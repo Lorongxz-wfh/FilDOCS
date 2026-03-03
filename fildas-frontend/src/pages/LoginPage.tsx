@@ -1,6 +1,7 @@
 import React from "react";
 
-const API_BASE = "http://127.0.0.1:8000/api"; // keep consistent with APP_URL
+const API_BASE =
+  (import.meta.env.VITE_API_BASE_URL as string) || "http://127.0.0.1:8000/api";
 
 import logoUrl from "../assets/FCU Logo.png";
 
