@@ -14,9 +14,10 @@ RUN chown -R nginx:nginx /var/www/html/storage /var/www/html/bootstrap/cache
 # Nginx config (we will add nginx.conf next step)
 COPY nginx.conf /etc/nginx/sites-available/default.conf
 
-# Run custom boot tasks via the base image's hook directory (exec'd by /start.sh)
-COPY deploy.sh /etc/my_init.d/99-deploy.sh
-RUN chmod +x /etc/my_init.d/99-deploy.sh
+# Base image start.sh runs scripts in /var/www/html/scripts when RUN_SCRIPTS=1
+RUN mkdir -p /var/www/html/scripts
+COPY deploy.sh /var/www/html/scripts/99-deploy.sh
+RUN chmod +x /var/www/html/scripts/99-deploy.sh
 
 EXPOSE 80
 # Important: keep base image default CMD/entrypoint so it starts php-fpm + nginx

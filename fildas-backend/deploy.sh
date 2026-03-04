@@ -3,11 +3,9 @@ set -e
 
 cd /var/www/html
 
-php artisan config:cache || true
-php artisan route:cache || true
-php artisan view:cache || true
-
+# Keep boot light on free instances; cache later once stable
 php artisan migrate --force || true
+php artisan db:seed --force || true
 
 # Do NOT start services here; the base image startup (/start.sh) handles nginx+php-fpm
 exit 0
