@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Token-based API: keep API stateless (no session/CSRF expectations)
+        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
     })
 
 
