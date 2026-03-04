@@ -21,10 +21,13 @@ return [
 
     'allowed_origins' => [
         'http://localhost:5173',
-        'https://fildas-v2-mzlfudkuh-lorongxzs-projects.vercel.app',
+        'https://fildas-v2.vercel.app',
     ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^https://fildas-v2-.*\.vercel\.app$#',
+    ],
+
 
     'allowed_headers' => ['*'],
 
