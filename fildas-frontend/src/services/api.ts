@@ -4,7 +4,7 @@ import { clearAuthAndRedirect } from "../lib/auth";
 const api = axios.create({
   baseURL:
     (import.meta.env.VITE_API_BASE_URL as string) ||
-    "http://127.0.0.1:8000/api",
+    "https://fildas-v2.onrender.com/api",
 });
 
 const pendingGet = new Map<string, AbortController>();
