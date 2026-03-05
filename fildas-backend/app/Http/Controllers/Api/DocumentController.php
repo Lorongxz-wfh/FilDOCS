@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use App\Models\ActivityLog;
 use App\Models\Tag;
 
@@ -732,20 +733,15 @@ class DocumentController extends Controller
     {
         $roleName = $request->user()?->role?->name ? strtolower(trim($request->user()->role->name)) : null;
 
-        // Auditor can only preview Distributed versions
         if ($roleName === 'auditor' && $version->status !== 'Distributed') {
             return response()->json(['message' => 'Only Distributed versions can be previewed.'], 422);
         }
 
         if (!$version->preview_path) {
-
             return response()->json(['message' => 'Preview not available for this version.'], Response::HTTP_NOT_FOUND);
         }
 
-        $storageRoot = base_path(env('DOC_STORAGE_PATH', '../documents'));
-        $fullPath = $storageRoot . DIRECTORY_SEPARATOR . $version->preview_path;
-
-        if (!file_exists($fullPath)) {
+        if (!Storage::disk('s3')->exists($version->preview_path)) {
             return response()->json(['message' => 'Preview file not found on server.'], Response::HTTP_NOT_FOUND);
         }
 
@@ -764,7 +760,11 @@ class DocumentController extends Controller
             ],
         ]);
 
-        return response()->file($fullPath, [
+        $stream = Storage::disk('s3')->readStream($version->preview_path);
+
+        return response()->stream(function () use ($stream) {
+            fpassthru($stream);
+        }, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . ($version->original_filename ?? 'preview.pdf') . '"',
         ]);
@@ -779,10 +779,7 @@ class DocumentController extends Controller
             return response()->json(['message' => 'No file available for this version.'], 404);
         }
 
-        $storageRoot = base_path(env('DOC_STORAGE_PATH', '../documents'));
-        $fullPath = $storageRoot . DIRECTORY_SEPARATOR . $version->file_path;
-
-        if (!file_exists($fullPath)) {
+        if (!Storage::disk('s3')->exists($version->file_path)) {
             return response()->json(['message' => 'File not found on server.'], 404);
         }
 
@@ -802,7 +799,14 @@ class DocumentController extends Controller
             ],
         ]);
 
-        return response()->download($fullPath, $downloadName);
+        $stream = Storage::disk('s3')->readStream($version->file_path);
+
+        return response()->stream(function () use ($stream) {
+            fpassthru($stream);
+        }, 200, [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="' . $downloadName . '"',
+        ]);
     }
 
     public function cancelRevision(Request $request, DocumentVersion $version)

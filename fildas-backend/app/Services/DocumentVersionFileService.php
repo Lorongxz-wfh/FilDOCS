@@ -4,54 +4,71 @@ namespace App\Services;
 
 use App\Models\DocumentVersion;
 use App\Services\DocumentPreviewService;
+use Illuminate\Support\Facades\Storage;
 
 class DocumentVersionFileService
 {
     public function saveVersionFile(DocumentVersion $version, $file): void
     {
-        $storageRoot = base_path(env('DOC_STORAGE_PATH', '../documents'));
-        if (!is_dir($storageRoot)) {
-            mkdir($storageRoot, 0775, true);
-        }
-
-        // Delete old
+        // Delete old files first
         $this->deleteVersionFiles($version);
 
         $year = now()->year;
-        $folder = $storageRoot . DIRECTORY_SEPARATOR . $year . DIRECTORY_SEPARATOR . $version->id;
-        if (!is_dir($folder)) {
-            mkdir($folder, 0775, true);
-        }
-
         $extension = strtolower($file->getClientOriginalExtension());
         $storedName = 'original.' . $extension;
-        $fullPath = $folder . DIRECTORY_SEPARATOR . $storedName;
+        $r2Path = $year . '/' . $version->id . '/' . $storedName;
 
-        $file->move($folder, $storedName);
+        // Upload original file to R2
+        Storage::disk('s3')->putFileAs(
+            $year . '/' . $version->id,
+            $file,
+            $storedName
+        );
 
         $version->original_filename = $file->getClientOriginalName();
-        $version->file_path = $year . '/' . $version->id . '/' . $storedName;
+        $version->file_path = $r2Path;
 
-        $previewFileName = DocumentPreviewService::generatePreview($folder, $fullPath);
+        // Preview generation: store file locally, convert, upload to R2, cleanup
+        $tmpDir = sys_get_temp_dir() . '/fildas/' . $version->id;
+        if (!is_dir($tmpDir)) {
+            mkdir($tmpDir, 0775, true);
+        }
 
-        $version->preview_path = $previewFileName
-            ? ($year . '/' . $version->id . '/' . $previewFileName)
-            : null;
+        $tmpFilePath = $tmpDir . '/' . $storedName;
+        copy($file->getRealPath(), $tmpFilePath);
+
+        $previewFileName = DocumentPreviewService::generatePreview($tmpDir, $tmpFilePath);
+
+        if ($previewFileName) {
+            $previewTmpPath = $tmpDir . '/' . $previewFileName;
+            $r2PreviewPath = $year . '/' . $version->id . '/' . $previewFileName;
+
+            Storage::disk('s3')->putFileAs(
+                $year . '/' . $version->id,
+                new \Illuminate\Http\File($previewTmpPath),
+                $previewFileName
+            );
+
+            $version->preview_path = $r2PreviewPath;
+
+            @unlink($previewTmpPath);
+        } else {
+            $version->preview_path = null;
+        }
+
+        @unlink($tmpFilePath);
+        @rmdir($tmpDir);
 
         $version->save();
     }
 
     public function deleteVersionFiles(DocumentVersion $version): void
     {
-        $storageRoot = base_path(env('DOC_STORAGE_PATH', '../documents'));
-
         if ($version->file_path) {
-            $p = $storageRoot . DIRECTORY_SEPARATOR . $version->file_path;
-            if (file_exists($p)) @unlink($p);
+            Storage::disk('s3')->delete($version->file_path);
         }
         if ($version->preview_path) {
-            $p = $storageRoot . DIRECTORY_SEPARATOR . $version->preview_path;
-            if (file_exists($p)) @unlink($p);
+            Storage::disk('s3')->delete($version->preview_path);
         }
     }
 }
