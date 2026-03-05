@@ -3,7 +3,7 @@ FROM richarvey/nginx-php-fpm:3.1.6
 WORKDIR /var/www/html
 
 # Install LibreOffice for PDF preview generation
-RUN apt-get update && apt-get install -y libreoffice --no-install-recommends && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache libreoffice openjdk11-jre
 
 # Copy app
 COPY . .
