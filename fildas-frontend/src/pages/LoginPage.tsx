@@ -58,19 +58,19 @@ const LoginPage: React.FC = () => {
       {/* Content */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-10 flex items-center justify-center gap-0 lg:gap-0">
         {/* Left info card */}
-        <div className="hidden lg:flex flex-col justify-between w-100 min-h-120 rounded-3xl rounded-r-none bg-linear-to-br from-sky-500 to-blue-700 text-white p-10 shadow-2xl">
+        <div className="hidden lg:flex flex-col justify-between w-100 min-h-120 rounded-3xl rounded-r-none bg-linear-to-br from-sky-500 to-blue-700 text-white p-8 shadow-2xl">
           <div>
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 overflow-hidden rounded-xl border border-white/30 bg-white/20 backdrop-blur-sm">
+              <div className="h-20 w-20 overflow-hidden rounded-xl border border-white/30 bg-white/20 backdrop-blur-sm">
                 <img
                   src={logoUrl}
                   alt="FCU Logo"
-                  className="h-full w-full object-contain p-1.5"
+                  className="h-full w-full object-contain p-1"
                 />
               </div>
               <div className="leading-tight">
-                <div className="text-base font-bold">FilDAS</div>
-                <div className="text-[11px] text-blue-100">
+                <div className="text-base text-[18px] font-bold">FilDAS</div>
+                <div className="text-[12px] text-blue-100">
                   FCU • Quality Assurance
                 </div>
               </div>
@@ -104,13 +104,13 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          <p className="text-[11px] text-blue-200">
+          <p className="text-[11px] mt-5 text-blue-200 text-center">
             Filamer Christian University • Quality Assurance Office
           </p>
         </div>
 
         {/* Right login card */}
-        <div className="w-full max-w-sm lg:max-w-none lg:w-96 rounded-3xl lg:rounded-l-none bg-white/95 backdrop-blur-md shadow-2xl p-10 flex flex-col justify-center min-h-[480px]">
+        <div className="w-full max-w-sm lg:max-w-none lg:w-96 rounded-3xl lg:rounded-l-none bg-white/95 backdrop-blur-md shadow-2xl p-10 flex flex-col justify-center min-h-120">
           {/* Mobile logo */}
           <div className="flex lg:hidden items-center justify-center mb-6">
             <div className="h-14 w-14 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -126,7 +126,7 @@ const LoginPage: React.FC = () => {
             Welcome back
           </h2>
           <p className="mt-1 text-sm text-slate-500 text-center">
-            Please sign in to your account
+            Please sign in using your Filamer account
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -165,14 +165,14 @@ const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.99] transition disabled:opacity-60"
+              className="w-full py-2.5 rounded-lg bg-linear-to-r from-sky-500 to-blue-600 text-sm font-semibold text-white hover:opacity-90 active:scale-[0.99] transition disabled:opacity-60"
             >
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
           <p className="mt-8 text-center text-xs text-slate-400">
-            Having trouble signing in? Contact QA/IT for account access.
+            Having trouble signing in? Contact QA/IT
           </p>
         </div>
       </div>
