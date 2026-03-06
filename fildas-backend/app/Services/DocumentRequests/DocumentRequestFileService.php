@@ -3,84 +3,95 @@
 namespace App\Services\DocumentRequests;
 
 use App\Services\DocumentPreviewService;
+use Illuminate\Support\Facades\Storage;
 
 class DocumentRequestFileService
 {
-    public function ensureStorageRoot(): string
-    {
-        $storageRoot = base_path(env('DOC_STORAGE_PATH', '../documents'));
-        if (!is_dir($storageRoot)) {
-            mkdir($storageRoot, 0775, true);
-        }
-        return $storageRoot;
-    }
-
-    /**
-     * Save a single "example" file for a document request.
-     * Returns array: [original_filename, file_path, preview_path]
-     */
     public function saveRequestExampleFile(int $requestId, $file): array
     {
-        $storageRoot = $this->ensureStorageRoot();
-
         $year = now()->year;
-        $folder = $storageRoot . DIRECTORY_SEPARATOR . $year . DIRECTORY_SEPARATOR . 'document_requests' . DIRECTORY_SEPARATOR . $requestId;
-        if (!is_dir($folder)) {
-            mkdir($folder, 0775, true);
-        }
-
         $extension = strtolower($file->getClientOriginalExtension());
         $storedName = 'example.' . $extension;
-        $fullPath = $folder . DIRECTORY_SEPARATOR . $storedName;
+        $r2Folder = $year . '/document_requests/' . $requestId;
+        $originalName = $file->getClientOriginalName();
 
-        $originalName = method_exists($file, 'getClientOriginalName') ? $file->getClientOriginalName() : null;
+        // Upload original to storage
+        Storage::disk()->putFileAs($r2Folder, $file, $storedName);
 
-        $file->move($folder, $storedName);
+        // Generate preview via tmp
+        $tmpDir = sys_get_temp_dir() . '/fildas/doc_requests/' . $requestId;
+        if (!is_dir($tmpDir)) mkdir($tmpDir, 0775, true);
 
-        $previewFileName = DocumentPreviewService::generatePreview($folder, $fullPath);
+        $tmpFilePath = $tmpDir . '/' . $storedName;
+        copy($file->getRealPath() ?: (Storage::disk()->path($r2Folder . '/' . $storedName)), $tmpFilePath);
+
+        $previewFileName = DocumentPreviewService::generatePreview($tmpDir, $tmpFilePath);
+        $previewPath = null;
+
+        if ($previewFileName) {
+            $tmpPreviewPath = $tmpDir . '/' . $previewFileName;
+            Storage::disk()->putFileAs(
+                $r2Folder,
+                new \Illuminate\Http\File($tmpPreviewPath),
+                $previewFileName
+            );
+            $previewPath = $r2Folder . '/' . $previewFileName;
+            @unlink($tmpPreviewPath);
+        }
+
+        @unlink($tmpFilePath);
+        @rmdir($tmpDir);
 
         return [
             'original_filename' => $originalName,
-            'file_path' => $year . '/document_requests/' . $requestId . '/' . $storedName,
-            'preview_path' => $previewFileName
-                ? ($year . '/document_requests/' . $requestId . '/' . $previewFileName)
-                : null,
+            'file_path' => $r2Folder . '/' . $storedName,
+            'preview_path' => $previewPath,
         ];
     }
 
-    /**
-     * Save a submission file.
-     * Returns array: [original_filename, file_path, preview_path, mime, size_bytes]
-     */
     public function saveSubmissionFile(int $submissionId, $file, int $index): array
     {
-        $storageRoot = $this->ensureStorageRoot();
-
         $year = now()->year;
-        $folder = $storageRoot . DIRECTORY_SEPARATOR . $year . DIRECTORY_SEPARATOR . 'document_request_submissions' . DIRECTORY_SEPARATOR . $submissionId;
-        if (!is_dir($folder)) {
-            mkdir($folder, 0775, true);
-        }
-
-        // Capture metadata BEFORE move(), because move() can invalidate the tmp file handle/path.
-        $originalName = method_exists($file, 'getClientOriginalName') ? $file->getClientOriginalName() : null;
-        $mime = method_exists($file, 'getClientMimeType') ? $file->getClientMimeType() : null;
-        $sizeBytes = method_exists($file, 'getSize') ? (int) $file->getSize() : null;
-
         $extension = strtolower($file->getClientOriginalExtension());
         $storedName = 'file_' . $index . '.' . $extension;
-        $fullPath = $folder . DIRECTORY_SEPARATOR . $storedName;
+        $r2Folder = $year . '/document_request_submissions/' . $submissionId;
 
-        $file->move($folder, $storedName);
+        $originalName = $file->getClientOriginalName();
+        $mime = $file->getClientMimeType();
+        $sizeBytes = (int) $file->getSize();
+        $tmpRealPath = $file->getRealPath();
 
-        $previewFileName = DocumentPreviewService::generatePreview($folder, $fullPath);
+        // Upload original to storage
+        Storage::disk()->putFileAs($r2Folder, $file, $storedName);
+
+        // Generate preview via tmp
+        $tmpDir = sys_get_temp_dir() . '/fildas/doc_request_submissions/' . $submissionId;
+        if (!is_dir($tmpDir)) mkdir($tmpDir, 0775, true);
+
+        $tmpFilePath = $tmpDir . '/' . $storedName;
+        copy($tmpRealPath, $tmpFilePath);
+
+        $previewFileName = DocumentPreviewService::generatePreview($tmpDir, $tmpFilePath);
+        $previewPath = null;
+
+        if ($previewFileName) {
+            $tmpPreviewPath = $tmpDir . '/' . $previewFileName;
+            Storage::disk()->putFileAs(
+                $r2Folder,
+                new \Illuminate\Http\File($tmpPreviewPath),
+                $previewFileName
+            );
+            $previewPath = $r2Folder . '/' . $previewFileName;
+            @unlink($tmpPreviewPath);
+        }
+
+        @unlink($tmpFilePath);
+        @rmdir($tmpDir);
 
         return [
             'original_filename' => $originalName,
-            'file_path' => $year . '/document_request_submissions/' . $submissionId . '/' . $storedName,
-            'preview_path' => $previewFileName
-                ? ($year . '/document_request_submissions/' . $submissionId . '/' . $previewFileName)
-                : null,
+            'file_path' => $r2Folder . '/' . $storedName,
+            'preview_path' => $previewPath,
             'mime' => $mime,
             'size_bytes' => $sizeBytes,
         ];
@@ -89,11 +100,6 @@ class DocumentRequestFileService
     public function deletePath(?string $relativePath): void
     {
         if (!$relativePath) return;
-
-        $storageRoot = base_path(env('DOC_STORAGE_PATH', '../documents'));
-        $p = $storageRoot . DIRECTORY_SEPARATOR . $relativePath;
-        if (file_exists($p)) {
-            @unlink($p);
-        }
+        Storage::disk()->delete($relativePath);
     }
 }
