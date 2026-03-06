@@ -2,7 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { setAuthUser } from "../lib/auth";
 import logoUrl from "../assets/FCU Logo.png";
-import login_bg from "../assets/login_bg.png";
 
 const API_BASE =
   (import.meta.env.VITE_API_BASE_URL as string) || "http://127.0.0.1:8000/api";
@@ -51,7 +50,7 @@ const LoginPage: React.FC = () => {
       {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${login_bg})` }}
+        style={{ backgroundImage: "url(/login_bg.png)" }}
       />
       {/* Overlay */}
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" />
