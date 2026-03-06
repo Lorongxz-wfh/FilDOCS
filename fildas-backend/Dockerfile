@@ -3,7 +3,7 @@ FROM richarvey/nginx-php-fpm:3.1.6
 WORKDIR /var/www/html
 
 # Install LibreOffice for PDF preview generation
-RUN apk add --no-cache libreoffice openjdk11-jre
+RUN apk add --no-cache libreoffice openjdk17-jre ttf-dejavu fontconfig
 
 # Copy app
 COPY . .
