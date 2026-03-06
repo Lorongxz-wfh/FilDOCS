@@ -58,7 +58,7 @@ const LoginPage: React.FC = () => {
       {/* Content */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-10 flex items-center justify-center gap-0 lg:gap-0">
         {/* Left info card */}
-        <div className="hidden lg:flex flex-col justify-between w-80 min-h-[480px] rounded-3xl rounded-r-none bg-gradient-to-br from-sky-500 to-blue-700 text-white p-10 shadow-2xl">
+        <div className="hidden lg:flex flex-col justify-between w-100 min-h-120 rounded-3xl rounded-r-none bg-linear-to-br from-sky-500 to-blue-700 text-white p-10 shadow-2xl">
           <div>
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 overflow-hidden rounded-xl border border-white/30 bg-white/20 backdrop-blur-sm">
