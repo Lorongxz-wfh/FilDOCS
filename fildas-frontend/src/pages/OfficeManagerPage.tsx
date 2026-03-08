@@ -212,7 +212,6 @@ export function OfficeManagerPage() {
             ]}
             rows={visible}
             loading={loading}
-            loadingStyle="spinner"
             error={error}
             emptyMessage={loading ? "Loading offices…" : "No offices found."}
             rowKey={(o) => o.id}

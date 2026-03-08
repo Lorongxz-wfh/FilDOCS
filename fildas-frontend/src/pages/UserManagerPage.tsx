@@ -209,7 +209,6 @@ const UserManagerPage: React.FC = () => {
               columns={columns}
               rows={users}
               loading={loading}
-              loadingStyle="skeleton"
               error={null}
               emptyMessage="No users found for the current filter."
               rowKey={(u) => u.id}
