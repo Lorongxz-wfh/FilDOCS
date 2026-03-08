@@ -1023,6 +1023,43 @@ export type DocumentStats = {
   distributed: number;
 };
 
+export type AdminDashboardStats = {
+  users: {
+    total: number;
+    active: number;
+    inactive: number;
+    by_role: { role: string; count: number }[];
+    recent: {
+      id: number;
+      name: string;
+      email: string;
+      role: string;
+      office_name: string | null;
+      is_active: boolean;
+      created_at: string;
+    }[];
+  };
+  offices: { total: number; active: number };
+  documents: { total: number; distributed: number; in_progress: number };
+  activity_series: { label: string; count: number }[];
+};
+
+export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
+  try {
+    const api = await getApi();
+    const res = await api.get("/admin/dashboard-stats");
+    return res.data as AdminDashboardStats;
+  } catch (e: any) {
+    const status = e?.response?.status;
+    const msg =
+      e?.response?.data?.message ||
+      (status
+        ? `Failed to load admin stats (${status})`
+        : "Failed to load admin stats");
+    throw new Error(msg);
+  }
+}
+
 export async function getDocumentStats(): Promise<DocumentStats> {
   try {
     const api = await getApi();

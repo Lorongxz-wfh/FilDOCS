@@ -382,16 +382,7 @@ export default function DocumentRequestPage() {
   return (
     <PageFrame
       title={`Document Request #${requestId}`}
-      right={
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => navigate("/document-requests")}
-        >
-          ← Back
-        </Button>
-      }
+      onBack={() => navigate("/document-requests")}
     >
       {loading ? (
         <div className="flex h-40 items-center justify-center text-sm text-slate-500 dark:text-slate-400">
