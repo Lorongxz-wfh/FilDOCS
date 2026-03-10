@@ -37,6 +37,11 @@ class DocumentVersionPolicy
     {
         $roleName = $user->role?->name ? strtolower(trim($user->role->name)) : null;
 
+        // Admin/sysadmin — full access, no office required
+        if (in_array($roleName, ['admin', 'sysadmin'], true)) {
+            return Response::allow();
+        }
+
         if (!$user->office_id) {
             return Response::deny('Your account has no office assigned.');
         }

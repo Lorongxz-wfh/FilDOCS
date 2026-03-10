@@ -241,7 +241,7 @@ const MyWorkQueuePage: React.FC = () => {
       )}
 
       {/* Stat cards */}
-      <div className="flex gap-3 shrink-0">
+      <div className="grid grid-cols-3 gap-3 shrink-0">
         <StatCard
           label="Pending"
           value={stats?.pending ?? null}
@@ -264,7 +264,7 @@ const MyWorkQueuePage: React.FC = () => {
 
       {/* Queue + Activity — 2 col on large screens */}
       <div
-        className="flex gap-5 flex-col lg:flex-row"
+        className="flex gap-5 flex-col lg:flex-row lg:min-h-0"
         style={{ height: "calc(100vh - 275px)" }}
       >
         {/* Work queue panel */}
@@ -354,7 +354,7 @@ const MyWorkQueuePage: React.FC = () => {
         </div>
 
         {/* Recent activity panel */}
-        <div className="flex flex-col lg:w-80 shrink-0 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
+        <div className="flex flex-col lg:w-80 shrink-0 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden max-h-96 lg:max-h-none">
           {/* Panel header */}
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-5 py-4">
             <div>

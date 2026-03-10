@@ -231,7 +231,7 @@ const CreateDocumentPage: React.FC = () => {
 
   // ── Step indicator ───────────────────────────────────────────────────────────
   const StepBar = () => (
-    <div className="flex items-center gap-2 shrink-0">
+    <div className="flex items-center gap-2 shrink-0 overflow-x-auto pb-0.5">
       {[
         { num: 1, label: "Flow setup" },
         { num: 2, label: "Document details" },
@@ -292,9 +292,9 @@ const CreateDocumentPage: React.FC = () => {
       {/* ── STEP 1 ──────────────────────────────────────────────────────────── */}
       {step === 1 && (
         <div className="flex justify-center">
-          <div className="w-full max-w-lg">
+          <div className="w-full max-w-lg mx-auto">
             <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-200 dark:border-surface-400">
+              <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-200 dark:border-surface-400">
                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   Choose workflow
                 </p>
@@ -303,7 +303,7 @@ const CreateDocumentPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="px-6 py-5 flex flex-col gap-5">
+              <div className="px-4 py-4 sm:px-6 sm:py-5 flex flex-col gap-5">
                 {/* Flow option */}
                 <Field label="Flow option" required>
                   <select
@@ -429,13 +429,13 @@ const CreateDocumentPage: React.FC = () => {
 
       {/* ── STEP 2 ──────────────────────────────────────────────────────────── */}
       {step === 2 && (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 flex-1 min-h-0">
+        <div className="flex flex-col lg:grid lg:grid-cols-5 gap-5 flex-1 min-h-0">
           {/* Left: form — 3 cols */}
-          <div className="lg:col-span-3 overflow-y-auto">
+          <div className="lg:col-span-3 lg:overflow-y-auto">
             <form onSubmit={handleSubmit}>
               <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-surface-400">
+                <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-200 dark:border-surface-400">
                   <div>
                     <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                       Document details
@@ -460,7 +460,7 @@ const CreateDocumentPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="px-6 py-5 flex flex-col gap-5">
+                <div className="px-4 py-4 sm:px-6 sm:py-5 flex flex-col gap-5">
                   <Field label="Title" required>
                     <input
                       type="text"
@@ -509,7 +509,7 @@ const CreateDocumentPage: React.FC = () => {
                     />
                   </Field>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Field
                       label="Effective date"
                       hint={
@@ -665,7 +665,10 @@ const CreateDocumentPage: React.FC = () => {
 
           {/* Right: preview — 2 cols */}
           <div className="lg:col-span-2 flex flex-col min-h-0">
-            <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden flex flex-col flex-1">
+            <div
+              className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden flex flex-col"
+              style={{ minHeight: "400px" }}
+            >
               <div className="px-5 py-4 border-b border-slate-200 dark:border-surface-400">
                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   Preview

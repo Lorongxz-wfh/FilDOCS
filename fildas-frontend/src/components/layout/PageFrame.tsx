@@ -28,10 +28,10 @@ export default function PageFrame({
       ].join(" ")}
     >
       <div className="shrink-0 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-surface-400 dark:bg-surface-600/80">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between gap-4">
+        <div className="px-4 py-3 sm:px-6 sm:py-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Left: back arrow + title */}
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               {onBack && (
                 <button
                   type="button"
@@ -65,7 +65,9 @@ export default function PageFrame({
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className={["px-6 py-5", contentClassName].join(" ")}>
+        <div
+          className={["px-4 py-4 sm:px-6 sm:py-5", contentClassName].join(" ")}
+        >
           {children}
         </div>
       </div>

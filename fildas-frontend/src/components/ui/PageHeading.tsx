@@ -22,14 +22,14 @@ export default function PageHeading({
   return (
     <div
       className={[
-        "flex items-start justify-between gap-4 min-w-0",
+        "flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4 min-w-0",
         className,
       ].join(" ")}
     >
       <div className="flex items-center gap-2 min-w-0">
         {onBack && <BackButton onClick={onBack} disabled={onBackDisabled} />}
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold leading-tight tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-lg sm:text-xl font-semibold leading-tight tracking-tight text-slate-900 dark:text-slate-100">
             {title}
           </h1>
           {subtitle && (
@@ -39,7 +39,11 @@ export default function PageHeading({
           )}
         </div>
       </div>
-      {right && <div className="shrink-0 flex items-center gap-2">{right}</div>}
+      {right && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 sm:pb-0 sm:flex-wrap sm:shrink-0">
+          {right}
+        </div>
+      )}
     </div>
   );
 }

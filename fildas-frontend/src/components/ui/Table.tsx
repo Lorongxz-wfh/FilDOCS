@@ -175,7 +175,11 @@ export default function Table<T>({
       <div
         className={["flex flex-col min-h-0 h-full", className ?? ""].join(" ")}
       >
-        {inner}
+        <div className="flex flex-col min-h-0 h-full overflow-x-auto">
+          <div className="min-w-150 flex flex-col min-h-0 h-full">
+            {inner}
+          </div>
+        </div>
       </div>
     );
   }
@@ -187,7 +191,11 @@ export default function Table<T>({
         className ?? "",
       ].join(" ")}
     >
-      {inner}
+      <div className="flex flex-col min-h-0 h-full overflow-x-auto">
+        <div className="min-w-150 flex flex-col min-h-0 h-full">
+          {inner}
+        </div>
+      </div>
     </div>
   );
 }

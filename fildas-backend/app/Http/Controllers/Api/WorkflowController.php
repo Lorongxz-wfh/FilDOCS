@@ -20,8 +20,10 @@ class WorkflowController extends Controller
     {
         $user         = request()->user();
         $userOfficeId = (int) ($user?->office_id ?? 0);
+        $roleName     = strtolower(trim((string) ($user?->role?->name ?? '')));
+        $isAdmin      = in_array($roleName, ['admin', 'sysadmin'], true);
 
-        if (!$userOfficeId) {
+        if (!$userOfficeId && !$isAdmin) {
             return response()->json(['message' => 'Your account has no office assigned.'], 422);
         }
 
@@ -34,7 +36,7 @@ class WorkflowController extends Controller
         $roleName     = strtolower(trim((string) ($user?->role?->name ?? '')));
         $canSeeAll    = $userOfficeId === $qaOfficeId
             || $userOfficeId === $presOfficeId
-            || $roleName === 'admin';
+            || in_array($roleName, ['admin', 'sysadmin'], true);
 
         if (!$canSeeAll) {
             $hasTask = $tasks->contains(fn($t) => (int) $t->assigned_office_id === $userOfficeId);
@@ -68,8 +70,10 @@ class WorkflowController extends Controller
     {
         $user         = request()->user();
         $userOfficeId = (int) ($user?->office_id ?? 0);
+        $roleName     = strtolower(trim((string) ($user?->role?->name ?? '')));
+        $isAdmin      = in_array($roleName, ['admin', 'sysadmin'], true);
 
-        if (!$userOfficeId) {
+        if (!$userOfficeId && !$isAdmin) {
             return response()->json(['message' => 'Your account has no office assigned.'], 422);
         }
 
@@ -78,7 +82,7 @@ class WorkflowController extends Controller
         $roleName     = strtolower(trim((string) ($user?->role?->name ?? '')));
         $canSeeAll    = $userOfficeId === $qaOfficeId
             || $userOfficeId === $presOfficeId
-            || $roleName === 'admin';
+            || in_array($roleName, ['admin', 'sysadmin'], true);
 
         if (!$canSeeAll) {
             $hasTask = WorkflowTask::where('document_version_id', $version->id)

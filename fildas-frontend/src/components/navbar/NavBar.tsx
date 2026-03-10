@@ -8,6 +8,7 @@ import {
   Building2,
   LayoutDashboard,
   X,
+  Menu,
 } from "lucide-react";
 import InlineSpinner from "../ui/loader/InlineSpinner";
 import SkeletonList from "../ui/loader/SkeletonList";
@@ -27,6 +28,7 @@ import { Sun, Moon } from "lucide-react";
 interface NavbarProps {
   onThemeToggle?: () => void;
   theme?: "light" | "dark";
+  onMobileMenuOpen?: () => void;
 }
 
 // ── Page results from navConfig ────────────────────────────────────────────
@@ -61,7 +63,11 @@ const ResultIcon: React.FC<{ type: SearchResultItem["type"] }> = ({ type }) => {
   return <LayoutDashboard className={cls} />;
 };
 
-const Navbar: React.FC<NavbarProps> = ({ onThemeToggle, theme = "light" }) => {
+const Navbar: React.FC<NavbarProps> = ({
+  onThemeToggle,
+  theme = "light",
+  onMobileMenuOpen,
+}) => {
   const navigate = useNavigate();
   const role = getUserRole();
 
@@ -294,8 +300,18 @@ const Navbar: React.FC<NavbarProps> = ({ onThemeToggle, theme = "light" }) => {
   return (
     <header className="relative z-50 border-b border-slate-200 bg-white/80 backdrop-blur-sm dark:border-surface-400 dark:bg-surface-500/80">
       <div className="flex items-center gap-3 px-4 py-2.5">
-        {/* Left spacer to push search to center */}
-        <div className="w-190" />
+        {/* Mobile hamburger */}
+        <button
+          type="button"
+          onClick={onMobileMenuOpen}
+          className="md:hidden rounded-md p-1.5 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-surface-400 transition"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        {/* Left spacer to push search to center — desktop only */}
+        <div className="hidden md:block w-190" />
         {/* Search bar — centered */}
         <div ref={searchRef} className="relative w-full max-w-md">
           <div className="relative flex items-center">
