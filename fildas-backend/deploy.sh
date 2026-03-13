@@ -3,16 +3,7 @@ set -e
 
 cd /var/www/html
 
-# Keep boot light on free instances; cache later once stable
-php artisan config:clear
-php artisan config:cache
-
+php artisan config:clear || true
+php artisan config:cache || true
 php artisan storage:link --force || true
-php artisan migrate:fresh --force --seed
-php artisan about || true
-# Replace the line above with this two lines below to not wipe data
-# php artisan migrate --force || true
-# php artisan db:seed --force || true
-
-# Do NOT start services here; the base image startup (/start.sh) handles nginx+php-fpm
-exit 0
+php artisan migrate:fresh --force --seed || true

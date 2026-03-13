@@ -20,6 +20,7 @@ COPY nginx.conf /etc/nginx/sites-available/default.conf
 # Base image start.sh runs scripts in /var/www/html/scripts when RUN_SCRIPTS=1
 RUN mkdir -p /var/www/html/scripts
 COPY deploy.sh /var/www/html/scripts/99-deploy.sh
-RUN chmod +x /var/www/html/scripts/99-deploy.sh
+RUN chmod +x /var/www/html/scripts/99-deploy.sh && \
+    head -1 /var/www/html/scripts/99-deploy.sh
 
 EXPOSE 80
