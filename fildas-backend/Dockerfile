@@ -12,11 +12,11 @@ RUN chown -R nginx:nginx /var/www/html/storage /var/www/html/bootstrap/cache
 
 COPY nginx.conf /etc/nginx/sites-available/default.conf
 
-RUN mkdir -p /var/www/html/scripts
-COPY deploy.sh /var/www/html/scripts/99-deploy.sh
-RUN chmod +x /var/www/html/scripts/99-deploy.sh
+COPY deploy.sh /deploy.sh
+RUN chmod +x /deploy.sh
 
-ENV RUN_SCRIPTS=1
 ENV WEBROOT=/var/www/html/public
 
 EXPOSE 80
+
+CMD ["/deploy.sh"]
