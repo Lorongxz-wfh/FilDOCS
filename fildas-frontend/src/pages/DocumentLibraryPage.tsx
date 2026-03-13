@@ -493,9 +493,9 @@ const DocumentLibraryPage: React.FC<DocumentLibraryPageProps> = ({
       contentClassName="flex flex-col min-h-0 gap-4 h-full"
     >
       {/* Filter bar */}
-      <div className="flex flex-wrap items-end gap-3 shrink-0">
+      <div className="flex flex-wrap items-center gap-2 shrink-0">
         {/* Search */}
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full sm:w-60">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             value={q}
@@ -514,72 +514,55 @@ const DocumentLibraryPage: React.FC<DocumentLibraryPageProps> = ({
           )}
         </div>
 
-        <div className="flex flex-wrap items-end gap-2 w-full sm:w-auto">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Status
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className={selectCls}
-            >
-              {statusOptions.map((s) => (
-                <option key={s} value={s}>
-                  {s === "ALL" ? "All statuses" : s}
-                </option>
-              ))}
-            </select>
-          </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className={selectCls}
+        >
+          {statusOptions.map((s) => (
+            <option key={s} value={s}>
+              {s === "ALL" ? "All statuses" : s}
+            </option>
+          ))}
+        </select>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Type
-            </label>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className={selectCls}
-            >
-              <option value="ALL">All types</option>
-              <option value="internal">Internal</option>
-              <option value="external">External</option>
-              <option value="forms">Forms</option>
-            </select>
-          </div>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className={selectCls}
+        >
+          <option value="ALL">All types</option>
+          <option value="internal">Internal</option>
+          <option value="external">External</option>
+          <option value="forms">Forms</option>
+        </select>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Scope
-            </label>
-            <select
-              value={scopeFilter}
-              onChange={(e) => setScopeFilter(e.target.value as any)}
-              className={selectCls}
-            >
-              <option value="all">All</option>
-              <option value="assigned">Assigned</option>
-              <option value="owned">Owned</option>
-              <option value="shared">Shared</option>
-            </select>
-          </div>
+        <select
+          value={scopeFilter}
+          onChange={(e) => setScopeFilter(e.target.value as any)}
+          className={selectCls}
+        >
+          <option value="all">All scope</option>
+          <option value="assigned">Assigned</option>
+          <option value="owned">Owned</option>
+          <option value="shared">Shared</option>
+        </select>
 
-          {isFiltered && (
-            <button
-              type="button"
-              onClick={() => {
-                setQ("");
-                setStatusFilter("ALL");
-                setTypeFilter("ALL");
-                setScopeFilter("all");
-                setPage(1);
-              }}
-              className="mt-5 rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
-            >
-              Clear
-            </button>
-          )}
-        </div>
+        {isFiltered && (
+          <button
+            type="button"
+            onClick={() => {
+              setQ("");
+              setStatusFilter("ALL");
+              setTypeFilter("ALL");
+              setScopeFilter("all");
+              setPage(1);
+            }}
+            className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Table view */}

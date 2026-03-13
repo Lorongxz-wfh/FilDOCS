@@ -21,9 +21,9 @@ const MAX_CUSTOM = 5;
 function buildChain(
   isQA: boolean,
   routingMode: "default" | "custom",
-  reviewOfficeId: number | null,
+  _reviewOfficeId: number | null,
   customOfficeIds: number[],
-  officeNameById: Record<number, string>,
+  _officeNameById: Record<number, string>,
   officeCodeById: Record<number, string> = {},
 ): string[] {
   if (routingMode === "custom") {
