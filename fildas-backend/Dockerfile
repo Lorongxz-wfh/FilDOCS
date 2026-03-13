@@ -19,4 +19,4 @@ ENV WEBROOT=/var/www/html/public
 
 EXPOSE 80
 
-CMD ["/deploy.sh"]
+ENTRYPOINT ["/deploy.sh"]
