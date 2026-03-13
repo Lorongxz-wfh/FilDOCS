@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Auth ───────────────────────────────────────────────────────────────
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', fn(Request $r) => $r->user());
+    Route::get('/offices/{office}/users', [OfficeController::class, 'users']);
 
     // ── Workflow ───────────────────────────────────────────────────────────
     Route::prefix('document-versions/{version}')->group(function () {
@@ -103,8 +104,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Notifications ──────────────────────────────────────────────────────
     Route::get('/notifications',                          [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count',             [NotificationController::class, 'unreadCount']);
-    Route::post('/notifications/{notification}/read',     [NotificationController::class, 'markRead']);
     Route::post('/notifications/read-all',                [NotificationController::class, 'markAllRead']);
+    Route::delete('/notifications',                       [NotificationController::class, 'destroyAll']);
+    Route::post('/notifications/{notification}/read',     [NotificationController::class, 'markRead']);
+    Route::delete('/notifications/{notification}',        [NotificationController::class, 'destroy']);
 
     // ── Activity ───────────────────────────────────────────────────────────
     Route::post('/activity/opened-version', [ActivityLogController::class, 'openedVersion']);
@@ -161,6 +164,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('templates')->group(function () {
         Route::get('/',                    [DocumentTemplateController::class, 'index']);
         Route::post('/',                   [DocumentTemplateController::class, 'store']);
+        Route::patch('/{template}/tags',   [DocumentTemplateController::class, 'updateTags']);
         Route::delete('/{template}',       [DocumentTemplateController::class, 'destroy']);
         Route::get('/{template}/download', [DocumentTemplateController::class, 'download']);
     });

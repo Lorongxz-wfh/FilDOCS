@@ -18,7 +18,7 @@ class DocumentTemplateController extends Controller
     {
         $user = $request->user();
 
-        $query = DocumentTemplate::with(['uploader:id,first_name,last_name', 'office:id,name,code'])
+        $query = DocumentTemplate::with(['uploader:id,first_name,last_name', 'office:id,name,code', 'tags'])
             ->where(function ($q) use ($user) {
                 // Global templates (Admin/QA uploads) — everyone sees these
                 $q->whereNull('office_id');
@@ -35,8 +35,14 @@ class DocumentTemplateController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('original_filename', 'like', "%{$search}%");
+                    ->orWhere('original_filename', 'like', "%{$search}%")
+                    ->orWhereHas('tags', fn($tq) => $tq->where('name', 'like', "%{$search}%"));
             });
+        }
+
+        // Optional tag filter
+        if ($tag = trim((string) $request->query('tag', ''))) {
+            $query->whereHas('tags', fn($tq) => $tq->where('name', $tag));
         }
 
         $templates = $query->get()->map(fn($t) => $this->format($t, $user));
@@ -80,6 +86,21 @@ class DocumentTemplateController extends Controller
             'office_id'         => $officeId,
         ]);
 
+        // Sync tags if provided
+        if ($request->has('tags')) {
+            $tagNames = collect($request->input('tags', []))
+                ->map(fn($t) => trim($t))
+                ->filter()
+                ->unique()
+                ->values();
+
+            $tagIds = $tagNames->map(function ($name) {
+                return \App\Models\TemplateTag::firstOrCreate(['name' => $name])->id;
+            });
+
+            $template->tags()->sync($tagIds);
+        }
+
         // Generate thumbnail in the background (best-effort)
         try {
             $thumbnailService = app(ThumbnailService::class);
@@ -99,7 +120,7 @@ class DocumentTemplateController extends Controller
             // Never fail the upload due to thumbnail error
         }
 
-        $template->load(['uploader:id,first_name,last_name', 'office:id,name,code']);
+        $template->load(['uploader:id,first_name,last_name', 'office:id,name,code', 'tags']);
 
         return response()->json(['template' => $this->format($template, $user)], 201);
     }
@@ -139,10 +160,42 @@ class DocumentTemplateController extends Controller
             return response()->json(['message' => 'File not found.'], 404);
         }
 
-        return Storage::disk($disk)->download(
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        $storage = Storage::disk($disk);
+
+        return $storage->download(
             $template->file_path,
             $template->original_filename
         );
+    }
+
+    // ── PATCH /api/templates/{template}/tags ─────────────────
+
+    public function updateTags(Request $request, DocumentTemplate $template): JsonResponse
+    {
+        $this->authorize('delete', $template); // reuse — only uploader/admin
+
+        $request->validate([
+            'tags'   => 'present|array',
+            'tags.*' => 'string|max:50',
+        ]);
+
+        $tagNames = collect($request->input('tags', []))
+            ->map(fn($t) => trim($t))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $tagIds = $tagNames->map(function ($name) {
+            return \App\Models\TemplateTag::firstOrCreate(['name' => $name])->id;
+        });
+
+        $template->tags()->sync($tagIds);
+        $template->load('tags');
+
+        return response()->json([
+            'tags' => $template->tags->pluck('name')->values()->all(),
+        ]);
     }
 
     // ── Private helpers ──────────────────────────────────────
@@ -173,6 +226,7 @@ class DocumentTemplateController extends Controller
             ] : null,
             'can_delete'      => $canDelete,
             'thumbnail_url'   => $t->thumbnail_path ? asset('storage/' . $t->thumbnail_path) : null,
+            'tags'            => $t->tags->pluck('name')->values()->all(),
             'created_at'      => $t->created_at?->toISOString(),
         ];
     }

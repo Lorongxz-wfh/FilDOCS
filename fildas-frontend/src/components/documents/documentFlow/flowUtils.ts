@@ -156,9 +156,10 @@ export function buildCustomFlowSteps(opts: {
 
   if (!ordered.length) return null;
 
-  const ownerLabel = ownerOfficeId
-    ? officeLabelById(offices, ownerOfficeId)
-    : "Originator";
+  const ownerOffice = ownerOfficeId
+    ? (offices?.find((o) => Number(o.id) === Number(ownerOfficeId)) ?? null)
+    : null;
+  const ownerLabel = ownerOffice?.code ?? ownerOffice?.name ?? "Owner";
 
   const out: FlowStep[] = [];
   out.push({
@@ -179,8 +180,8 @@ export function buildCustomFlowSteps(opts: {
 
   out.push({
     id: "custom_review_back_to_originator",
-    label: `Originator check (${ownerLabel})`,
-    statusValue: "For Creator Check",
+    label: `Owner review check (${ownerLabel})`,
+    statusValue: "For Owner Review",
     phase: "review",
   });
 
@@ -195,29 +196,29 @@ export function buildCustomFlowSteps(opts: {
 
   out.push({
     id: "custom_approval_back_to_originator",
-    label: `Originator proceed (${ownerLabel})`,
-    statusValue: "For Creator Final",
+    label: `Owner approval check (${ownerLabel})`,
+    statusValue: "For Owner Approval Check",
     phase: "approval",
   });
 
   out.push(
     {
       id: "custom_registration",
-      label: `Originator registration (${ownerLabel})`,
-      statusValue: "For QA Registration",
-      phase: "registration",
+      label: `Register document (${ownerLabel})`,
+      statusValue: "For Registration",
+      phase: "finalization",
     },
     {
       id: "custom_distribution",
-      label: `Originator distribution (${ownerLabel})`,
-      statusValue: "For QA Distribution",
-      phase: "registration",
+      label: `Distribute document (${ownerLabel})`,
+      statusValue: "For Distribution",
+      phase: "finalization",
     },
     {
       id: "distributed",
-      label: "Distributed",
+      label: "Completed",
       statusValue: "Distributed",
-      phase: "distributed",
+      phase: "completed",
     },
   );
 

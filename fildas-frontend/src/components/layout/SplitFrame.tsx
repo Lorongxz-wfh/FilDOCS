@@ -15,6 +15,8 @@ type Props = {
   rightPanel: React.ReactNode;
   onRightTitleClick?: () => void;
   rightCollapsed?: boolean;
+  versionsDropdown?: React.ReactNode;
+  // internal use only — do not pass both
 };
 
 export default function SplitFrame({
@@ -31,6 +33,7 @@ export default function SplitFrame({
   rightPanel,
   onRightTitleClick,
   rightCollapsed = false,
+  versionsDropdown,
 }: Props) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
 
@@ -38,7 +41,7 @@ export default function SplitFrame({
     <div className="min-h-0 flex flex-1 flex-col overflow-hidden">
       {/* Top header */}
       <div className="shrink-0 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-surface-400 dark:bg-surface-600/80">
-        <div className="px-4 py-3 sm:px-6 sm:py-4">
+        <div className="px-4 py-2 sm:px-6 sm:py-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <PageHeading
@@ -66,86 +69,79 @@ export default function SplitFrame({
       <div className="min-h-0 flex flex-1 overflow-hidden">
         {/* Left / main content */}
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
-          <div className="px-4 py-4 sm:px-6 sm:py-5">{left}</div>
+          <div className="px-4 py-4 sm:px-6 sm:py-5 flex flex-col">{left}</div>
         </div>
 
         {/* Desktop right aside — hidden on mobile */}
+        {/* Collapsed tab — only visible when panel is closed */}
+        {rightCollapsed && (
+          <button
+            type="button"
+            onClick={onRightTitleClick}
+            className="hidden md:flex shrink-0 flex-col items-center justify-start gap-1 border-l border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 w-8 pt-3 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-surface-500 transition"
+            title="Expand panel"
+          >
+            <svg
+              className="h-3.5 w-3.5 rotate-180"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        )}
         <aside
           className={[
-            "hidden md:flex md:flex-col",
-            rightCollapsed ? "w-10" : rightWidthClassName,
-            "shrink-0 border-l border-slate-200 bg-white transition-all duration-200",
+            "hidden md:flex md:flex-col relative",
+            rightCollapsed ? "w-0 overflow-hidden" : rightWidthClassName,
+            "shrink-0 border-l border-slate-200 bg-white transition-all duration-200 overflow-visible",
             "dark:border-surface-400 dark:bg-surface-500",
           ].join(" ")}
         >
-          <div className="flex h-full min-h-0 flex-col">
-            <div className="shrink-0 border-b border-slate-200 bg-slate-50/80 dark:border-surface-400 dark:bg-surface-600/80">
-              <button
-                type="button"
-                onClick={onRightTitleClick}
-                className={[
-                  "flex w-full items-center gap-2 px-4 py-3 transition",
-                  onRightTitleClick
-                    ? "hover:bg-slate-100 dark:hover:bg-surface-500 cursor-pointer"
-                    : "cursor-default",
-                  rightCollapsed ? "justify-center" : "justify-between",
-                ].join(" ")}
-              >
-                {rightCollapsed ? (
+          <div className="flex h-full min-h-0 flex-col overflow-visible">
+            {/* Panel header — collapse + title + versions dropdown */}
+            <div className="shrink-0 border-b border-slate-200 bg-slate-50/80 dark:border-surface-400 dark:bg-surface-600/80 px-3 py-2 overflow-visible relative z-20">
+              <div className="flex items-center gap-2 min-w-0">
+                <button
+                  type="button"
+                  onClick={onRightTitleClick}
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-surface-400 dark:hover:text-slate-200 transition"
+                  title="Collapse panel"
+                >
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 text-slate-400 dark:text-slate-500"
+                    className="h-3 w-3"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M15 19l-7-7 7-7"
+                      d="M9 5l7 7-7 7"
                     />
                   </svg>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                      <div className="min-w-0 text-left">
-                        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                          {rightTitle}
-                        </div>
-                        {rightSubtitle && (
-                          <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-                            {rightSubtitle}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {rightHeader && (
-                      <div className="shrink-0">{rightHeader}</div>
-                    )}
-                  </>
+                </button>
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 shrink-0">
+                  {rightTitle}
+                </div>
+                {versionsDropdown && (
+                  <div className="min-w-0 flex-1">{versionsDropdown}</div>
                 )}
-              </button>
-            </div>
-            {!rightCollapsed && (
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="p-4">{rightPanel}</div>
+                {rightHeader && (
+                  <div className="shrink-0 ml-auto">{rightHeader}</div>
+                )}
               </div>
-            )}
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <div className="p-4">{rightPanel}</div>
+            </div>
           </div>
         </aside>
       </div>

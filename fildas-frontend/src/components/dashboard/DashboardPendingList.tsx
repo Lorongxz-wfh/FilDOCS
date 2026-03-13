@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "../ui/loader/Skeleton";
 import type { WorkQueueItem } from "../../services/documents";
+import { FileText, CheckCircle } from "lucide-react";
 
 type Props = {
   items: WorkQueueItem[];
@@ -64,7 +65,9 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
           ))
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="mb-2 text-2xl">✅</div>
+            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/40">
+              <CheckCircle className="h-5 w-5 text-emerald-500" />
+            </div>
             <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
               All caught up!
             </p>
@@ -73,7 +76,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
             </p>
           </div>
         ) : (
-          items.slice(0, 6).map((x) => {
+          items.slice(0, 5).map((x) => {
             const colorClass =
               statusColor[x.version.status] ??
               "bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300";
@@ -89,19 +92,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
                 className="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-slate-50 dark:hover:bg-surface-400"
               >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-950/30">
-                  <svg
-                    className="h-4 w-4 text-brand-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
+                  <FileText className="h-4 w-4 text-brand-500" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">

@@ -30,6 +30,7 @@ import {
   isOfficeStaff,
   isOfficeHead,
 } from "../lib/roleFilters";
+import { FolderOpen, ClipboardList, Inbox, Clock } from "lucide-react";
 
 // ─── Shared card wrapper ───────────────────────────────────────────────────
 const Card: React.FC<{
@@ -297,27 +298,50 @@ const OfficeDashboard: React.FC<
         <Card title="Quick actions">
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "View my documents", path: "/documents", icon: "📄" },
-              { label: "Work queue", path: "/work-queue", icon: "📋" },
+              {
+                label: "View my documents",
+                path: "/documents",
+                icon: FolderOpen,
+                color: "text-sky-500 bg-sky-50 dark:bg-sky-950/40",
+              },
+              {
+                label: "Work queue",
+                path: "/work-queue",
+                icon: ClipboardList,
+                color: "text-brand-500 bg-brand-50 dark:bg-brand-950/30",
+              },
               {
                 label: "Document requests",
                 path: "/document-requests",
-                icon: "📨",
+                icon: Inbox,
+                color: "text-violet-500 bg-violet-50 dark:bg-violet-950/40",
               },
-              { label: "Activity logs", path: "/activity-logs", icon: "🕒" },
-            ].map((item) => (
-              <button
-                key={item.path}
-                type="button"
-                onClick={() => navigate(item.path)}
-                className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:bg-slate-100 dark:border-surface-400 dark:bg-surface-600 dark:hover:bg-surface-400"
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                  {item.label}
-                </span>
-              </button>
-            ))}
+              {
+                label: "Activity logs",
+                path: "/activity-logs",
+                icon: Clock,
+                color: "text-amber-500 bg-amber-50 dark:bg-amber-950/40",
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.path}
+                  type="button"
+                  onClick={() => navigate(item.path)}
+                  className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:bg-slate-100 dark:border-surface-400 dark:bg-surface-600 dark:hover:bg-surface-400"
+                >
+                  <div
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${item.color}`}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </Card>
       </div>

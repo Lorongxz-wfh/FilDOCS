@@ -577,6 +577,10 @@ class DocumentController extends Controller
 
     public function createRevision(Request $request, Document $document)
     {
+        $data = $request->validate([
+            'revision_reason' => 'nullable|string|max:1000',
+        ]);
+
         $latestOfficial = DocumentVersion::query()
             ->where('document_id', $document->id)
             ->whereIn('status', ['Distributed', 'Superseded'])
@@ -639,21 +643,25 @@ class DocumentController extends Controller
             $draftStatus      = 'Draft';
         }
 
+        $revisionReason = $data['revision_reason'] ?? null;
+
         if ($latestCancelled && (int) $latestCancelled->version_number === $nextVersionNumber) {
             // Re-open the cancelled version instead of creating a new row
             $revision = $latestCancelled;
-            $revision->status       = $draftStatus;
-            $revision->workflow_type = $inheritedFlow;
-            $revision->routing_mode  = $inheritedRouting;
-            $revision->cancelled_at  = null;
+            $revision->status          = $draftStatus;
+            $revision->workflow_type   = $inheritedFlow;
+            $revision->routing_mode    = $inheritedRouting;
+            $revision->revision_reason = $revisionReason;
+            $revision->cancelled_at    = null;
             $revision->save();
         } else {
             $revision = DocumentVersion::create([
-                'document_id'    => $document->id,
-                'version_number' => $nextVersionNumber,
-                'status'         => $draftStatus,
-                'workflow_type'  => $inheritedFlow,
-                'routing_mode'   => $inheritedRouting,
+                'document_id'     => $document->id,
+                'version_number'  => $nextVersionNumber,
+                'status'          => $draftStatus,
+                'workflow_type'   => $inheritedFlow,
+                'routing_mode'    => $inheritedRouting,
+                'revision_reason' => $revisionReason,
             ]);
         }
 
@@ -712,7 +720,7 @@ class DocumentController extends Controller
     // POST /api/document-versions/{version}/replace-file
     public function replaceFile(Request $request, DocumentVersion $version)
     {
-        if (!in_array($version->status, ['Draft'])) {
+        if (!in_array($version->status, ['Draft', 'Office Draft'])) {
             return response()->json(['message' => 'Can only replace file during Draft.'], 422);
         }
 

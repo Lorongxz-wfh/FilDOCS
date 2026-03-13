@@ -115,4 +115,26 @@ class NotificationController extends Controller
 
         return response()->json(['ok' => true]);
     }
+
+    // DELETE /api/notifications/{notification}
+    public function destroy(Request $request, Notification $notification)
+    {
+        if ((int) $notification->user_id !== (int) $request->user()->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $notification->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    // DELETE /api/notifications
+    public function destroyAll(Request $request)
+    {
+        Notification::query()
+            ->where('user_id', $request->user()->id)
+            ->delete();
+
+        return response()->json(['ok' => true]);
+    }
 }

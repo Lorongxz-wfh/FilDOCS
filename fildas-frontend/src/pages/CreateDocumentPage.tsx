@@ -181,7 +181,6 @@ const CreateDocumentPage: React.FC = () => {
     setError(null);
     setFieldErrors(null);
     try {
-      setUploadPct(0);
       const step1Err = validateStep1();
       if (step1Err) {
         setError(step1Err);
@@ -192,25 +191,21 @@ const CreateDocumentPage: React.FC = () => {
         setError("Please attach a file.");
         return;
       }
-      const result = await createDocumentWithProgress(
-        {
-          title,
-          workflow_type: isQA ? "qa" : "office",
-          routing_mode: routingMode,
-          review_office_id:
-            routingMode === "default" && isQA
-              ? (reviewOfficeId as number)
-              : null,
-          custom_review_office_ids:
-            routingMode === "custom" ? customSelectedIds : undefined,
-          doctype,
-          description,
-          effective_date:
-            isQA && effectiveDate.trim() ? effectiveDate.trim() : null,
-          file,
-        },
-        (pct) => setUploadPct(pct),
-      );
+      // Create document metadata only (no file) — instant
+      const result = await createDocumentWithProgress({
+        title,
+        workflow_type: isQA ? "qa" : "office",
+        routing_mode: routingMode,
+        review_office_id:
+          routingMode === "default" && isQA ? (reviewOfficeId as number) : null,
+        custom_review_office_ids:
+          routingMode === "custom" ? customSelectedIds : undefined,
+        doctype,
+        description,
+        effective_date:
+          isQA && effectiveDate.trim() ? effectiveDate.trim() : null,
+        // file intentionally omitted — uploaded in background on flow page
+      });
       if (tags.length > 0) {
         try {
           await setDocumentTags(result.id, tags);
@@ -219,7 +214,10 @@ const CreateDocumentPage: React.FC = () => {
         }
       }
       cleanupTempPreview(tempPreview);
-      navigate(`/documents/${result.id}`);
+      // Redirect immediately — file uploads in background on flow page
+      navigate(`/documents/${result.id}`, {
+        state: { pendingFile: file, fromCreate: true },
+      });
     } catch (err: any) {
       setError(err?.message ?? "Failed to create document");
       if (err?.details) setFieldErrors(err.details);
@@ -655,7 +653,7 @@ const CreateDocumentPage: React.FC = () => {
                       disabled={loading}
                       className="rounded-lg bg-sky-500 hover:bg-sky-600 disabled:opacity-50 px-5 py-2 text-sm font-semibold text-white transition"
                     >
-                      {loading ? `Saving… ${uploadPct}%` : "Save document"}
+                      {loading ? "Creating…" : "Save document"}
                     </button>
                   </div>
                 </div>
@@ -667,7 +665,7 @@ const CreateDocumentPage: React.FC = () => {
           <div className="lg:col-span-2 flex flex-col min-h-0">
             <div
               className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden flex flex-col"
-              style={{ minHeight: "400px" }}
+              style={{ minHeight: "475px" }}
             >
               <div className="px-5 py-4 border-b border-slate-200 dark:border-surface-400">
                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">

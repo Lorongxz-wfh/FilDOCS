@@ -22,41 +22,50 @@ class WorkflowService
     // PUBLIC API
     // ──────────────────────────────────────────────────────────────────────
 
-    /**
-     * Return list of action constants available to $user on $version right now.
-     * Frontend uses this to render buttons.
-     */
     public function getAvailableActions(DocumentVersion $version, User $user): array
     {
+        // Cancel is always checked separately — it's available to owner/admin
+        // regardless of which office the open task is assigned to
+        $cancelAllowed = $this->canCancelDocument($version, $user);
+
         $task = $this->openTask($version);
-        if (!$task) return [];
+        if (!$task) {
+            return $cancelAllowed ? [WorkflowSteps::ACTION_CANCEL_DOCUMENT] : [];
+        }
 
         $userOfficeId = (int) ($user->office_id ?? 0);
         $taskOfficeId = (int) ($task->assigned_office_id ?? 0);
 
-        // Must be assigned to this user's office
-        if ($userOfficeId !== $taskOfficeId) return [];
+        $actions = [];
 
-        $flow    = $version->workflow_type;
-        $routing = $version->routing_mode;
-        $step    = $task->step;
+        // Only add workflow actions if this user's office is the assigned one
+        if ($userOfficeId === $taskOfficeId) {
+            $flow    = $version->workflow_type;
+            $routing = $version->routing_mode;
+            $step    = $task->step;
 
-        if ($routing === 'custom') {
-            return $this->availableActionsCustom($step, $user);
+            $actions = $routing === 'custom'
+                ? $this->availableActionsCustom($step, $user)
+                : match ($flow) {
+                    'office' => $this->availableActionsOffice($step, $user),
+                    default  => $this->availableActionsQa($step, $user),
+                };
         }
 
-        return match ($flow) {
-            'office' => $this->availableActionsOffice($step, $user),
-            default  => $this->availableActionsQa($step, $user),
-        };
+        // Append cancel if allowed and not already in finalization
+        if ($cancelAllowed) {
+            $step = $task->step ?? '';
+            if (
+                !WorkflowSteps::isDraftStep($step) &&
+                !WorkflowSteps::isFinalizationStep($step)
+            ) {
+                $actions[] = WorkflowSteps::ACTION_CANCEL_DOCUMENT;
+            }
+        }
+
+        return $actions;
     }
 
-    /**
-     * Apply an action. Wraps everything in a DB transaction.
-     *
-     * @throws \InvalidArgumentException on bad action
-     * @throws \RuntimeException on guard failures
-     */
     public function applyAction(
         DocumentVersion $version,
         User $user,
@@ -65,13 +74,20 @@ class WorkflowService
         ?string $effectiveDate = null,
     ): WorkflowTask {
         return DB::transaction(function () use ($version, $user, $action, $note, $effectiveDate) {
-            $task = $this->openTask($version);
+            // Cancel — handled before task check
+            if ($action === WorkflowSteps::ACTION_CANCEL_DOCUMENT) {
+                if (!$note) throw new \RuntimeException('A reason is required when cancelling.');
+                if (!$this->canCancelDocument($version, $user)) {
+                    throw new \RuntimeException('You do not have permission to cancel this document.');
+                }
+                return $this->applyCancel($version, $user, $note);
+            }
 
+            $task = $this->openTask($version);
             if (!$task) {
                 throw new \RuntimeException('No open task found for this version.');
             }
 
-            // Reject is universal — handled first
             if ($action === WorkflowSteps::ACTION_REJECT) {
                 if (!$note) throw new \RuntimeException('A note is required when rejecting.');
                 return $this->applyReject($version, $task, $user, $note);
@@ -97,28 +113,52 @@ class WorkflowService
 
     private function availableActionsQa(string $step, User $user): array
     {
+        $reviewSteps = [
+            WorkflowSteps::STEP_QA_OFFICE_REVIEW,
+            WorkflowSteps::STEP_QA_VP_REVIEW,
+        ];
+        $approvalSteps = [
+            WorkflowSteps::STEP_QA_OFFICE_APPROVAL,
+            WorkflowSteps::STEP_QA_VP_APPROVAL,
+            WorkflowSteps::STEP_QA_PRES_APPROVAL,
+        ];
+
         $actions = match ($step) {
-            WorkflowSteps::STEP_QA_DRAFT           => [WorkflowSteps::ACTION_QA_SEND_TO_OFFICE_REVIEW],
-            WorkflowSteps::STEP_QA_OFFICE_REVIEW   => [
-                WorkflowSteps::ACTION_QA_OFFICE_FORWARD_TO_VP,
-                WorkflowSteps::ACTION_QA_OFFICE_RETURN_TO_QA,
-            ],
-            WorkflowSteps::STEP_QA_VP_REVIEW       => [WorkflowSteps::ACTION_QA_VP_SEND_BACK_TO_QA],
-            WorkflowSteps::STEP_QA_FINAL_CHECK     => [WorkflowSteps::ACTION_QA_START_OFFICE_APPROVAL],
-            WorkflowSteps::STEP_QA_OFFICE_APPROVAL => [WorkflowSteps::ACTION_QA_OFFICE_FORWARD_TO_VP_APPR],
-            WorkflowSteps::STEP_QA_VP_APPROVAL     => [WorkflowSteps::ACTION_QA_VP_FORWARD_TO_PRESIDENT],
-            WorkflowSteps::STEP_QA_PRES_APPROVAL   => [WorkflowSteps::ACTION_QA_PRESIDENT_SEND_BACK_TO_QA],
-            WorkflowSteps::STEP_QA_REGISTRATION    => [WorkflowSteps::ACTION_QA_REGISTER],
-            WorkflowSteps::STEP_QA_DISTRIBUTION    => [WorkflowSteps::ACTION_QA_DISTRIBUTE],
+            WorkflowSteps::STEP_QA_DRAFT
+            => [WorkflowSteps::ACTION_QA_SEND_TO_OFFICE_REVIEW],
+
+            WorkflowSteps::STEP_QA_OFFICE_REVIEW
+            => [WorkflowSteps::ACTION_QA_OFFICE_FORWARD_TO_VP, WorkflowSteps::ACTION_QA_OFFICE_RETURN_TO_QA],
+
+            WorkflowSteps::STEP_QA_VP_REVIEW
+            => [WorkflowSteps::ACTION_QA_VP_SEND_BACK_TO_QA],
+
+            WorkflowSteps::STEP_QA_REVIEW_FINAL_CHECK
+            => [WorkflowSteps::ACTION_QA_START_OFFICE_APPROVAL],
+
+            WorkflowSteps::STEP_QA_OFFICE_APPROVAL
+            => [WorkflowSteps::ACTION_QA_OFFICE_FORWARD_TO_VP_APPR],
+
+            WorkflowSteps::STEP_QA_VP_APPROVAL
+            => [WorkflowSteps::ACTION_QA_VP_FORWARD_TO_PRESIDENT],
+
+            WorkflowSteps::STEP_QA_PRES_APPROVAL
+            => [WorkflowSteps::ACTION_QA_PRESIDENT_APPROVE],
+
+            WorkflowSteps::STEP_QA_APPROVAL_FINAL_CHECK
+            => [WorkflowSteps::ACTION_QA_START_FINALIZATION],
+
+            WorkflowSteps::STEP_QA_REGISTRATION
+            => [WorkflowSteps::ACTION_QA_REGISTER],
+
+            WorkflowSteps::STEP_QA_DISTRIBUTION
+            => [WorkflowSteps::ACTION_QA_DISTRIBUTE],
+
             default => [],
         };
 
-        // Reject available on all steps except draft (owner can just edit)
-        // and distributed (terminal)
-        if (!in_array($step, [
-            WorkflowSteps::STEP_QA_DRAFT,
-            WorkflowSteps::STEP_DISTRIBUTED,
-        ], true)) {
+        // Reject: review and approval steps only (not draft, final checks, finalization)
+        if (in_array($step, [...$reviewSteps, ...$approvalSteps], true)) {
             $actions[] = WorkflowSteps::ACTION_REJECT;
         }
 
@@ -127,27 +167,51 @@ class WorkflowService
 
     private function availableActionsOffice(string $step, User $user): array
     {
+        $reviewSteps = [
+            WorkflowSteps::STEP_OFFICE_HEAD_REVIEW,
+            WorkflowSteps::STEP_OFFICE_VP_REVIEW,
+        ];
+        $approvalSteps = [
+            WorkflowSteps::STEP_OFFICE_HEAD_APPROVAL,
+            WorkflowSteps::STEP_OFFICE_VP_APPROVAL,
+            WorkflowSteps::STEP_OFFICE_PRES_APPROVAL,
+        ];
+
         $actions = match ($step) {
-            WorkflowSteps::STEP_OFFICE_DRAFT       => [WorkflowSteps::ACTION_OFFICE_SEND_TO_HEAD],
-            WorkflowSteps::STEP_OFFICE_HEAD_REVIEW => [
-                WorkflowSteps::ACTION_OFFICE_HEAD_FORWARD_TO_VP,
-                WorkflowSteps::ACTION_OFFICE_HEAD_RETURN_TO_STAFF,
-            ],
-            WorkflowSteps::STEP_OFFICE_VP_REVIEW   => [WorkflowSteps::ACTION_OFFICE_VP_SEND_BACK_TO_STAFF],
-            WorkflowSteps::STEP_OFFICE_FINAL_CHECK => [WorkflowSteps::ACTION_OFFICE_SEND_TO_QA_APPROVAL],
-            WorkflowSteps::STEP_OFFICE_QA_APPROVAL => [
-                WorkflowSteps::ACTION_OFFICE_QA_APPROVE,
-                WorkflowSteps::ACTION_OFFICE_QA_RETURN_TO_STAFF,
-            ],
-            WorkflowSteps::STEP_OFFICE_REGISTRATION => [WorkflowSteps::ACTION_OFFICE_REGISTER],
-            WorkflowSteps::STEP_OFFICE_DISTRIBUTION => [WorkflowSteps::ACTION_OFFICE_DISTRIBUTE],
+            WorkflowSteps::STEP_OFFICE_DRAFT
+            => [WorkflowSteps::ACTION_OFFICE_SEND_TO_HEAD],
+
+            WorkflowSteps::STEP_OFFICE_HEAD_REVIEW
+            => [WorkflowSteps::ACTION_OFFICE_HEAD_FORWARD_TO_VP, WorkflowSteps::ACTION_OFFICE_HEAD_RETURN_TO_STAFF],
+
+            WorkflowSteps::STEP_OFFICE_VP_REVIEW
+            => [WorkflowSteps::ACTION_OFFICE_VP_SEND_BACK_TO_STAFF],
+
+            WorkflowSteps::STEP_OFFICE_REVIEW_FINAL_CHECK
+            => [WorkflowSteps::ACTION_OFFICE_START_APPROVAL],
+
+            WorkflowSteps::STEP_OFFICE_HEAD_APPROVAL
+            => [WorkflowSteps::ACTION_OFFICE_HEAD_FORWARD_TO_VP_APPR],
+
+            WorkflowSteps::STEP_OFFICE_VP_APPROVAL
+            => [WorkflowSteps::ACTION_OFFICE_VP_FORWARD_TO_PRESIDENT],
+
+            WorkflowSteps::STEP_OFFICE_PRES_APPROVAL
+            => [WorkflowSteps::ACTION_OFFICE_PRESIDENT_APPROVE],
+
+            WorkflowSteps::STEP_OFFICE_APPROVAL_FINAL_CHECK
+            => [WorkflowSteps::ACTION_OFFICE_START_FINALIZATION],
+
+            WorkflowSteps::STEP_OFFICE_REGISTRATION
+            => [WorkflowSteps::ACTION_OFFICE_REGISTER],
+
+            WorkflowSteps::STEP_OFFICE_DISTRIBUTION
+            => [WorkflowSteps::ACTION_OFFICE_DISTRIBUTE],
+
             default => [],
         };
 
-        if (!in_array($step, [
-            WorkflowSteps::STEP_OFFICE_DRAFT,
-            WorkflowSteps::STEP_DISTRIBUTED,
-        ], true)) {
+        if (in_array($step, [...$reviewSteps, ...$approvalSteps], true)) {
             $actions[] = WorkflowSteps::ACTION_REJECT;
         }
 
@@ -156,21 +220,37 @@ class WorkflowService
 
     private function availableActionsCustom(string $step, User $user): array
     {
+        $rejectableSteps = [
+            WorkflowSteps::STEP_CUSTOM_OFFICE_REVIEW,
+            WorkflowSteps::STEP_CUSTOM_OFFICE_APPROVAL,
+        ];
+
         $actions = match ($step) {
-            WorkflowSteps::STEP_CUSTOM_DRAFT                  => [WorkflowSteps::ACTION_CUSTOM_FORWARD],
-            WorkflowSteps::STEP_CUSTOM_OFFICE_REVIEW          => [WorkflowSteps::ACTION_CUSTOM_FORWARD],
-            WorkflowSteps::STEP_CUSTOM_BACK_TO_OWNER          => [WorkflowSteps::ACTION_CUSTOM_START_APPROVAL],
-            WorkflowSteps::STEP_CUSTOM_OFFICE_APPROVAL        => [WorkflowSteps::ACTION_CUSTOM_FORWARD],
-            WorkflowSteps::STEP_CUSTOM_BACK_TO_OWNER_APPROVAL => [WorkflowSteps::ACTION_CUSTOM_REGISTER],
-            WorkflowSteps::STEP_CUSTOM_REGISTRATION           => [WorkflowSteps::ACTION_CUSTOM_DISTRIBUTE],
-            WorkflowSteps::STEP_CUSTOM_DISTRIBUTION           => [],
+            WorkflowSteps::STEP_CUSTOM_DRAFT
+            => [WorkflowSteps::ACTION_CUSTOM_FORWARD],
+
+            WorkflowSteps::STEP_CUSTOM_OFFICE_REVIEW
+            => [WorkflowSteps::ACTION_CUSTOM_FORWARD],
+
+            WorkflowSteps::STEP_CUSTOM_REVIEW_BACK_TO_OWNER
+            => [WorkflowSteps::ACTION_CUSTOM_START_APPROVAL],
+
+            WorkflowSteps::STEP_CUSTOM_OFFICE_APPROVAL
+            => [WorkflowSteps::ACTION_CUSTOM_FORWARD],
+
+            WorkflowSteps::STEP_CUSTOM_APPROVAL_BACK_TO_OWNER
+            => [WorkflowSteps::ACTION_CUSTOM_START_FINALIZATION],
+
+            WorkflowSteps::STEP_CUSTOM_REGISTRATION
+            => [WorkflowSteps::ACTION_CUSTOM_REGISTER],
+
+            WorkflowSteps::STEP_CUSTOM_DISTRIBUTION
+            => [WorkflowSteps::ACTION_CUSTOM_DISTRIBUTE],
+
             default => [],
         };
 
-        if (!in_array($step, [
-            WorkflowSteps::STEP_CUSTOM_DRAFT,
-            WorkflowSteps::STEP_DISTRIBUTED,
-        ], true)) {
+        if (in_array($step, $rejectableSteps, true)) {
             $actions[] = WorkflowSteps::ACTION_REJECT;
         }
 
@@ -189,9 +269,9 @@ class WorkflowService
         ?string $note,
         ?string $effectiveDate,
     ): WorkflowTask {
-        $doc          = $this->doc($version);
-        $qaOfficeId   = $this->qaOfficeId();
-        $officeId     = (int) ($doc->review_office_id ?? 0);
+        $doc        = $this->doc($version);
+        $qaOfficeId = $this->qaOfficeId();
+        $officeId   = (int) ($doc->review_office_id ?? 0);
 
         [$nextStep, $nextOfficeId, $nextRoleId, $nextUserId] = match ($action) {
 
@@ -215,7 +295,7 @@ class WorkflowService
             ],
 
             WorkflowSteps::ACTION_QA_VP_SEND_BACK_TO_QA => [
-                WorkflowSteps::STEP_QA_FINAL_CHECK,
+                WorkflowSteps::STEP_QA_REVIEW_FINAL_CHECK,
                 $qaOfficeId,
                 null,
                 null,
@@ -238,7 +318,14 @@ class WorkflowService
                 return [WorkflowSteps::STEP_QA_PRES_APPROVAL, $presOfficeId, $presRoleId, $presUserId];
             })(),
 
-            WorkflowSteps::ACTION_QA_PRESIDENT_SEND_BACK_TO_QA => [
+            WorkflowSteps::ACTION_QA_PRESIDENT_APPROVE => [
+                WorkflowSteps::STEP_QA_APPROVAL_FINAL_CHECK,
+                $qaOfficeId,
+                null,
+                null,
+            ],
+
+            WorkflowSteps::ACTION_QA_START_FINALIZATION => [
                 WorkflowSteps::STEP_QA_REGISTRATION,
                 $qaOfficeId,
                 null,
@@ -262,17 +349,7 @@ class WorkflowService
             default => throw new \InvalidArgumentException("Unknown QA action: {$action}"),
         };
 
-        return $this->transition(
-            $version,
-            $task,
-            $user,
-            $nextStep,
-            $nextOfficeId,
-            $nextRoleId,
-            $nextUserId,
-            $note,
-            $effectiveDate,
-        );
+        return $this->transition($version, $task, $user, $nextStep, $nextOfficeId, $nextRoleId, $nextUserId, $note, $effectiveDate);
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -287,9 +364,8 @@ class WorkflowService
         ?string $note,
         ?string $effectiveDate,
     ): WorkflowTask {
-        $doc          = $this->doc($version);
+        $doc           = $this->doc($version);
         $ownerOfficeId = (int) ($doc->owner_office_id ?? 0);
-        $qaOfficeId   = $this->qaOfficeId();
 
         [$nextStep, $nextOfficeId, $nextRoleId, $nextUserId] = match ($action) {
 
@@ -313,27 +389,37 @@ class WorkflowService
             ],
 
             WorkflowSteps::ACTION_OFFICE_VP_SEND_BACK_TO_STAFF => [
-                WorkflowSteps::STEP_OFFICE_FINAL_CHECK,
+                WorkflowSteps::STEP_OFFICE_REVIEW_FINAL_CHECK,
                 $ownerOfficeId,
                 null,
                 null,
             ],
 
-            WorkflowSteps::ACTION_OFFICE_SEND_TO_QA_APPROVAL => [
-                WorkflowSteps::STEP_OFFICE_QA_APPROVAL,
-                $qaOfficeId,
-                null,
-                null,
-            ],
-
-            WorkflowSteps::ACTION_OFFICE_QA_RETURN_TO_STAFF => [
-                WorkflowSteps::STEP_OFFICE_DRAFT,
+            WorkflowSteps::ACTION_OFFICE_START_APPROVAL => [
+                WorkflowSteps::STEP_OFFICE_HEAD_APPROVAL,
                 $ownerOfficeId,
                 null,
                 null,
             ],
 
-            WorkflowSteps::ACTION_OFFICE_QA_APPROVE => [
+            WorkflowSteps::ACTION_OFFICE_HEAD_FORWARD_TO_VP_APPR => (function () use ($ownerOfficeId) {
+                [$vpOfficeId, $vpRoleId, $vpUserId] = $this->resolveVp($ownerOfficeId);
+                return [WorkflowSteps::STEP_OFFICE_VP_APPROVAL, $vpOfficeId, $vpRoleId, $vpUserId];
+            })(),
+
+            WorkflowSteps::ACTION_OFFICE_VP_FORWARD_TO_PRESIDENT => (function () {
+                [$presOfficeId, $presRoleId, $presUserId] = $this->resolvePresident();
+                return [WorkflowSteps::STEP_OFFICE_PRES_APPROVAL, $presOfficeId, $presRoleId, $presUserId];
+            })(),
+
+            WorkflowSteps::ACTION_OFFICE_PRESIDENT_APPROVE => [
+                WorkflowSteps::STEP_OFFICE_APPROVAL_FINAL_CHECK,
+                $ownerOfficeId,
+                null,
+                null,
+            ],
+
+            WorkflowSteps::ACTION_OFFICE_START_FINALIZATION => [
                 WorkflowSteps::STEP_OFFICE_REGISTRATION,
                 $ownerOfficeId,
                 null,
@@ -357,17 +443,7 @@ class WorkflowService
             default => throw new \InvalidArgumentException("Unknown Office action: {$action}"),
         };
 
-        return $this->transition(
-            $version,
-            $task,
-            $user,
-            $nextStep,
-            $nextOfficeId,
-            $nextRoleId,
-            $nextUserId,
-            $note,
-            $effectiveDate,
-        );
+        return $this->transition($version, $task, $user, $nextStep, $nextOfficeId, $nextRoleId, $nextUserId, $note, $effectiveDate);
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -388,49 +464,42 @@ class WorkflowService
         $curStep       = $task->step;
         $curOfficeId   = (int) ($task->assigned_office_id ?? 0);
 
-        // Find position in custom list
-        $idx         = array_search($curOfficeId, $customList, true);
-        $nextInList  = ($idx !== false && isset($customList[$idx + 1]))
-            ? $customList[$idx + 1]
-            : null;
+        $idx        = array_search($curOfficeId, $customList, true);
+        $nextInList = ($idx !== false && isset($customList[$idx + 1])) ? $customList[$idx + 1] : null;
 
         [$nextStep, $nextOfficeId] = match ($action) {
 
-            WorkflowSteps::ACTION_CUSTOM_FORWARD => (function () use (
-                $curStep,
-                $nextInList,
-                $ownerOfficeId,
-                $customList
-            ) {
+            WorkflowSteps::ACTION_CUSTOM_FORWARD => (function () use ($curStep, $nextInList, $ownerOfficeId, $customList) {
                 return match ($curStep) {
-                    // Draft → first review office
                     WorkflowSteps::STEP_CUSTOM_DRAFT =>
                     [WorkflowSteps::STEP_CUSTOM_OFFICE_REVIEW, $customList[0] ?? $ownerOfficeId],
 
-                    // Review office → next office OR back to owner
                     WorkflowSteps::STEP_CUSTOM_OFFICE_REVIEW =>
                     $nextInList
                         ? [WorkflowSteps::STEP_CUSTOM_OFFICE_REVIEW, $nextInList]
-                        : [WorkflowSteps::STEP_CUSTOM_BACK_TO_OWNER, $ownerOfficeId],
+                        : [WorkflowSteps::STEP_CUSTOM_REVIEW_BACK_TO_OWNER, $ownerOfficeId],
 
-                    // Approval office → next office OR back to owner
                     WorkflowSteps::STEP_CUSTOM_OFFICE_APPROVAL =>
                     $nextInList
                         ? [WorkflowSteps::STEP_CUSTOM_OFFICE_APPROVAL, $nextInList]
-                        : [WorkflowSteps::STEP_CUSTOM_BACK_TO_OWNER_APPROVAL, $ownerOfficeId],
+                        : [WorkflowSteps::STEP_CUSTOM_APPROVAL_BACK_TO_OWNER, $ownerOfficeId],
 
                     default => throw new \InvalidArgumentException("CUSTOM_FORWARD not valid at step: {$curStep}"),
                 };
             })(),
 
-            // Owner manually starts approval after review
             WorkflowSteps::ACTION_CUSTOM_START_APPROVAL => [
                 WorkflowSteps::STEP_CUSTOM_OFFICE_APPROVAL,
                 $customList[0] ?? $ownerOfficeId,
             ],
 
-            WorkflowSteps::ACTION_CUSTOM_REGISTER => [
+            WorkflowSteps::ACTION_CUSTOM_START_FINALIZATION => [
                 WorkflowSteps::STEP_CUSTOM_REGISTRATION,
+                $ownerOfficeId,
+            ],
+
+            WorkflowSteps::ACTION_CUSTOM_REGISTER => [
+                WorkflowSteps::STEP_CUSTOM_DISTRIBUTION,
                 $ownerOfficeId,
             ],
 
@@ -442,17 +511,7 @@ class WorkflowService
             default => throw new \InvalidArgumentException("Unknown Custom action: {$action}"),
         };
 
-        return $this->transition(
-            $version,
-            $task,
-            $user,
-            $nextStep,
-            $nextOfficeId,
-            null,
-            null,
-            $note,
-            $effectiveDate,
-        );
+        return $this->transition($version, $task, $user, $nextStep, $nextOfficeId, null, null, $note, $effectiveDate);
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -465,39 +524,126 @@ class WorkflowService
         User $user,
         string $note,
     ): WorkflowTask {
-        $doc           = $this->doc($version);
-        $flow          = $version->workflow_type;
-        $routing       = $version->routing_mode;
+        $doc     = $this->doc($version);
+        $flow    = $version->workflow_type;
+        $routing = $version->routing_mode;
 
-        // Owner office is always the reject target
-        $ownerOfficeId = $routing === 'custom' || $flow === 'office'
+        $ownerOfficeId = ($routing === 'custom' || $flow === 'office')
             ? (int) ($doc->owner_office_id ?? 0)
             : $this->qaOfficeId();
 
-        $draftStep = $flow === 'office'
-            ? WorkflowSteps::STEP_OFFICE_DRAFT
-            : WorkflowSteps::STEP_QA_DRAFT;
+        $draftStep = match (true) {
+            $routing === 'custom' => WorkflowSteps::STEP_CUSTOM_DRAFT,
+            $flow === 'office'    => WorkflowSteps::STEP_OFFICE_DRAFT,
+            default               => WorkflowSteps::STEP_QA_DRAFT,
+        };
 
-        if ($routing === 'custom') {
-            $draftStep = WorkflowSteps::STEP_CUSTOM_DRAFT;
-        }
-
-        return $this->transition(
-            $version,
-            $task,
-            $user,
-            $draftStep,
-            $ownerOfficeId,
-            null,
-            null,
-            $note,
-            null,
-            isReject: true,
-        );
+        return $this->transition($version, $task, $user, $draftStep, $ownerOfficeId, null, null, $note, null, isReject: true);
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    // CORE TRANSITION — single place that writes to DB
+    // CANCEL DOCUMENT
+    // ──────────────────────────────────────────────────────────────────────
+
+    private function applyCancel(
+        DocumentVersion $version,
+        User $user,
+        string $reason,
+    ): WorkflowTask {
+        $doc = $this->doc($version);
+
+        // Close all open tasks
+        WorkflowTask::where('document_version_id', $version->id)
+            ->where('status', 'open')
+            ->update(['status' => 'cancelled', 'completed_at' => now()]);
+
+        // Update version status
+        $fromStatus      = $version->status;
+        $version->status = WorkflowSteps::STATUS_CANCELLED;
+        $version->cancelled_at = now();
+        $version->save();
+
+        // Post cancel message
+        DocumentMessage::create([
+            'document_version_id' => $version->id,
+            'sender_user_id'      => $user->id,
+            'type'                => 'system',
+            'message'             => "Document cancelled: {$reason}",
+        ]);
+
+        // Notify all involved offices
+        $involvedOfficeIds = $this->involvedOfficeIds($version);
+        foreach ($involvedOfficeIds as $officeId) {
+            $officeUsers = User::where('office_id', $officeId)->get(['id']);
+            foreach ($officeUsers as $u) {
+                if ((int) $u->id === (int) $user->id) continue;
+                Notification::create([
+                    'user_id'             => $u->id,
+                    'document_id'         => $version->document_id,
+                    'document_version_id' => $version->id,
+                    'event'               => 'workflow.cancelled',
+                    'title'               => 'Document cancelled',
+                    'body'                => ($doc->title ?? 'A document') . ' has been cancelled. Reason: ' . $reason,
+                    'meta'                => ['from_status' => $fromStatus],
+                    'read_at'             => null,
+                ]);
+            }
+        }
+
+        // Activity log
+        ActivityLog::create([
+            'document_id'         => $version->document_id,
+            'document_version_id' => $version->id,
+            'actor_user_id'       => $user->id,
+            'actor_office_id'     => $user->office_id,
+            'target_office_id'    => null,
+            'event'               => 'workflow.cancelled',
+            'label'               => 'Document cancelled',
+            'meta'                => [
+                'from_status' => $fromStatus,
+                'to_status'   => WorkflowSteps::STATUS_CANCELLED,
+                'reason'      => $reason,
+            ],
+        ]);
+
+        // Return the last task as a dummy result (cancel doesn't create a new task)
+        return WorkflowTask::where('document_version_id', $version->id)
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    private function canCancelDocument(DocumentVersion $version, User $user): bool
+    {
+        // Admin/SysAdmin can always cancel
+        $role = strtolower($user->role?->name ?? '');
+        if (in_array($role, ['admin', 'sysadmin', 'system admin'], true)) return true;
+
+        // Owner/QA: must be the document's owner office
+        $doc           = $this->doc($version);
+        $ownerOfficeId = (int) ($doc->owner_office_id ?? 0);
+        $userOfficeId  = (int) ($user->office_id ?? 0);
+
+        // For QA flow, owner is QA office
+        if ($version->workflow_type === 'qa') {
+            return $userOfficeId === $this->qaOfficeId();
+        }
+
+        return $userOfficeId === $ownerOfficeId;
+    }
+
+    private function involvedOfficeIds(DocumentVersion $version): array
+    {
+        return WorkflowTask::where('document_version_id', $version->id)
+            ->whereNotNull('assigned_office_id')
+            ->pluck('assigned_office_id')
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // CORE TRANSITION
     // ──────────────────────────────────────────────────────────────────────
 
     private function transition(
@@ -517,7 +663,6 @@ class WorkflowService
         $fromStatus = $version->status;
         $isFinal    = ($nextStep === WorkflowSteps::STEP_DISTRIBUTED);
 
-        // Resolve office code for status label
         $nextOffice     = $nextOfficeId ? Office::find($nextOfficeId) : null;
         $nextOfficeCode = $nextOffice?->code;
 
@@ -534,12 +679,8 @@ class WorkflowService
         $currentTask->completed_at = now();
         $currentTask->save();
 
-        // 2. If returning to draft — cancel all other open tasks on this version
-        if ($isReject || in_array($nextStep, [
-            WorkflowSteps::STEP_QA_DRAFT,
-            WorkflowSteps::STEP_OFFICE_DRAFT,
-            WorkflowSteps::STEP_CUSTOM_DRAFT,
-        ], true)) {
+        // 2. Cancel other open tasks if returning to draft
+        if ($isReject || WorkflowSteps::isDraftStep($nextStep)) {
             WorkflowTask::where('document_version_id', $version->id)
                 ->where('status', 'open')
                 ->where('id', '!=', $currentTask->id)
@@ -564,11 +705,8 @@ class WorkflowService
 
         if ($isFinal) {
             $version->distributed_at = $version->distributed_at ?? now();
-            $version->effective_date = $effectiveDate
-                ?? $version->effective_date
-                ?? now()->toDateString();
+            $version->effective_date = $effectiveDate ?? $version->effective_date ?? now()->toDateString();
 
-            // Supersede older distributed versions
             DocumentVersion::where('document_id', $version->document_id)
                 ->where('id', '!=', $version->id)
                 ->where('status', 'Distributed')
@@ -578,11 +716,7 @@ class WorkflowService
         $version->save();
 
         // 5. Post return/reject note as message
-        if ($note && ($isReject || in_array($nextStep, [
-            WorkflowSteps::STEP_QA_DRAFT,
-            WorkflowSteps::STEP_OFFICE_DRAFT,
-            WorkflowSteps::STEP_CUSTOM_DRAFT,
-        ], true))) {
+        if ($note && ($isReject || WorkflowSteps::isDraftStep($nextStep))) {
             DocumentMessage::create([
                 'document_version_id' => $version->id,
                 'sender_user_id'      => $actor->id,
@@ -591,10 +725,8 @@ class WorkflowService
             ]);
         }
 
-        // 6. Notifications
+        // 6. Notifications + logs
         $this->notify($nextOfficeId, $actor, $version, $nextStatus, $isReject);
-
-        // 7. Activity log
         $this->log($version, $actor, $nextOfficeId, $fromStatus, $nextStatus, $nextStep, $nextPhase, $note, $isReject);
 
         return $newTask;
@@ -635,69 +767,45 @@ class WorkflowService
             ->all();
     }
 
-    /** @return array{int, ?int, ?int} [officeId, roleId, userId] */
     private function resolveVp(int $basisOfficeId): array
     {
         $vpOffice = $this->hierarchy->findVpOfficeForOfficeId($basisOfficeId);
-
-        if (!$vpOffice) {
-            throw new \RuntimeException('VP office not found for this office. Check office parent hierarchy.');
-        }
+        if (!$vpOffice) throw new \RuntimeException('VP office not found for this office.');
 
         $roleId = $this->hierarchy->roleId('vp');
         $user   = $this->hierarchy->findSingleActiveUser((int) $vpOffice->id, 'vp');
-
-        if (!$user) {
-            throw new \RuntimeException('No VP user found for VP office ' . $vpOffice->code . '.');
-        }
+        if (!$user) throw new \RuntimeException('No VP user found for VP office ' . $vpOffice->code . '.');
 
         return [(int) $vpOffice->id, $roleId, (int) $user->id];
     }
 
-    /** @return array{int, ?int, ?int} [officeId, roleId, userId] */
     private function resolvePresident(): array
     {
         $presOffice = $this->hierarchy->findPresidentOffice();
-
-        if (!$presOffice) {
-            throw new \RuntimeException('President office not found.');
-        }
+        if (!$presOffice) throw new \RuntimeException('President office not found.');
 
         $roleId = $this->hierarchy->roleId('president');
         $user   = $this->hierarchy->findSingleActiveUser((int) $presOffice->id, 'president');
-
-        if (!$user) {
-            throw new \RuntimeException('No President user found for President office.');
-        }
+        if (!$user) throw new \RuntimeException('No President user found.');
 
         return [(int) $presOffice->id, $roleId, (int) $user->id];
     }
 
-    private function notify(
-        int $officeId,
-        User $actor,
-        DocumentVersion $version,
-        string $toStatus,
-        bool $isReject,
-    ): void {
+    private function notify(int $officeId, User $actor, DocumentVersion $version, string $toStatus, bool $isReject): void
+    {
         $doc       = $this->doc($version);
         $actorName = trim($actor->first_name . ' ' . $actor->last_name) ?: 'Someone';
         $office    = $officeId ? Office::find($officeId) : null;
 
-        $title = $isReject
-            ? 'Document returned for editing'
-            : 'Document requires your action';
-
-        $body = ($doc->title ?? 'A document')
+        $title = $isReject ? 'Document returned for editing' : 'Document requires your action';
+        $body  = ($doc->title ?? 'A document')
             . ' is now ' . $toStatus
             . ($office ? ' • Assigned to ' . $office->code : '')
             . ' • By ' . $actorName;
 
         $users = User::where('office_id', $officeId)->get(['id']);
-
         foreach ($users as $u) {
             if ((int) $u->id === (int) $actor->id) continue;
-
             Notification::create([
                 'user_id'             => $u->id,
                 'document_id'         => $version->document_id,
@@ -723,7 +831,6 @@ class WorkflowService
         bool $isReject,
     ): void {
         [$event, $label] = $this->resolveEventAndLabel($step, $toStatus, $isReject);
-
         ActivityLog::create([
             'document_id'         => $version->document_id,
             'document_version_id' => $version->id,
@@ -744,38 +851,41 @@ class WorkflowService
 
     private function resolveEventAndLabel(string $step, string $toStatus, bool $isReject): array
     {
-        if ($isReject) {
-            return ['workflow.rejected', 'Rejected — returned to draft'];
-        }
+        if ($isReject) return ['workflow.rejected', 'Rejected — returned to draft'];
 
         return match ($step) {
             // QA flow
-            WorkflowSteps::STEP_QA_DRAFT           => ['workflow.returned_to_draft',    'Returned to QA draft'],
-            WorkflowSteps::STEP_QA_OFFICE_REVIEW   => ['workflow.sent_to_review',        'Sent to office for review'],
-            WorkflowSteps::STEP_QA_VP_REVIEW       => ['workflow.forwarded_to_vp',       'Forwarded to VP for review'],
-            WorkflowSteps::STEP_QA_FINAL_CHECK     => ['workflow.returned_for_check',    'VP sent back to QA for final check'],
-            WorkflowSteps::STEP_QA_OFFICE_APPROVAL => ['workflow.sent_to_approval',      'Sent to office for approval'],
-            WorkflowSteps::STEP_QA_VP_APPROVAL     => ['workflow.forwarded_to_vp',       'Forwarded to VP for approval'],
-            WorkflowSteps::STEP_QA_PRES_APPROVAL   => ['workflow.forwarded_to_president', 'Forwarded to President for approval'],
-            WorkflowSteps::STEP_QA_REGISTRATION    => ['workflow.sent_to_registration',  'President approved — sent to QA for registration'],
-            WorkflowSteps::STEP_QA_DISTRIBUTION    => ['workflow.registered',            'Document registered'],
+            WorkflowSteps::STEP_QA_DRAFT                => ['workflow.returned_to_draft',     'Returned to QA draft'],
+            WorkflowSteps::STEP_QA_OFFICE_REVIEW        => ['workflow.sent_to_review',         'Sent to office for review'],
+            WorkflowSteps::STEP_QA_VP_REVIEW            => ['workflow.forwarded_to_vp',        'Forwarded to VP for review'],
+            WorkflowSteps::STEP_QA_REVIEW_FINAL_CHECK   => ['workflow.returned_for_check',     'VP sent back to QA for review check'],
+            WorkflowSteps::STEP_QA_OFFICE_APPROVAL      => ['workflow.sent_to_approval',       'Sent to office for approval'],
+            WorkflowSteps::STEP_QA_VP_APPROVAL          => ['workflow.forwarded_to_vp',        'Forwarded to VP for approval'],
+            WorkflowSteps::STEP_QA_PRES_APPROVAL        => ['workflow.forwarded_to_president', 'Forwarded to President for approval'],
+            WorkflowSteps::STEP_QA_APPROVAL_FINAL_CHECK => ['workflow.returned_for_check',     'President approved — QA approval check'],
+            WorkflowSteps::STEP_QA_REGISTRATION         => ['workflow.sent_to_registration',   'QA started finalization — registration'],
+            WorkflowSteps::STEP_QA_DISTRIBUTION         => ['workflow.registered',             'Document registered — ready to distribute'],
 
             // Office flow
-            WorkflowSteps::STEP_OFFICE_DRAFT        => ['workflow.returned_to_draft',    'Returned to office draft'],
-            WorkflowSteps::STEP_OFFICE_HEAD_REVIEW  => ['workflow.sent_to_review',       'Sent to office head for review'],
-            WorkflowSteps::STEP_OFFICE_VP_REVIEW    => ['workflow.forwarded_to_vp',      'Forwarded to VP for review'],
-            WorkflowSteps::STEP_OFFICE_FINAL_CHECK  => ['workflow.returned_for_check',   'VP sent back to office for final check'],
-            WorkflowSteps::STEP_OFFICE_QA_APPROVAL  => ['workflow.sent_to_approval',     'Sent to QA for approval'],
-            WorkflowSteps::STEP_OFFICE_REGISTRATION => ['workflow.sent_to_registration', 'QA approved — sent to office for registration'],
-            WorkflowSteps::STEP_OFFICE_DISTRIBUTION => ['workflow.registered',           'Document registered'],
+            WorkflowSteps::STEP_OFFICE_DRAFT                => ['workflow.returned_to_draft',     'Returned to office draft'],
+            WorkflowSteps::STEP_OFFICE_HEAD_REVIEW          => ['workflow.sent_to_review',         'Sent to office head for review'],
+            WorkflowSteps::STEP_OFFICE_VP_REVIEW            => ['workflow.forwarded_to_vp',        'Forwarded to VP for review'],
+            WorkflowSteps::STEP_OFFICE_REVIEW_FINAL_CHECK   => ['workflow.returned_for_check',     'VP sent back to staff for review check'],
+            WorkflowSteps::STEP_OFFICE_HEAD_APPROVAL        => ['workflow.sent_to_approval',       'Sent to office head for approval'],
+            WorkflowSteps::STEP_OFFICE_VP_APPROVAL          => ['workflow.forwarded_to_vp',        'Forwarded to VP for approval'],
+            WorkflowSteps::STEP_OFFICE_PRES_APPROVAL        => ['workflow.forwarded_to_president', 'Forwarded to President for approval'],
+            WorkflowSteps::STEP_OFFICE_APPROVAL_FINAL_CHECK => ['workflow.returned_for_check',     'President approved — staff approval check'],
+            WorkflowSteps::STEP_OFFICE_REGISTRATION         => ['workflow.sent_to_registration',   'Staff started finalization — registration'],
+            WorkflowSteps::STEP_OFFICE_DISTRIBUTION         => ['workflow.registered',             'Document registered — ready to distribute'],
 
             // Custom flow
-            WorkflowSteps::STEP_CUSTOM_DRAFT                  => ['workflow.returned_to_draft',    'Returned to owner draft'],
-            WorkflowSteps::STEP_CUSTOM_OFFICE_REVIEW          => ['workflow.sent_to_review',        'Forwarded for review'],
-            WorkflowSteps::STEP_CUSTOM_BACK_TO_OWNER          => ['workflow.returned_for_check',    'Review complete — returned to owner'],
-            WorkflowSteps::STEP_CUSTOM_OFFICE_APPROVAL        => ['workflow.sent_to_approval',      'Forwarded for approval'],
-            WorkflowSteps::STEP_CUSTOM_BACK_TO_OWNER_APPROVAL => ['workflow.returned_for_check',    'Approval complete — returned to owner'],
-            WorkflowSteps::STEP_CUSTOM_REGISTRATION           => ['workflow.sent_to_registration',  'Sent for registration'],
+            WorkflowSteps::STEP_CUSTOM_DRAFT                    => ['workflow.returned_to_draft',  'Returned to owner draft'],
+            WorkflowSteps::STEP_CUSTOM_OFFICE_REVIEW            => ['workflow.sent_to_review',      'Forwarded for review'],
+            WorkflowSteps::STEP_CUSTOM_REVIEW_BACK_TO_OWNER     => ['workflow.returned_for_check',  'Review complete — returned to owner for check'],
+            WorkflowSteps::STEP_CUSTOM_OFFICE_APPROVAL          => ['workflow.sent_to_approval',    'Forwarded for approval'],
+            WorkflowSteps::STEP_CUSTOM_APPROVAL_BACK_TO_OWNER   => ['workflow.returned_for_check',  'Approval complete — returned to owner for check'],
+            WorkflowSteps::STEP_CUSTOM_REGISTRATION             => ['workflow.sent_to_registration', 'Owner started finalization — registration'],
+            WorkflowSteps::STEP_CUSTOM_DISTRIBUTION             => ['workflow.registered',           'Document registered — ready to distribute'],
 
             // Terminal
             WorkflowSteps::STEP_DISTRIBUTED => ['workflow.distributed', 'Document distributed'],

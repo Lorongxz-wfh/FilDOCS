@@ -6,20 +6,16 @@ type Props = {
   isLoading: boolean;
   logs: ActivityLogItem[];
   formatWhen: (iso: string) => string;
-  panelHeight: number;
+  panelHeight?: number;
 };
 
 const DocumentActivityPanel: React.FC<Props> = ({
   isLoading,
   logs,
   formatWhen,
-  panelHeight,
 }) => {
   return (
-    <div
-      className="overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/60 dark:border-surface-400 dark:bg-surface-600/60 transition-all duration-200"
-      style={{ height: panelHeight }}
-    >
+    <div className="flex-1 min-h-0 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/60 dark:border-surface-400 dark:bg-surface-600/60">
       {isLoading ? (
         <div className="space-y-2 p-2">
           <Skeleton className="h-12 w-full" />

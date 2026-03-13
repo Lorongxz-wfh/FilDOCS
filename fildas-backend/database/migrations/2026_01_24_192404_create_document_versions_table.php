@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('original_filename')->nullable();
 
             $table->text('description')->nullable();
+            $table->text('revision_reason')->nullable();
 
             $table->date('effective_date')->nullable();
 

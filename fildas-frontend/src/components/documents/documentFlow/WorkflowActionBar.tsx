@@ -19,10 +19,12 @@ const WorkflowActionBar: React.FC<Props> = ({
     React.useState<HeaderActionButton | null>(null);
   const [rejectNote, setRejectNote] = React.useState("");
   const [rejectError, setRejectError] = React.useState("");
+  const [processingKey, setProcessingKey] = React.useState<string | null>(null);
 
-  if (!actions.length || !canAct) return null;
+  if (!actions.length) return null;
 
   const handleClick = (action: HeaderActionButton) => {
+    if (!canAct || isChangingStatus) return;
     setRejectNote("");
     setRejectError("");
     setConfirmAction(action);
@@ -36,8 +38,13 @@ const WorkflowActionBar: React.FC<Props> = ({
       return;
     }
 
-    await confirmAction.onClick();
-    setConfirmAction(null);
+    setProcessingKey(confirmAction.key);
+    try {
+      await confirmAction.onClick();
+    } finally {
+      setProcessingKey(null);
+      setConfirmAction(null);
+    }
   };
 
   const isReject = confirmAction?.key === "REJECT";
@@ -45,18 +52,50 @@ const WorkflowActionBar: React.FC<Props> = ({
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        {actions.map((a) => (
-          <Button
-            key={a.key}
-            type="button"
-            size="sm"
-            variant={a.variant === "danger" ? "danger" : "primary"}
-            disabled={a.disabled || isChangingStatus}
-            onClick={() => handleClick(a)}
-          >
-            {isChangingStatus ? "Processing…" : a.label}
-          </Button>
-        ))}
+        {actions.map((a) => {
+          const isThis = processingKey === a.key;
+          const isBusy = isChangingStatus || !!processingKey;
+          return (
+            <Button
+              key={a.key}
+              type="button"
+              size="sm"
+              variant={a.variant === "danger" ? "danger" : "primary"}
+              disabled={isBusy || !canAct}
+              onClick={() => handleClick(a)}
+              className={
+                !canAct && !isBusy ? "opacity-40 cursor-not-allowed" : ""
+              }
+            >
+              {isThis ? (
+                <span className="flex items-center gap-1.5">
+                  <svg
+                    className="animate-spin h-3 w-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8z"
+                    />
+                  </svg>
+                  Processing…
+                </span>
+              ) : (
+                a.label
+              )}
+            </Button>
+          );
+        })}
       </div>
 
       {/* Confirm / Reject modal */}

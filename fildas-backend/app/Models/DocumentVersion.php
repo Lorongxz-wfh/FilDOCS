@@ -20,6 +20,7 @@ class DocumentVersion extends Model
         'preview_path',
         'original_filename',
         'description',
+        'revision_reason',
         'effective_date',
         'distributed_at',
         'superseded_at',

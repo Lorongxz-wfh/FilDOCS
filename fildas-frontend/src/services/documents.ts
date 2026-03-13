@@ -237,6 +237,7 @@ export interface DocumentVersion {
   preview_path: string | null;
   original_filename: string | null;
   description?: string | null;
+  revision_reason?: string | null;
 
   effective_date?: string | null; // YYYY-MM-DD
 
@@ -592,10 +593,14 @@ export async function getDocumentVersions(
 
 export async function createRevision(
   documentId: number,
+  payload?: { revision_reason?: string | null },
 ): Promise<DocumentVersion> {
   try {
     const api = await getApi();
-    const res = await api.post(`/documents/${documentId}/revision`);
+    const res = await api.post(
+      `/documents/${documentId}/revision`,
+      payload ?? {},
+    );
     return res.data as DocumentVersion;
   } catch (e: any) {
     const status = e?.response?.status;
@@ -836,6 +841,7 @@ export const getCurrentUserOfficeId = (): number => {
 export type WorkflowActionCode =
   // Universal
   | "REJECT"
+  | "CANCEL_DOCUMENT"
   // QA flow
   | "QA_SEND_TO_OFFICE_REVIEW"
   | "QA_OFFICE_FORWARD_TO_VP"
@@ -1210,4 +1216,47 @@ export async function markAllNotificationsRead(): Promise<void> {
   const api = await getApi();
   await api.post("/notifications/read-all");
   clearNotifCache();
+}
+
+export async function deleteNotification(
+  notificationId: number,
+): Promise<void> {
+  const api = await getApi();
+  await api.delete(`/notifications/${notificationId}`);
+  clearNotifCache();
+}
+
+export async function deleteAllNotifications(): Promise<void> {
+  const api = await getApi();
+  await api.delete("/notifications");
+  clearNotifCache();
+}
+
+export type OfficeUser = {
+  id: number;
+  first_name: string;
+  middle_name: string | null;
+  last_name: string;
+  suffix: string | null;
+  profile_photo_path: string | null;
+  role_id: number | null;
+  office_id: number | null;
+  full_name: string;
+  role?: { id: number; name: string; label?: string };
+};
+
+export async function getOfficeUsers(officeId: number): Promise<OfficeUser[]> {
+  try {
+    const api = await getApi();
+    const res = await api.get<OfficeUser[]>(`/offices/${officeId}/users`);
+    return res.data;
+  } catch (e: any) {
+    const status = e?.response?.status;
+    const msg =
+      e?.response?.data?.message ||
+      (status
+        ? `Failed to load office users (${status})`
+        : "Failed to load office users");
+    throw new Error(msg);
+  }
 }

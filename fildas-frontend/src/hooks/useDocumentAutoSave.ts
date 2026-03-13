@@ -8,7 +8,7 @@ import {
 
 type Options = {
   documentId: number;
-  version: DocumentVersion;
+  version: DocumentVersion | null;
   localTitle: string;
   initialTitle: string;
   setInitialTitle: (v: string) => void;
@@ -45,7 +45,7 @@ export function useDocumentAutoSave({
 
   // Title auto-save
   useEffect(() => {
-    if (version.status !== "Draft") return;
+    if (!version || version.status !== "Draft") return;
     if (localTitle === initialTitle) return;
 
     if (titleTimer.current) window.clearTimeout(titleTimer.current);
@@ -62,11 +62,11 @@ export function useDocumentAutoSave({
     return () => {
       if (titleTimer.current) window.clearTimeout(titleTimer.current);
     };
-  }, [localTitle, initialTitle, version.status, documentId, onChanged]);
+  }, [localTitle, initialTitle, version?.status, documentId, onChanged]);
 
   // Description auto-save
   useEffect(() => {
-    if (version.status !== "Draft") return;
+    if (!version || version.status !== "Draft") return;
     if (localDesc === initialDesc) return;
 
     if (descTimer.current) window.clearTimeout(descTimer.current);
@@ -87,11 +87,11 @@ export function useDocumentAutoSave({
     return () => {
       if (descTimer.current) window.clearTimeout(descTimer.current);
     };
-  }, [localDesc, initialDesc, version.id, version.status, onChanged]);
+  }, [localDesc, initialDesc, version?.id, version?.status, onChanged]);
 
   // Effective date auto-save
   useEffect(() => {
-    if (!canEditEffectiveDate) return;
+    if (!version || !canEditEffectiveDate) return;
     if (localEffectiveDate === initialEffectiveDate) return;
 
     if (dateTimer.current) window.clearTimeout(dateTimer.current);
@@ -116,7 +116,7 @@ export function useDocumentAutoSave({
     canEditEffectiveDate,
     localEffectiveDate,
     initialEffectiveDate,
-    version.id,
+    version?.id,
     onChanged,
   ]);
 }

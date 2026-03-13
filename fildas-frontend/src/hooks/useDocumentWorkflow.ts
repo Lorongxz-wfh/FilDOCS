@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useVisibilityPolling } from "./useVisibilityPolling";
 import { getAuthUser } from "../lib/auth";
 import {
   listWorkflowTasks,
@@ -76,51 +77,70 @@ export function useDocumentWorkflow({
   // Keep old name as alias so existing call sites don't break
   const stopBurstPolling = stopAllPolling;
 
-  const refreshTasksAndActions = useCallback(async (id: number) => {
-    await new Promise((r) => setTimeout(r, 300));
-    try {
-      const [t, actions] = await Promise.all([
-        listWorkflowTasks(id),
-        getAvailableActions(id),
-      ]);
-      setTasks(t);
-      setAvailableActions(actions);
+  const refreshTasksAndActions = useCallback(
+    async (id: number, opts?: { isPolling?: boolean }) => {
+      try {
+        const [t, actions] = await Promise.all([
+          listWorkflowTasks(id),
+          getAvailableActions(id),
+        ]);
 
-      // Change detection — skip on first load
-      if (!isFirstTaskLoadRef.current) {
-        const openTask = t.find((tk) => tk.status === "open") ?? null;
-        const newOffice = openTask?.assigned_office_id ?? null;
-        const newActionsKey = actions.join(",");
-        if (
-          newOffice !== prevOpenTaskOfficeRef.current ||
-          newActionsKey !== prevActionsRef.current
-        ) {
-          setTaskChanged(true);
+        // Change detection — skip on first load
+        if (!isFirstTaskLoadRef.current) {
+          const openTask = t.find((tk) => tk.status === "open") ?? null;
+          const newOffice = openTask?.assigned_office_id ?? null;
+          const newActionsKey = actions.join(",");
+          if (
+            newOffice !== prevOpenTaskOfficeRef.current ||
+            newActionsKey !== prevActionsRef.current
+          ) {
+            setTaskChanged(true);
+            // Only update state if something actually changed during polling
+            setTasks(t);
+            setAvailableActions(actions);
+          } else if (!opts?.isPolling) {
+            // Always update state on explicit (non-poll) refreshes
+            setTasks(t);
+            setAvailableActions(actions);
+          }
+        } else {
+          isFirstTaskLoadRef.current = false;
+          setTasks(t);
+          setAvailableActions(actions);
         }
-      } else {
-        isFirstTaskLoadRef.current = false;
-      }
 
-      // Update refs
-      const openTask = t.find((tk) => tk.status === "open") ?? null;
-      prevOpenTaskOfficeRef.current = openTask?.assigned_office_id ?? null;
-      prevActionsRef.current = actions.join(",");
-    } catch {
-      setTasks([]);
-      setAvailableActions([]);
-    } finally {
-      setIsTasksReady(true);
-    }
-  }, []);
+        // Update refs
+        const openTask = t.find((tk) => tk.status === "open") ?? null;
+        prevOpenTaskOfficeRef.current = openTask?.assigned_office_id ?? null;
+        prevActionsRef.current = actions.join(",");
+      } catch {
+        if (!opts?.isPolling) {
+          setTasks([]);
+          setAvailableActions([]);
+        }
+      } finally {
+        setIsTasksReady(true);
+      }
+    },
+    [],
+  );
 
   const startIdlePolling = useCallback(
     (id: number) => {
       if (idlePollRef.current) window.clearInterval(idlePollRef.current);
       idlePollRef.current = window.setInterval(() => {
-        refreshTasksAndActions(id).catch(() => {});
+        refreshTasksAndActions(id, { isPolling: true }).catch(() => {});
       }, 10_000);
     },
     [refreshTasksAndActions],
+  );
+
+  // Visibility-aware catch-up: fire immediately when tab becomes visible
+  useVisibilityPolling(
+    useCallback(() => {
+      refreshTasksAndActions(versionId, { isPolling: true }).catch(() => {});
+    }, [versionId, refreshTasksAndActions]),
+    10_000,
   );
 
   const startBurstPolling = useCallback(
@@ -132,7 +152,7 @@ export function useDocumentWorkflow({
 
       setIsBurstPolling(true);
       burstPollRef.current = window.setInterval(() => {
-        refreshTasksAndActions(id).catch(() => {});
+        refreshTasksAndActions(id, { isPolling: true }).catch(() => {});
       }, 5_000);
 
       // After 15s revert to idle
@@ -149,6 +169,7 @@ export function useDocumentWorkflow({
 
   // Initial load
   useEffect(() => {
+    if (!versionId || versionId === 0) return;
     let alive = true;
     setIsTasksReady(false);
     setAvailableActions([]);
@@ -178,13 +199,14 @@ export function useDocumentWorkflow({
 
   // Start idle polling on mount, stop on unmount
   useEffect(() => {
+    if (!versionId || versionId === 0) return;
     startIdlePolling(versionId);
     return () => stopAllPolling();
   }, [versionId, startIdlePolling, stopAllPolling]);
 
-  // Poll messages every 10s when comments tab is active
+  // Poll messages every 10s regardless of active tab
   useEffect(() => {
-    if (activeSideTab !== "comments") return;
+    if (!versionId || versionId === 0) return;
     const interval = window.setInterval(() => {
       listDocumentMessages(versionId)
         .then((m) => {
@@ -212,21 +234,28 @@ export function useDocumentWorkflow({
     }, 10_000);
     return () => {
       window.clearInterval(interval);
-      isFirstMessageLoadRef.current = true;
     };
-  }, [versionId, activeSideTab]);
+  }, [versionId]);
 
-  // Messages
+  // Messages — load once on mount, polling handles updates
+  const hasLoadedMessagesRef = useRef(false);
+
   useEffect(() => {
+    if (!versionId || versionId === 0) return;
     let alive = true;
-    if (activeSideTab !== "comments") {
-      setMessages([]);
-      return;
-    }
+    if (hasLoadedMessagesRef.current) return; // already loaded, skip
     setIsLoadingMessages(true);
     listDocumentMessages(versionId)
       .then((m) => {
-        if (alive) setMessages(m);
+        if (alive) {
+          setMessages(m);
+          hasLoadedMessagesRef.current = true;
+          const incoming = m.filter(
+            (msg) => Number(msg.sender_user_id) !== Number(myUserIdRef.current),
+          );
+          prevMessageCountRef.current = incoming.length;
+          isFirstMessageLoadRef.current = false;
+        }
       })
       .catch(() => {
         if (alive) setMessages([]);
@@ -237,15 +266,23 @@ export function useDocumentWorkflow({
     return () => {
       alive = false;
     };
-  }, [versionId, activeSideTab]);
+  }, [versionId]);
 
-  // Activity logs
+  // Activity logs — load once on mount, don't clear on tab switch
+  const hasLoadedLogsRef = useRef(false);
+
+  // Reset load guards when versionId changes
   useEffect(() => {
+    hasLoadedMessagesRef.current = false;
+    hasLoadedLogsRef.current = false;
+    isFirstTaskLoadRef.current = true;
+    isFirstMessageLoadRef.current = true;
+  }, [versionId]);
+
+  useEffect(() => {
+    if (!versionId || versionId === 0) return;
     let alive = true;
-    if (activeSideTab !== "logs") {
-      setActivityLogs([]);
-      return;
-    }
+    if (hasLoadedLogsRef.current) return; // already loaded, skip
     setIsLoadingActivityLogs(true);
     listActivityLogs({
       scope: "document",
@@ -253,7 +290,10 @@ export function useDocumentWorkflow({
       per_page: 50,
     })
       .then((p) => {
-        if (alive) setActivityLogs(p.data);
+        if (alive) {
+          setActivityLogs(p.data);
+          hasLoadedLogsRef.current = true;
+        }
       })
       .catch(() => {
         if (alive) setActivityLogs([]);
@@ -264,7 +304,7 @@ export function useDocumentWorkflow({
     return () => {
       alive = false;
     };
-  }, [versionId, activeSideTab]);
+  }, [versionId]);
 
   const submitAction = useCallback(
     async (code: WorkflowActionCode, note?: string) => {
@@ -275,21 +315,22 @@ export function useDocumentWorkflow({
         await refreshTasksAndActions(res.version.id);
         startBurstPolling(res.version.id);
 
-        const [msgs, logs] = await Promise.all([
-          activeSideTab === "comments"
-            ? listDocumentMessages(res.version.id)
-            : Promise.resolve(null),
-          activeSideTab === "logs"
-            ? listActivityLogs({
-                scope: "document",
-                document_version_id: res.version.id,
-                per_page: 50,
-              })
-            : Promise.resolve(null),
-        ]);
-
-        if (msgs) setMessages(msgs);
-        if (logs) setActivityLogs(logs.data);
+        // Always refresh both messages and logs after any action
+        // Wrapped separately so a fetch failure doesn't surface as an action error
+        try {
+          const [msgs, logs] = await Promise.all([
+            listDocumentMessages(res.version.id),
+            listActivityLogs({
+              scope: "document",
+              document_version_id: res.version.id,
+              per_page: 50,
+            }),
+          ]);
+          setMessages(msgs);
+          setActivityLogs(logs.data);
+        } catch {
+          // Non-critical — polling will catch up
+        }
 
         if (onChanged) await onChanged();
 
@@ -315,6 +356,7 @@ export function useDocumentWorkflow({
   );
 
   const refreshMessages = useCallback(async () => {
+    if (!versionId || versionId === 0) return;
     const m = await listDocumentMessages(versionId);
     setMessages(m);
   }, [versionId]);

@@ -6,6 +6,7 @@ type Props = {
   children: React.ReactNode;
   onClose: () => void;
   widthClassName?: string;
+  headerActions?: React.ReactNode;
 };
 
 export default function Modal({
@@ -14,6 +15,7 @@ export default function Modal({
   children,
   onClose,
   widthClassName = "max-w-lg",
+  headerActions,
 }: Props) {
   useEffect(() => {
     if (!open) return;
@@ -42,18 +44,27 @@ export default function Modal({
             widthClassName,
           ].join(" ")}
         >
-          <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-surface-400">
+          {/* Header */}
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-3.5 dark:border-surface-400">
             <h2 className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
               {title}
             </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-surface-400"
-            >
-              ✕
-            </button>
+            {headerActions ? (
+              <div className="flex items-center gap-2 shrink-0">
+                {headerActions}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-surface-400"
+              >
+                ✕
+              </button>
+            )}
           </div>
+
+          {/* Body */}
           <div className="max-h-[70vh] overflow-y-auto px-5 py-4">
             {children}
           </div>

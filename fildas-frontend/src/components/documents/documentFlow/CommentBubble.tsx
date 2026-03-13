@@ -14,9 +14,9 @@ type Props = {
 const CommentBubble: React.FC<Props> = ({
   senderName,
   roleName,
-  when,
   message,
   type,
+  when,
   isNew = false,
   isMine = false,
   avatarLetter,
@@ -34,11 +34,17 @@ const CommentBubble: React.FC<Props> = ({
   return (
     <div
       ref={ref}
-      className={`flex gap-2.5 transition-all duration-700 ${isMine ? "flex-row-reverse" : "flex-row"}`}
+      className={`flex gap-2 transition-all duration-700 ${isMine ? "flex-row-reverse" : "flex-row"}`}
     >
       {/* Avatar */}
-      <div className="shrink-0 mt-0.5">
-        <div className="h-7 w-7 rounded-full bg-slate-200 dark:bg-surface-400 flex items-center justify-center text-[11px] font-bold text-slate-600 dark:text-slate-300">
+      <div className="shrink-0 mt-1">
+        <div
+          className={`h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-bold ${
+            isMine
+              ? "bg-sky-600 text-white"
+              : "bg-slate-200 dark:bg-surface-400 text-slate-600 dark:text-slate-300"
+          }`}
+        >
           {initial}
         </div>
       </div>
@@ -47,9 +53,9 @@ const CommentBubble: React.FC<Props> = ({
       <div
         className={`flex flex-col gap-1 max-w-[78%] ${isMine ? "items-end" : "items-start"}`}
       >
-        {/* Name + role */}
+        {/* Name + role + type */}
         <div
-          className={`flex items-center gap-1.5 ${isMine ? "flex-row-reverse" : "flex-row"}`}
+          className={`flex items-center gap-1.5 flex-wrap ${isMine ? "flex-row-reverse" : "flex-row"}`}
         >
           <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
             {senderName}
@@ -69,12 +75,12 @@ const CommentBubble: React.FC<Props> = ({
         {/* Bubble */}
         <div
           className={[
-            "rounded-2xl px-3.5 py-2 text-sm leading-relaxed transition-all duration-500",
+            "px-3.5 py-2 text-sm leading-relaxed transition-all duration-500 rounded-2xl",
             isMine
-              ? "bg-sky-600 text-white rounded-tr-sm"
+              ? "bg-sky-600 text-white"
               : isNew
-                ? "bg-sky-50 border border-sky-200 text-slate-800 rounded-tl-sm dark:bg-sky-950/40 dark:border-sky-700 dark:text-slate-200 ring-1 ring-sky-200 dark:ring-sky-700"
-                : "bg-white border border-slate-200 text-slate-800 rounded-tl-sm dark:bg-surface-400 dark:border-surface-300 dark:text-slate-200",
+                ? "bg-sky-50 border border-sky-200 text-slate-800 dark:bg-sky-950/40 dark:border-sky-700 dark:text-slate-200 ring-1 ring-sky-200 dark:ring-sky-700"
+                : "bg-white border border-slate-200 text-slate-800 dark:bg-surface-400 dark:border-surface-300 dark:text-slate-200",
           ].join(" ")}
         >
           {message}

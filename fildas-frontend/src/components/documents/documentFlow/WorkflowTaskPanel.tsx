@@ -133,23 +133,14 @@ const WorkflowTaskPanel: React.FC<Props> = ({
           <div className="space-y-2">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-2/3" />
           </div>
         ) : (
           <>
-            {/* Assigned office */}
+            {/* From (your office — who sent it) */}
             <div className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 dark:bg-surface-600/50 border border-slate-200 dark:border-surface-400 px-3 py-2">
               <span className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
-                Assigned to
-              </span>
-              <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 text-right truncate">
-                {assignedOfficeName ?? "—"}
-              </span>
-            </div>
-
-            {/* Your office */}
-            <div className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 dark:bg-surface-600/50 border border-slate-200 dark:border-surface-400 px-3 py-2">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
-                Your office
+                From
               </span>
               <div className="flex items-center gap-1.5">
                 {canAct && (
@@ -161,17 +152,39 @@ const WorkflowTaskPanel: React.FC<Props> = ({
               </div>
             </div>
 
-            {/* Phase + opened time */}
+            {/* To (assigned office — who needs to act) */}
+            <div className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 dark:bg-surface-600/50 border border-slate-200 dark:border-surface-400 px-3 py-2">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+                For
+              </span>
+              <span
+                className={`text-[11px] font-semibold text-right truncate ${canAct ? "text-emerald-700 dark:text-emerald-400" : "text-slate-800 dark:text-slate-200"}`}
+              >
+                {assignedOfficeName ?? "—"}
+              </span>
+            </div>
+
+            {/* Phase */}
             {currentTask && (
               <div className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 dark:bg-surface-600/50 border border-slate-200 dark:border-surface-400 px-3 py-2">
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 capitalize shrink-0">
-                  {currentTask.phase} phase
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+                  Phase
                 </span>
-                {openedAt && (
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 text-right">
-                    Since {openedAt}
-                  </span>
-                )}
+                <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 capitalize text-right">
+                  {currentTask.phase}
+                </span>
+              </div>
+            )}
+
+            {/* Date started */}
+            {openedAt && (
+              <div className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 dark:bg-surface-600/50 border border-slate-200 dark:border-surface-400 px-3 py-2">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+                  Started
+                </span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 text-right">
+                  {openedAt}
+                </span>
               </div>
             )}
 

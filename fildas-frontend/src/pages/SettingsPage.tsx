@@ -262,22 +262,36 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  // ── Notification prefs (localStorage) ────────────────────────────────
-  const [emailNotif, setEmailNotif] = useState(
-    () => localStorage.getItem("pref_email_notif") !== "false",
-  );
-  const [soundNotif, setSoundNotif] = useState(
-    () => localStorage.getItem("pref_sound_notif") !== "false",
-  );
+  // ── Notification prefs (localStorage, per-user) ───────────────────────
+  const prefKey = (key: string) => `pref_${key}_${user?.id ?? "guest"}`;
 
-  const handleEmailNotif = (v: boolean) => {
-    setEmailNotif(v);
-    localStorage.setItem("pref_email_notif", String(v));
+  const [emailDocUpdates, setEmailDocUpdates] = useState(false);
+  const [emailApprovals, setEmailApprovals] = useState(false);
+  const [soundNotif, setSoundNotif] = useState(false);
+
+  // Re-read prefs once user is resolved
+  useEffect(() => {
+    if (!user?.id) return;
+    setEmailDocUpdates(
+      localStorage.getItem(prefKey("email_doc_updates")) !== "false",
+    );
+    setEmailApprovals(
+      localStorage.getItem(prefKey("email_approvals")) !== "false",
+    );
+    setSoundNotif(localStorage.getItem(prefKey("sound_notif")) !== "false");
+  }, [user?.id]);
+
+  const handleEmailDocUpdates = (v: boolean) => {
+    setEmailDocUpdates(v);
+    localStorage.setItem(prefKey("email_doc_updates"), String(v));
   };
-
+  const handleEmailApprovals = (v: boolean) => {
+    setEmailApprovals(v);
+    localStorage.setItem(prefKey("email_approvals"), String(v));
+  };
   const handleSoundNotif = (v: boolean) => {
     setSoundNotif(v);
-    localStorage.setItem("pref_sound_notif", String(v));
+    localStorage.setItem(prefKey("sound_notif"), String(v));
   };
 
   // ── Initials avatar ───────────────────────────────────────────────────
@@ -501,14 +515,14 @@ const SettingsPage: React.FC = () => {
           >
             <div className="divide-y divide-slate-100 dark:divide-surface-400">
               <Toggle
-                checked={emailNotif}
-                onChange={handleEmailNotif}
+                checked={emailDocUpdates}
+                onChange={handleEmailDocUpdates}
                 label="Document updates"
                 description="Get notified when a document is assigned to you or changes status."
               />
               <Toggle
-                checked={emailNotif}
-                onChange={handleEmailNotif}
+                checked={emailApprovals}
+                onChange={handleEmailApprovals}
                 label="Approvals & reviews"
                 description="Receive an email when action is required from you."
               />

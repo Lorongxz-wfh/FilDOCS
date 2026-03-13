@@ -29,11 +29,11 @@ export default function PageHeading({
       <div className="flex items-center gap-2 min-w-0">
         {onBack && <BackButton onClick={onBack} disabled={onBackDisabled} />}
         <div className="min-w-0">
-          <h1 className="text-lg sm:text-xl font-semibold leading-tight tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-base font-semibold leading-tight tracking-tight text-slate-900 dark:text-slate-100">
             {title}
           </h1>
           {subtitle && (
-            <div className="mt-1 text-sm leading-snug text-slate-500 dark:text-slate-400">
+            <div className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
               {subtitle}
             </div>
           )}

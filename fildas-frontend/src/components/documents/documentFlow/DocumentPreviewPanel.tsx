@@ -1,5 +1,4 @@
 import React from "react";
-import Skeleton from "../../ui/loader/Skeleton";
 import InlineSpinner from "../../ui/loader/InlineSpinner";
 import UploadProgress from "../../ui/loader/UploadProgress";
 import { Download, Maximize2, X } from "lucide-react";
@@ -122,9 +121,9 @@ const DocumentPreviewPanel: React.FC<Props> = ({
   };
 
   return (
-    <div className="space-y-0">
+    <div className="flex flex-col h-full min-h-0">
       {/* Preview container */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500">
         {/* Toolbar */}
         <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2 dark:border-surface-400 dark:bg-surface-600">
           <div className="flex items-center gap-2 min-w-0">
@@ -145,7 +144,7 @@ const DocumentPreviewPanel: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={openModal}
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition dark:hover:bg-surface-400 dark:hover:text-slate-200"
+                className="flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-700 dark:hover:bg-sky-950/30 dark:hover:border-sky-700 dark:hover:text-sky-400 transition shadow-sm"
               >
                 <Maximize2 size={11} /> View
               </button>
@@ -166,7 +165,7 @@ const DocumentPreviewPanel: React.FC<Props> = ({
 
         {/* Preview body */}
         <div
-          className={`relative h-150 w-full overflow-hidden transition-all ${
+          className={`relative flex-1 min-h-0 w-full overflow-hidden transition-all ${
             !filePath
               ? "cursor-pointer"
               : status === "Draft"
@@ -184,14 +183,22 @@ const DocumentPreviewPanel: React.FC<Props> = ({
         >
           {filePath && previewPath && !signedPreviewUrl && (
             <div className="absolute inset-0 p-4">
-              <Skeleton className="h-full w-full rounded-lg" />
+              <div className="h-full w-full rounded-lg bg-slate-100 dark:bg-surface-400 animate-pulse flex flex-col gap-3 p-6">
+                <div className="h-4 w-3/4 rounded bg-slate-200 dark:bg-surface-300" />
+                <div className="h-4 w-full rounded bg-slate-200 dark:bg-surface-300" />
+                <div className="h-4 w-5/6 rounded bg-slate-200 dark:bg-surface-300" />
+                <div className="h-4 w-2/3 rounded bg-slate-200 dark:bg-surface-300" />
+                <div className="mt-2 h-4 w-full rounded bg-slate-200 dark:bg-surface-300" />
+                <div className="h-4 w-4/5 rounded bg-slate-200 dark:bg-surface-300" />
+                <div className="h-4 w-full rounded bg-slate-200 dark:bg-surface-300" />
+              </div>
             </div>
           )}
 
-          {hasPreview ? (
+          {hasPreview && signedPreviewUrl ? (
             <iframe
               key={`${versionId}-${previewNonce}`}
-              src={signedPreviewUrl || "about:blank"}
+              src={signedPreviewUrl}
               title="Document preview"
               className="h-full w-full"
               onLoad={() => setIsPreviewLoading(false)}

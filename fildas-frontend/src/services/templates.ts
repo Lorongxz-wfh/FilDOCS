@@ -26,6 +26,7 @@ export type DocumentTemplate = {
   uploaded_by: TemplateUploader | null;
   can_delete: boolean;
   thumbnail_url: string | null;
+  tags: string[];
   created_at: string;
 };
 
@@ -43,11 +44,23 @@ export type UploadTemplatePayload = {
  */
 export async function listTemplates(opts?: {
   q?: string;
+  tag?: string;
 }): Promise<DocumentTemplate[]> {
+  const params: Record<string, string> = {};
+  if (opts?.q?.trim()) params.q = opts.q.trim();
+  if (opts?.tag?.trim()) params.tag = opts.tag.trim();
   const res = await api.get("/templates", {
-    params: opts?.q?.trim() ? { q: opts.q.trim() } : undefined,
+    params: Object.keys(params).length ? params : undefined,
   });
   return (res.data?.data ?? []) as DocumentTemplate[];
+}
+
+export async function updateTemplateTags(
+  id: number,
+  tags: string[],
+): Promise<string[]> {
+  const res = await api.patch(`/templates/${id}/tags`, { tags });
+  return res.data.tags as string[];
 }
 
 /**

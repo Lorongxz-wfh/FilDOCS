@@ -39,6 +39,11 @@ class DocumentTemplate extends Model
         return $this->belongsTo(Office::class);
     }
 
+    public function tags(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(TemplateTag::class, 'document_template_tag');
+    }
+
     // ── Helpers ──────────────────────────────────────────────
 
     /**

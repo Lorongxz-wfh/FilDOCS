@@ -111,6 +111,27 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
     }
   };
 
+  const headerActions = (
+    <>
+      <button
+        type="button"
+        onClick={handleClose}
+        disabled={loading}
+        className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-50 transition"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        form="create-doc-request-form"
+        disabled={loading}
+        className="rounded-lg bg-brand-500 hover:bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 transition"
+      >
+        {loading ? "Creating…" : "Create request"}
+      </button>
+    </>
+  );
+
   return (
     <>
       <Modal
@@ -118,8 +139,13 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
         title="Create Document Request"
         onClose={handleClose}
         widthClassName="max-w-xl"
+        headerActions={headerActions}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          id="create-doc-request-form"
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
           {/* Title */}
           <div>
             <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
@@ -141,7 +167,7 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
               Description
             </label>
             <textarea
-              rows={3}
+              rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What should offices submit? Add clear instructions."
@@ -237,7 +263,7 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
               onClick={() => setTemplatesPanelOpen(true)}
               className="text-xs text-sky-600 hover:underline dark:text-sky-400"
             >
-              📄 Browse templates
+              Browse templates
             </button>
           </div>
 
@@ -246,27 +272,6 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
               {error}
             </div>
           )}
-
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-2 pt-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleClose}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="sm"
-              disabled={loading}
-            >
-              {loading ? "Creating…" : "Create request"}
-            </Button>
-          </div>
         </form>
       </Modal>
 

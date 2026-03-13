@@ -4,8 +4,8 @@ export type PhaseId =
   | "draft"
   | "review"
   | "approval"
-  | "registration"
-  | "distributed";
+  | "finalization"
+  | "completed";
 
 export type Phase = {
   id: PhaseId;
@@ -16,8 +16,8 @@ export const phases: Phase[] = [
   { id: "draft", label: "Draft" },
   { id: "review", label: "Review" },
   { id: "approval", label: "Approval" },
-  { id: "registration", label: "Registration" },
-  { id: "distributed", label: "Distributed" },
+  { id: "finalization", label: "Finalization" },
+  { id: "completed", label: "Completed" },
 ];
 
 export type FlowStep = {
@@ -43,11 +43,10 @@ export const flowStepsQa: FlowStep[] = [
   },
   {
     id: "qafinalcheck",
-    label: "QA final check",
+    label: "QA double-check",
     statusValue: "For QA Final Check",
     phase: "review",
   },
-
   {
     id: "office_approval",
     label: "Office approval",
@@ -66,24 +65,29 @@ export const flowStepsQa: FlowStep[] = [
     statusValue: "For President Approval",
     phase: "approval",
   },
-
+  {
+    id: "qa_prefinalize_check",
+    label: "QA double-check",
+    statusValue: "For QA Pre-Finalize Check",
+    phase: "approval",
+  },
   {
     id: "qa_registration",
-    label: "QA registration",
-    statusValue: "For QA Registration",
-    phase: "registration",
+    label: "Register document",
+    statusValue: "For Registration",
+    phase: "finalization",
   },
   {
     id: "qa_distribution",
-    label: "QA distribution",
-    statusValue: "For QA Distribution",
-    phase: "registration",
+    label: "Distribute document",
+    statusValue: "For Distribution",
+    phase: "finalization",
   },
   {
     id: "distributed",
-    label: "Distributed",
+    label: "Completed",
     statusValue: "Distributed",
-    phase: "distributed",
+    phase: "completed",
   },
 ];
 
@@ -96,7 +100,7 @@ export const flowStepsOffice: FlowStep[] = [
   },
   {
     id: "office_head_review",
-    label: "Office head review",
+    label: "Office Head review",
     statusValue: "For Office Head Review",
     phase: "review",
   },
@@ -108,33 +112,51 @@ export const flowStepsOffice: FlowStep[] = [
   },
   {
     id: "office_final_check",
-    label: "Office final check",
+    label: "Office double-check",
     statusValue: "For Office Final Check",
     phase: "review",
   },
   {
-    id: "office_qa_approval",
-    label: "QA approval",
-    statusValue: "For QA Approval",
+    id: "office_head_approval",
+    label: "Office Head approval",
+    statusValue: "For Office Head Approval",
+    phase: "approval",
+  },
+  {
+    id: "office_vp_approval",
+    label: "VP approval",
+    statusValue: "For VP Approval",
+    phase: "approval",
+  },
+  {
+    id: "office_pres_approval",
+    label: "President approval",
+    statusValue: "For President Approval",
+    phase: "approval",
+  },
+  {
+    id: "office_prefinalize_check",
+    label: "Office double-check",
+    statusValue: "For Office Pre-Finalize Check",
     phase: "approval",
   },
   {
     id: "office_registration",
-    label: "Registration",
+    label: "Register document",
     statusValue: "For Registration",
-    phase: "registration",
+    phase: "finalization",
   },
   {
     id: "office_distribution",
-    label: "Distribution",
+    label: "Distribute document",
     statusValue: "For Distribution",
-    phase: "registration",
+    phase: "finalization",
   },
   {
     id: "distributed",
-    label: "Distributed",
+    label: "Completed",
     statusValue: "Distributed",
-    phase: "distributed",
+    phase: "completed",
   },
 ];
 
