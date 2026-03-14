@@ -16,9 +16,12 @@ class SearchController extends Controller
 
         if (strlen($q) < 2) {
             return response()->json([
-                'documents' => [],
-                'users'     => [],
-                'offices'   => [],
+                'documents'   => [],
+                'users'       => [],
+                'offices'     => [],
+                'templates'   => [],
+                'requests'    => [],
+                'notifications' => [],
             ]);
         }
 
@@ -83,10 +86,86 @@ class SearchController extends Controller
                 'url'         => "/office-manager",
             ]);
 
+        // Templates
+        $templateQuery = \App\Models\DocumentTemplate::query()
+            ->where(function ($query) use ($like, $op) {
+                $query->where('name', $op, $like)
+                    ->orWhere('description', $op, $like);
+            });
+        // Non-admins only see their office templates or global (office_id null)
+        if (!$isAdmin) {
+            $officeId = $actor?->office_id;
+            $templateQuery->where(function ($q2) use ($officeId) {
+                $q2->whereNull('office_id')
+                    ->orWhere('office_id', $officeId);
+            });
+        }
+        $templates = $templateQuery
+            ->limit(4)
+            ->get(['id', 'name', 'description'])
+            ->map(fn($t) => [
+                'type'        => 'template',
+                'id'          => $t->id,
+                'title'       => $t->name,
+                'description' => $t->description,
+                'url'         => '/templates',
+            ]);
+
+        // Document Requests
+        $requestQuery = \App\Models\DocumentRequest::query()
+            ->where(function ($query) use ($like, $op) {
+                $query->where('title', $op, $like)
+                    ->orWhere('description', $op, $like);
+            });
+
+        // Non-admins only see requests assigned to their office
+        if (!$isAdmin) {
+            $officeId = $actor?->office_id;
+            $requestQuery->whereHas('recipients', function ($q2) use ($officeId) {
+                $q2->where('office_id', $officeId);
+            });
+        }
+
+        $requests = $requestQuery
+            ->limit(4)
+            ->get(['id', 'title', 'description', 'status'])
+            ->map(fn($r) => [
+                'type'        => 'request',
+                'id'          => $r->id,
+                'title'       => $r->title,
+                'description' => $r->description,
+                'meta'        => $r->status,
+                'url'         => "/document-requests/{$r->id}",
+            ]);
+
+        // Notifications — only current user's own
+        $notifications = \App\Models\Notification::query()
+            ->where('user_id', $actor?->id)
+            ->where(function ($query) use ($like, $op) {
+                $query->where('title', $op, $like)
+                    ->orWhere('body', $op, $like);
+            })
+            ->orderByDesc('created_at')
+            ->limit(4)
+            ->get(['id', 'title', 'body', 'read_at'])
+            ->map(fn($n) => [
+                'type'        => 'notification',
+                'id'          => $n->id,
+                'title'       => $n->title,
+                'description' => $n->body
+                    ? \Illuminate\Support\Str::limit($n->body, 60)
+                    : null,
+                'meta'        => $n->read_at ? 'read' : 'unread',
+                'url'         => '/inbox',
+            ]);
+
         return response()->json([
-            'documents' => $documents->values(),
-            'users'     => $users->values(),
-            'offices'   => $offices->values(),
+            'documents'     => $documents->values(),
+            'users'         => $users->values(),
+            'offices'       => $offices->values(),
+            'templates'     => $templates->values(),
+            'requests'      => $requests->values(),
+            'notifications' => $notifications->values(),
         ]);
     }
 }

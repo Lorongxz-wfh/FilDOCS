@@ -24,6 +24,8 @@ return new class extends Migration
 
             $table->foreignId('created_by_user_id')->nullable()->constrained('users')->nullOnDelete();
 
+            $table->enum('mode', ['multi_office', 'multi_doc'])->default('multi_office');
+
             $table->json('meta')->nullable();
 
             $table->timestamps();
@@ -40,6 +42,7 @@ return new class extends Migration
             $table->foreignId('office_id')->constrained('offices')->restrictOnDelete();
 
             $table->enum('status', ['pending', 'submitted', 'accepted', 'rejected'])->default('pending');
+            $table->dateTime('due_at')->nullable();
             $table->dateTime('last_submitted_at')->nullable();
             $table->dateTime('last_reviewed_at')->nullable();
 
@@ -52,10 +55,37 @@ return new class extends Migration
             $table->index(['request_id', 'status']);
         });
 
+        Schema::create('document_request_items', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('request_id')
+                ->constrained('document_requests')
+                ->cascadeOnDelete();
+
+            $table->string('title', 180);
+            $table->text('description')->nullable();
+            $table->dateTime('due_at')->nullable();
+
+            $table->string('example_original_filename')->nullable();
+            $table->string('example_file_path')->nullable();
+            $table->string('example_preview_path')->nullable();
+
+            $table->unsignedInteger('sort_order')->default(0);
+
+            $table->timestamps();
+
+            $table->index(['request_id', 'sort_order']);
+        });
+
         Schema::create('document_request_submissions', function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('recipient_id')->constrained('document_request_recipients')->cascadeOnDelete();
+
+            $table->foreignId('item_id')
+                ->nullable()
+                ->constrained('document_request_items')
+                ->nullOnDelete();
 
             // Each office can submit multiple attempts over time
             $table->unsignedInteger('attempt_no')->default(1);
@@ -102,6 +132,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('document_request_submission_files');
         Schema::dropIfExists('document_request_submissions');
+        Schema::dropIfExists('document_request_items');
         Schema::dropIfExists('document_request_recipients');
         Schema::dropIfExists('document_requests');
     }

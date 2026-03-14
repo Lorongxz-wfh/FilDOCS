@@ -14,7 +14,7 @@ import PageFrame from "../components/layout/PageFrame";
 import TemplatesBrowserPanel from "../components/templates/TemplatesBrowserPanel";
 import FlowSelectModal, {
   type FlowSelection,
-} from "../components/documents/FlowSelectModal";
+} from "../components/documents/CreateDocumentModal";
 import { Pencil } from "lucide-react";
 
 const Field: React.FC<{

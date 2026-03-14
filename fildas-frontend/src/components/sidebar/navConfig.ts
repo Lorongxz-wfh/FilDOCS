@@ -9,6 +9,11 @@ import {
   Users,
   Building2,
   Settings,
+  FilePlus,
+  FileInput,
+  LayoutTemplate,
+  UserPlus,
+  Building,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -29,6 +34,55 @@ export const settingsNavItem: NavItem = {
   label: "Settings",
   icon: Settings,
 };
+
+export const inboxNavItem: NavItem = {
+  to: "/inbox",
+  label: "Inbox",
+  icon: Inbox,
+};
+
+export type NewAction = {
+  label: string;
+  to: string;
+  icon: LucideIcon;
+  roles?: string[];
+  state?: Record<string, unknown>;
+};
+
+export const newActions: NewAction[] = [
+  {
+    label: "New Document",
+    to: "/documents/create",
+    icon: FilePlus,
+    state: { fromLibrary: true },
+  },
+  {
+    label: "New Request",
+    to: "/document-requests",
+    icon: FileInput,
+    state: { openModal: true },
+  },
+  {
+    label: "New Template",
+    to: "/templates",
+    icon: LayoutTemplate,
+    state: { openModal: true },
+  },
+  {
+    label: "New User",
+    to: "/user-manager",
+    icon: UserPlus,
+    roles: ["ADMIN", "SYSADMIN"],
+    state: { openModal: true },
+  },
+  {
+    label: "New Office",
+    to: "/office-manager",
+    icon: Building,
+    roles: ["ADMIN", "SYSADMIN"],
+    state: { openModal: true },
+  },
+];
 
 export const navGroups: NavGroup[] = [
   {

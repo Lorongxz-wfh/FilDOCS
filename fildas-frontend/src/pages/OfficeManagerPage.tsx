@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
 import Button from "../components/ui/Button";
 import Table, { type TableColumn } from "../components/ui/Table";
@@ -15,8 +16,13 @@ export function OfficeManagerPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const location = useLocation();
+  const [modalOpen, setModalOpen] = useState(
+    () => (location.state as any)?.openModal === true,
+  );
+  const [modalMode, setModalMode] = useState<"create" | "edit">(() =>
+    (location.state as any)?.openModal === true ? "create" : "edit",
+  );
   const [selected, setSelected] = useState<AdminOffice | null>(null);
 
   // Debounce search

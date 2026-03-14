@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\AdminOfficeController;
 use App\Http\Controllers\Api\DocumentRequestMessageController;
 
 // ── Public ─────────────────────────────────────────────────────────────────
+Route::get('/ping', fn() => response()->json(['status' => 'ok']));
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/offices', [OfficeController::class, 'index']);
 
@@ -34,6 +35,10 @@ Route::get('/previews/{year}/{preview}/preview', [PreviewController::class, 'pre
 
 Route::get('/document-requests/{request}/example/preview', [DocumentRequestFileController::class, 'requestExamplePreviewSigned'])
     ->name('document-requests.example.preview')
+    ->middleware('signed');
+
+Route::get('/document-request-items/{item}/example/preview', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'examplePreviewSigned'])
+    ->name('document-request-items.example.preview')
     ->middleware('signed');
 
 Route::get('/document-requests/{request}/example/download', [DocumentRequestFileController::class, 'requestExampleDownloadSigned'])
@@ -129,6 +134,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Document Requests ──────────────────────────────────────────────────
     Route::get('/document-requests/{request}/messages',  [DocumentRequestMessageController::class, 'index']);
     Route::post('/document-requests/{request}/messages', [DocumentRequestMessageController::class, 'store']);
+    Route::get('/document-requests/{request}/recipients/{recipient}',   [DocumentRequestController::class, 'showRecipient']);
+    Route::patch('/document-requests/{request}/recipients/{recipient}', [DocumentRequestController::class, 'updateRecipient']);
+    Route::get('/document-requests/{request}/items/{item}',             [DocumentRequestController::class, 'showItem']);
+    Route::patch('/document-requests/{request}',      [DocumentRequestController::class, 'update']);
+    Route::patch('/document-request-items/{item}',    [DocumentRequestController::class, 'updateItem']);
+    Route::post('/document-request-items/{item}/example', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'uploadExample']);
+    Route::get('/document-request-items/{item}/example/preview-link', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'examplePreviewLink']);
     Route::get('/document-requests',         [DocumentRequestController::class, 'index']);
     Route::post('/document-requests',        [DocumentRequestController::class, 'store']);
     Route::get('/document-requests/inbox',   [DocumentRequestController::class, 'inbox']);

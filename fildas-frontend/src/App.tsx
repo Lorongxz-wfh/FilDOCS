@@ -29,6 +29,9 @@ const DocumentRequestListPage = React.lazy(
 const CreateDocumentRequestPage = React.lazy(
   () => import("./pages/CreateDocumentRequestPage"),
 );
+const DocumentRequestBatchPage = React.lazy(
+  () => import("./pages/DocumentRequestBatchPage"),
+);
 const DocumentRequestPage = React.lazy(
   () => import("./pages/DocumentRequestPage"),
 );
@@ -57,17 +60,24 @@ export default function App() {
             path="/document-requests"
             element={<DocumentRequestListPage />}
           />
-          <Route
-            path="/document-requests/:id"
-            element={<DocumentRequestPage />}
-          />
-
           <Route element={<RequireRole allow={["QA", "SYSADMIN", "ADMIN"]} />}>
             <Route
               path="/document-requests/create"
               element={<CreateDocumentRequestPage />}
             />
           </Route>
+          <Route
+            path="/document-requests/:id"
+            element={<DocumentRequestBatchPage />}
+          />
+          <Route
+            path="/document-requests/:id/recipients/:recipientId"
+            element={<DocumentRequestPage />}
+          />
+          <Route
+            path="/document-requests/:id/items/:itemId"
+            element={<DocumentRequestPage />}
+          />
 
           {/* Back-compat (optional): redirect old compliance URLs */}
           <Route

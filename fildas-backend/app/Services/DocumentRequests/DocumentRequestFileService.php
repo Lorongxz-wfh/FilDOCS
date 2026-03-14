@@ -49,6 +49,46 @@ class DocumentRequestFileService
         ];
     }
 
+    public function saveRequestItemExampleFile(int $itemId, $file): array
+    {
+        $year = now()->year;
+        $extension = strtolower($file->getClientOriginalExtension());
+        $storedName = 'example.' . $extension;
+        $r2Folder = $year . '/document_request_items/' . $itemId;
+        $originalName = $file->getClientOriginalName();
+
+        Storage::disk()->putFileAs($r2Folder, $file, $storedName);
+
+        $tmpDir = sys_get_temp_dir() . '/fildas/doc_request_items/' . $itemId;
+        if (!is_dir($tmpDir)) mkdir($tmpDir, 0775, true);
+
+        $tmpFilePath = $tmpDir . '/' . $storedName;
+        copy($file->getRealPath() ?: (Storage::disk()->path($r2Folder . '/' . $storedName)), $tmpFilePath);
+
+        $previewFileName = DocumentPreviewService::generatePreview($tmpDir, $tmpFilePath);
+        $previewPath = null;
+
+        if ($previewFileName) {
+            $tmpPreviewPath = $tmpDir . '/' . $previewFileName;
+            Storage::disk()->putFileAs(
+                $r2Folder,
+                new \Illuminate\Http\File($tmpPreviewPath),
+                $previewFileName
+            );
+            $previewPath = $r2Folder . '/' . $previewFileName;
+            @unlink($tmpPreviewPath);
+        }
+
+        @unlink($tmpFilePath);
+        @rmdir($tmpDir);
+
+        return [
+            'original_filename' => $originalName,
+            'file_path'         => $r2Folder . '/' . $storedName,
+            'preview_path'      => $previewPath,
+        ];
+    }
+
     public function saveSubmissionFile(int $submissionId, $file, int $index): array
     {
         $year = now()->year;

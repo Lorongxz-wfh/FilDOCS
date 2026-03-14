@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
 import Button from "../components/ui/Button";
 import Modal from "../components/ui/Modal";
@@ -26,7 +27,10 @@ const TemplatesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const location = useLocation();
+  const [modalOpen, setModalOpen] = useState(
+    () => (location.state as any)?.openModal === true,
+  );
   const [selectedTemplate, setSelectedTemplate] =
     useState<DocumentTemplate | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {

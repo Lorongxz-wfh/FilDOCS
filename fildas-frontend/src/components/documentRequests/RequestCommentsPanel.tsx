@@ -92,11 +92,7 @@ export default function RequestCommentsPanel({
         ref={scrollAreaRef}
         className="flex-1 overflow-y-auto px-4 py-3 bg-slate-50/30 dark:bg-surface-600/30 space-y-4"
       >
-        {loading ? (
-          <div className="flex items-center justify-center py-10">
-            <div className="h-5 w-5 rounded-full border-2 border-sky-400 border-t-transparent animate-spin" />
-          </div>
-        ) : messages.length === 0 ? (
+        {messages.length === 0 && !loading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2">
             <p className="text-sm text-slate-400 dark:text-slate-500">
               No comments yet. Start the conversation.

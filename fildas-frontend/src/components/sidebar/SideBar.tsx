@@ -1,8 +1,14 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { getUserRole } from "../../lib/roleFilters";
-import { navGroups, settingsNavItem } from "./navConfig";
-import { PanelLeftClose, PanelLeftOpen, LogOut, Settings } from "lucide-react";
+import { navGroups, settingsNavItem, newActions } from "./navConfig";
+import {
+  PanelLeftClose,
+  PanelLeftOpen,
+  LogOut,
+  Settings,
+  Plus,
+} from "lucide-react";
 import { useSidebarCollapsed } from "../../hooks/useSidebarCollapsed";
 import { useAuthUser } from "../../hooks/useAuthUser";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +37,22 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const navigate = useNavigate();
   const [confirmLogout, setConfirmLogout] = React.useState(false);
+  const [newOpen, setNewOpen] = React.useState(false);
+  const newRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (newRef.current && !newRef.current.contains(e.target as Node)) {
+        setNewOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const visibleNewActions = newActions.filter(
+    (a) => !a.roles || a.roles.includes(role),
+  );
 
   const handleLogout = () => {
     if (!confirmLogout) {
@@ -122,8 +144,54 @@ const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
+        {/* New button */}
+        <div className="shrink-0 px-2 py-3" ref={newRef}>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setNewOpen((o) => !o)}
+              className={[
+                "flex items-center rounded-lg text-sm font-semibold transition-all",
+                "bg-brand-500 hover:bg-brand-600 text-white shadow-sm",
+                collapsed
+                  ? "justify-center w-full px-0 h-10.5"
+                  : "gap-2 px-4 h-10.5",
+              ].join(" ")}
+              title={collapsed ? "New" : undefined}
+            >
+              <Plus className="h-4 w-4 shrink-0" />
+              {!collapsed && <span>New</span>}
+            </button>
+
+            {newOpen && (
+              <div className="absolute left-0 top-full mt-1 z-50 w-52 rounded-xl border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-500 shadow-lg py-1">
+                {visibleNewActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={action.to}
+                      type="button"
+                      onClick={() => {
+                        setNewOpen(false);
+                        navigate(
+                          action.to,
+                          action.state ? { state: action.state } : undefined,
+                        );
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors"
+                    >
+                      <Icon className="h-4 w-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                      {action.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 space-y-5">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 space-y-5">
           {navGroups.map((group) => {
             const visibleItems = group.items.filter(
               (item) => !item.roles || item.roles.includes(role),

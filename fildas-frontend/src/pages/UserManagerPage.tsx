@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { getAuthUser } from "../lib/auth";
 import PageFrame from "../components/layout/PageFrame";
 import Table, { type TableColumn } from "../components/ui/Table";
@@ -20,8 +21,13 @@ const UserManagerPage: React.FC = () => {
   const [searchDebounced, setSearchDebounced] = useState("");
   const [reloadTick, setReloadTick] = useState(0);
 
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editMode, setEditMode] = useState<"edit" | "create">("edit");
+  const location = useLocation();
+  const [isEditOpen, setIsEditOpen] = useState(
+    () => (location.state as any)?.openModal === true,
+  );
+  const [editMode, setEditMode] = useState<"edit" | "create">(() =>
+    (location.state as any)?.openModal === true ? "create" : "edit",
+  );
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
   // Debounce search

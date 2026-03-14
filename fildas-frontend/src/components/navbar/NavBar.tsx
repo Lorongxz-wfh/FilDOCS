@@ -7,6 +7,9 @@ import {
   Users,
   Building2,
   LayoutDashboard,
+  Inbox,
+  ClipboardList,
+  LayoutTemplate,
   X,
   Menu,
 } from "lucide-react";
@@ -21,7 +24,7 @@ import {
 } from "../../services/documents";
 import { globalSearch, type SearchResultItem } from "../../services/search";
 import { playNotificationChime } from "../../utils/notificationSound";
-import { navGroups } from "../sidebar/navConfig";
+import { navGroups, settingsNavItem, inboxNavItem } from "../sidebar/navConfig";
 import { getUserRole } from "../../lib/roleFilters";
 import { Sun, Moon } from "lucide-react";
 
@@ -36,6 +39,8 @@ function getPageResults(q: string, role: string): SearchResultItem[] {
   if (!q) return [];
   const lower = q.toLowerCase();
   const results: SearchResultItem[] = [];
+
+  // Nav group pages
   for (const group of navGroups) {
     for (const item of group.items) {
       if (!item.roles || item.roles.includes(role)) {
@@ -51,7 +56,21 @@ function getPageResults(q: string, role: string): SearchResultItem[] {
       }
     }
   }
-  return results.slice(0, 4);
+
+  // Settings + Inbox as static pages
+  for (const item of [settingsNavItem, inboxNavItem]) {
+    if (item.label.toLowerCase().includes(lower)) {
+      results.push({
+        type: "page",
+        id: item.to,
+        title: item.label,
+        description: "General",
+        url: item.to,
+      });
+    }
+  }
+
+  return results.slice(0, 6);
 }
 
 // ── Icon per result type ───────────────────────────────────────────────────
@@ -60,6 +79,9 @@ const ResultIcon: React.FC<{ type: SearchResultItem["type"] }> = ({ type }) => {
   if (type === "document") return <FileText className={cls} />;
   if (type === "user") return <Users className={cls} />;
   if (type === "office") return <Building2 className={cls} />;
+  if (type === "template") return <LayoutTemplate className={cls} />;
+  if (type === "request") return <ClipboardList className={cls} />;
+  if (type === "notification") return <Inbox className={cls} />;
   return <LayoutDashboard className={cls} />;
 };
 
@@ -80,7 +102,18 @@ const Navbar: React.FC<NavbarProps> = ({
     documents: SearchResultItem[];
     users: SearchResultItem[];
     offices: SearchResultItem[];
-  }>({ pages: [], documents: [], users: [], offices: [] });
+    templates: SearchResultItem[];
+    requests: SearchResultItem[];
+    notifications: SearchResultItem[];
+  }>({
+    pages: [],
+    documents: [],
+    users: [],
+    offices: [],
+    templates: [],
+    requests: [],
+    notifications: [],
+  });
   const searchRef = React.useRef<HTMLDivElement>(null);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
   const searchDebounceRef = React.useRef<number | null>(null);
@@ -89,7 +122,10 @@ const Navbar: React.FC<NavbarProps> = ({
     searchResults.pages.length +
     searchResults.documents.length +
     searchResults.users.length +
-    searchResults.offices.length;
+    searchResults.offices.length +
+    searchResults.templates.length +
+    searchResults.requests.length +
+    searchResults.notifications.length;
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const q = e.target.value;
@@ -100,7 +136,15 @@ const Navbar: React.FC<NavbarProps> = ({
       window.clearTimeout(searchDebounceRef.current);
 
     if (!q.trim()) {
-      setSearchResults({ pages: [], documents: [], users: [], offices: [] });
+      setSearchResults({
+        pages: [],
+        documents: [],
+        users: [],
+        offices: [],
+        templates: [],
+        requests: [],
+        notifications: [],
+      });
       setSearchLoading(false);
       return;
     }
@@ -119,6 +163,9 @@ const Navbar: React.FC<NavbarProps> = ({
           documents: data.documents,
           users: data.users,
           offices: data.offices,
+          templates: data.templates,
+          requests: data.requests,
+          notifications: data.notifications,
         });
       } catch {
         // ignore
@@ -131,14 +178,30 @@ const Navbar: React.FC<NavbarProps> = ({
   const handleResultClick = (url: string) => {
     setSearchOpen(false);
     setSearchQuery("");
-    setSearchResults({ pages: [], documents: [], users: [], offices: [] });
+    setSearchResults({
+      pages: [],
+      documents: [],
+      users: [],
+      offices: [],
+      templates: [],
+      requests: [],
+      notifications: [],
+    });
     navigate(url);
   };
 
   const clearSearch = () => {
     setSearchQuery("");
     setSearchOpen(false);
-    setSearchResults({ pages: [], documents: [], users: [], offices: [] });
+    setSearchResults({
+      pages: [],
+      documents: [],
+      users: [],
+      offices: [],
+      templates: [],
+      requests: [],
+      notifications: [],
+    });
     searchInputRef.current?.focus();
   };
 
@@ -358,6 +421,18 @@ const Navbar: React.FC<NavbarProps> = ({
                   <ResultGroup
                     label="Documents"
                     items={searchResults.documents}
+                  />
+                  <ResultGroup
+                    label="Requests"
+                    items={searchResults.requests}
+                  />
+                  <ResultGroup
+                    label="Templates"
+                    items={searchResults.templates}
+                  />
+                  <ResultGroup
+                    label="Notifications"
+                    items={searchResults.notifications}
                   />
                   <ResultGroup label="Users" items={searchResults.users} />
                   <ResultGroup label="Offices" items={searchResults.offices} />

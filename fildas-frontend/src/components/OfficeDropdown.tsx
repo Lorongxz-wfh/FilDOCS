@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { Office } from "../services/documents";
 import { listOffices } from "../services/documents";
+import { ChevronDown } from "lucide-react";
 
 interface OfficeDropdownProps {
   value: number | null;
@@ -21,6 +22,7 @@ const OfficeDropdown: React.FC<OfficeDropdownProps> = ({
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -36,6 +38,21 @@ const OfficeDropdown: React.FC<OfficeDropdownProps> = ({
     load();
   }, []);
 
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+        setSearch("");
+      }
+    };
+    if (isOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [isOpen]);
+
   const filtered = offices.filter((office) => {
     const q = search.toLowerCase();
     return (
@@ -46,75 +63,73 @@ const OfficeDropdown: React.FC<OfficeDropdownProps> = ({
 
   const selected = offices.find((o) => o.id === value);
 
+  const inputCls = `w-full rounded-lg border px-3 py-2 text-sm outline-none transition
+    bg-white dark:bg-surface-600
+    text-slate-900 dark:text-slate-100
+    placeholder-slate-400 dark:placeholder-slate-500
+    ${
+      error
+        ? "border-rose-300 dark:border-rose-700 focus:border-rose-500 focus:ring-2 focus:ring-rose-100 dark:focus:ring-rose-900/30"
+        : "border-slate-200 dark:border-surface-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30"
+    }`;
+
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       {!hideLabel && (
-        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-          Office / Department <span className="text-rose-500">*</span>
+        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1.5">
+          Office / Department{" "}
+          <span className="text-rose-500 normal-case">*</span>
         </label>
       )}
 
       <div className="relative">
         <input
           type="text"
-          placeholder="Search office..."
-          value={isOpen ? search : selected?.name || ""}
+          placeholder="Search office…"
+          value={isOpen ? search : (selected?.name ?? "")}
           onChange={(e) => setSearch(e.target.value)}
           onFocus={() => setIsOpen(true)}
-          className={`block w-full rounded-md border px-3 py-2 text-sm text-slate-900 shadow-xs outline-none transition dark:text-slate-200 dark:placeholder-slate-500 ${
-            error
-              ? "border-rose-300 focus:border-rose-500 focus:ring-rose-200 dark:border-rose-700"
-              : "border-slate-300 focus:border-sky-500 focus:ring-sky-200 dark:border-surface-400 dark:bg-surface-400"
-          } focus:ring-2`}
+          className={inputCls}
         />
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-          <svg
-            className={`h-4 w-4 text-slate-400 dark:text-slate-500 transition ${
+        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+          <ChevronDown
+            className={`h-4 w-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
               isOpen ? "rotate-180" : ""
             }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            />
-          </svg>
+          />
         </div>
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 w-full rounded-md border border-slate-200 bg-white shadow-lg dark:border-surface-400 dark:bg-surface-500">
-          <ul className="max-h-48 overflow-y-auto">
+        <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-lg overflow-hidden">
+          <ul className="max-h-48 overflow-y-auto py-1">
             {loading ? (
-              <li className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">
-                Loading...
+              <li className="px-3 py-2.5 text-xs text-slate-400 dark:text-slate-500">
+                Loading…
               </li>
             ) : filtered.length === 0 ? (
-              <li className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">
+              <li className="px-3 py-2.5 text-xs text-slate-400 dark:text-slate-500">
                 No offices found
               </li>
             ) : (
               filtered.map((office) => {
                 const isExcluded =
                   excludeOfficeIds.includes(office.id) && office.id !== value;
+                const isSelected = value === office.id;
 
                 return (
                   <li key={office.id}>
                     <button
                       type="button"
                       disabled={isExcluded}
-                      aria-disabled={isExcluded}
-                      className={`w-full text-left px-3 py-2 text-sm transition ${
-                        value === office.id
-                          ? "bg-sky-50 text-sky-700 font-medium dark:bg-sky-950/40 dark:text-sky-400"
+                      className={[
+                        "w-full text-left px-3 py-2 text-sm transition",
+                        isSelected
+                          ? "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 font-medium"
                           : isExcluded
-                            ? "text-slate-400 cursor-not-allowed dark:text-slate-600"
-                            : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-surface-400"
-                      }`}
+                            ? "text-slate-300 dark:text-slate-600 cursor-not-allowed"
+                            : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400",
+                      ].join(" ")}
                       onClick={() => {
                         if (isExcluded) return;
                         onChange(office.id, office.name, office.code);
@@ -123,7 +138,7 @@ const OfficeDropdown: React.FC<OfficeDropdownProps> = ({
                       }}
                     >
                       <span className="font-medium">{office.name}</span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                      <span className="ml-2 text-xs text-slate-400 dark:text-slate-500">
                         ({office.code})
                       </span>
                     </button>

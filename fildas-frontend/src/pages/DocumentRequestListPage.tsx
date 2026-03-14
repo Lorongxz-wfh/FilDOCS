@@ -4,38 +4,17 @@ import Button from "../components/ui/Button.tsx";
 import {
   listDocumentRequestInbox,
   listDocumentRequests,
+  type DocumentRequestProgress,
 } from "../services/documentRequests";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getAuthUser } from "../lib/auth.ts";
 import CreateDocumentRequestModal from "../components/documentRequests/CreateDocumentRequestModal";
-import Table, { type TableColumn } from "../components/ui/Table";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Search, X, Users, FileStack } from "lucide-react";
 
 function formatDate(iso: string | null | undefined) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const s = String(status).toLowerCase();
-  const map: Record<string, string> = {
-    open: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
-    closed:
-      "bg-slate-100 text-slate-600 border-slate-200 dark:bg-surface-400 dark:text-slate-400 dark:border-surface-300",
-    cancelled:
-      "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
-    pending:
-      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
-  };
-  const cls = map[s] ?? "bg-slate-100 text-slate-600 border-slate-200";
-  return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold tracking-wide ${cls}`}
-    >
-      {String(status).toUpperCase()}
-    </span>
-  );
 }
 
 function roleLower(me: any) {
@@ -55,6 +34,133 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
+// ── 3-layer progress bar ───────────────────────────────────────────────────
+const ProgressBar: React.FC<{ progress: DocumentRequestProgress }> = ({
+  progress,
+}) => {
+  const { total, submitted, accepted } = progress;
+  if (total === 0) return null;
+
+  const submittedPct = Math.round((submitted / total) * 100);
+  const acceptedPct = Math.round((accepted / total) * 100);
+
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <div className="relative flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-surface-400 overflow-hidden">
+        {/* submitted layer */}
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-sky-300 dark:bg-sky-700 transition-all"
+          style={{ width: `${submittedPct}%` }}
+        />
+        {/* accepted layer — on top */}
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-emerald-500 dark:bg-emerald-400 transition-all"
+          style={{ width: `${acceptedPct}%` }}
+        />
+      </div>
+      <span className="shrink-0 text-[10px] font-medium text-slate-400 dark:text-slate-500 tabular-nums">
+        {accepted}/{total}
+      </span>
+    </div>
+  );
+};
+
+// ── Status badge ───────────────────────────────────────────────────────────
+function StatusBadge({ status }: { status: string }) {
+  const s = String(status).toLowerCase();
+  const map: Record<string, string> = {
+    open: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
+    closed:
+      "bg-slate-100 text-slate-600 border-slate-200 dark:bg-surface-400 dark:text-slate-400 dark:border-surface-300",
+    cancelled:
+      "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
+    pending:
+      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+  };
+  const cls = map[s] ?? "bg-slate-100 text-slate-600 border-slate-200";
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide ${cls}`}
+    >
+      {String(status).toUpperCase()}
+    </span>
+  );
+}
+
+// ── Mode badge ─────────────────────────────────────────────────────────────
+function ModeBadge({ mode }: { mode: string }) {
+  const isMultiDoc = mode === "multi_doc";
+  return (
+    <span
+      className={[
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+        isMultiDoc
+          ? "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-400"
+          : "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-400",
+      ].join(" ")}
+    >
+      {isMultiDoc ? (
+        <FileStack className="h-2.5 w-2.5" />
+      ) : (
+        <Users className="h-2.5 w-2.5" />
+      )}
+      {isMultiDoc ? "Multi-Doc" : "Multi-Office"}
+    </span>
+  );
+}
+
+// ── Request row ────────────────────────────────────────────────────────────
+const RequestRow: React.FC<{
+  row: any;
+  isQaAdmin: boolean;
+  onClick: () => void;
+}> = ({ row, isQaAdmin, onClick }) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition border-b border-slate-100 dark:border-surface-400 last:border-0"
+    >
+      {/* Title + mode */}
+      <div className="flex-1 min-w-0 flex flex-col gap-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+            {row.title}
+          </span>
+          {isQaAdmin && <ModeBadge mode={row.mode} />}
+          <StatusBadge status={row.status} />
+        </div>
+        {/* Progress bar */}
+        {row.progress && <ProgressBar progress={row.progress} />}
+      </div>
+
+      {/* Office info — QA only */}
+      {isQaAdmin && (
+        <div className="shrink-0 hidden sm:block text-xs text-slate-400 dark:text-slate-500 text-right">
+          {row.office_name ?? "—"}
+          {row.office_code && (
+            <span className="ml-1 text-slate-300 dark:text-slate-600">
+              ({row.office_code})
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Due + created */}
+      <div className="shrink-0 hidden md:flex flex-col items-end gap-0.5">
+        {row.due_at && (
+          <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+            Due {formatDate(row.due_at)}
+          </span>
+        )}
+        <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          {formatDate(row.created_at)}
+        </span>
+      </div>
+    </button>
+  );
+};
+
 export default function DocumentRequestListPage() {
   const me = getAuthUser();
   const role = roleLower(me);
@@ -64,7 +170,10 @@ export default function DocumentRequestListPage() {
   const [status, setStatus] = React.useState<
     "" | "open" | "closed" | "cancelled"
   >("");
-  const [createOpen, setCreateOpen] = React.useState(false);
+  const location = useLocation();
+  const [createOpen, setCreateOpen] = React.useState(
+    () => (location.state as any)?.openModal === true,
+  );
 
   const [rows, setRows] = React.useState<any[]>([]);
   const [page, setPage] = React.useState(1);
@@ -74,8 +183,6 @@ export default function DocumentRequestListPage() {
   const [error, setError] = React.useState<string | null>(null);
 
   const qDebounced = useDebouncedValue(q, 400);
-  // scroll/sentinel handled by Table component
-
   const navigate = useNavigate();
 
   const reloadRequests = React.useCallback(async () => {
@@ -88,7 +195,6 @@ export default function DocumentRequestListPage() {
   const { refresh: refreshRequests, refreshing: refreshingRequests } =
     usePageBurstRefresh(reloadRequests);
 
-  // Reset when filters change
   React.useEffect(() => {
     setRows([]);
     setPage(1);
@@ -96,7 +202,6 @@ export default function DocumentRequestListPage() {
     setInitialLoading(true);
   }, [qDebounced, status, isQaAdmin]);
 
-  // Load data
   React.useEffect(() => {
     let alive = true;
     const load = async () => {
@@ -139,8 +244,6 @@ export default function DocumentRequestListPage() {
     };
   }, [page, qDebounced, status, isQaAdmin, hasMore]);
 
-  // infinite scroll handled by Table component via onLoadMore
-
   return (
     <PageFrame
       title="Document Requests"
@@ -173,17 +276,29 @@ export default function DocumentRequestListPage() {
     >
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 shrink-0">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search title/description…"
-          className="w-72 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-200 dark:placeholder-slate-500"
-        />
+        <div className="relative w-full sm:w-60">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search title/description…"
+            className="w-full rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 pl-9 pr-8 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
+          />
+          {q && (
+            <button
+              type="button"
+              onClick={() => setQ("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
         {isQaAdmin && (
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as any)}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-200"
+            className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
           >
             <option value="">All statuses</option>
             <option value="open">Open</option>
@@ -194,83 +309,60 @@ export default function DocumentRequestListPage() {
         {error && <span className="text-xs text-rose-500">{error}</span>}
       </div>
 
-      {/* Table */}
-      {(() => {
-        const columns: TableColumn<any>[] = [
-          {
-            key: "id",
-            header: "#",
-            render: (r) => (
-              <span className="text-xs font-mono text-slate-400 dark:text-slate-500">
-                #{r.id}
-              </span>
-            ),
-          },
-          {
-            key: "title",
-            header: "Title",
-            render: (r) => (
-              <span className="font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                {r.title}
-              </span>
-            ),
-          },
-          ...(isQaAdmin
-            ? [
-                {
-                  key: "office",
-                  header: "Office",
-                  render: (r: any) => (
-                    <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                      {r.office_name ?? "—"}
-                      {r.office_code && (
-                        <span className="ml-1 text-slate-400 dark:text-slate-500">
-                          ({r.office_code})
-                        </span>
-                      )}
-                    </span>
-                  ),
-                },
-              ]
-            : []),
-          {
-            key: "status",
-            header: "Status",
-            render: (r) => <StatusBadge status={r.status} />,
-          },
-          {
-            key: "due",
-            header: "Due",
-            render: (r) => (
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                {formatDate(r.due_at)}
-              </span>
-            ),
-          },
-        ];
-
-        return (
-          <div
-            className="rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden"
-            style={{ height: "calc(100vh - 217px)" }}
-          >
-            <Table
-              bare
-              className="h-full"
-              columns={columns}
-              rows={rows}
-              rowKey={(r) => r.id}
-              onRowClick={(r) => navigate(`/document-requests/${r.id}`)}
-              loading={loading}
-              initialLoading={initialLoading}
-              error={error}
-              emptyMessage="No requests found."
-              hasMore={hasMore}
-              onLoadMore={() => setPage((p) => p + 1)}
-            />
+      {/* List */}
+      <div
+        className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden overflow-y-auto"
+        style={{ height: "calc(100vh - 217px)" }}
+      >
+        {initialLoading ? (
+          <div className="space-y-0 divide-y divide-slate-100 dark:divide-surface-400">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="px-4 py-3 flex items-center gap-4">
+                <div className="flex-1 flex flex-col gap-2">
+                  <div className="h-4 w-2/3 rounded-md bg-slate-100 dark:bg-surface-400 animate-pulse" />
+                  <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-surface-400 animate-pulse" />
+                </div>
+                <div className="h-3 w-20 rounded-md bg-slate-100 dark:bg-surface-400 animate-pulse" />
+              </div>
+            ))}
           </div>
-        );
-      })()}
+        ) : rows.length === 0 ? (
+          <div className="flex h-40 items-center justify-center text-sm text-slate-400 dark:text-slate-500">
+            No requests found.
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100 dark:divide-surface-400">
+            {rows.map((row) => (
+              <RequestRow
+                key={row.id}
+                row={row}
+                isQaAdmin={isQaAdmin}
+                onClick={() => {
+                  if (isQaAdmin) {
+                    navigate(`/document-requests/${row.id}`);
+                  } else {
+                    navigate(
+                      `/document-requests/${row.id}/recipients/${row.recipient_id}`,
+                    );
+                  }
+                }}
+              />
+            ))}
+            {hasMore && (
+              <div className="flex justify-center py-3">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={loading}
+                  className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
+                >
+                  {loading ? "Loading…" : "Load more"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <CreateDocumentRequestModal
         open={createOpen}

@@ -583,7 +583,7 @@ const DocumentLibraryPage: React.FC<DocumentLibraryPageProps> = ({
             emptyMessage="No documents found."
             hasMore={hasMore}
             onLoadMore={!documents ? () => setPage((p) => p + 1) : undefined}
-            gridTemplateColumns="minmax(0,2.5fr) minmax(0,1.5fr) 100px 110px 60px 90px 80px"
+            gridTemplateColumns="minmax(0,2.5fr) minmax(0,1fr) 100px 160px 60px 90px 80px"
           />
         </div>
       )}
