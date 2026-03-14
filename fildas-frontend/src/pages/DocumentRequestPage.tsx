@@ -16,7 +16,7 @@ import {
   updateDocumentRequestRecipient,
   type DocumentRequestMessageRow,
 } from "../services/documentRequests";
-import { MessageSquare, Activity, Pencil, Check, X } from "lucide-react";
+import { MessageSquare, Activity, Pencil} from "lucide-react";
 import { roleLower, TabBar } from "../components/documentRequests/shared";
 import RequestHeaderCard from "../components/documentRequests/RequestHeaderCard";
 import RequestCommentsPanel from "../components/documentRequests/RequestCommentsPanel";
