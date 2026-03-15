@@ -164,7 +164,7 @@ const TAB_LABELS: Record<LibTab, string> = {
 function getDocSource(
   doc: Document,
   myOfficeId: number,
-  role: ReturnType<typeof getUserRole>,
+  _role?: ReturnType<typeof getUserRole>,
 ): "created" | "shared" | "requested" {
   // Shared: not owned by user's office
   if (doc.owner_office_id && doc.owner_office_id !== myOfficeId)
