@@ -295,7 +295,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   function startNotifPolling(mode: "idle" | "open" | "burst") {
     stopNotifPolling();
-    const ms = mode === "open" ? 8000 : mode === "burst" ? 5000 : 30000;
+    const ms = mode === "open" ? 8000 : mode === "burst" ? 5000 : 10000;
     notifPollRef.current = window.setInterval(() => {
       refreshNotifications({ includeList: isNotifOpen }).catch(() => {});
     }, ms);

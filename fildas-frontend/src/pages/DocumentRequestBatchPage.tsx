@@ -5,10 +5,11 @@ import { getAuthUser } from "../lib/auth";
 import {
   getDocumentRequest,
   updateDocumentRequest,
+  updateDocumentRequestStatus,
   type DocumentRequestItemRow,
   type DocumentRequestProgress,
 } from "../services/documentRequests";
-import { Users, FileStack, Check, Pencil, X } from "lucide-react";
+import { Users, FileStack, Check, Pencil, X, RefreshCw, Ban } from "lucide-react";
 import { roleLower, StatusBadge } from "../components/documentRequests/shared";
 import RequestActivityPanel from "../components/documentRequests/RequestActivityPanel";
 import RequestPreviewModal from "../components/documentRequests/RequestPreviewModal";
@@ -195,6 +196,40 @@ export default function DocumentRequestBatchPage() {
     load().catch(() => {});
   }, [load]);
 
+  // Poll every 15s for status/progress updates
+  React.useEffect(() => {
+    const id = window.setInterval(() => {
+      load().catch(() => {});
+    }, 15_000);
+    return () => window.clearInterval(id);
+  }, [load]);
+
+  const [refreshing, setRefreshing] = React.useState(false);
+  const handleRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await load().catch(() => {});
+    setRefreshing(false);
+  }, [load]);
+
+  const [statusUpdating, setStatusUpdating] = React.useState(false);
+  const handleStatusChange = React.useCallback(
+    async (status: "closed" | "cancelled") => {
+      const label = status === "closed" ? "close" : "cancel";
+      if (!window.confirm(`Are you sure you want to ${label} this request?`))
+        return;
+      setStatusUpdating(true);
+      try {
+        await updateDocumentRequestStatus(requestId!, status);
+        await load();
+      } catch (e: any) {
+        alert(e?.response?.data?.message ?? `Failed to ${label} request.`);
+      } finally {
+        setStatusUpdating(false);
+      }
+    },
+    [requestId, load],
+  );
+
   // Sync edit fields when req loads
   React.useEffect(() => {
     if (!req) return;
@@ -295,6 +330,39 @@ export default function DocumentRequestBatchPage() {
     <PageFrame
       title={req.title ?? `Request #${requestId}`}
       onBack={() => navigate("/document-requests")}
+      right={
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing || loading}
+            title="Refresh"
+            className="flex items-center justify-center h-8 w-8 rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+          </button>
+          {isQa && req?.status === "open" && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleStatusChange("closed")}
+                disabled={statusUpdating}
+                className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
+              >
+                <Check className="h-3 w-3" /> Close
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStatusChange("cancelled")}
+                disabled={statusUpdating}
+                className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-rose-200 dark:border-rose-800 bg-white dark:bg-surface-500 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:opacity-40 transition"
+              >
+                <Ban className="h-3 w-3" /> Cancel
+              </button>
+            </>
+          )}
+        </div>
+      }
     >
       <div className="grid h-full min-h-0 overflow-hidden grid-cols-1 gap-5 lg:grid-cols-12">
         {/* ── LEFT ── */}

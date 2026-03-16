@@ -41,6 +41,10 @@ Route::get('/document-request-items/{item}/example/preview', [\App\Http\Controll
     ->name('document-request-items.example.preview')
     ->middleware('signed');
 
+Route::get('/document-request-items/{item}/example/download', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'exampleDownloadSigned'])
+    ->name('document-request-items.example.download')
+    ->middleware('signed');
+
 Route::get('/document-requests/{request}/example/download', [DocumentRequestFileController::class, 'requestExampleDownloadSigned'])
     ->name('document-requests.example.download')
     ->middleware('signed');
@@ -138,10 +142,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/document-requests/{request}/recipients/{recipient}',   [DocumentRequestController::class, 'showRecipient']);
     Route::patch('/document-requests/{request}/recipients/{recipient}', [DocumentRequestController::class, 'updateRecipient']);
     Route::get('/document-requests/{request}/items/{item}',             [DocumentRequestController::class, 'showItem']);
-    Route::patch('/document-requests/{request}',      [DocumentRequestController::class, 'update']);
-    Route::patch('/document-request-items/{item}',    [DocumentRequestController::class, 'updateItem']);
+    Route::patch('/document-requests/{request}',         [DocumentRequestController::class, 'update']);
+    Route::patch('/document-requests/{request}/status', [DocumentRequestController::class, 'updateStatus']);
+    Route::patch('/document-request-items/{item}',       [DocumentRequestController::class, 'updateItem']);
     Route::post('/document-request-items/{item}/example', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'uploadExample']);
     Route::get('/document-request-items/{item}/example/preview-link', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'examplePreviewLink']);
+    Route::get('/document-request-items/{item}/example/download-link', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'exampleDownloadLink']);
     Route::get('/document-requests',         [DocumentRequestController::class, 'index']);
     Route::post('/document-requests',        [DocumentRequestController::class, 'store']);
     Route::get('/document-requests/inbox',   [DocumentRequestController::class, 'inbox']);

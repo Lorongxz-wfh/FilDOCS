@@ -973,10 +973,11 @@ class DocumentController extends Controller
     {
         $version->load('document.ownerOffice');
 
-        // Check if file replacement is required after rejection
+        // Check if file replacement is required (after rejection OR revision without new file)
         $needsFileReplacement = false;
         $draftStatuses = ['Draft', 'Office Draft'];
         if (in_array($version->status, $draftStatuses, true)) {
+            // Case 1: After rejection — must upload new file before re-forwarding
             $lastRejected = ActivityLog::where('document_version_id', $version->id)
                 ->where('event', 'workflow.rejected')
                 ->orderByDesc('created_at')
@@ -990,6 +991,14 @@ class DocumentController extends Controller
 
                 // Needs replacement if rejected AFTER last file upload (or never uploaded)
                 $needsFileReplacement = !$lastFileEvent || $lastRejected > $lastFileEvent;
+            }
+
+            // Case 2: Revision draft (version_number > 0) — must upload a new file before first forward
+            if (!$needsFileReplacement && (int) $version->version_number > 0) {
+                $hasNewFile = ActivityLog::where('document_version_id', $version->id)
+                    ->whereIn('event', ['version.file_replaced', 'version.file_uploaded'])
+                    ->exists();
+                $needsFileReplacement = !$hasNewFile;
             }
         }
 

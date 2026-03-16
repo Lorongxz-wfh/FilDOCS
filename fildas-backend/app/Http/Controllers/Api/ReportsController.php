@@ -107,14 +107,46 @@ class ReportsController extends Controller
         $officeAcc = []; // [officeId => ['office_id'=>..,'office_code'=>..,'cluster'=>..,'assigned'=>..,'approved'=>..,'returned'=>..]]
 
 
-        // Step codes (from real tasks JSON)
-        $reviewOfficeHeadStep = 'office_head_review';
-        $reviewVpOfficeStep   = 'vp_review_office';
-        $qaApprovalOfficeStep = 'qa_approval_office';
+        // All step codes across QA, Office, and Custom flows
+        // Review steps (office head / VP / custom recipient review)
+        $reviewSteps = [
+            'qa_office_review',           // QA flow: office reviews
+            'qa_vp_review',               // QA flow: VP reviews
+            'office_head_review',         // Office flow: head reviews
+            'office_vp_review',           // Office flow: VP reviews
+            'custom_office_review',       // Custom flow: recipient reviews
+        ];
+
+        // Approval steps (office head / VP / President / QA check)
+        $approvalSteps = [
+            'qa_office_approval',         // QA flow: office approves
+            'qa_vp_approval',             // QA flow: VP approves
+            'qa_pres_approval',           // QA flow: President approves
+            'qa_approval_final_check',    // QA flow: QA double-check before finalization
+            'office_head_approval',       // Office flow: head approves
+            'office_vp_approval',         // Office flow: VP approves
+            'office_pres_approval',       // Office flow: President approves
+            'office_approval_final_check', // Office flow: staff double-check
+            'custom_office_approval',     // Custom flow: recipient approves
+            'custom_approval_back_to_owner', // Custom flow: back to owner check
+        ];
+
+        // Finalization steps
+        $finalizationSteps = [
+            'qa_registration',
+            'qa_distribution',
+            'office_registration',
+            'office_distribution',
+            'custom_registration',
+            'custom_distribution',
+            'distributed',
+        ];
+
+        $allTrackedSteps = array_merge($reviewSteps, $approvalSteps, $finalizationSteps);
 
         $taskQuery = WorkflowTask::query()
-            ->whereIn('phase', ['review', 'registration'])
-            ->whereIn('status', ['completed', 'returned'])
+            ->whereIn('phase', ['review', 'approval', 'finalization', 'registration'])
+            ->whereIn('status', ['completed', 'returned', 'rejected'])
             ->whereNotNull('assigned_office_id');
 
         // For completed-based analytics, ignore rows without completed_at
@@ -167,20 +199,20 @@ class ReportsController extends Controller
             }
 
 
-            if ($t->status === 'returned') {
+            if ($t->status === 'returned' || $t->status === 'rejected') {
                 $versionFlags[$vid]['returned'] = true;
                 continue;
             }
 
-            if ($t->phase === 'review' && ($t->step === $reviewOfficeHeadStep || $t->step === $reviewVpOfficeStep)) {
+            if (in_array($t->step, $reviewSteps, true)) {
                 $versionFlags[$vid]['inReview'] = true;
             }
 
-            if ($t->phase === 'review' && $t->step === $qaApprovalOfficeStep) {
+            if (in_array($t->step, $approvalSteps, true)) {
                 $versionFlags[$vid]['sentToQa'] = true;
             }
 
-            if ($t->phase === 'registration' && $t->step === 'distributed') {
+            if (in_array($t->step, $finalizationSteps, true)) {
                 $versionFlags[$vid]['distributed'] = true;
             }
         }
@@ -313,8 +345,7 @@ class ReportsController extends Controller
 
             $vid = (int) $t->document_version_id;
 
-            // Returned: count unique versions that had a returned event in this bucket
-            if ($t->status === 'returned') {
+            if ($t->status === 'returned' || $t->status === 'rejected') {
                 if (!isset($seenSeries[$label]['returned'][$vid])) {
                     $seenSeries[$label]['returned'][$vid] = true;
                     $seriesAcc[$label]['returned']++;
@@ -322,24 +353,21 @@ class ReportsController extends Controller
                 continue;
             }
 
-            // in_review: count unique versions that hit office head OR vp review in this bucket
-            if ($t->phase === 'review' && ($t->step === $reviewOfficeHeadStep || $t->step === $reviewVpOfficeStep)) {
+            if (in_array($t->step, $reviewSteps, true)) {
                 if (!isset($seenSeries[$label]['in_review'][$vid])) {
                     $seenSeries[$label]['in_review'][$vid] = true;
                     $seriesAcc[$label]['in_review']++;
                 }
             }
 
-            // sent_to_qa: count unique versions that hit qa approval step in this bucket
-            if ($t->phase === 'review' && $t->step === $qaApprovalOfficeStep) {
+            if (in_array($t->step, $approvalSteps, true)) {
                 if (!isset($seenSeries[$label]['sent_to_qa'][$vid])) {
                     $seenSeries[$label]['sent_to_qa'][$vid] = true;
                     $seriesAcc[$label]['sent_to_qa']++;
                 }
             }
 
-            // approved: count unique versions distributed in this bucket
-            if ($t->phase === 'registration' && $t->step === 'distributed') {
+            if (in_array($t->step, $finalizationSteps, true)) {
                 if (!isset($seenSeries[$label]['approved'][$vid])) {
                     $seenSeries[$label]['approved'][$vid] = true;
                     $seriesAcc[$label]['approved']++;
@@ -444,10 +472,56 @@ class ReportsController extends Controller
 
         // stage buckets
         $stageBuckets = [
-            'Office' => ['steps' => ['office_head_review'], 'total_seconds' => 0, 'task_count' => 0, 'version_ids' => []],
-            'VP' => ['steps' => ['vp_review_office'], 'total_seconds' => 0, 'task_count' => 0, 'version_ids' => []],
-            'QA' => ['steps' => ['qa_approval_office'], 'total_seconds' => 0, 'task_count' => 0, 'version_ids' => []],
-            'Registration' => ['steps' => ['distributed'], 'total_seconds' => 0, 'task_count' => 0, 'version_ids' => []],
+            'Review' => [
+                'steps' => [
+                    'qa_office_review',
+                    'office_head_review',
+                    'custom_office_review',
+                ],
+                'total_seconds' => 0,
+                'task_count' => 0,
+                'version_ids' => [],
+            ],
+            'VP / President' => [
+                'steps' => [
+                    'qa_vp_review',
+                    'qa_pres_approval',
+                    'office_vp_review',
+                    'office_vp_approval',
+                    'office_pres_approval',
+                    'qa_vp_approval',
+                ],
+                'total_seconds' => 0,
+                'task_count' => 0,
+                'version_ids' => [],
+            ],
+            'Approval Check' => [
+                'steps' => [
+                    'qa_approval_final_check',
+                    'office_approval_final_check',
+                    'custom_approval_back_to_owner',
+                    'qa_office_approval',
+                    'office_head_approval',
+                    'custom_office_approval',
+                ],
+                'total_seconds' => 0,
+                'task_count' => 0,
+                'version_ids' => [],
+            ],
+            'Finalization' => [
+                'steps' => [
+                    'qa_registration',
+                    'qa_distribution',
+                    'office_registration',
+                    'office_distribution',
+                    'custom_registration',
+                    'custom_distribution',
+                    'distributed',
+                ],
+                'total_seconds' => 0,
+                'task_count' => 0,
+                'version_ids' => [],
+            ],
         ];
 
 

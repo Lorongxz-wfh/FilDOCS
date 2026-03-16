@@ -29,6 +29,8 @@ import {
   Building2,
   Hash,
   Send,
+  Maximize2,
+  X,
 } from "lucide-react";
 import CommentBubble from "../components/documents/documentFlow/CommentBubble";
 
@@ -128,6 +130,7 @@ export default function DocumentViewPage() {
   const [newMsgCount, setNewMsgCount] = React.useState(0);
 
   const [shareOpen, setShareOpen] = React.useState(false);
+  const [fullscreen, setFullscreen] = React.useState(false);
   const [infoCollapsed, setInfoCollapsed] = React.useState(false);
 
   // ── Load doc + latest distributed version ──────────────────────────────────
@@ -550,6 +553,7 @@ export default function DocumentViewPage() {
                   {version?.original_filename ?? "No file"}
                 </span>
                 {version?.preview_path && (
+                  <>
                   <button
                     type="button"
                     onClick={() => {
@@ -569,6 +573,17 @@ export default function DocumentViewPage() {
                   >
                     ↺ Reload
                   </button>
+                  {previewUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setFullscreen(true)}
+                      title="Fullscreen preview"
+                      className="flex items-center gap-1 rounded-md border border-slate-200 dark:border-surface-400 px-2 py-1 text-[11px] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+                    >
+                      <Maximize2 className="h-3 w-3" />
+                    </button>
+                  )}
+                  </>
                 )}
               </div>
             </div>
@@ -597,6 +612,27 @@ export default function DocumentViewPage() {
           </div>
         </aside>
       </div>
+
+      {/* Fullscreen preview modal */}
+      {fullscreen && previewUrl && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/90">
+          <div className="flex items-center justify-between px-4 py-2 shrink-0">
+            <span className="text-sm text-white/70 truncate">{version?.original_filename ?? "Preview"}</span>
+            <button
+              type="button"
+              onClick={() => setFullscreen(false)}
+              className="flex items-center justify-center h-8 w-8 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <iframe
+            title="Document preview fullscreen"
+            src={previewUrl}
+            className="flex-1 w-full border-0"
+          />
+        </div>
+      )}
 
       <ShareDocumentModal
         open={shareOpen}

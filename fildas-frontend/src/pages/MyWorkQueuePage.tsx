@@ -21,7 +21,7 @@ import InlineSpinner from "../components/ui/loader/InlineSpinner";
 import SkeletonList from "../components/ui/loader/SkeletonList";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
-import { RefreshCw, CheckCircle2, FileText } from "lucide-react";
+import { RefreshCw, CheckCircle2, FileText, Search, X } from "lucide-react";
 
 // ── Stat card ──────────────────────────────────────────────────────────────
 const StatCard: React.FC<{
@@ -145,7 +145,7 @@ const FinishedCard: React.FC<{
 );
 
 // ── Main page ──────────────────────────────────────────────────────────────
-type QueueTab = "assigned" | "monitoring" | "finished";
+type QueueTab = "all" | "active" | "done";
 
 const MyWorkQueuePage: React.FC = () => {
   const navigate = useNavigate();
@@ -169,9 +169,11 @@ const MyWorkQueuePage: React.FC = () => {
   const [loadingActivity, setLoadingActivity] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [search, setSearch] = useState("");
+
   // Pre-select tab from router state (e.g. from Work Queue "finished" link)
   const initialTab = (location.state as any)?.tab as QueueTab | undefined;
-  const [tab, setTab] = useState<QueueTab>(initialTab ?? "assigned");
+  const [tab, setTab] = useState<QueueTab>(initialTab ?? "all");
 
   const formatWhen = (iso?: string | null) => {
     if (!iso) return "";
@@ -194,8 +196,6 @@ const MyWorkQueuePage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const roleNow = getUserRole();
-
         const [s, a] = await Promise.all([
           getDocumentStats(),
           // Workflow-only events for recent activity
@@ -210,12 +210,10 @@ const MyWorkQueuePage: React.FC = () => {
         setStats(s);
         setRecentActivity((a as any)?.data ?? []);
 
-        if (roleNow !== "ADMIN") {
-          const q = await getWorkQueue();
-          if (!alive) return;
-          setAssignedItems(q.assigned ?? []);
-          setMonitoringItems(q.monitoring ?? []);
-        }
+        const q = await getWorkQueue();
+        if (!alive) return;
+        setAssignedItems(q.assigned ?? []);
+        setMonitoringItems(q.monitoring ?? []);
       } catch (e: any) {
         if (alive) setError(e?.message ?? "Failed to load work queue");
       } finally {
@@ -252,7 +250,7 @@ const MyWorkQueuePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (tab === "finished" && finishedDocs.length === 0) {
+    if (tab === "done" && finishedDocs.length === 0) {
       loadFinished(1);
     }
   }, [tab]);
@@ -275,23 +273,39 @@ const MyWorkQueuePage: React.FC = () => {
 
   const canCreate =
     isQA(userRole) || isOfficeStaff(userRole) || isOfficeHead(userRole);
-  const showMonitoring = isQA(userRole);
-  const activeItems = tab === "assigned" ? assignedItems : monitoringItems;
+
+  // Combined + filtered lists
+  const allItems = React.useMemo(() => {
+    const seen = new Set<string>();
+    return [...assignedItems, ...monitoringItems].filter((item) => {
+      const key = `${item.document.id}-${item.version.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [assignedItems, monitoringItems]);
+
+  const filterItems = (items: WorkQueueItem[]) => {
+    if (!search.trim()) return items;
+    const q = search.trim().toLowerCase();
+    return items.filter(
+      (item) =>
+        item.document.title?.toLowerCase().includes(q) ||
+        item.document.code?.toLowerCase().includes(q),
+    );
+  };
 
   const loadAll = useCallback(async () => {
-    const roleNow = getUserRole();
     const [s, a] = await Promise.all([
       getDocumentStats(),
       listActivityLogs({ scope: "mine", per_page: 10, category: "workflow" }),
     ]);
     setStats(s);
     setRecentActivity((a as any)?.data ?? []);
-    if (roleNow !== "ADMIN") {
-      const q = await getWorkQueue();
-      setAssignedItems(q.assigned ?? []);
-      setMonitoringItems(q.monitoring ?? []);
-    }
-    if (tab === "finished") {
+    const q = await getWorkQueue();
+    setAssignedItems(q.assigned ?? []);
+    setMonitoringItems(q.monitoring ?? []);
+    if (tab === "done") {
       setFinishedDocs([]);
       setFinishedPage(1);
       await loadFinished(1);
@@ -303,20 +317,16 @@ const MyWorkQueuePage: React.FC = () => {
   // ── Tabs config ────────────────────────────────────────────────────────────
   const tabs: { value: QueueTab; label: string; count?: number }[] = [
     {
-      value: "assigned",
-      label: "Assigned",
+      value: "all",
+      label: "All",
+      count: allItems.length || undefined,
+    },
+    {
+      value: "active",
+      label: "Active",
       count: assignedItems.length || undefined,
     },
-    ...(showMonitoring
-      ? [
-          {
-            value: "monitoring" as QueueTab,
-            label: "Monitoring",
-            count: monitoringItems.length || undefined,
-          },
-        ]
-      : []),
-    { value: "finished", label: "Finished" },
+    { value: "done", label: "Done" },
   ];
 
   return (
@@ -402,12 +412,14 @@ const MyWorkQueuePage: React.FC = () => {
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-5 py-3">
             <div>
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {tab === "finished" ? "Completed flows" : "Pending actions"}
+                {tab === "done" ? "Completed flows" : tab === "active" ? "Needs action" : "All documents"}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {tab === "finished"
+                {tab === "done"
                   ? "Distributed documents you were involved in"
-                  : "Items requiring your attention"}
+                  : tab === "active"
+                  ? "Assigned to your office — action required"
+                  : "All assigned + monitored documents"}
               </p>
             </div>
 
@@ -436,9 +448,33 @@ const MyWorkQueuePage: React.FC = () => {
             </div>
           </div>
 
+          {/* Search bar (All / Active tabs only) */}
+          {tab !== "done" && (
+            <div className="shrink-0 px-5 pt-3 pb-0">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by title or code…"
+                  className="w-full rounded-lg border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 pl-9 pr-8 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Queue list */}
           <div className="flex-1 overflow-y-auto px-5 py-4">
-            {tab === "finished" ? (
+            {tab === "done" ? (
               finishedLoading && finishedDocs.length === 0 ? (
                 <SkeletonList rows={4} rowClassName="h-14 rounded-xl" />
               ) : finishedDocs.length === 0 ? (
@@ -488,33 +524,40 @@ const MyWorkQueuePage: React.FC = () => {
               )
             ) : loading ? (
               <SkeletonList rows={4} rowClassName="h-14 rounded-xl" />
-            ) : activeItems.length === 0 ? (
-              <div className="flex h-full min-h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600">
-                <div className="text-center">
-                  <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-lg">
-                    ✓
+            ) : (() => {
+              const displayItems = filterItems(
+                tab === "active" ? assignedItems : allItems,
+              );
+              return displayItems.length === 0 ? (
+                <div className="flex h-full min-h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600">
+                  <div className="text-center">
+                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-lg">
+                      ✓
+                    </div>
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      {search ? "No results" : "All caught up"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                      {search
+                        ? "Try a different search term."
+                        : tab === "active"
+                        ? "No tasks assigned to your office right now."
+                        : "No documents in your queue."}
+                    </p>
                   </div>
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    All caught up
-                  </p>
-                  <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-                    {tab === "assigned"
-                      ? "No assigned tasks right now."
-                      : "No monitored documents right now."}
-                  </p>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {activeItems.map((item) => (
-                  <QueueCard
-                    key={`${item.document.id}-${item.version.id}`}
-                    item={item}
-                    onClick={openByDocId}
-                  />
-                ))}
-              </div>
-            )}
+              ) : (
+                <div className="space-y-2">
+                  {displayItems.map((item) => (
+                    <QueueCard
+                      key={`${item.document.id}-${item.version.id}`}
+                      item={item}
+                      onClick={openByDocId}
+                    />
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
 

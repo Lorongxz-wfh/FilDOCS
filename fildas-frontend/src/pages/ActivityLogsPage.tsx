@@ -9,7 +9,7 @@ import ActivityCalendar from "../components/activityLogs/ActivityCalendar";
 import { List, CalendarDays, X } from "lucide-react";
 
 type Scope = "all" | "office" | "mine";
-type Category = "" | "workflow" | "request";
+type Category = "" | "workflow" | "request" | "document" | "user" | "template" | "profile";
 
 const EVENT_LABELS: Record<string, string> = {
   "auth.login": "Logged in",
@@ -438,7 +438,11 @@ const ActivityLogsPage: React.FC = () => {
           >
             <option value="">All categories</option>
             <option value="workflow">Workflow</option>
-            <option value="request">Requests</option>
+            <option value="request">Document Requests</option>
+            <option value="document">Documents</option>
+            <option value="user">User Management</option>
+            <option value="template">Templates</option>
+            <option value="profile">Profile &amp; Auth</option>
           </select>
 
           <div className="relative">

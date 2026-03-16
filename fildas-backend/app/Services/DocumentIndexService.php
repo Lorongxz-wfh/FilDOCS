@@ -81,6 +81,14 @@ class DocumentIndexService
             });
         }
 
+        // Date range filter (created_at of the document)
+        if (!empty($data['date_from'])) {
+            $query->where('documents.created_at', '>=', $data['date_from'] . ' 00:00:00');
+        }
+        if (!empty($data['date_to'])) {
+            $query->where('documents.created_at', '<=', $data['date_to'] . ' 23:59:59');
+        }
+
         if (!empty($data['q'])) {
             $term = trim($data['q']);
             $like = '%' . str_replace('%', '\\%', $term) . '%';

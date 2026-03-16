@@ -144,6 +144,29 @@ class WorkflowService
                 );
             }
 
+            // ── Revision draft enforcement ────────────────────────────────
+            // Revisions must have a new file uploaded before the first forward from draft
+            $draftForwardActions = [
+                WorkflowSteps::ACTION_QA_SEND_TO_OFFICE_REVIEW,
+                WorkflowSteps::ACTION_OFFICE_SEND_TO_HEAD,
+                WorkflowSteps::ACTION_CUSTOM_FORWARD,
+            ];
+            if (
+                $task &&
+                WorkflowSteps::isDraftStep($task->step) &&
+                in_array($action, $draftForwardActions, true) &&
+                (int) $version->version_number > 0
+            ) {
+                $hasNewFile = ActivityLog::where('document_version_id', $version->id)
+                    ->whereIn('event', ['version.file_replaced', 'version.file_uploaded'])
+                    ->exists();
+                if (!$hasNewFile) {
+                    throw new \InvalidArgumentException(
+                        'Upload a new version of the document before forwarding this revision.'
+                    );
+                }
+            }
+
             if ($routing === 'custom') {
                 return $this->applyCustomAction($version, $task, $user, $action, $note, $effectiveDate);
             }

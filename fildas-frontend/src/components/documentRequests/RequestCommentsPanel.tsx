@@ -108,7 +108,7 @@ export default function RequestCommentsPanel({
               }
               when={formatDateTime(m.created_at ?? "")}
               message={m.message}
-              type="comment"
+              type={m.type ?? "comment"}
               isNew={newMessageIds.has(m.id)}
               isMine={m.sender_user_id === myUserId}
               avatarLetter={(m.sender?.name ?? "?").charAt(0).toUpperCase()}

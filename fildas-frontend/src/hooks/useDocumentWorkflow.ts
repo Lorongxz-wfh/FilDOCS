@@ -23,11 +23,11 @@ type Options = {
   qaOfficeId: number | null;
 };
 
-// Polling intervals — tuned for localhost + production
-const IDLE_POLL_MS = 30_000; // 30s idle (was 10s — 3x fewer requests)
-const BURST_POLL_MS = 8_000; // 8s burst after action (was 5s)
-const BURST_EXPIRE_MS = 24_000; // revert after 24s (was 15s)
-const MSG_POLL_MS = 15_000; // 15s message poll (was 10s)
+// Polling intervals
+const IDLE_POLL_MS = 10_000; // 10s idle
+const BURST_POLL_MS = 5_000; // 5s burst after action
+const BURST_EXPIRE_MS = 15_000; // revert after 15s
+const MSG_POLL_MS = 10_000; // 10s message poll
 
 export function useDocumentWorkflow({
   versionId,

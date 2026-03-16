@@ -177,11 +177,14 @@ export default function DocumentLibraryPage() {
   const navigate = useNavigate();
   const role = getUserRole();
   const myOfficeId = getCurrentUserOfficeId();
+  const isAdmin = ["ADMIN", "SYSADMIN"].includes(String(role).toUpperCase());
 
   const [tab, setTab] = useState<LibTab>("all");
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const [rows, setRows] = useState<Document[]>([]);
   const [page, setPage] = useState(1);
@@ -205,7 +208,7 @@ export default function DocumentLibraryPage() {
     setPage(1);
     setHasMore(true);
     setInitialLoading(true);
-  }, [tab, qDebounced, typeFilter]);
+  }, [tab, qDebounced, typeFilter, dateFrom, dateTo]);
 
   // Derive scope from tab
   const scopeFromTab = useMemo((): "all" | "owned" | "shared" | "assigned" => {
@@ -229,7 +232,9 @@ export default function DocumentLibraryPage() {
           q: qDebounced.trim() || undefined,
           status: "Distributed",
           doctype: typeFilter !== "ALL" ? typeFilter : undefined,
-          scope: scopeFromTab,
+          scope: isAdmin ? undefined : scopeFromTab,
+          date_from: dateFrom || undefined,
+          date_to: dateTo || undefined,
         });
         if (!alive) return;
         const incoming = res.data ?? [];
@@ -252,7 +257,7 @@ export default function DocumentLibraryPage() {
     return () => {
       alive = false;
     };
-  }, [page, qDebounced, typeFilter, scopeFromTab, hasMore]);
+  }, [page, qDebounced, typeFilter, scopeFromTab, hasMore, dateFrom, dateTo]);
 
   const reloadLibrary = useCallback(async () => {
     setRows([]);
@@ -342,12 +347,31 @@ export default function DocumentLibraryPage() {
           <option value="forms">Forms</option>
         </select>
 
-        {(q || typeFilter !== "ALL") && (
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">From</span>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
+          />
+          <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">To</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
+          />
+        </div>
+
+        {(q || typeFilter !== "ALL" || dateFrom || dateTo) && (
           <button
             type="button"
             onClick={() => {
               setQ("");
               setTypeFilter("ALL");
+              setDateFrom("");
+              setDateTo("");
             }}
             className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
           >

@@ -79,7 +79,7 @@ export type DocumentRequestMessageRow = {
   id: number;
   document_request_id: number;
   sender_user_id: number;
-  type: "comment" | "system";
+  type: "comment" | "system" | "review" | "upload";
   message: string;
   created_at?: string;
   updated_at?: string;
@@ -235,6 +235,13 @@ export async function getDocumentRequestItemExamplePreviewLink(itemId: number) {
   return res.data as { url: string; expires_in_minutes: number };
 }
 
+export async function getDocumentRequestItemExampleDownloadLink(itemId: number) {
+  const res = await api.get(
+    `/document-request-items/${itemId}/example/download-link`,
+  );
+  return res.data as { url: string; expires_in_minutes: number };
+}
+
 export async function uploadDocumentRequestItemExample(
   itemId: number,
   file: File,
@@ -326,6 +333,19 @@ export async function getDocumentRequestItem(
     submissions?: DocumentRequestSubmissionRow[];
   };
 }
+// ── Update request status (close / cancel) ─────────────────────────────────
+export async function updateDocumentRequestStatus(
+  requestId: number,
+  status: "closed" | "cancelled",
+  reason?: string | null,
+) {
+  const res = await api.patch(`/document-requests/${requestId}/status`, {
+    status,
+    reason: reason ?? null,
+  });
+  return res.data as { message: string; id: number };
+}
+
 // ── Update request ─────────────────────────────────────────────────────────
 export async function updateDocumentRequest(
   requestId: number,

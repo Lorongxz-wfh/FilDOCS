@@ -147,13 +147,33 @@ class WorkflowController extends Controller
     {
         $user         = $request->user();
         $userOfficeId = (int) ($user?->office_id ?? 0);
+        $roleName     = strtolower(trim((string) ($user?->role?->name ?? '')));
+        $isAdmin      = in_array($roleName, ['admin', 'sysadmin'], true);
+
+        // Admin/Sysadmin: return all open tasks as monitoring (read-only)
+        if ($isAdmin) {
+            $allOpenTasks = WorkflowTask::where('status', 'open')
+                ->with(['version.document.ownerOffice'])
+                ->orderByDesc('id')
+                ->limit(100)
+                ->get();
+
+            $monitoring = $allOpenTasks->map(fn($t) => [
+                'task'     => $t,
+                'version'  => $t->version,
+                'document' => $t->version?->document,
+                'can_act'  => false,
+            ])->values();
+
+            return response()->json([
+                'assigned'   => [],
+                'monitoring' => $monitoring,
+            ]);
+        }
 
         if (!$userOfficeId) {
             return response()->json(['message' => 'Your account has no office assigned.'], 422);
         }
-
-        $qaOfficeId = (int) (\App\Models\Office::where('code', 'QA')->value('id') ?? 0);
-        $isQa       = $userOfficeId === $qaOfficeId;
 
         // Tasks assigned to my office
         $assignedTasks = WorkflowTask::where('status', 'open')
@@ -170,36 +190,32 @@ class WorkflowController extends Controller
             'can_act' => true,
         ])->values();
 
-        // QA monitoring: docs created by this QA user, not currently assigned to QA
-        $monitoring = collect();
+        // Monitoring: docs created by this user, not currently assigned to this office
+        $monitorVersions = \App\Models\DocumentVersion::query()
+            ->whereHas('document', fn($q) => $q->where('created_by', $user->id))
+            ->with([
+                'document.ownerOffice',
+                'tasks' => fn($q) => $q->orderByDesc('id'),
+            ])
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get();
 
-        if ($isQa) {
-            $monitorVersions = \App\Models\DocumentVersion::query()
-                ->whereHas('document', fn($q) => $q->where('created_by', $user->id))
-                ->with([
-                    'document.ownerOffice',
-                    'tasks' => fn($q) => $q->orderByDesc('id'),
-                ])
-                ->orderByDesc('id')
-                ->limit(50)
-                ->get();
+        $monitoring = $monitorVersions->map(function ($v) use ($userOfficeId) {
+            $openTask = $v->tasks->firstWhere('status', 'open');
 
-            $monitoring = $monitorVersions->map(function ($v) use ($userOfficeId) {
-                $openTask = $v->tasks->firstWhere('status', 'open');
+            // Already in assigned list — skip
+            if ($openTask && (int) $openTask->assigned_office_id === $userOfficeId) {
+                return null;
+            }
 
-                // Already in assigned list
-                if ($openTask && (int) $openTask->assigned_office_id === $userOfficeId) {
-                    return null;
-                }
-
-                return [
-                    'task'    => $openTask,
-                    'version' => $v,
-                    'document' => $v->document,
-                    'can_act' => false,
-                ];
-            })->filter()->values();
-        }
+            return [
+                'task'    => $openTask,
+                'version' => $v,
+                'document' => $v->document,
+                'can_act' => false,
+            ];
+        })->filter()->values();
 
         return response()->json([
             'assigned'   => $assigned,

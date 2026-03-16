@@ -985,17 +985,17 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
         </div>
       )}
 
-      {/* File replacement required banner — shown after rejection */}
+      {/* File replacement required banner */}
       {needsFileReplacement && (
         <div className="flex items-center gap-3 rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 px-4 py-3">
           <span className="text-orange-500 shrink-0 text-base">↺</span>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-orange-800 dark:text-orange-300">
-              Revised document required
+              New file required before forwarding
             </p>
             <p className="text-[11px] text-orange-700 dark:text-orange-400 mt-0.5">
-              This document was rejected. Upload a revised version using the
-              "Replace" button before forwarding.
+              Upload a new version of the document using the "Replace" button
+              before forwarding.
             </p>
           </div>
         </div>

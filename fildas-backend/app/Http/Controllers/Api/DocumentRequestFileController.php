@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
 class DocumentRequestFileController extends Controller
@@ -110,13 +111,18 @@ class DocumentRequestFileController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        $fullPath = $this->storageRoot() . DIRECTORY_SEPARATOR . $row->example_preview_path;
-        if (!file_exists($fullPath)) {
+        $disk = Storage::disk();
+        if (!$disk->exists($row->example_preview_path)) {
             return response()->json(['message' => 'Preview file not found on server.'], 404);
         }
 
-        return response()->file($fullPath, [
-            'Content-Type' => 'application/pdf',
+        $stream = $disk->readStream($row->example_preview_path);
+        $mime = $disk->mimeType($row->example_preview_path) ?: 'application/pdf';
+
+        return response()->stream(function () use ($stream) {
+            fpassthru($stream);
+        }, 200, [
+            'Content-Type' => $mime,
             'Content-Disposition' => 'inline; filename="' . ($row->example_original_filename ?? 'preview.pdf') . '"',
         ]);
     }
@@ -169,14 +175,14 @@ class DocumentRequestFileController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        $fullPath = $this->storageRoot() . DIRECTORY_SEPARATOR . $row->example_file_path;
-        if (!file_exists($fullPath)) {
+        $disk = Storage::disk();
+        if (!$disk->exists($row->example_file_path)) {
             return response()->json(['message' => 'File not found on server.'], 404);
         }
 
         $downloadName = $row->example_original_filename ?? 'document_request_example';
 
-        return response()->download($fullPath, $downloadName);
+        return $disk->download($row->example_file_path, $downloadName);
     }
 
     // ---------- Submission file: preview-link ----------
@@ -227,13 +233,18 @@ class DocumentRequestFileController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        $fullPath = $this->storageRoot() . DIRECTORY_SEPARATOR . $row->preview_path;
-        if (!file_exists($fullPath)) {
+        $disk = Storage::disk();
+        if (!$disk->exists($row->preview_path)) {
             return response()->json(['message' => 'Preview file not found on server.'], 404);
         }
 
-        return response()->file($fullPath, [
-            'Content-Type' => 'application/pdf',
+        $stream = $disk->readStream($row->preview_path);
+        $mime = $disk->mimeType($row->preview_path) ?: 'application/pdf';
+
+        return response()->stream(function () use ($stream) {
+            fpassthru($stream);
+        }, 200, [
+            'Content-Type' => $mime,
             'Content-Disposition' => 'inline; filename="' . ($row->original_filename ?? 'preview.pdf') . '"',
         ]);
     }
@@ -286,13 +297,13 @@ class DocumentRequestFileController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        $fullPath = $this->storageRoot() . DIRECTORY_SEPARATOR . $row->file_path;
-        if (!file_exists($fullPath)) {
+        $disk = Storage::disk();
+        if (!$disk->exists($row->file_path)) {
             return response()->json(['message' => 'File not found on server.'], 404);
         }
 
         $downloadName = $row->original_filename ?? 'document_request_submission_file';
 
-        return response()->download($fullPath, $downloadName);
+        return $disk->download($row->file_path, $downloadName);
     }
 }

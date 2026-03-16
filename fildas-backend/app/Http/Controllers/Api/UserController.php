@@ -154,6 +154,9 @@ class UserController extends Controller
         // Only update fields that were sent (PATCH semantics)
         $payload = collect($data)->except(['password'])->toArray();
 
+        // Capture old role before update for audit log
+        $oldRoleId = $user->role_id;
+
         // If role is being changed, enforce office nulling for admin/auditor.
         if (array_key_exists('role_id', $data)) {
             $incomingRoleId = $data['role_id'] ?? null;
@@ -187,6 +190,27 @@ class UserController extends Controller
                 'changed_fields' => array_keys($payload),
             ],
         ]);
+
+        // If role changed, add a dedicated role-change log entry
+        $newRoleId = $user->role_id;
+        if (array_key_exists('role_id', $data) && (int) $oldRoleId !== (int) $newRoleId) {
+            \App\Models\ActivityLog::create([
+                'document_id'         => null,
+                'document_version_id' => null,
+                'actor_user_id'       => $request->user()->id,
+                'actor_office_id'     => $request->user()->office_id,
+                'target_office_id'    => null,
+                'event'               => 'user.role_changed',
+                'label'               => 'Changed user role',
+                'meta'                => [
+                    'target_user_id' => $user->id,
+                    'name'           => trim("{$user->first_name} {$user->last_name}"),
+                    'old_role_id'    => $oldRoleId,
+                    'new_role_id'    => $newRoleId,
+                    'new_role_name'  => $user->role?->name,
+                ],
+            ]);
+        }
 
         return response()->json([
             'user' => $user,

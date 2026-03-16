@@ -7,6 +7,8 @@ import {
   getDocumentRequestItem,
   getDocumentRequestExamplePreviewLink,
   getDocumentRequestItemExamplePreviewLink,
+  getDocumentRequestExampleDownloadLink,
+  getDocumentRequestItemExampleDownloadLink,
   getDocumentRequestMessages,
   getDocumentRequestSubmissionFilePreviewLink,
   postDocumentRequestMessage,
@@ -153,7 +155,11 @@ export default function DocumentRequestPage() {
     isQa &&
     !!selectedSubmission?.id &&
     String(selectedSubmission?.status) === "submitted";
-  const backUrl = `/document-requests/${requestId}`;
+  // QA/item-view: go back to batch; office recipient (multi-office): go back to list
+  const backUrl =
+    isQa || isItemView
+      ? `/document-requests/${requestId}`
+      : `/document-requests`;
 
   // Page title — item title for item view
   const pageTitle =
@@ -702,6 +708,16 @@ export default function DocumentRequestPage() {
                   canQaReview={canQaReview}
                   onQaNoteChange={setQaNote}
                   onQaReview={qaReview}
+                  hasExample={!!(isItemView ? req.item_example_preview_path : req.example_preview_path)}
+                  onDownloadExample={async () => {
+                    const win = window.open("about:blank", "_blank");
+                    try {
+                      const res = isItemView && itemId
+                        ? await getDocumentRequestItemExampleDownloadLink(itemId)
+                        : await getDocumentRequestExampleDownloadLink(requestId);
+                      if (win) win.location.href = res.url;
+                    } catch { if (win) win.close(); }
+                  }}
                   files={files}
                   localPreviewUrl={localPreviewUrl}
                   hasLocalFile={hasLocalFile}

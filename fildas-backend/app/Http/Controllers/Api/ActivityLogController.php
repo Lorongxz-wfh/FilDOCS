@@ -50,7 +50,7 @@ class ActivityLogController extends Controller
             'office_id' => 'nullable|integer|exists:offices,id',
             'date_from' => 'nullable|date',
             'date_to'  => 'nullable|date',
-            'category' => 'nullable|in:workflow,request',
+            'category' => 'nullable|in:workflow,request,document,user,template,profile',
         ]);
 
         $scope = $data['scope'] ?? 'office';
@@ -88,15 +88,21 @@ class ActivityLogController extends Controller
 
         // Category filter
         $category = trim((string) ($request->query('category', '')));
-        if ($category === 'workflow') {
-            $q->where(function ($qq) {
-                $qq->where('event', 'like', 'workflow.%')
-                    ->orWhere('event', 'like', 'document.%')
-                    ->orWhere('event', 'like', 'version.%')
-                    ->orWhere('event', 'like', 'message.%');
+        $categoryPrefixes = [
+            'workflow' => ['workflow.'],
+            'request'  => ['document_request.'],
+            'document' => ['document.', 'version.', 'message.'],
+            'user'     => ['user.', 'office.'],
+            'template' => ['template.'],
+            'profile'  => ['profile.', 'auth.'],
+        ];
+        if ($category !== '' && isset($categoryPrefixes[$category])) {
+            $prefixes = $categoryPrefixes[$category];
+            $q->where(function ($qq) use ($prefixes) {
+                foreach ($prefixes as $prefix) {
+                    $qq->orWhere('event', 'like', $prefix . '%');
+                }
             });
-        } elseif ($category === 'request') {
-            $q->where('event', 'like', 'document_request%');
         }
 
         // Scope

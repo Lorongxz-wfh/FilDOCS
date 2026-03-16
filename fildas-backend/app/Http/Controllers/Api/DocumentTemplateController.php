@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\DocumentTemplate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -122,6 +123,18 @@ class DocumentTemplateController extends Controller
 
         $template->load(['uploader:id,first_name,last_name', 'office:id,name,code', 'tags']);
 
+        ActivityLog::create([
+            'actor_user_id'  => $user->id,
+            'actor_office_id' => $user->office_id,
+            'event'          => 'template.created',
+            'label'          => 'Created a template',
+            'meta'           => [
+                'template_id' => $template->id,
+                'name'        => $template->name,
+                'scope'       => $isGlobal ? 'global' : 'office',
+            ],
+        ]);
+
         return response()->json(['template' => $this->format($template, $user)], 201);
     }
 
@@ -143,7 +156,19 @@ class DocumentTemplateController extends Controller
             Storage::disk('public')->delete($template->thumbnail_path);
         }
 
+        $user = $request->user();
+        $templateName = $template->name;
+        $templateId   = $template->id;
+
         $template->forceDelete(); // hard delete; use delete() if you want soft-delete history
+
+        ActivityLog::create([
+            'actor_user_id'  => $user->id,
+            'actor_office_id' => $user->office_id,
+            'event'          => 'template.deleted',
+            'label'          => 'Deleted a template',
+            'meta'           => ['template_id' => $templateId, 'name' => $templateName],
+        ]);
 
         return response()->json(['message' => 'Template deleted.']);
     }
@@ -192,6 +217,14 @@ class DocumentTemplateController extends Controller
 
         $template->tags()->sync($tagIds);
         $template->load('tags');
+
+        ActivityLog::create([
+            'actor_user_id'  => $request->user()->id,
+            'actor_office_id' => $request->user()->office_id,
+            'event'          => 'template.tags_updated',
+            'label'          => 'Updated template tags',
+            'meta'           => ['template_id' => $template->id, 'name' => $template->name],
+        ]);
 
         return response()->json([
             'tags' => $template->tags->pluck('name')->values()->all(),

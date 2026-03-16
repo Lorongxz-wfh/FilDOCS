@@ -1,5 +1,4 @@
-// import React from "react";
-import { Upload, CheckCircle, XCircle, Clock, ChevronDown } from "lucide-react";
+import { Upload, CheckCircle, XCircle, Clock, ChevronDown, Download } from "lucide-react";
 import { StatusBadge } from "./shared";
 import RequestPreviewBox from "./RequestPreviewBox";
 import { getDocumentRequestSubmissionFileDownloadLink } from "../../services/documentRequests";
@@ -21,6 +20,10 @@ type Props = {
   canQaReview: boolean;
   onQaNoteChange: (v: string) => void;
   onQaReview: (decision: "accepted" | "rejected") => void;
+
+  // Example download
+  hasExample: boolean;
+  onDownloadExample: () => void;
 
   // Office upload
   files: File[];
@@ -60,6 +63,8 @@ export default function RequestSubmissionTab({
   canQaReview,
   onQaNoteChange,
   onQaReview,
+  hasExample,
+  onDownloadExample,
   files,
   localPreviewUrl,
   hasLocalFile,
@@ -217,6 +222,22 @@ export default function RequestSubmissionTab({
             </div>
           )}
 
+          {hasExample && (
+            <div className="shrink-0 flex items-center justify-between gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 dark:border-sky-800 dark:bg-sky-950/30">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-sky-800 dark:text-sky-300">Step 1 — Download the example document</p>
+                <p className="text-[11px] text-sky-600 dark:text-sky-400 mt-0.5">Fill in or sign the downloaded file, then upload it below.</p>
+              </div>
+              <button
+                type="button"
+                onClick={onDownloadExample}
+                className="shrink-0 flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-700 transition"
+              >
+                <Download size={12} /> Download
+              </button>
+            </div>
+          )}
+
           {showUploadArea && (
             <div className="shrink-0">
               <div
@@ -236,7 +257,7 @@ export default function RequestSubmissionTab({
                   className="mx-auto text-slate-300 dark:text-slate-600"
                 />
                 <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Drop your file here
+                  {hasExample ? "Step 2 — Upload completed document" : "Drop your file here"}
                 </p>
                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                   PDF, Word, Excel, PowerPoint · max 10MB

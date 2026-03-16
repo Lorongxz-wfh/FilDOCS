@@ -94,6 +94,13 @@ class ProfileController extends Controller
         $user->profile_photo_path = $path;
         $user->save();
 
+        \App\Models\ActivityLog::create([
+            'actor_user_id'  => $user->id,
+            'actor_office_id' => $user->office_id,
+            'event'          => 'profile.photo_updated',
+            'label'          => 'Updated profile photo',
+        ]);
+
         return response()->json(['user' => $this->userPayload($user)]);
     }
 
@@ -107,6 +114,13 @@ class ProfileController extends Controller
             Storage::disk('public')->delete($user->profile_photo_path);
             $user->profile_photo_path = null;
             $user->save();
+
+            \App\Models\ActivityLog::create([
+                'actor_user_id'  => $user->id,
+                'actor_office_id' => $user->office_id,
+                'event'          => 'profile.photo_removed',
+                'label'          => 'Removed profile photo',
+            ]);
         }
 
         return response()->json(['user' => $this->userPayload($user)]);

@@ -195,6 +195,14 @@ export default function DocumentRequestListPage() {
   const { refresh: refreshRequests, refreshing: refreshingRequests } =
     usePageBurstRefresh(reloadRequests);
 
+  // Poll every 30s for new/updated requests
+  React.useEffect(() => {
+    const id = window.setInterval(() => {
+      reloadRequests().catch(() => {});
+    }, 30_000);
+    return () => window.clearInterval(id);
+  }, [reloadRequests]);
+
   React.useEffect(() => {
     setRows([]);
     setPage(1);
@@ -338,9 +346,12 @@ export default function DocumentRequestListPage() {
                 row={row}
                 isQaAdmin={isQaAdmin}
                 onClick={() => {
-                  if (isQaAdmin) {
+                  if (isQaAdmin || row.mode === "multi_doc") {
+                    // QA/Admin: always batch view
+                    // multi_doc: office user sees the batch to pick which item to submit
                     navigate(`/document-requests/${row.id}`);
                   } else {
+                    // multi_office: office user goes directly to their specific recipient view
                     navigate(
                       `/document-requests/${row.id}/recipients/${row.recipient_id}`,
                     );

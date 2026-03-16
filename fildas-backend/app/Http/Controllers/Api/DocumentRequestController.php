@@ -608,6 +608,18 @@ class DocumentRequestController extends Controller
                 ],
             ]);
 
+            // System message for submission
+            $uploadMsg = "Submitted attempt #{$attemptNo}";
+            if (!empty($data['note'])) $uploadMsg .= ": " . $data['note'];
+            DB::table('document_request_messages')->insert([
+                'document_request_id' => $requestId,
+                'sender_user_id'      => $user->id,
+                'type'                => 'upload',
+                'message'             => $uploadMsg,
+                'created_at'          => $now,
+                'updated_at'          => $now,
+            ]);
+
             // Notify QA
             $qaUsers = User::query()
                 ->whereHas('role', fn($q) => $q->whereIn('name', ['QA', 'SYSADMIN']))
@@ -722,6 +734,20 @@ class DocumentRequestController extends Controller
                     'submission_id'       => (int) $submissionId,
                     'decision'            => $data['decision'],
                 ],
+            ]);
+
+            // System message for review decision
+            $reviewMsg = $data['decision'] === 'accepted'
+                ? 'Submission accepted'
+                : 'Submission rejected';
+            if (!empty($data['note'])) $reviewMsg .= ": " . $data['note'];
+            DB::table('document_request_messages')->insert([
+                'document_request_id' => (int) ($recipient->request_id ?? null),
+                'sender_user_id'      => $user->id,
+                'type'                => 'review',
+                'message'             => $reviewMsg,
+                'created_at'          => $now,
+                'updated_at'          => $now,
             ]);
 
             // Notify office users
@@ -1076,5 +1102,58 @@ class DocumentRequestController extends Controller
         ]);
 
         return response()->json(['message' => 'Updated.', 'id' => $recipientId]);
+    }
+
+    // PATCH /api/document-requests/{id}/status
+    public function updateStatus(Request $request, int $requestId)
+    {
+        $this->assertQaOrSysadmin($request);
+
+        $data = $request->validate([
+            'status' => 'required|in:closed,cancelled',
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $row = DB::table('document_requests')->where('id', $requestId)->first();
+        if (!$row) return response()->json(['message' => 'Not found.'], 404);
+
+        if ($row->status === $data['status']) {
+            return response()->json(['message' => 'Already ' . $data['status'] . '.'], 422);
+        }
+
+        $now = now();
+        DB::table('document_requests')->where('id', $requestId)->update([
+            'status'     => $data['status'],
+            'updated_at' => $now,
+        ]);
+
+        $event = $data['status'] === 'closed' ? 'document_request.closed' : 'document_request.cancelled';
+        $label = $data['status'] === 'closed' ? 'Closed document request' : 'Cancelled document request';
+
+        ActivityLog::create([
+            'document_id'         => null,
+            'document_version_id' => null,
+            'actor_user_id'       => $request->user()->id,
+            'actor_office_id'     => $request->user()->office_id,
+            'target_office_id'    => null,
+            'event'               => $event,
+            'label'               => $label,
+            'meta'                => [
+                'document_request_id' => $requestId,
+                'reason'              => $data['reason'] ?? null,
+            ],
+        ]);
+
+        // Insert system message so participants see the status change
+        DB::table('document_request_messages')->insert([
+            'document_request_id' => $requestId,
+            'sender_user_id'      => $request->user()->id,
+            'type'                => 'system',
+            'message'             => $label . ($data['reason'] ? ': ' . $data['reason'] : ''),
+            'created_at'          => $now,
+            'updated_at'          => $now,
+        ]);
+
+        return response()->json(['message' => ucfirst($data['status']) . '.', 'id' => $requestId]);
     }
 }

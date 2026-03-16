@@ -25,6 +25,10 @@ class DocumentIndexRequest extends FormRequest
             // frontend filter
             'scope' => 'nullable|in:all,owned,shared,assigned',
 
+            // date range filter
+            'date_from' => 'nullable|date_format:Y-m-d',
+            'date_to'   => 'nullable|date_format:Y-m-d',
+
             // legacy / optional
             'owner_office_id' => 'nullable|integer|exists:offices,id',
             'office_id' => 'nullable|integer|exists:offices,id',

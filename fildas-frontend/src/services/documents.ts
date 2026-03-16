@@ -325,7 +325,7 @@ export type ComplianceClusterDatum = {
 export type ComplianceReportParams = {
   date_from?: string; // YYYY-MM-DD
   date_to?: string; // YYYY-MM-DD
-  category?: "workflow" | "request";
+  category?: "workflow" | "request" | "document" | "user" | "template" | "profile";
 
   date_field?: "created" | "completed";
 
@@ -504,6 +504,8 @@ export async function listDocumentsPage(params?: {
   status?: string;
   doctype?: string;
   owner_office_id?: number;
+  date_from?: string; // YYYY-MM-DD
+  date_to?: string;   // YYYY-MM-DD
 
   // NEW: document library scope
   scope?: "all" | "owned" | "shared" | "assigned";
@@ -519,6 +521,8 @@ export async function listDocumentsPage(params?: {
         status: params?.status,
         doctype: params?.doctype,
         owner_office_id: params?.owner_office_id,
+        date_from: params?.date_from,
+        date_to: params?.date_to,
 
         scope: params?.scope,
       },
@@ -969,7 +973,7 @@ export async function listActivityLogs(params: {
   office_id?: number;
   date_from?: string; // YYYY-MM-DD
   date_to?: string; // YYYY-MM-DD
-  category?: "workflow" | "request";
+  category?: "workflow" | "request" | "document" | "user" | "template" | "profile";
 }): Promise<Paginated<ActivityLogItem>> {
   try {
     const api = await getApi();

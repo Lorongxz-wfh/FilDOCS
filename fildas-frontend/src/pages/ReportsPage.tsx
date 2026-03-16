@@ -659,7 +659,7 @@ const ReportsPage: React.FC = () => {
           <div className="flex flex-col gap-5">
             <ReportChartCard
               title={`Approval activity over time (${bucket})`}
-              subtitle={`Unique versions per stage per ${bucket} — based on task ${dateField} date`}
+              subtitle={`Unique versions per stage per ${bucket} — covers QA, Office, and Custom flows`}
               onExportCsv={() => exportTimelineCsv(seriesData)}
               onExportPdf={chartPdfHandler("fildas_approval_timeline.pdf")}
             >
@@ -685,7 +685,7 @@ const ReportsPage: React.FC = () => {
                   <Bar
                     dataKey="sent_to_qa"
                     fill="#a855f7"
-                    name="Sent to QA"
+                    name="In Approval"
                     radius={[3, 3, 0, 0] as any}
                   />
                   <Bar

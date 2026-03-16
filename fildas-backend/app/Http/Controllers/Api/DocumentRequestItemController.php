@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Services\DocumentRequests\DocumentRequestFileService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
@@ -87,6 +88,53 @@ class DocumentRequestItemController extends Controller
         );
 
         return response()->json(['url' => $url, 'expires_in_minutes' => 30]);
+    }
+
+    // GET /api/document-request-items/{item}/example/download-link
+    public function exampleDownloadLink(Request $request, int $itemId)
+    {
+        $me = $request->user();
+        $userId = (int) ($me?->id ?? 0);
+        if ($userId <= 0) return response()->json(['message' => 'Unauthorized.'], 401);
+
+        $item = DB::table('document_request_items')->where('id', $itemId)->first();
+        if (!$item || !$item->example_file_path) {
+            return response()->json(['message' => 'No file available.'], 404);
+        }
+
+        $ttlMinutes = 60;
+        $cacheKey = "document_request_item:{$itemId}:example:download_link:uid{$userId}:ttl{$ttlMinutes}";
+
+        $payload = Cache::remember($cacheKey, ($ttlMinutes - 5) * 60, function () use ($itemId, $ttlMinutes, $userId) {
+            $signedUrl = URL::temporarySignedRoute(
+                'document-request-items.example.download',
+                now()->addMinutes($ttlMinutes),
+                ['item' => $itemId, 'uid' => $userId]
+            );
+            return ['url' => $signedUrl, 'expires_in_minutes' => $ttlMinutes];
+        });
+
+        return response()->json($payload);
+    }
+
+    // GET /api/document-request-items/{item}/example/download (signed)
+    public function exampleDownloadSigned(Request $request, int $itemId)
+    {
+        $uid = (int) ($request->query('uid') ?? 0);
+        if ($uid <= 0) return response()->json(['message' => 'Missing uid.'], 422);
+
+        $item = DB::table('document_request_items')->where('id', $itemId)->first();
+        if (!$item || !$item->example_file_path) {
+            abort(404);
+        }
+
+        if (!Storage::disk()->exists($item->example_file_path)) {
+            abort(404, 'File not found on server.');
+        }
+
+        $downloadName = $item->example_original_filename ?? 'document_request_item_example';
+
+        return Storage::disk()->download($item->example_file_path, $downloadName);
     }
 
     // GET /api/document-request-items/{item}/example/preview (signed)
