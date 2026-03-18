@@ -78,7 +78,7 @@ export default function Table<T>({
     <>
       {/* Sticky header */}
       <div
-        className="shrink-0 grid gap-3 px-5 py-2.5 text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-surface-400 bg-slate-50 dark:bg-surface-600"
+        className="shrink-0 grid gap-3 px-4 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600"
         style={{ gridTemplateColumns: colTemplate }}
       >
         {columns.map((c) => (
@@ -94,17 +94,17 @@ export default function Table<T>({
       {/* Scrollable body */}
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         {initialLoading ? (
-          <div className="divide-y divide-slate-100 dark:divide-surface-400 px-2 py-1">
+          <div className="divide-y divide-slate-200 dark:divide-surface-400">
             {Array.from({ length: 10 }).map((_, r) => (
               <div
                 key={r}
-                className="grid gap-3 items-center px-3 py-3 rounded-lg"
+                className="grid gap-3 items-center px-4 py-2 rounded-none"
                 style={{ gridTemplateColumns: colTemplate }}
               >
                 {columns.map((_, c) => (
                   <div
                     key={c}
-                    className="h-3 rounded-full animate-pulse bg-slate-100 dark:bg-surface-400"
+                    className="h-3 rounded-sm animate-pulse bg-slate-100 dark:bg-surface-400"
                     style={{ width: c === 1 ? "60%" : c === 0 ? "50%" : "75%" }}
                   />
                 ))}
@@ -122,7 +122,7 @@ export default function Table<T>({
             {emptyMessage}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 dark:divide-surface-400 px-2 py-1">
+          <div className="divide-y divide-slate-200 dark:divide-surface-400">
             {rows.map((row) => {
               const clickable = !!onRowClick;
               return (
@@ -130,7 +130,7 @@ export default function Table<T>({
                   key={rowKey(row)}
                   onClick={clickable ? () => onRowClick?.(row) : undefined}
                   className={[
-                    "grid gap-3 items-center px-3 py-3 rounded-lg text-sm transition-colors group",
+                    "grid gap-3 items-center px-4 py-2 rounded-none text-sm transition-colors group",
                     clickable
                       ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-surface-400/60"
                       : "",
@@ -187,7 +187,7 @@ export default function Table<T>({
   return (
     <div
       className={[
-        "flex flex-col min-h-0 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500",
+        "flex flex-col min-h-0 overflow-hidden rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500",
         className ?? "",
       ].join(" ")}
     >

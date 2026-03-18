@@ -339,9 +339,9 @@ const Navbar: React.FC<NavbarProps> = ({
             key={`${item.type}-${item.id}`}
             type="button"
             onMouseDown={() => handleResultClick(item.url, item)}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition"
           >
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-surface-400 text-slate-500 dark:text-slate-300">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-slate-100 dark:bg-surface-400 text-slate-500 dark:text-slate-300">
               <ResultIcon type={item.type} />
             </span>
             <span className="flex-1 min-w-0">
@@ -355,7 +355,7 @@ const Navbar: React.FC<NavbarProps> = ({
               )}
             </span>
             {item.meta && (
-              <span className="shrink-0 rounded-full bg-slate-100 dark:bg-surface-400 px-2 py-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400 capitalize">
+              <span className="shrink-0 rounded bg-slate-100 dark:bg-surface-400 px-2 py-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400 capitalize">
                 {item.meta}
               </span>
             )}
@@ -366,7 +366,7 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="relative z-50 border-b border-slate-200 bg-white/80 backdrop-blur-sm dark:border-surface-400 dark:bg-surface-500/80">
+    <header className="relative z-50 border-b border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500">
       <div className="flex items-center gap-3 px-4 py-2.5">
         {/* Mobile hamburger */}
         <button
@@ -393,7 +393,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 if (searchQuery) setSearchOpen(true);
               }}
               placeholder="Search documents, pages… (Ctrl+K)"
-              className="w-full rounded-lg border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 pl-9 pr-8 py-1.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
+              className="w-full rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 pl-9 pr-8 py-1.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/30 transition"
             />
             {searchQuery && (
               <button
@@ -408,7 +408,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
           {/* Results dropdown */}
           {searchOpen && searchQuery.trim() && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-xl overflow-hidden">
+            <div className="absolute left-0 right-0 top-full mt-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-md overflow-hidden">
               {searchLoading && totalResults === 0 ? (
                 <div className="px-3 py-4">
                   <SkeletonList rows={3} rowClassName="h-8 rounded-md" />
@@ -495,8 +495,8 @@ const Navbar: React.FC<NavbarProps> = ({
 
           {/* Notification dropdown */}
           {isNotifOpen && (
-            <div className="absolute right-4 top-14 w-72 rounded-xl border border-slate-200 bg-white shadow-lg dark:border-surface-400 dark:bg-surface-500">
-              <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 dark:border-surface-400">
+            <div className="absolute right-4 top-14 w-72 rounded-md border border-slate-200 bg-white shadow-md dark:border-surface-400 dark:bg-surface-500">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200 dark:border-surface-400">
                 <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">
                   Inbox
                 </div>

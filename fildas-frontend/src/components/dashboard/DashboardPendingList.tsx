@@ -33,8 +33,8 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500">
-      <div className="flex items-center justify-between border-b border-slate-100 dark:border-surface-400 px-5 py-4">
+    <div className="rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500">
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-4 py-3">
         <div>
           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             Pending actions
@@ -52,11 +52,11 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
         </button>
       </div>
 
-      <div className="divide-y divide-slate-50 dark:divide-surface-400">
+      <div className="divide-y divide-slate-200 dark:divide-surface-400">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 px-5 py-3">
-              <Skeleton className="h-8 w-8 rounded-lg" />
+            <div key={i} className="flex items-center gap-3 px-4 py-2.5">
+              <Skeleton className="h-7 w-7 rounded" />
               <div className="flex-1 space-y-1.5">
                 <Skeleton className="h-3.5 w-3/4" />
                 <Skeleton className="h-3 w-1/3" />
@@ -89,9 +89,9 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
                     `/documents/${x.document.id}?version_id=${x.version.id}`,
                   )
                 }
-                className="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-slate-50 dark:hover:bg-surface-400"
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-slate-50 dark:hover:bg-surface-400"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-950/30">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-brand-50 dark:bg-brand-950/30">
                   <FileText className="h-4 w-4 text-brand-500" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -103,7 +103,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
                   </p>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${colorClass}`}
+                  className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${colorClass}`}
                 >
                   {x.version.status}
                 </span>

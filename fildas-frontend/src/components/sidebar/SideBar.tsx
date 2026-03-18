@@ -117,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClick={collapsed ? toggle : () => navigate("/dashboard")}
             title={collapsed ? "Expand sidebar" : "Go to dashboard"}
           >
-            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-lg">
+            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md">
               <img
                 src="/favicon.png"
                 alt="FilDAS"
@@ -152,11 +152,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={() => setNewOpen((o) => !o)}
                 className={[
-                  "flex items-center rounded-lg text-sm font-semibold transition-all",
-                  "bg-brand-500 hover:bg-brand-600 text-white shadow-sm",
+                  "flex items-center rounded-md text-sm font-semibold transition-all",
+                  "bg-brand-500 hover:bg-brand-600 text-white",
                   collapsed
-                    ? "justify-center w-full px-0 h-10.5"
-                    : "gap-2 px-4 h-10.5",
+                    ? "justify-center w-full px-0 h-9"
+                    : "gap-2 px-4 h-9",
                 ].join(" ")}
                 title={collapsed ? "New" : undefined}
               >
@@ -165,7 +165,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               </button>
 
               {newOpen && (
-                <div className="absolute left-0 top-full mt-1 z-50 w-52 rounded-xl border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-500 shadow-lg py-1">
+                <div className="absolute left-0 top-full mt-1 z-50 w-52 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-500 shadow-md py-1">
                   {visibleNewActions.map((action) => {
                     const Icon = action.icon;
                     return (
@@ -205,7 +205,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <div key={group.label}>
                 {/* Group label — hidden when collapsed */}
                 {!collapsed && (
-                  <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                     {group.label}
                   </p>
                 )}
@@ -229,7 +229,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                           title={collapsed ? item.label : undefined}
                           className={({ isActive }) =>
                             [
-                              "group flex w-full items-center rounded-lg text-sm font-medium transition-all",
+                              "group flex w-full items-center rounded-md text-sm font-medium transition-all",
                               collapsed
                                 ? "justify-center px-0 py-2"
                                 : "gap-3 px-3 py-2",
@@ -285,7 +285,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               title={collapsed ? settingsNavItem.label : undefined}
               className={({ isActive }) =>
                 [
-                  "group relative flex w-full items-center rounded-lg text-sm font-medium transition-all",
+                  "group relative flex w-full items-center rounded-md text-sm font-medium transition-all",
                   collapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-2",
                   isActive
                     ? "bg-brand-50 text-brand-500 dark:bg-surface-400 dark:text-brand-300"
@@ -331,7 +331,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     : `Logout ${user?.full_name ?? ""}`
                 }
                 className={[
-                  "flex w-full items-center justify-center rounded-lg py-2 transition-colors",
+                  "flex w-full items-center justify-center rounded-md py-2 transition-colors",
                   confirmLogout
                     ? "text-rose-500 bg-rose-50 dark:bg-rose-950/40"
                     : "text-slate-400 hover:bg-slate-50 hover:text-rose-500 dark:hover:bg-surface-400 dark:hover:text-rose-400",
@@ -341,7 +341,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               </button>
             ) : (
               <div className="flex items-center gap-2.5 px-1 pt-1">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/40 text-[11px] font-semibold text-brand-600 dark:text-brand-300">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-slate-200 dark:bg-surface-400 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                   {initials || "?"}
                 </div>
                 <div className="flex-1 min-w-0">

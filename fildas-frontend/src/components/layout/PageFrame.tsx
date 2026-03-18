@@ -27,7 +27,7 @@ export default function PageFrame({
         className,
       ].join(" ")}
     >
-      <div className="shrink-0 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-surface-400 dark:bg-surface-600/80">
+      <div className="shrink-0 border-b border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-600">
         <div className="px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Left: back arrow + title */}

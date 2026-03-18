@@ -28,28 +28,20 @@ const StatCard: React.FC<{
   label: string;
   value: number | null;
   loading: boolean;
-  color: "sky" | "slate" | "emerald";
-}> = ({ label, value, loading, color }) => {
-  const colorMap = {
-    sky: "text-sky-600 dark:text-sky-400",
-    slate: "text-slate-800 dark:text-slate-100",
-    emerald: "text-emerald-600 dark:text-emerald-400",
-  };
-  return (
-    <div className="flex-1 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-5 py-4">
-      <div className={`text-3xl font-bold tabular-nums ${colorMap[color]}`}>
-        {loading ? (
-          <InlineSpinner className="h-6 w-6 border-2" />
-        ) : (
-          (value ?? 0)
-        )}
-      </div>
-      <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-        {label}
-      </div>
+}> = ({ label, value, loading }) => (
+  <div className="flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3">
+    <div className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
+      {loading ? (
+        <InlineSpinner className="h-5 w-5 border-2" />
+      ) : (
+        (value ?? 0)
+      )}
     </div>
-  );
-};
+    <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+      {label}
+    </div>
+  </div>
+);
 
 // ── Queue item card ────────────────────────────────────────────────────────
 const QueueCard: React.FC<{
@@ -76,11 +68,11 @@ const QueueCard: React.FC<{
     <button
       type="button"
       onClick={() => onClick(doc.id)}
-      className="w-full text-left flex items-center gap-4 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3 transition hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-sm"
+      className="w-full text-left flex items-center gap-4 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3 transition hover:border-slate-300 dark:hover:border-slate-600"
     >
       <div className="shrink-0">
         <span
-          className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusColor(ver.status)}`}
+          className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium ${statusColor(ver.status)}`}
         >
           {ver.status}
         </span>
@@ -95,11 +87,11 @@ const QueueCard: React.FC<{
       </div>
       <div className="shrink-0">
         {item.can_act ? (
-          <span className="inline-flex items-center gap-1 rounded-lg bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 px-2.5 py-1 text-[11px] font-semibold text-sky-700 dark:text-sky-400">
+          <span className="inline-flex items-center gap-1 rounded bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 px-2 py-0.5 text-[10px] font-semibold text-sky-700 dark:text-sky-400">
             Action needed →
           </span>
         ) : (
-          <span className="inline-flex items-center rounded-lg bg-slate-50 dark:bg-surface-400 border border-slate-200 dark:border-surface-400 px-2.5 py-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+          <span className="inline-flex items-center rounded bg-slate-50 dark:bg-surface-400 border border-slate-200 dark:border-surface-400 px-2 py-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
             Monitoring
           </span>
         )}
@@ -116,13 +108,13 @@ const FinishedCard: React.FC<{
   <button
     type="button"
     onClick={onClick}
-    className="w-full text-left flex items-center gap-4 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3 transition hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-sm group"
+    className="w-full text-left flex items-center gap-4 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3 transition hover:border-slate-300 dark:hover:border-slate-600 group"
   >
-    <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30">
-      <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+    <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600">
+      <FileText className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
         {doc.title}
       </p>
       <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
@@ -131,7 +123,7 @@ const FinishedCard: React.FC<{
       </p>
     </div>
     <div className="shrink-0 flex flex-col items-end gap-1">
-      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+      <span className="inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-surface-400 border border-slate-200 dark:border-surface-400 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">
         <CheckCircle2 className="h-2.5 w-2.5" />
         Distributed
       </span>
@@ -340,7 +332,7 @@ const MyWorkQueuePage: React.FC = () => {
             onClick={refresh}
             disabled={refreshing || loading}
             title="Refresh queue"
-            className="flex items-center justify-center h-8 w-8 rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
+            className="flex items-center justify-center h-7 w-7 rounded border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
           >
             <RefreshCw
               className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
@@ -374,7 +366,7 @@ const MyWorkQueuePage: React.FC = () => {
     >
       {/* Error */}
       {error && (
-        <div className="shrink-0 rounded-lg border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 px-4 py-3 text-sm text-rose-700 dark:text-rose-400">
+        <div className="shrink-0 rounded-md border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 px-4 py-3 text-sm text-rose-700 dark:text-rose-400">
           {error}
         </div>
       )}
@@ -385,19 +377,16 @@ const MyWorkQueuePage: React.FC = () => {
           label="Pending"
           value={stats?.pending ?? null}
           loading={loading}
-          color="sky"
         />
         <StatCard
           label="Total documents"
           value={stats?.total ?? null}
           loading={loading}
-          color="slate"
         />
         <StatCard
           label="Official"
           value={stats?.distributed ?? null}
           loading={loading}
-          color="emerald"
         />
       </div>
 
@@ -407,9 +396,9 @@ const MyWorkQueuePage: React.FC = () => {
         style={{ height: "calc(100vh - 275px)" }}
       >
         {/* Queue panel */}
-        <div className="flex flex-col flex-1 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
+        <div className="flex flex-col flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
           {/* Panel header + tabs */}
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-5 py-3">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 {tab === "done" ? "Completed flows" : tab === "active" ? "Needs action" : "All documents"}
@@ -424,14 +413,14 @@ const MyWorkQueuePage: React.FC = () => {
             </div>
 
             {/* Tab switcher */}
-            <div className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 p-1">
+            <div className="flex items-center gap-1 rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 p-1">
               {tabs.map((t) => (
                 <button
                   key={t.value}
                   type="button"
                   onClick={() => setTab(t.value)}
                   className={[
-                    "rounded-md px-3 py-1 text-xs font-medium capitalize transition",
+                    "rounded px-3 py-1 text-xs font-medium capitalize transition",
                     tab === t.value
                       ? "bg-white dark:bg-surface-500 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-surface-400"
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200",
@@ -439,7 +428,7 @@ const MyWorkQueuePage: React.FC = () => {
                 >
                   {t.label}
                   {t.count != null && (
-                    <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-sky-100 dark:bg-sky-950/40 px-1.5 py-0.5 text-[10px] font-bold text-sky-700 dark:text-sky-400">
+                    <span className="ml-1.5 inline-flex items-center justify-center rounded bg-slate-100 dark:bg-surface-400 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                       {t.count}
                     </span>
                   )}
@@ -450,14 +439,14 @@ const MyWorkQueuePage: React.FC = () => {
 
           {/* Search bar (All / Active tabs only) */}
           {tab !== "done" && (
-            <div className="shrink-0 px-5 pt-3 pb-0">
+            <div className="shrink-0 px-4 pt-3 pb-0">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search by title or code…"
-                  className="w-full rounded-lg border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 pl-9 pr-8 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
+                  className="w-full rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 pl-9 pr-8 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/30 transition"
                 />
                 {search && (
                   <button
@@ -473,15 +462,15 @@ const MyWorkQueuePage: React.FC = () => {
           )}
 
           {/* Queue list */}
-          <div className="flex-1 overflow-y-auto px-5 py-4">
+          <div className="flex-1 overflow-y-auto px-4 py-4">
             {tab === "done" ? (
               finishedLoading && finishedDocs.length === 0 ? (
-                <SkeletonList rows={4} rowClassName="h-14 rounded-xl" />
+                <SkeletonList rows={4} rowClassName="h-14 rounded-md" />
               ) : finishedDocs.length === 0 ? (
-                <div className="flex h-full min-h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600">
+                <div className="flex h-full min-h-40 items-center justify-center rounded-md border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600">
                   <div className="text-center">
-                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-surface-400 text-slate-400 dark:text-slate-500 text-lg">
-                      <CheckCircle2 className="h-5 w-5" />
+                    <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded bg-slate-100 dark:bg-surface-400 text-slate-400 dark:text-slate-500">
+                      <CheckCircle2 className="h-4 w-4" />
                     </div>
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                       No finished flows yet
@@ -514,7 +503,7 @@ const MyWorkQueuePage: React.FC = () => {
                           loadFinished(next);
                         }}
                         disabled={finishedLoading}
-                        className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
+                        className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
                       >
                         {finishedLoading ? "Loading…" : "Load more"}
                       </button>
@@ -523,16 +512,16 @@ const MyWorkQueuePage: React.FC = () => {
                 </div>
               )
             ) : loading ? (
-              <SkeletonList rows={4} rowClassName="h-14 rounded-xl" />
+              <SkeletonList rows={4} rowClassName="h-14 rounded-md" />
             ) : (() => {
               const displayItems = filterItems(
                 tab === "active" ? assignedItems : allItems,
               );
               return displayItems.length === 0 ? (
-                <div className="flex h-full min-h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600">
+                <div className="flex h-full min-h-40 items-center justify-center rounded-md border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600">
                   <div className="text-center">
-                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-lg">
-                      ✓
+                    <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded bg-slate-100 dark:bg-surface-400 text-slate-400 dark:text-slate-500">
+                      <CheckCircle2 className="h-4 w-4" />
                     </div>
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                       {search ? "No results" : "All caught up"}
@@ -562,8 +551,8 @@ const MyWorkQueuePage: React.FC = () => {
         </div>
 
         {/* Recent activity panel — workflow only */}
-        <div className="flex flex-col lg:w-80 shrink-0 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden max-h-96 lg:max-h-none">
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-5 py-4">
+        <div className="flex flex-col lg:w-80 shrink-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden max-h-96 lg:max-h-none">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Recent activity
@@ -579,15 +568,15 @@ const MyWorkQueuePage: React.FC = () => {
                   state: { category: "workflow" },
                 })
               }
-              className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+              className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
             >
               View all
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-4">
+          <div className="flex-1 overflow-y-auto px-3 py-3">
             {loadingActivity ? (
-              <SkeletonList rows={5} rowClassName="h-12 rounded-lg" />
+              <SkeletonList rows={5} rowClassName="h-12 rounded-md" />
             ) : recentActivity.length === 0 ? (
               <div className="flex h-full min-h-30 items-center justify-center">
                 <p className="text-xs text-slate-400 dark:text-slate-500">
@@ -595,13 +584,13 @@ const MyWorkQueuePage: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {recentActivity.slice(0, 8).map((l: any) => (
                   <button
                     key={l.id}
                     type="button"
                     onClick={() => openActivity(l)}
-                    className="w-full text-left rounded-lg px-3 py-2.5 transition hover:bg-slate-50 dark:hover:bg-surface-400"
+                    className="w-full text-left rounded-md px-3 py-2.5 transition hover:bg-slate-50 dark:hover:bg-surface-400"
                   >
                     <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
                       {l.label || l.event}

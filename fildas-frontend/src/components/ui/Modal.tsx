@@ -39,13 +39,13 @@ export default function Modal({
       <div className="relative mx-auto mt-20 w-[92vw]">
         <div
           className={[
-            "mx-auto rounded-2xl border border-slate-200 bg-white shadow-xl flex flex-col",
+            "mx-auto rounded-md border border-slate-200 bg-white shadow-lg flex flex-col",
             "dark:border-surface-400 dark:bg-surface-500",
             widthClassName,
           ].join(" ")}
         >
           {/* Header */}
-          <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-3.5 dark:border-surface-400">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-surface-400">
             <h2 className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
               {title}
             </h2>
@@ -65,7 +65,7 @@ export default function Modal({
           </div>
 
           {/* Body */}
-          <div className="px-5 py-4 max-h-[65vh] overflow-y-auto">
+          <div className="px-4 py-4 max-h-[65vh] overflow-y-auto">
             {children}
           </div>
         </div>

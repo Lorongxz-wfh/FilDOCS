@@ -49,7 +49,7 @@ const Card: React.FC<{
   onLinkClick?: () => void;
 }> = ({ title, sub, link, children, className = "", onLinkClick }) => (
   <div
-    className={`rounded-2xl border border-slate-200 bg-white px-6 py-5 dark:border-surface-400 dark:bg-surface-500 ${className}`}
+    className={`rounded-md border border-slate-200 bg-white px-4 py-4 dark:border-surface-400 dark:bg-surface-500 ${className}`}
   >
     <div className="mb-4 flex items-start justify-between gap-2">
       <div>
@@ -120,7 +120,7 @@ const QADashboard: React.FC<
           onLinkClick={() => navigate("/reports")}
         >
           {loading ? (
-            <Skeleton className="h-44 w-full rounded-xl" />
+            <Skeleton className="h-44 w-full rounded-md" />
           ) : (
             <VolumeTrendChart data={report.volume_series} height={180} />
           )}
@@ -132,7 +132,7 @@ const QADashboard: React.FC<
           onLinkClick={() => navigate("/reports")}
         >
           {loading ? (
-            <Skeleton className="h-44 w-full rounded-xl" />
+            <Skeleton className="h-44 w-full rounded-md" />
           ) : (
             <StageDelayChart data={report.stage_delays} height={180} />
           )}
@@ -172,7 +172,7 @@ const QADashboard: React.FC<
           onLinkClick={() => navigate("/reports")}
         >
           {loading ? (
-            <Skeleton className="h-44 w-full rounded-xl" />
+            <Skeleton className="h-44 w-full rounded-md" />
           ) : (
             <ComplianceClusterBarChart height={180} data={report.clusters} />
           )}
@@ -211,9 +211,9 @@ const QADashboard: React.FC<
           ].map((kpi) => (
             <div
               key={kpi.label}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-surface-400 dark:bg-surface-500"
+              className="rounded-md border border-slate-200 bg-white px-3 py-3 dark:border-surface-400 dark:bg-surface-500"
             >
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {kpi.label}
               </p>
               {loading ? (
@@ -336,10 +336,10 @@ const OfficeDashboard: React.FC<
                   key={item.path}
                   type="button"
                   onClick={() => navigate(item.path)}
-                  className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:bg-slate-100 dark:border-surface-400 dark:bg-surface-600 dark:hover:bg-surface-400"
+                  className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:bg-slate-100 dark:border-surface-400 dark:bg-surface-600 dark:hover:bg-surface-400"
                 >
                   <div
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${item.color}`}
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${item.color}`}
                   >
                     <Icon className="h-4 w-4" />
                   </div>
@@ -460,7 +460,7 @@ const DashboardPage: React.FC = () => {
             onClick={refresh}
             disabled={refreshing || loading}
             title="Refresh dashboard"
-            className="flex items-center justify-center h-8 w-8 rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
+            className="flex items-center justify-center h-7 w-7 rounded border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
           >
             <RefreshCw
               className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}

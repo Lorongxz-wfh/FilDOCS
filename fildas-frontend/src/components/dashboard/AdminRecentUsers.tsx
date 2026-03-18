@@ -38,34 +38,34 @@ const AdminRecentUsers: React.FC<{ users: User[]; loading: boolean }> = ({
   users,
   loading,
 }) => (
-  <div className="space-y-2">
+  <div className="min-h-52.5 space-y-0.5">
     {loading
       ? Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full rounded-lg" />
+          <Skeleton key={i} className="h-9 w-full rounded-md" />
         ))
-      : users.map((u) => (
+      : users.slice(0, 5).map((u) => (
           <div
             key={u.id}
-            className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-surface-600 transition-colors"
+            className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-slate-50 dark:hover:bg-surface-600 transition-colors"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-surface-400 text-xs font-bold text-slate-600 dark:text-slate-300">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-surface-400 text-xs font-bold text-slate-600 dark:text-slate-300">
               {u.name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+              <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">
                 {u.name}
               </p>
-              <p className="truncate text-xs text-slate-400 dark:text-slate-500">
+              <p className="truncate text-[11px] text-slate-400 dark:text-slate-500">
                 {u.office_name ?? "No office"}
               </p>
             </div>
             <span
-              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${ROLE_COLORS[u.role] ?? "bg-slate-100 text-slate-600"}`}
+              className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${ROLE_COLORS[u.role] ?? "bg-slate-100 text-slate-600"}`}
             >
               {ROLE_LABELS[u.role] ?? u.role}
             </span>
             <span
-              className={`h-2 w-2 shrink-0 rounded-full ${u.is_active ? "bg-emerald-400" : "bg-slate-300"}`}
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${u.is_active ? "bg-emerald-400" : "bg-slate-300"}`}
             />
           </div>
         ))}

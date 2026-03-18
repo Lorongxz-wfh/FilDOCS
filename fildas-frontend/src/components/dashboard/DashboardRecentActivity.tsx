@@ -79,7 +79,7 @@ function formatRelative(iso: string): string {
 
 const DashboardRecentActivity: React.FC<Props> = ({ logs, loading }) => {
   return (
-    <div className="divide-y divide-slate-100 dark:divide-surface-400">
+    <div className="min-h-52.5 divide-y divide-slate-200 dark:divide-surface-400">
       {loading ? (
         Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex items-start gap-3 py-3">
@@ -114,7 +114,7 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading }) => {
                     </span>
                   ) : null}
                 </p>
-                <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+                <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
                   {formatRelative(log.created_at)}
                 </p>
               </div>
