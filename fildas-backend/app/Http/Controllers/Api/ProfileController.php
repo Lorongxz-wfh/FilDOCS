@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -10,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
+    use LogsActivityTrait;
+
     // PATCH /api/profile
     public function update(Request $request)
     {
@@ -30,16 +33,7 @@ class ProfileController extends Controller
         $user->fill($data);
         $user->save();
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $user->id,
-            'actor_office_id'     => $user->office_id,
-            'target_office_id'    => null,
-            'event'               => 'profile.updated',
-            'label'               => 'Updated profile information',
-            'meta'                => ['changed_fields' => array_keys($data)],
-        ]);
+        $this->logActivity('profile.updated', 'Updated profile information', $user->id, $user->office_id, ['changed_fields' => array_keys($data)]);
 
         return response()->json(['user' => $this->userPayload($user)]);
     }
@@ -62,16 +56,7 @@ class ProfileController extends Controller
         $user->password = $data['password'];
         $user->save();
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $user->id,
-            'actor_office_id'     => $user->office_id,
-            'target_office_id'    => null,
-            'event'               => 'profile.password_changed',
-            'label'               => 'Changed account password',
-            'meta'                => null,
-        ]);
+        $this->logActivity('profile.password_changed', 'Changed account password', $user->id, $user->office_id);
 
         return response()->json(['message' => 'Password updated successfully.']);
     }
@@ -94,12 +79,7 @@ class ProfileController extends Controller
         $user->profile_photo_path = $path;
         $user->save();
 
-        \App\Models\ActivityLog::create([
-            'actor_user_id'  => $user->id,
-            'actor_office_id' => $user->office_id,
-            'event'          => 'profile.photo_updated',
-            'label'          => 'Updated profile photo',
-        ]);
+        $this->logActivity('profile.photo_updated', 'Updated profile photo', $user->id, $user->office_id);
 
         return response()->json(['user' => $this->userPayload($user)]);
     }
@@ -115,12 +95,7 @@ class ProfileController extends Controller
             $user->profile_photo_path = null;
             $user->save();
 
-            \App\Models\ActivityLog::create([
-                'actor_user_id'  => $user->id,
-                'actor_office_id' => $user->office_id,
-                'event'          => 'profile.photo_removed',
-                'label'          => 'Removed profile photo',
-            ]);
+            $this->logActivity('profile.photo_removed', 'Removed profile photo', $user->id, $user->office_id);
         }
 
         return response()->json(['user' => $this->userPayload($user)]);

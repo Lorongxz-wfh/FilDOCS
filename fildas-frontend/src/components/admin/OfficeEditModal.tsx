@@ -13,16 +13,7 @@ import {
   type AdminOffice,
 } from "../../services/admin";
 
-const inputCls = [
-  "w-full rounded-lg border px-3 py-2 text-sm outline-none transition",
-  "border-slate-200 bg-white text-slate-900",
-  "focus:border-sky-400 focus:ring-2 focus:ring-sky-100",
-  "dark:border-surface-400 dark:bg-surface-500 dark:text-slate-200 dark:placeholder-slate-500",
-  "disabled:opacity-50 dark:disabled:bg-surface-600",
-].join(" ");
-
-const labelCls =
-  "block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5";
+import { inputCls, labelCls } from "../../utils/formStyles";
 
 type Props = {
   open: boolean;

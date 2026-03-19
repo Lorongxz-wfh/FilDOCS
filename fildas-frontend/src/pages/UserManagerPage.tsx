@@ -4,8 +4,16 @@ import { getAuthUser } from "../lib/auth";
 import PageFrame from "../components/layout/PageFrame";
 import Table, { type TableColumn } from "../components/ui/Table";
 import Button from "../components/ui/Button";
-import { getAdminUsers, type AdminUser } from "../services/admin";
+import {
+  getAdminUsers,
+  getAdminRoles,
+  type AdminUser,
+  type AdminRole,
+} from "../services/admin";
 import UserEditModal from "../components/admin/UserEditModal";
+import Alert from "../components/ui/Alert";
+import { inputCls, selectCls } from "../utils/formStyles";
+import { X } from "lucide-react";
 
 const UserManagerPage: React.FC = () => {
   const me = getAuthUser();
@@ -17,8 +25,12 @@ const UserManagerPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [search, setSearch] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"" | "active" | "disabled">("");
+  const [roleFilter, setRoleFilter] = useState<number | "">("");
+  const [roles, setRoles] = useState<AdminRole[]>([]);
   const [reloadTick, setReloadTick] = useState(0);
 
   const location = useLocation();
@@ -29,6 +41,11 @@ const UserManagerPage: React.FC = () => {
     (location.state as any)?.openModal === true ? "create" : "edit",
   );
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+
+  // Load roles once
+  useEffect(() => {
+    getAdminRoles().then(setRoles).catch(() => {});
+  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -42,7 +59,7 @@ const UserManagerPage: React.FC = () => {
     setPage(1);
     setHasMore(true);
     setInitialLoading(true);
-  }, [searchDebounced, reloadTick]);
+  }, [searchDebounced, statusFilter, roleFilter, reloadTick]);
 
   useEffect(() => {
     let alive = true;
@@ -54,6 +71,8 @@ const UserManagerPage: React.FC = () => {
         const res = await getAdminUsers({
           page,
           q: searchDebounced || undefined,
+          status: statusFilter || undefined,
+          role_id: roleFilter || undefined,
         });
         if (!alive) return;
         const incoming = res.data ?? [];
@@ -74,10 +93,8 @@ const UserManagerPage: React.FC = () => {
       }
     };
     load();
-    return () => {
-      alive = false;
-    };
-  }, [page, searchDebounced, reloadTick]);
+    return () => { alive = false; };
+  }, [page, searchDebounced, statusFilter, roleFilter, reloadTick]);
 
   const openEdit = (u: AdminUser) => {
     setEditMode("edit");
@@ -91,6 +108,14 @@ const UserManagerPage: React.FC = () => {
   };
   const handleSaved = (_saved: AdminUser) => {
     setReloadTick((t) => t + 1);
+  };
+
+  const hasActiveFilters = !!search || !!statusFilter || !!roleFilter;
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("");
+    setRoleFilter("");
+    setPage(1);
   };
 
   const columns: TableColumn<AdminUser>[] = useMemo(
@@ -127,9 +152,7 @@ const UserManagerPage: React.FC = () => {
         header: "Role",
         render: (u) => {
           const role = u.role?.name ?? "none";
-          const isAdminRole = ["admin", "sysadmin"].includes(
-            role.toLowerCase(),
-          );
+          const isAdminRole = ["admin", "sysadmin"].includes(role.toLowerCase());
           return (
             <span
               className={[
@@ -180,7 +203,7 @@ const UserManagerPage: React.FC = () => {
   return (
     <PageFrame
       title="User Manager"
-      contentClassName="flex flex-col min-h-0 gap-4"
+      contentClassName="flex flex-col min-h-0 gap-4 h-full overflow-hidden"
       right={
         <Button type="button" variant="primary" size="sm" onClick={openCreate}>
           New user
@@ -189,33 +212,66 @@ const UserManagerPage: React.FC = () => {
     >
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2 shrink-0">
-        <input
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          placeholder="Search name / email…"
-          className="w-72 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-200 dark:placeholder-slate-500"
-        />
-        <button
-          type="button"
-          onClick={() => {
-            setSearch("");
-            setPage(1);
-          }}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-300 dark:hover:bg-surface-400 transition-colors"
+        {/* Search with inline clear */}
+        <div className="relative w-64">
+          <input
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search name / email…"
+            className={`${inputCls} pr-8`}
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => { setSearch(""); setPage(1); }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Status filter */}
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as any)}
+          className={selectCls}
         >
-          Clear
-        </button>
-        {error && <span className="text-xs text-rose-500">{error}</span>}
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="disabled">Disabled</option>
+        </select>
+
+        {/* Role filter */}
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value === "" ? "" : Number(e.target.value))}
+          className={selectCls}
+        >
+          <option value="">All roles</option>
+          {roles.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.label || r.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Clear — only when filters are active */}
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+          >
+            Clear
+          </button>
+        )}
+
+        {error && <Alert variant="danger">{error}</Alert>}
       </div>
 
-      {/* Table */}
-      <div
-        className="rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden"
-        style={{ height: "calc(100vh - 217px)" }}
-      >
+      {/* Table — flex-1 so it fills remaining space and scrolls internally */}
+      <div className="flex-1 min-h-0 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
         <Table<AdminUser>
           bare
           className="h-full"

@@ -7,10 +7,13 @@ use App\Models\DocumentVersion;
 use App\Models\WorkflowTask;
 use App\Models\Office;
 use App\Models\User;
+use App\Traits\RoleNameTrait;
 use Illuminate\Support\Facades\Cache;
 
 class DocumentIndexService
 {
+    use RoleNameTrait;
+
 
     private function vpRoleToOfficeCode(?string $roleName): ?string
     {
@@ -50,7 +53,7 @@ class DocumentIndexService
 
     public function paginateForUser(User $user, array $data)
     {
-        $roleName = $user->role?->name ? strtolower(trim($user->role->name)) : null;
+        $roleName = $this->roleNameOf($user) ?: null;
         $userOfficeId = $user->office_id;
 
         $qaOfficeId = Cache::remember('office_id:QA', 3600, function () {

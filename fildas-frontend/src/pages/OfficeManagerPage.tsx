@@ -5,11 +5,17 @@ import Button from "../components/ui/Button";
 import Table, { type TableColumn } from "../components/ui/Table";
 import { getAdminOffices, type AdminOffice } from "../services/admin";
 import OfficeEditModal from "../components/admin/OfficeEditModal";
+import Alert from "../components/ui/Alert";
+import { inputCls, selectCls } from "../utils/formStyles";
+import { X } from "lucide-react";
+
+const OFFICE_TYPES = ["office", "vp", "president", "committee", "unit"];
 
 export function OfficeManagerPage() {
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
-  const [showDisabled, setShowDisabled] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"active" | "disabled" | "all">("active");
+  const [typeFilter, setTypeFilter] = useState("");
 
   const [items, setItems] = useState<AdminOffice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +43,8 @@ export function OfficeManagerPage() {
       setError(null);
       const data = await getAdminOffices({
         q: qDebounced.trim() || undefined,
-        disabled: showDisabled,
+        status: statusFilter,
+        type: typeFilter || undefined,
       });
       setItems(data);
     } catch (e: any) {
@@ -46,7 +53,7 @@ export function OfficeManagerPage() {
       setLoading(false);
       setInitialLoading(false);
     }
-  }, [qDebounced, showDisabled]);
+  }, [qDebounced, statusFilter, typeFilter]);
 
   useEffect(() => {
     setInitialLoading(true);
@@ -62,6 +69,13 @@ export function OfficeManagerPage() {
     setSelected(office);
     setModalMode("edit");
     setModalOpen(true);
+  };
+
+  const hasActiveFilters = !!q || statusFilter !== "active" || !!typeFilter;
+  const clearFilters = () => {
+    setQ("");
+    setStatusFilter("active");
+    setTypeFilter("");
   };
 
   const columns: TableColumn<AdminOffice>[] = [
@@ -127,7 +141,7 @@ export function OfficeManagerPage() {
   return (
     <PageFrame
       title="Office Manager"
-      contentClassName="flex flex-col min-h-0 gap-4"
+      contentClassName="flex flex-col min-h-0 gap-4 h-full overflow-hidden"
       right={
         <Button type="button" variant="primary" size="sm" onClick={openCreate}>
           New office
@@ -136,39 +150,66 @@ export function OfficeManagerPage() {
     >
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2 shrink-0">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search name or code…"
-          className="w-72 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-200 dark:placeholder-slate-500"
-        />
-        <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-300 cursor-pointer select-none">
+        {/* Search with inline clear */}
+        <div className="relative w-64">
           <input
-            type="checkbox"
-            checked={showDisabled}
-            onChange={(e) => setShowDisabled(e.target.checked)}
-            className="rounded border-slate-300 text-sky-500 focus:ring-sky-400"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name or code…"
+            className={`${inputCls} pr-8`}
           />
-          Show disabled
-        </label>
-        <button
-          type="button"
-          onClick={() => {
-            setQ("");
-            setShowDisabled(false);
-          }}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-300 dark:hover:bg-surface-400 transition-colors"
+          {q && (
+            <button
+              type="button"
+              onClick={() => setQ("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Status filter */}
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as any)}
+          className={selectCls}
         >
-          Clear
-        </button>
-        {error && <span className="text-xs text-rose-500">{error}</span>}
+          <option value="active">Active</option>
+          <option value="disabled">Disabled</option>
+          <option value="all">All</option>
+        </select>
+
+        {/* Type filter */}
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className={selectCls}
+        >
+          <option value="">All types</option>
+          {OFFICE_TYPES.map((t) => (
+            <option key={t} value={t} className="capitalize">
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </option>
+          ))}
+        </select>
+
+        {/* Clear — only when non-default filters active */}
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+          >
+            Clear
+          </button>
+        )}
+
+        {error && <Alert variant="danger">{error}</Alert>}
       </div>
 
-      {/* Table */}
-      <div
-        className="rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden"
-        style={{ height: "calc(100vh - 217px)" }}
-      >
+      {/* Table — flex-1 so it fills remaining space and scrolls internally */}
+      <div className="flex-1 min-h-0 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
         <Table<AdminOffice>
           bare
           className="h-full"

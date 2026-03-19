@@ -34,8 +34,7 @@ const Field: React.FC<{
   </div>
 );
 
-const inputCls =
-  "w-full rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition";
+import { inputCls } from "../utils/formStyles";
 
 function buildChainLabels(
   isQA: boolean,

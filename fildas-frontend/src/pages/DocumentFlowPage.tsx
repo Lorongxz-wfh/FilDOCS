@@ -3,13 +3,14 @@ import {
   getDocument,
   getDocumentVersions,
   getDocumentVersion,
-  createRevision,
   logOpenedVersion,
   type Document,
   type DocumentVersion,
 } from "../services/documents";
 import DocumentFlow from "../components/documents/DocumentFlow";
 import ShareDocumentModal from "../components/documents/ShareDocumentModal";
+import ActionConfirmModal from "../components/documents/documentFlow/ActionConfirmModal";
+import RevisionModal from "../components/documents/documentFlow/RevisionModal";
 import {
   useNavigate,
   useLocation,
@@ -76,8 +77,6 @@ const DocumentFlowPage: React.FC = () => {
 
   const [error, setError] = useState<string | null>(null);
   const [reviseModalOpen, setReviseModalOpen] = useState(false);
-  const [revisionReason, setRevisionReason] = useState("");
-  const [isRevising, setIsRevising] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [rightPanelContent, setRightPanelContent] =
     useState<React.ReactNode>(null);
@@ -155,39 +154,19 @@ const DocumentFlowPage: React.FC = () => {
     variant: "primary" | "danger" | "outline";
     onClick: (note?: string) => Promise<void> | void;
   } | null>(null);
-  const [rejectNote, setRejectNote] = useState("");
-  const [rejectError, setRejectError] = useState("");
   const [processingKey, setProcessingKey] = useState<string | null>(null);
 
   const handleHeaderActionClick = (a: any) => {
-    setRejectNote("");
-    setRejectError("");
     setConfirmAction(a);
   };
 
-  const handleHeaderActionConfirm = async () => {
+  const handleHeaderActionConfirm = async (note?: string) => {
     if (!confirmAction) return;
-    if (
-      (confirmAction.key === "REJECT" ||
-        confirmAction.key === "CANCEL_DOCUMENT") &&
-      !rejectNote.trim()
-    ) {
-      setRejectError(
-        confirmAction.key === "CANCEL_DOCUMENT"
-          ? "A reason is required when cancelling."
-          : "A note is required when rejecting.",
-      );
-      return;
-    }
     const actionToRun = confirmAction;
     setProcessingKey(actionToRun.key);
-    setConfirmAction(null); // close modal immediately
+    setConfirmAction(null);
     try {
-      await actionToRun.onClick(
-        actionToRun.key === "REJECT" || actionToRun.key === "CANCEL_DOCUMENT"
-          ? rejectNote
-          : undefined,
-      );
+      await actionToRun.onClick(note);
     } finally {
       setProcessingKey(null);
     }
@@ -603,7 +582,6 @@ const DocumentFlowPage: React.FC = () => {
                 size="sm"
                 disabled={isLoadingSelectedVersion}
                 onClick={() => {
-                  setRevisionReason("");
                   setReviseModalOpen(true);
                 }}
               >
@@ -789,186 +767,35 @@ const DocumentFlowPage: React.FC = () => {
         onSaved={() => {}}
       />
 
-      {/* Header action confirm modal */}
-      {confirmAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-xl p-6">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">
-              {confirmAction.key === "REJECT"
-                ? "Reject document"
-                : confirmAction.key === "CANCEL_DOCUMENT"
-                  ? "Cancel document"
-                  : `Confirm: ${confirmAction.label}`}
-            </h2>
-            {confirmAction.key === "REJECT" ||
-            confirmAction.key === "CANCEL_DOCUMENT" ? (
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  {confirmAction.key === "CANCEL_DOCUMENT"
-                    ? "Cancellation reason"
-                    : "Rejection note"}
-                  <span className="text-rose-500 ml-0.5">*</span>
-                </label>
-                <textarea
-                  rows={3}
-                  value={rejectNote}
-                  onChange={(e) => {
-                    setRejectNote(e.target.value);
-                    setRejectError("");
-                  }}
-                  placeholder={
-                    confirmAction.key === "CANCEL_DOCUMENT"
-                      ? "Explain why this document is being cancelled…"
-                      : "Explain why this document is being rejected…"
-                  }
-                  className="block w-full rounded-lg border border-slate-300 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 dark:focus:ring-rose-900/30"
-                />
-                {rejectError && (
-                  <p className="mt-1 text-xs text-rose-600">{rejectError}</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-700 dark:text-slate-300 mb-4">
-                Are you sure you want to{" "}
-                <span className="font-semibold">{confirmAction.label}</span>?
-                This action cannot be undone.
-              </p>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmAction(null)}
-                disabled={!!processingKey}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant={confirmAction.key === "REJECT" ? "danger" : "primary"}
-                size="sm"
-                disabled={!!processingKey}
-                onClick={handleHeaderActionConfirm}
-              >
-                {processingKey ? (
-                  <span className="flex items-center gap-1.5">
-                    <svg
-                      className="animate-spin h-3 w-3"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8z"
-                      />
-                    </svg>
-                    Processing…
-                  </span>
-                ) : confirmAction.key === "REJECT" ? (
-                  "Reject"
-                ) : confirmAction.key === "CANCEL_DOCUMENT" ? (
-                  "Cancel document"
-                ) : (
-                  "Confirm"
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ActionConfirmModal
+        action={confirmAction}
+        processingKey={processingKey}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={handleHeaderActionConfirm}
+      />
 
-      {/* Revision reason modal */}
-      {reviseModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shadow-2xl">
-            <div className="px-5 py-4 border-b border-slate-100 dark:border-surface-400">
-              <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                Start revision
-              </h2>
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                Optionally describe why this document is being revised.
-              </p>
-            </div>
-            <div className="px-5 py-4">
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1.5">
-                Revision reason{" "}
-                <span className="font-normal text-slate-400">(optional)</span>
-              </label>
-              <textarea
-                className="w-full rounded-lg border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-500 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
-                rows={3}
-                maxLength={1000}
-                placeholder="e.g. Updated to reflect new compliance requirements…"
-                value={revisionReason}
-                onChange={(e) => setRevisionReason(e.target.value)}
-              />
-              <p className="mt-1 text-right text-[10px] text-slate-400">
-                {revisionReason.length}/1000
-              </p>
-            </div>
-            <div className="px-5 py-3 border-t border-slate-100 dark:border-surface-400 flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={isRevising}
-                onClick={() => setReviseModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                disabled={isRevising}
-                onClick={async () => {
-                  setIsRevising(true);
-                  try {
-                    const revised = await createRevision(document!.id, {
-                      revision_reason: revisionReason.trim() || null,
-                    });
-                    setAllVersions((prev) => {
-                      const next = [
-                        revised,
-                        ...prev.filter((v) => v.id !== revised.id),
-                      ];
-                      next.sort(
-                        (a, b) =>
-                          Number(b.version_number) - Number(a.version_number),
-                      );
-                      return next;
-                    });
-                    setSelectedVersion(revised);
-                    setSearchParams((prev) => {
-                      const p = new URLSearchParams(prev);
-                      p.set("version_id", String(revised.id));
-                      p.delete("version");
-                      return p;
-                    });
-                    setReviseModalOpen(false);
-                  } catch (e: any) {
-                    alert(`Revision failed: ${e.message}`);
-                  } finally {
-                    setIsRevising(false);
-                  }
-                }}
-              >
-                {isRevising ? "Creating…" : "Start revision"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RevisionModal
+        open={reviseModalOpen}
+        documentId={document?.id ?? 0}
+        onClose={() => setReviseModalOpen(false)}
+        onRevised={(revised) => {
+          setAllVersions((prev) => {
+            const next = [revised, ...prev.filter((v) => v.id !== revised.id)];
+            next.sort(
+              (a, b) => Number(b.version_number) - Number(a.version_number),
+            );
+            return next;
+          });
+          setSelectedVersion(revised);
+          setSearchParams((prev) => {
+            const p = new URLSearchParams(prev);
+            p.set("version_id", String(revised.id));
+            p.delete("version");
+            return p;
+          });
+          setReviseModalOpen(false);
+        }}
+      />
     </>
   );
 };

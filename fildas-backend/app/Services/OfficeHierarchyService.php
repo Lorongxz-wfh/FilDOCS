@@ -64,4 +64,19 @@ class OfficeHierarchyService
             ->whereNull('deleted_at')
             ->first();
     }
+
+    /**
+     * Map a VP role name to its corresponding office code.
+     * Returns null if the role is not a VP role.
+     */
+    public function vpRoleToOfficeCode(?string $roleName): ?string
+    {
+        return match ($roleName) {
+            'vpaa'      => 'VA',
+            'vpadmin'   => 'VAd',
+            'vpfinance' => 'VF',
+            'vpreqa'    => 'VR',
+            default     => null,
+        };
+    }
 }

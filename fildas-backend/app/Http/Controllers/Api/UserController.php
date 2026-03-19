@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Office;
 use App\Actions\Admin\CanModifyUserAction;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
+    use LogsActivityTrait;
 
     private function roleDisablesOffice(?int $roleId): bool
     {
@@ -37,11 +39,18 @@ class UserController extends Controller
             $query->withTrashed();
         }
 
-        $onlyDisabled = $request->boolean('disabled', false);
-        if ($onlyDisabled) {
+        // status: active | disabled | (empty = all)
+        $status = $request->get('status', '');
+        if ($status === 'active') {
+            $query->whereNull('disabled_at');
+        } elseif ($status === 'disabled') {
             $query->whereNotNull('disabled_at');
         }
 
+        // role_id filter
+        if ($roleId = $request->get('role_id')) {
+            $query->where('role_id', (int) $roleId);
+        }
 
         if ($search = $request->get('q')) {
             $query->where(function ($q) use ($search) {
@@ -107,21 +116,12 @@ class UserController extends Controller
 
         $user->load(['role', 'office']);
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $request->user()->id,
-            'actor_office_id'     => $request->user()->office_id,
-            'target_office_id'    => null,
-            'event'               => 'user.created',
-            'label'               => 'Created a user account',
-            'meta'                => [
-                'target_user_id' => $user->id,
-                'name'           => trim("{$user->first_name} {$user->last_name}"),
-                'email'          => $user->email,
-                'role'           => $user->role?->name,
-                'office'         => $user->office?->code,
-            ],
+        $this->logActivity('user.created', 'Created a user account', $request->user()->id, $request->user()->office_id, [
+            'target_user_id' => $user->id,
+            'name'           => trim("{$user->first_name} {$user->last_name}"),
+            'email'          => $user->email,
+            'role'           => $user->role?->name,
+            'office'         => $user->office?->code,
         ]);
 
         return response()->json([
@@ -176,39 +176,21 @@ class UserController extends Controller
 
         $user->load(['role', 'office']);
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $request->user()->id,
-            'actor_office_id'     => $request->user()->office_id,
-            'target_office_id'    => null,
-            'event'               => 'user.updated',
-            'label'               => 'Updated a user account',
-            'meta'                => [
-                'target_user_id' => $user->id,
-                'name'           => trim("{$user->first_name} {$user->last_name}"),
-                'changed_fields' => array_keys($payload),
-            ],
+        $this->logActivity('user.updated', 'Updated a user account', $request->user()->id, $request->user()->office_id, [
+            'target_user_id' => $user->id,
+            'name'           => trim("{$user->first_name} {$user->last_name}"),
+            'changed_fields' => array_keys($payload),
         ]);
 
         // If role changed, add a dedicated role-change log entry
         $newRoleId = $user->role_id;
         if (array_key_exists('role_id', $data) && (int) $oldRoleId !== (int) $newRoleId) {
-            \App\Models\ActivityLog::create([
-                'document_id'         => null,
-                'document_version_id' => null,
-                'actor_user_id'       => $request->user()->id,
-                'actor_office_id'     => $request->user()->office_id,
-                'target_office_id'    => null,
-                'event'               => 'user.role_changed',
-                'label'               => 'Changed user role',
-                'meta'                => [
-                    'target_user_id' => $user->id,
-                    'name'           => trim("{$user->first_name} {$user->last_name}"),
-                    'old_role_id'    => $oldRoleId,
-                    'new_role_id'    => $newRoleId,
-                    'new_role_name'  => $user->role?->name,
-                ],
+            $this->logActivity('user.role_changed', 'Changed user role', $request->user()->id, $request->user()->office_id, [
+                'target_user_id' => $user->id,
+                'name'           => trim("{$user->first_name} {$user->last_name}"),
+                'old_role_id'    => $oldRoleId,
+                'new_role_id'    => $newRoleId,
+                'new_role_name'  => $user->role?->name,
             ]);
         }
 
@@ -235,18 +217,9 @@ class UserController extends Controller
 
         $user->load(['role', 'office']);
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $actor->id,
-            'actor_office_id'     => $actor->office_id,
-            'target_office_id'    => null,
-            'event'               => 'user.disabled',
-            'label'               => 'Disabled a user account',
-            'meta'                => [
-                'target_user_id' => $user->id,
-                'name'           => trim("{$user->first_name} {$user->last_name}"),
-            ],
+        $this->logActivity('user.disabled', 'Disabled a user account', $actor->id, $actor->office_id, [
+            'target_user_id' => $user->id,
+            'name'           => trim("{$user->first_name} {$user->last_name}"),
         ]);
 
         return response()->json(['user' => $user]);
@@ -268,18 +241,9 @@ class UserController extends Controller
 
         $user->load(['role', 'office']);
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $actor->id,
-            'actor_office_id'     => $actor->office_id,
-            'target_office_id'    => null,
-            'event'               => 'user.enabled',
-            'label'               => 'Re-enabled a user account',
-            'meta'                => [
-                'target_user_id' => $user->id,
-                'name'           => trim("{$user->first_name} {$user->last_name}"),
-            ],
+        $this->logActivity('user.enabled', 'Re-enabled a user account', $actor->id, $actor->office_id, [
+            'target_user_id' => $user->id,
+            'name'           => trim("{$user->first_name} {$user->last_name}"),
         ]);
 
         return response()->json(['user' => $user]);
@@ -293,19 +257,10 @@ class UserController extends Controller
 
         $guard->assertCanDisableOrDelete($actor, $user);
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $actor->id,
-            'actor_office_id'     => $actor->office_id,
-            'target_office_id'    => null,
-            'event'               => 'user.deleted',
-            'label'               => 'Deleted a user account',
-            'meta'                => [
-                'target_user_id' => $user->id,
-                'name'           => trim("{$user->first_name} {$user->last_name}"),
-                'email'          => $user->email,
-            ],
+        $this->logActivity('user.deleted', 'Deleted a user account', $actor->id, $actor->office_id, [
+            'target_user_id' => $user->id,
+            'name'           => trim("{$user->first_name} {$user->last_name}"),
+            'email'          => $user->email,
         ]);
 
         $user->delete();

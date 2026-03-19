@@ -150,8 +150,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/document-request-items/{item}/example/download-link', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'exampleDownloadLink']);
     Route::get('/document-requests',         [DocumentRequestController::class, 'index']);
     Route::post('/document-requests',        [DocumentRequestController::class, 'store']);
-    Route::get('/document-requests/inbox',   [DocumentRequestController::class, 'inbox']);
-    Route::get('/document-requests/{request}', [DocumentRequestController::class, 'show']);
+    Route::get('/document-requests/inbox',       [DocumentRequestController::class, 'inbox']);
+    Route::get('/document-requests/recipients',  [DocumentRequestController::class, 'indexRecipients']);
+    Route::get('/document-requests/individual',  [DocumentRequestController::class, 'indexIndividual']);
+    Route::get('/document-requests/{request}',   [DocumentRequestController::class, 'show']);
     Route::post(
         '/document-requests/{request}/recipients/{recipient}/submit',
         [DocumentRequestController::class, 'submit']

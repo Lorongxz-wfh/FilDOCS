@@ -4,24 +4,35 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Office;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class AdminOfficeController extends Controller
 {
+    use LogsActivityTrait;
+
     // GET /api/admin/offices?q=&disabled=0|1
     public function index(Request $request)
     {
         $q = trim((string) $request->get('q', ''));
-        $disabled = $request->boolean('disabled', false);
+        // status: active (default) | disabled | all
+        $status = $request->get('status', 'active');
+        $type   = $request->get('type', '');
 
         $query = Office::query()
             ->with(['parentOffice:id,code,name'])
             ->orderBy('code')
             ->orderBy('name');
 
-        if ($disabled) {
+        if ($status === 'disabled') {
             $query->onlyTrashed();
+        } elseif ($status === 'all') {
+            $query->withTrashed();
+        }
+
+        if ($type !== '') {
+            $query->where('type', $type);
         }
 
         if ($q !== '') {
@@ -82,16 +93,9 @@ class AdminOfficeController extends Controller
 
         $office->load(['parentOffice:id,code,name']);
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $request->user()->id,
-            'actor_office_id'     => $request->user()->office_id,
-            'target_office_id'    => null,
-            'event'               => 'office.created',
-            'label'               => 'Created an office',
-            'meta'                => ['office_id' => $office->id, 'code' => $office->code, 'name' => $office->name],
-        ]);
+        $this->logActivity('office.created', 'Created an office',
+            $request->user()->id, $request->user()->office_id,
+            ['office_id' => $office->id, 'code' => $office->code, 'name' => $office->name]);
 
         return response()->json(['office' => $office], 201);
     }
@@ -141,16 +145,9 @@ class AdminOfficeController extends Controller
 
         $office->load(['parentOffice:id,code,name']);
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $request->user()->id,
-            'actor_office_id'     => $request->user()->office_id,
-            'target_office_id'    => null,
-            'event'               => 'office.updated',
-            'label'               => 'Updated an office',
-            'meta'                => ['office_id' => $office->id, 'code' => $office->code, 'changed_fields' => array_keys($payload)],
-        ]);
+        $this->logActivity('office.updated', 'Updated an office',
+            $request->user()->id, $request->user()->office_id,
+            ['office_id' => $office->id, 'code' => $office->code, 'changed_fields' => array_keys($payload)]);
 
         return response()->json(['office' => $office]);
     }
@@ -158,16 +155,9 @@ class AdminOfficeController extends Controller
     // DELETE /api/admin/offices/{office} (soft delete)
     public function destroy(Request $office_request, Office $office)
     {
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $office_request->user()->id,
-            'actor_office_id'     => $office_request->user()->office_id,
-            'target_office_id'    => null,
-            'event'               => 'office.disabled',
-            'label'               => 'Disabled an office',
-            'meta'                => ['office_id' => $office->id, 'code' => $office->code],
-        ]);
+        $this->logActivity('office.disabled', 'Disabled an office',
+            $office_request->user()->id, $office_request->user()->office_id,
+            ['office_id' => $office->id, 'code' => $office->code]);
 
         $office->delete();
         return response()->json(['message' => 'Office disabled.']);
@@ -182,16 +172,9 @@ class AdminOfficeController extends Controller
         $o->restore();
         $o->load(['parentOffice:id,code,name']);
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $request->user()->id,
-            'actor_office_id'     => $request->user()->office_id,
-            'target_office_id'    => null,
-            'event'               => 'office.restored',
-            'label'               => 'Restored a disabled office',
-            'meta'                => ['office_id' => $o->id, 'code' => $o->code],
-        ]);
+        $this->logActivity('office.restored', 'Restored a disabled office',
+            $request->user()->id, $request->user()->office_id,
+            ['office_id' => $o->id, 'code' => $o->code]);
 
         return response()->json(['office' => $o]);
     }

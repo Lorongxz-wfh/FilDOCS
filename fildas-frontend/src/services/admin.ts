@@ -45,6 +45,8 @@ export interface AdminUsersResponse {
 export async function getAdminUsers(params: {
   page?: number;
   q?: string;
+  status?: "active" | "disabled" | "";
+  role_id?: number | "";
 }): Promise<AdminUsersResponse> {
   const res = await api.get("/admin/users", { params });
   return res.data as AdminUsersResponse;
@@ -80,7 +82,8 @@ export type AdminOffice = {
 
 export async function getAdminOffices(params?: {
   q?: string;
-  disabled?: boolean; // show disabled (onlyTrashed)
+  status?: "active" | "disabled" | "all";
+  type?: string;
 }): Promise<AdminOffice[]> {
   const res = await api.get("/admin/offices", { params });
   return res.data as AdminOffice[];

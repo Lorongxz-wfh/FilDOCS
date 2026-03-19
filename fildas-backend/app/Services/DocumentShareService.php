@@ -7,9 +7,12 @@ use App\Models\DocumentVersion;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\ActivityLog;
+use App\Traits\LogsActivityTrait;
 
 class DocumentShareService
 {
+    use LogsActivityTrait;
+
     /**
      * Sync shares and create notifications + activity log.
      *
@@ -98,20 +101,11 @@ class DocumentShareService
             if (!empty($rows)) Notification::insert($rows);
         }
 
-        ActivityLog::create([
-            'document_id' => $document->id,
-            'document_version_id' => $latestVersionId,
-            'actor_user_id' => $actorUserId,
-            'actor_office_id' => $actorOfficeId,
-            'target_office_id' => null,
-            'event' => 'document.shares_updated',
-            'label' => 'Updated document sharing',
-            'meta' => [
-                'office_ids' => $officeIds,
-                'added_office_ids' => $addedOfficeIds,
-                'removed_office_ids' => $removedOfficeIds,
-            ],
-        ]);
+        $this->logActivity('document.shares_updated', 'Updated document sharing', $actorUserId, $actorOfficeId, [
+            'office_ids' => $officeIds,
+            'added_office_ids' => $addedOfficeIds,
+            'removed_office_ids' => $removedOfficeIds,
+        ], $document->id, $latestVersionId);
 
         return [
             'office_ids' => $officeIds,

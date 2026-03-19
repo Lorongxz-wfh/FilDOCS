@@ -9,82 +9,20 @@ use App\Models\DocumentRequestItem;
 use App\Models\Notification;
 use App\Models\User;
 use App\Services\DocumentRequests\DocumentRequestFileService;
+use App\Services\DocumentRequests\DocumentRequestProgressService;
+use App\Traits\RoleNameTrait;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DocumentRequestController extends Controller
 {
-    public function __construct(private DocumentRequestFileService $files) {}
+    use RoleNameTrait, LogsActivityTrait;
 
-    private function roleName(Request $request): string
-    {
-        $user = $request->user();
-        $raw =
-            (optional($user?->role)->name ?? null) ??
-            ($user?->role_name ?? null) ??
-            ($user?->role ?? null) ??
-            '';
-        return strtolower(trim((string) $raw));
-    }
-
-    private function assertQaOrSysadmin(Request $request): void
-    {
-        $role = $this->roleName($request);
-        if (!in_array($role, ['qa', 'sysadmin', 'admin'], true)) {
-            abort(403, 'Forbidden.');
-        }
-    }
-
-    private function isQaRole(string $role): bool
-    {
-        return in_array($role, ['qa', 'sysadmin', 'admin'], true);
-    }
-
-    // ── Helpers ────────────────────────────────────────────────────────────
-
-    private function buildProgress(int $requestId, string $mode): array
-    {
-        if ($mode === 'multi_office') {
-            $recipients = DB::table('document_request_recipients')
-                ->where('request_id', $requestId)
-                ->get(['id', 'status']);
-
-            $total     = $recipients->count();
-            $submitted = $recipients->whereIn('status', ['submitted', 'accepted', 'rejected'])->count();
-            $accepted  = $recipients->where('status', 'accepted')->count();
-
-            return compact('total', 'submitted', 'accepted');
-        }
-
-        // multi_doc — progress is per item
-        $items = DB::table('document_request_items')
-            ->where('request_id', $requestId)
-            ->get(['id']);
-
-        $total = $items->count();
-
-        // For multi_doc there's 1 recipient — get their id
-        $recipient = DB::table('document_request_recipients')
-            ->where('request_id', $requestId)
-            ->first(['id']);
-
-        if (!$recipient) return ['total' => $total, 'submitted' => 0, 'accepted' => 0];
-
-        $itemIds = $items->pluck('id')->all();
-
-        // Latest submission per item for this recipient
-        $latestStatuses = DB::table('document_request_submissions as s')
-            ->whereIn('s.item_id', $itemIds)
-            ->where('s.recipient_id', $recipient->id)
-            ->orderByDesc('s.attempt_no')
-            ->get(['s.item_id', 's.status'])
-            ->unique('item_id');
-
-        $submitted = $latestStatuses->whereIn('status', ['submitted', 'accepted', 'rejected'])->count();
-        $accepted  = $latestStatuses->where('status', 'accepted')->count();
-
-        return compact('total', 'submitted', 'accepted');
-    }
+    public function __construct(
+        private DocumentRequestFileService $files,
+        private DocumentRequestProgressService $progress,
+    ) {}
 
     // ── GET /api/document-requests (QA/Admin) ──────────────────────────────
     public function index(Request $request)
@@ -116,7 +54,7 @@ class DocumentRequestController extends Controller
 
         // Attach progress to each row
         $items = collect($paginated->items())->map(function ($row) {
-            $progress = $this->buildProgress($row->id, $row->mode);
+            $progress = $this->progress->buildProgress($row->id, $row->mode);
             return array_merge((array) $row, ['progress' => $progress]);
         });
 
@@ -124,6 +62,187 @@ class DocumentRequestController extends Controller
             $paginated->toArray(),
             ['data' => $items]
         ));
+    }
+
+    // ── GET /api/document-requests/recipients (flat individual recipients) ─
+    public function indexRecipients(Request $request)
+    {
+        $user     = $request->user();
+        $role     = $this->roleName($request);
+        $isQa     = $this->isQaOrAdmin($role);
+        $officeId = (int) ($user?->office_id ?? 0);
+
+        if (!$isQa && $officeId <= 0) {
+            return response()->json(['message' => 'Your account has no office assigned.'], 422);
+        }
+
+        $data = $request->validate([
+            'q'              => 'nullable|string|max:100',
+            'status'         => 'nullable|in:pending,submitted,accepted,rejected',
+            'request_status' => 'nullable|in:open,closed,cancelled',
+            'per_page'       => 'nullable|integer|min:1|max:50',
+            'page'           => 'nullable|integer|min:1',
+        ]);
+
+        $perPage = (int) ($data['per_page'] ?? 25);
+
+        $q = DB::table('document_request_recipients as rr')
+            ->join('document_requests as r', 'r.id', '=', 'rr.request_id')
+            ->join('offices as o', 'o.id', '=', 'rr.office_id')
+            ->orderByDesc('rr.id')
+            ->select([
+                'rr.id as recipient_id',
+                'rr.request_id',
+                'rr.office_id',
+                'rr.status as recipient_status',
+                'rr.last_submitted_at',
+                'rr.last_reviewed_at',
+                'r.title as batch_title',
+                'r.description as batch_description',
+                'r.mode as batch_mode',
+                'r.status as batch_status',
+                'r.due_at',
+                'r.created_at',
+                'o.name as office_name',
+                'o.code as office_code',
+            ]);
+
+        if (!$isQa) {
+            $q->where('rr.office_id', $officeId);
+        }
+
+        if (!empty($data['q'])) {
+            $term = trim($data['q']);
+            $q->where(function ($qq) use ($term) {
+                $qq->where('r.title', 'like', "%{$term}%")
+                   ->orWhere('r.description', 'like', "%{$term}%");
+            });
+        }
+
+        if (!empty($data['status'])) {
+            $q->where('rr.status', $data['status']);
+        }
+
+        if (!empty($data['request_status'])) {
+            $q->where('r.status', $data['request_status']);
+        }
+
+        return response()->json($q->paginate($perPage));
+    }
+
+    // ── GET /api/document-requests/individual (flat items + recipients) ────
+    public function indexIndividual(Request $request)
+    {
+        $user     = $request->user();
+        $role     = $this->roleName($request);
+        $isQa     = $this->isQaOrAdmin($role);
+        $officeId = (int) ($user?->office_id ?? 0);
+
+        if (!$isQa && $officeId <= 0) {
+            return response()->json(['message' => 'Your account has no office assigned.'], 422);
+        }
+
+        $data = $request->validate([
+            'q'              => 'nullable|string|max:100',
+            'status'         => 'nullable|in:pending,submitted,accepted,rejected',
+            'request_status' => 'nullable|in:open,closed,cancelled',
+            'per_page'       => 'nullable|integer|min:1|max:50',
+            'page'           => 'nullable|integer|min:1',
+        ]);
+
+        $perPage = (int) ($data['per_page'] ?? 25);
+        $page    = max(1, (int) ($data['page'] ?? 1));
+        $offset  = ($page - 1) * $perPage;
+        $term    = !empty($data['q']) ? trim($data['q']) : null;
+        $reqSt   = $data['request_status'] ?? null;
+        $status  = $data['status'] ?? null;
+
+        // ── Sub-query A: multi_office recipients ──────────────────────────
+        $q1 = DB::table('document_request_recipients as rr')
+            ->join('document_requests as r', 'r.id', '=', 'rr.request_id')
+            ->join('offices as o', 'o.id', '=', 'rr.office_id')
+            ->where('r.mode', 'multi_office')
+            ->select([
+                DB::raw("'recipient' as row_type"),
+                'rr.id as row_id',
+                'r.id as request_id',
+                'r.title as batch_title',
+                'r.mode as batch_mode',
+                'r.status as batch_status',
+                'r.due_at',
+                'rr.created_at',
+                'rr.status as item_status',
+                'o.name as office_name',
+                'o.code as office_code',
+                DB::raw('NULL as item_title'),
+                'rr.id as recipient_id',
+                DB::raw('NULL as item_id'),
+            ]);
+
+        if (!$isQa) $q1->where('rr.office_id', $officeId);
+        if ($term)  $q1->where(function ($qq) use ($term) {
+            $qq->where('r.title', 'like', "%{$term}%")
+               ->orWhere('r.description', 'like', "%{$term}%");
+        });
+        if ($reqSt) $q1->where('r.status', $reqSt);
+        if ($status) $q1->where('rr.status', $status);
+
+        // ── Sub-query B: multi_doc items ──────────────────────────────────
+        $q2 = DB::table('document_request_items as dri')
+            ->join('document_requests as r', 'r.id', '=', 'dri.request_id')
+            ->join('document_request_recipients as rr', 'rr.request_id', '=', 'r.id')
+            ->join('offices as o', 'o.id', '=', 'rr.office_id')
+            ->where('r.mode', 'multi_doc')
+            ->select([
+                DB::raw("'item' as row_type"),
+                'dri.id as row_id',
+                'r.id as request_id',
+                'r.title as batch_title',
+                'r.mode as batch_mode',
+                'r.status as batch_status',
+                DB::raw('COALESCE(dri.due_at, r.due_at) as due_at'),
+                'dri.created_at',
+                DB::raw('COALESCE((SELECT s.status FROM document_request_submissions s WHERE s.item_id = dri.id AND s.recipient_id = rr.id ORDER BY s.attempt_no DESC LIMIT 1), \'pending\') as item_status'),
+                'o.name as office_name',
+                'o.code as office_code',
+                'dri.title as item_title',
+                'rr.id as recipient_id',
+                'dri.id as item_id',
+            ]);
+
+        if (!$isQa) $q2->where('rr.office_id', $officeId);
+        if ($term)  $q2->where(function ($qq) use ($term) {
+            $qq->where('r.title', 'like', "%{$term}%")
+               ->orWhere('dri.title', 'like', "%{$term}%");
+        });
+        if ($reqSt) $q2->where('r.status', $reqSt);
+
+        // ── UNION ALL + optional status outer filter ───────────────────────
+        $unionSql      = "({$q1->toSql()}) UNION ALL ({$q2->toSql()})";
+        $unionBindings = array_merge($q1->getBindings(), $q2->getBindings());
+
+        if ($status) {
+            // Item status for multi_doc is a computed column — filter on the outer query
+            $outerSql      = "SELECT * FROM ({$unionSql}) as combined WHERE item_status = ?";
+            $outerBindings = array_merge($unionBindings, [$status]);
+        } else {
+            $outerSql      = $unionSql;
+            $outerBindings = $unionBindings;
+        }
+
+        $total = DB::selectOne("SELECT COUNT(*) as agg FROM ({$outerSql}) as t", $outerBindings)->agg ?? 0;
+        $rows  = DB::select(
+            "SELECT * FROM ({$outerSql}) as t ORDER BY created_at DESC LIMIT {$perPage} OFFSET {$offset}",
+            $outerBindings
+        );
+
+        return response()->json([
+            'data'         => $rows,
+            'current_page' => $page,
+            'last_page'    => max(1, (int) ceil($total / $perPage)),
+            'per_page'     => $perPage,
+            'total'        => (int) $total,
+        ]);
     }
 
     // ── GET /api/document-requests/inbox (office users) ───────────────────
@@ -165,7 +284,7 @@ class DocumentRequestController extends Controller
 
         // Attach progress per row
         $rows = collect($paginated->items())->map(function ($row) {
-            $progress = $this->buildProgress($row->id, $row->mode);
+            $progress = $this->progress->buildProgress($row->id, $row->mode);
             return array_merge((array) $row, ['progress' => $progress]);
         });
 
@@ -181,7 +300,7 @@ class DocumentRequestController extends Controller
         $user     = $request->user();
         $role     = $this->roleName($request);
         $officeId = (int) ($user?->office_id ?? 0);
-        $isQa     = $this->isQaRole($role);
+        $isQa     = $this->isQaOrAdmin($role);
 
         $row = DB::table('document_requests')->where('id', $requestId)->first();
         if (!$row) return response()->json(['message' => 'Not found'], 404);
@@ -220,7 +339,7 @@ class DocumentRequestController extends Controller
             });
 
             $requestPayload            = (array) $row;
-            $requestPayload['progress'] = $this->buildProgress($requestId, $row->mode);
+            $requestPayload['progress'] = $this->progress->buildProgress($requestId, $row->mode);
 
             return response()->json([
                 'request'    => $requestPayload,
@@ -240,7 +359,7 @@ class DocumentRequestController extends Controller
         $requestPayload['office_id']   = (int) ($recipient->office_id ?? 0);
         $requestPayload['office_name'] = $recipient->office_name ?? null;
         $requestPayload['office_code'] = $recipient->office_code ?? null;
-        $requestPayload['progress']    = $this->buildProgress($requestId, $row->mode);
+        $requestPayload['progress']    = $this->progress->buildProgress($requestId, $row->mode);
 
         // Items for multi_doc mode
         $itemsPayload = [];
@@ -458,20 +577,11 @@ class DocumentRequestController extends Controller
             }
 
             // Activity log
-            ActivityLog::create([
-                'document_id'         => null,
-                'document_version_id' => null,
-                'actor_user_id'       => $user->id,
-                'actor_office_id'     => $user->office_id,
-                'target_office_id'    => null,
-                'event'               => 'document_request.created',
-                'label'               => 'Created a document request',
-                'meta'                => [
-                    'document_request_id' => $requestId,
-                    'mode'                => $mode,
-                    'office_ids'          => $officeIds,
-                    'due_at'              => $data['due_at'] ?? null,
-                ],
+            $this->logActivity('document_request.created', 'Created a document request', $user->id, $user->office_id, [
+                'document_request_id' => $requestId,
+                'mode'                => $mode,
+                'office_ids'          => $officeIds,
+                'due_at'              => $data['due_at'] ?? null,
             ]);
 
             // Notifications
@@ -591,21 +701,12 @@ class DocumentRequestController extends Controller
                     'updated_at'        => $now,
                 ]);
 
-            ActivityLog::create([
-                'document_id'         => null,
-                'document_version_id' => null,
-                'actor_user_id'       => $user->id,
-                'actor_office_id'     => $officeId,
-                'target_office_id'    => null,
-                'event'               => 'document_request.submission.submitted',
-                'label'               => 'Submitted document request evidence',
-                'meta'                => [
-                    'document_request_id' => $requestId,
-                    'recipient_id'        => $recipientId,
-                    'submission_id'       => $submissionId,
-                    'item_id'             => $itemId,
-                    'attempt_no'          => $attemptNo,
-                ],
+            $this->logActivity('document_request.submission.submitted', 'Submitted document request evidence', $user->id, $officeId, [
+                'document_request_id' => $requestId,
+                'recipient_id'        => $recipientId,
+                'submission_id'       => $submissionId,
+                'item_id'             => $itemId,
+                'attempt_no'          => $attemptNo,
             ]);
 
             // System message for submission
@@ -718,23 +819,14 @@ class DocumentRequestController extends Controller
                 ]);
             }
 
-            ActivityLog::create([
-                'document_id'         => null,
-                'document_version_id' => null,
-                'actor_user_id'       => $user->id,
-                'actor_office_id'     => $user->office_id,
-                'target_office_id'    => (int) ($recipient->office_id ?? null),
-                'event'               => 'document_request.submission.reviewed',
-                'label'               => $data['decision'] === 'accepted'
+            $this->logActivity('document_request.submission.reviewed', $data['decision'] === 'accepted'
                     ? 'Accepted document request submission'
-                    : 'Rejected document request submission',
-                'meta'                => [
-                    'document_request_id' => (int) ($recipient->request_id ?? null),
-                    'recipient_id'        => (int) $recipient->id,
-                    'submission_id'       => (int) $submissionId,
-                    'decision'            => $data['decision'],
-                ],
-            ]);
+                    : 'Rejected document request submission', $user->id, $user->office_id, [
+                'document_request_id' => (int) ($recipient->request_id ?? null),
+                'recipient_id'        => (int) $recipient->id,
+                'submission_id'       => (int) $submissionId,
+                'decision'            => $data['decision'],
+            ], null, null, (int) ($recipient->office_id ?? null));
 
             // System message for review decision
             $reviewMsg = $data['decision'] === 'accepted'
@@ -788,7 +880,7 @@ class DocumentRequestController extends Controller
         $user     = $request->user();
         $role     = $this->roleName($request);
         $officeId = (int) ($user?->office_id ?? 0);
-        $isQa     = $this->isQaRole($role);
+        $isQa     = $this->isQaOrAdmin($role);
 
         $row = DB::table('document_requests')->where('id', $requestId)->first();
         if (!$row) return response()->json(['message' => 'Not found'], 404);
@@ -878,7 +970,7 @@ class DocumentRequestController extends Controller
         $user     = $request->user();
         $role     = $this->roleName($request);
         $officeId = (int) ($user?->office_id ?? 0);
-        $isQa     = $this->isQaRole($role);
+        $isQa     = $this->isQaOrAdmin($role);
 
         $row = DB::table('document_requests')->where('id', $requestId)->first();
         if (!$row) return response()->json(['message' => 'Not found'], 404);
@@ -1003,16 +1095,7 @@ class DocumentRequestController extends Controller
 
         DB::table('document_requests')->where('id', $requestId)->update($payload);
 
-        ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $request->user()->id,
-            'actor_office_id'     => $request->user()->office_id,
-            'target_office_id'    => null,
-            'event'               => 'document_request.updated',
-            'label'               => 'Updated document request',
-            'meta'                => ['document_request_id' => $requestId, 'fields' => array_keys($payload)],
-        ]);
+        $this->logActivity('document_request.updated', 'Updated document request', $request->user()->id, $request->user()->office_id, ['document_request_id' => $requestId, 'fields' => array_keys($payload)]);
 
         return response()->json(['message' => 'Updated.', 'id' => $requestId]);
     }
@@ -1045,19 +1128,10 @@ class DocumentRequestController extends Controller
 
         DB::table('document_request_items')->where('id', $itemId)->update($payload);
 
-        ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $request->user()->id,
-            'actor_office_id'     => $request->user()->office_id,
-            'target_office_id'    => null,
-            'event'               => 'document_request_item.updated',
-            'label'               => 'Updated document request item',
-            'meta'                => [
-                'item_id'    => $itemId,
-                'request_id' => $item->request_id,
-                'fields'     => array_keys($payload),
-            ],
+        $this->logActivity('document_request_item.updated', 'Updated document request item', $request->user()->id, $request->user()->office_id, [
+            'item_id'    => $itemId,
+            'request_id' => $item->request_id,
+            'fields'     => array_keys($payload),
         ]);
 
         return response()->json(['message' => 'Updated.', 'id' => $itemId]);
@@ -1086,20 +1160,11 @@ class DocumentRequestController extends Controller
                 'updated_at' => now(),
             ]);
 
-        ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $request->user()->id,
-            'actor_office_id'     => $request->user()->office_id,
-            'target_office_id'    => (int) $recipient->office_id,
-            'event'               => 'document_request_recipient.updated',
-            'label'               => 'Updated recipient due date',
-            'meta'                => [
-                'recipient_id' => $recipientId,
-                'request_id'   => $requestId,
-                'due_at'       => $data['due_at'] ?? null,
-            ],
-        ]);
+        $this->logActivity('document_request_recipient.updated', 'Updated recipient due date', $request->user()->id, $request->user()->office_id, [
+            'recipient_id' => $recipientId,
+            'request_id'   => $requestId,
+            'due_at'       => $data['due_at'] ?? null,
+        ], null, null, (int) $recipient->office_id);
 
         return response()->json(['message' => 'Updated.', 'id' => $recipientId]);
     }
@@ -1130,18 +1195,9 @@ class DocumentRequestController extends Controller
         $event = $data['status'] === 'closed' ? 'document_request.closed' : 'document_request.cancelled';
         $label = $data['status'] === 'closed' ? 'Closed document request' : 'Cancelled document request';
 
-        ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $request->user()->id,
-            'actor_office_id'     => $request->user()->office_id,
-            'target_office_id'    => null,
-            'event'               => $event,
-            'label'               => $label,
-            'meta'                => [
-                'document_request_id' => $requestId,
-                'reason'              => $data['reason'] ?? null,
-            ],
+        $this->logActivity($event, $label, $request->user()->id, $request->user()->office_id, [
+            'document_request_id' => $requestId,
+            'reason'              => $data['reason'] ?? null,
         ]);
 
         // Insert system message so participants see the status change

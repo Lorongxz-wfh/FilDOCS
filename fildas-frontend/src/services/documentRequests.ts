@@ -112,6 +112,28 @@ export async function listDocumentRequestInbox(params?: {
   return res.data;
 }
 
+export async function listDocumentRequestRecipients(params?: {
+  q?: string;
+  status?: string;
+  request_status?: string;
+  per_page?: number;
+  page?: number;
+}) {
+  const res = await api.get("/document-requests/recipients", { params });
+  return res.data;
+}
+
+export async function listDocumentRequestIndividual(params?: {
+  q?: string;
+  status?: string;
+  request_status?: string;
+  per_page?: number;
+  page?: number;
+}) {
+  const res = await api.get("/document-requests/individual", { params });
+  return res.data;
+}
+
 // ── Show ───────────────────────────────────────────────────────────────────
 export async function getDocumentRequest(requestId: number) {
   const res = await api.get(`/document-requests/${requestId}`);

@@ -34,6 +34,7 @@ export type UploadTemplatePayload = {
   name: string;
   description?: string;
   file: File;
+  is_global?: boolean;
 };
 
 // ── API calls ─────────────────────────────────────────────────────────────────
@@ -75,6 +76,9 @@ export async function uploadTemplate(
     form.append("description", payload.description.trim());
   }
   form.append("file", payload.file);
+  if (payload.is_global !== undefined) {
+    form.append("is_global", payload.is_global ? "1" : "0");
+  }
 
   const res = await api.post("/templates", form, {
     headers: { "Content-Type": "multipart/form-data" },

@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\User;
 use App\Models\Office;
+use App\Traits\RoleNameTrait;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller
 {
+    use RoleNameTrait;
+
     public function __invoke(Request $request)
     {
         $q = trim((string) ($request->query('q', '')));
@@ -29,7 +32,7 @@ class SearchController extends Controller
         $op = config('database.default') === 'pgsql' ? 'ilike' : 'like';
 
         $actor    = $request->user();
-        $roleName = strtolower(trim((string) ($actor?->role?->name ?? '')));
+        $roleName = $this->roleNameOf($actor);
         $isAdmin  = in_array($roleName, ['admin', 'sysadmin'], true);
 
         // Documents — title / description match

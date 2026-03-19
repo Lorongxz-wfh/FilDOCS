@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\DocumentTemplate;
+use App\Traits\RoleNameTrait;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +15,8 @@ use App\Services\ThumbnailService;
 
 class DocumentTemplateController extends Controller
 {
+    use RoleNameTrait, LogsActivityTrait;
+
     // ── GET /api/templates ───────────────────────────────────
 
     public function index(Request $request): JsonResponse
@@ -61,14 +65,25 @@ class DocumentTemplateController extends Controller
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'file'        => 'required|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx',
+            'is_global'   => 'nullable|boolean',
         ]);
 
         $user = $request->user();
         $file = $request->file('file');
 
-        // Admin/QA → global; Office staff → scoped to their office
-        $role     = strtolower((string) ($user->role?->name ?? $user->role ?? ''));
-        $isGlobal = in_array($role, ['admin', 'qa']);
+        $role = $this->roleNameOf($user);
+
+        // Admin → always global (has no office)
+        // QA / sysadmin → can choose via is_global param (defaults to office-scoped)
+        // Everyone else → always office-scoped
+        if ($role === 'admin') {
+            $isGlobal = true;
+        } elseif (in_array($role, ['qa', 'sysadmin'])) {
+            $isGlobal = filter_var($request->input('is_global', false), FILTER_VALIDATE_BOOLEAN);
+        } else {
+            $isGlobal = false;
+        }
+
         $officeId = $isGlobal ? null : $user->office_id;
 
         $disk = config('filesystems.default');
@@ -123,16 +138,10 @@ class DocumentTemplateController extends Controller
 
         $template->load(['uploader:id,first_name,last_name', 'office:id,name,code', 'tags']);
 
-        ActivityLog::create([
-            'actor_user_id'  => $user->id,
-            'actor_office_id' => $user->office_id,
-            'event'          => 'template.created',
-            'label'          => 'Created a template',
-            'meta'           => [
-                'template_id' => $template->id,
-                'name'        => $template->name,
-                'scope'       => $isGlobal ? 'global' : 'office',
-            ],
+        $this->logActivity('template.created', 'Created a template', $user->id, $user->office_id, [
+            'template_id' => $template->id,
+            'name'        => $template->name,
+            'scope'       => $isGlobal ? 'global' : 'office',
         ]);
 
         return response()->json(['template' => $this->format($template, $user)], 201);
@@ -162,13 +171,7 @@ class DocumentTemplateController extends Controller
 
         $template->forceDelete(); // hard delete; use delete() if you want soft-delete history
 
-        ActivityLog::create([
-            'actor_user_id'  => $user->id,
-            'actor_office_id' => $user->office_id,
-            'event'          => 'template.deleted',
-            'label'          => 'Deleted a template',
-            'meta'           => ['template_id' => $templateId, 'name' => $templateName],
-        ]);
+        $this->logActivity('template.deleted', 'Deleted a template', $user->id, $user->office_id, ['template_id' => $templateId, 'name' => $templateName]);
 
         return response()->json(['message' => 'Template deleted.']);
     }
@@ -218,13 +221,7 @@ class DocumentTemplateController extends Controller
         $template->tags()->sync($tagIds);
         $template->load('tags');
 
-        ActivityLog::create([
-            'actor_user_id'  => $request->user()->id,
-            'actor_office_id' => $request->user()->office_id,
-            'event'          => 'template.tags_updated',
-            'label'          => 'Updated template tags',
-            'meta'           => ['template_id' => $template->id, 'name' => $template->name],
-        ]);
+        $this->logActivity('template.tags_updated', 'Updated template tags', $request->user()->id, $request->user()->office_id, ['template_id' => $template->id, 'name' => $template->name]);
 
         return response()->json([
             'tags' => $template->tags->pluck('name')->values()->all(),
@@ -235,7 +232,7 @@ class DocumentTemplateController extends Controller
 
     private function format(DocumentTemplate $t, $user): array
     {
-        $role     = strtolower((string) ($user->role?->name ?? $user->role ?? ''));
+        $role     = $this->roleNameOf($user);
         $isAdmin  = $role === 'admin';
         $canDelete = $isAdmin || $t->uploaded_by === $user->id;
 

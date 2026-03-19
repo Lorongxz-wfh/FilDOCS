@@ -73,7 +73,7 @@ const LoginPage: React.FC = () => {
       <button
         type="button"
         onClick={toggleDark}
-        className="absolute top-4 right-4 z-20 flex items-center justify-center h-9 w-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white backdrop-blur-sm transition"
+        className="absolute top-4 right-4 z-20 flex items-center justify-center h-8 w-8 rounded-md bg-white/10 hover:bg-white/20 border border-white/20 text-white backdrop-blur-sm transition"
       >
         {dark ? <Sun size={15} /> : <Moon size={15} />}
       </button>
@@ -85,7 +85,7 @@ const LoginPage: React.FC = () => {
           <div>
             {/* Logo + name */}
             <div className="flex items-center gap-3 mb-10">
-              <div className="h-11 w-11 overflow-hidden rounded-xl border border-white/25 bg-white/15 backdrop-blur-sm shrink-0">
+              <div className="h-11 w-11 overflow-hidden rounded-md border border-white/25 bg-white/15 backdrop-blur-sm shrink-0">
                 <img
                   src={logoUrl}
                   alt="FCU Logo"
@@ -94,7 +94,7 @@ const LoginPage: React.FC = () => {
               </div>
               <div className="leading-tight">
                 <div className="text-base font-bold tracking-tight">FilDAS</div>
-                <div className="text-[11px] uppercase tracking-widest text-blue-200 font-medium">
+                <div className="text-[11px] uppercase tracking-wide text-blue-200 font-medium">
                   Quality Assurance
                 </div>
               </div>
@@ -120,7 +120,7 @@ const LoginPage: React.FC = () => {
             <ul className="space-y-3.5">
               {features.map((f) => (
                 <li key={f} className="flex items-center gap-3">
-                  <div className="shrink-0 h-6 w-6 rounded-full bg-white/15 flex items-center justify-center">
+                  <div className="shrink-0 h-6 w-6 rounded bg-white/15 flex items-center justify-center">
                     <CheckCircle2 size={13} className="text-blue-200" />
                   </div>
                   <span className="text-sm font-medium text-white/90">{f}</span>
@@ -139,7 +139,7 @@ const LoginPage: React.FC = () => {
         <div className="w-full max-w-sm lg:max-w-none lg:w-[390px] rounded-3xl lg:rounded-l-none bg-white dark:bg-surface-500 shadow-2xl px-10 py-12 flex flex-col justify-center">
           {/* Mobile logo */}
           <div className="flex lg:hidden items-center justify-center mb-8">
-            <div className="h-14 w-14 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="h-14 w-14 overflow-hidden rounded-md border border-slate-200 bg-white">
               <img
                 src={logoUrl}
                 alt="FCU Logo"
@@ -158,7 +158,7 @@ const LoginPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             {/* Email */}
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
                 Institutional Email
               </label>
               <input
@@ -168,13 +168,13 @@ const LoginPage: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="qa@example.com"
                 required
-                className="w-full rounded-xl border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-sky-400 focus:bg-white dark:focus:bg-surface-600 focus:ring-2 focus:ring-sky-400/20 transition"
+                className="w-full rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-surface-600 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/30 transition"
               />
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
                 Password
               </label>
               <div className="relative">
@@ -184,7 +184,7 @@ const LoginPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full rounded-xl border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-4 py-3 pr-16 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-sky-400 focus:bg-white dark:focus:bg-surface-600 focus:ring-2 focus:ring-sky-400/20 transition"
+                  className="w-full rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-4 py-2.5 pr-16 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-surface-600 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/30 transition"
                 />
                 <button
                   type="button"
@@ -206,7 +206,7 @@ const LoginPage: React.FC = () => {
             </div>
 
             {error && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
+              <div className="rounded-md border border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-950/40 px-4 py-3 text-xs text-rose-700 dark:text-rose-400">
                 {error}
               </div>
             )}
@@ -214,7 +214,7 @@ const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-600 dark:bg-sky-500 dark:hover:bg-sky-600 text-sm font-bold text-white tracking-wide transition disabled:opacity-60 active:scale-[0.99]"
+              className="w-full py-2.5 rounded-md bg-brand-500 hover:bg-brand-600 text-sm font-semibold text-white transition disabled:opacity-60"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>

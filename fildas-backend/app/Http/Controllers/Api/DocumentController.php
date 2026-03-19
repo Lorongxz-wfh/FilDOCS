@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Traits\RoleNameTrait;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Http\Request;
 use App\Http\Requests\DocumentStoreRequest;
 use App\Http\Requests\DocumentIndexRequest;
@@ -18,6 +20,7 @@ use App\Services\DocumentPreviewService;
 use App\Services\DocumentVersionFileService;
 use App\Services\DocumentShareService;
 use App\Services\DocumentIndexService;
+use App\Services\OfficeHierarchyService;
 
 
 use Symfony\Component\HttpFoundation\Response;
@@ -33,22 +36,14 @@ use App\Services\WorkflowSteps;
 
 class DocumentController extends Controller
 {
+    use RoleNameTrait, LogsActivityTrait;
+
     public function __construct(
         private DocumentVersionFileService $versionFiles,
         private DocumentShareService $shares,
-        private DocumentIndexService $docIndex
+        private DocumentIndexService $docIndex,
+        private OfficeHierarchyService $officeHierarchy,
     ) {}
-
-    private function vpRoleToOfficeCode(?string $roleName): ?string
-    {
-        return match ($roleName) {
-            'vpaa' => 'VA',
-            'vpadmin' => 'VAd',
-            'vpfinance' => 'VF',
-            'vpreqa' => 'VR',
-            default => null,
-        };
-    }
 
     // GET /api/documents
     public function index(DocumentIndexRequest $request)
@@ -69,7 +64,7 @@ class DocumentController extends Controller
             return \App\Models\Office::where('code', 'QA')->value('id');
         });
 
-        $roleName = $user?->role?->name ? strtolower(trim($user->role->name)) : null;
+        $roleName = $this->roleNameOf($user) ?: null;
 
         $visibleDocs = Document::query();
 
@@ -141,7 +136,7 @@ class DocumentController extends Controller
     public function versions(Request $request, Document $document)
     {
         $user = $request->user();
-        $roleName = $user?->role?->name ? strtolower(trim($user->role->name)) : null;
+        $roleName = $this->roleNameOf($user) ?: null;
 
         $canSeeAll = in_array($roleName, ['admin', 'president', 'qa'], true);
 
@@ -166,7 +161,7 @@ class DocumentController extends Controller
                 })
                 ->exists();
 
-            $vpOfficeCode = $this->vpRoleToOfficeCode($roleName);
+            $vpOfficeCode = $this->officeHierarchy->vpRoleToOfficeCode($roleName);
             if ($vpOfficeCode) {
                 $vpOfficeId = Cache::remember("office_id:{$vpOfficeCode}", 3600, function () use ($vpOfficeCode) {
                     return \App\Models\Office::where('code', $vpOfficeCode)->value('id');
@@ -235,7 +230,7 @@ class DocumentController extends Controller
     public function getShares(Request $request, Document $document)
     {
         $user = $request->user();
-        $roleName = $user?->role?->name ? strtolower(trim($user->role->name)) : null;
+        $roleName = $this->roleNameOf($user) ?: null;
         $canManage = in_array($roleName, ['admin', 'qa'], true);
 
         if (!$canManage) {
@@ -253,7 +248,7 @@ class DocumentController extends Controller
     public function setShares(Request $request, Document $document)
     {
         $user = $request->user();
-        $roleName = $user?->role?->name ? strtolower(trim($user->role->name)) : null;
+        $roleName = $this->roleNameOf($user) ?: null;
         $canManage = in_array($roleName, ['admin', 'qa'], true);
 
         if (!$canManage) {
@@ -295,7 +290,7 @@ class DocumentController extends Controller
     public function setTags(Request $request, Document $document)
     {
         $user = $request->user();
-        $roleName = $user?->role?->name ? strtolower(trim($user->role->name)) : null;
+        $roleName = $this->roleNameOf($user) ?: null;
 
         $isAdmin = ($roleName === 'admin');
         $isCreator = ((int) ($document->created_by ?? 0) === (int) ($user?->id ?? 0));
@@ -333,18 +328,9 @@ class DocumentController extends Controller
 
         $document->tags()->sync($tagIds);
 
-        ActivityLog::create([
-            'document_id' => $document->id,
-            'document_version_id' => $document->latestVersion?->id,
-            'actor_user_id' => $user?->id,
-            'actor_office_id' => $user?->office_id,
-            'target_office_id' => null,
-            'event' => 'document.tags_updated',
-            'label' => 'Updated document tags',
-            'meta' => [
-                'tags' => $clean,
-            ],
-        ]);
+        $this->logActivity('document.tags_updated', 'Updated document tags', $user?->id, $user?->office_id, [
+            'tags' => $clean,
+        ], $document->id, $document->latestVersion?->id);
 
         return response()->json([
             'message' => 'Tags updated.',
@@ -356,7 +342,7 @@ class DocumentController extends Controller
     // POST /api/documents (create family + v0 Draft)
     public function store(DocumentStoreRequest $request)
     {
-        $roleName = $request->user()?->role?->name ? strtolower(trim($request->user()->role->name)) : null;
+        $roleName = $this->roleName($request) ?: null;
 
         $data = $request->validated();
 
@@ -482,29 +468,20 @@ class DocumentController extends Controller
 
 
 
-        ActivityLog::create([
-            'document_id' => $doc->id,
-            'document_version_id' => $version->id,
-            'actor_user_id' => $request->user()?->id,
-            'actor_office_id' => $request->user()?->office_id,
-            'target_office_id' => $doc->review_office_id,
-            'event' => 'document.created',
-            'label' => 'Created a document draft',
-            'meta' => [
-                'status' => $version->status,
-                'version_number' => $version->version_number,
-                'review_office_id' => $doc->review_office_id,
-                'doctype' => $doc->doctype,
-                'visibility_scope' => $doc->visibility_scope,
+        $this->logActivity('document.created', 'Created a document draft', $request->user()?->id, $request->user()?->office_id, [
+            'status' => $version->status,
+            'version_number' => $version->version_number,
+            'review_office_id' => $doc->review_office_id,
+            'doctype' => $doc->doctype,
+            'visibility_scope' => $doc->visibility_scope,
 
-                // Routing capture (temporary until we add a routing table)
-                'routing_mode' => $routingMode,
-                'custom_review_office_ids' => ($routingMode === 'custom')
-                    ? array_values($customOfficeIds)
-                    : [],
+            // Routing capture (temporary until we add a routing table)
+            'routing_mode' => $routingMode,
+            'custom_review_office_ids' => ($routingMode === 'custom')
+                ? array_values($customOfficeIds)
+                : [],
 
-            ],
-        ]);
+        ], $doc->id, $version->id, $doc->review_office_id);
 
         // Peek at expected code — does NOT consume the counter or increment seq.
         // The real code is assigned atomically at the registration step.
@@ -517,20 +494,11 @@ class DocumentController extends Controller
         // File upload
         if ($request->hasFile('file')) {
             $this->versionFiles->saveVersionFile($version, $request->file('file'));
-            ActivityLog::create([
-                'document_id' => $doc->id,
-                'document_version_id' => $version->id,
-                'actor_user_id' => $request->user()?->id,
-                'actor_office_id' => $request->user()?->office_id,
-                'target_office_id' => null,
-                'event' => 'version.file_uploaded',
-                'label' => 'Uploaded a draft file',
-                'meta' => [
-                    'status' => $version->status,
-                    'version_number' => $version->version_number,
-                    'filename' => $version->original_filename,
-                ],
-            ]);
+            $this->logActivity('version.file_uploaded', 'Uploaded a draft file', $request->user()?->id, $request->user()?->office_id, [
+                'status' => $version->status,
+                'version_number' => $version->version_number,
+                'filename' => $version->original_filename,
+            ], $doc->id, $version->id);
         }
 
         return (new DocumentResource($doc->load(['ownerOffice', 'latestVersion'])))
@@ -675,23 +643,14 @@ class DocumentController extends Controller
             'assigned_office_id'  => $assignedOfficeId,
         ]);
 
-        ActivityLog::create([
-            'document_id'         => $document->id,
-            'document_version_id' => $revision->id,
-            'actor_user_id'       => $request->user()?->id,
-            'actor_office_id'     => $request->user()?->office_id,
-            'target_office_id'    => $assignedOfficeId,
-            'event'               => 'version.revision_created',
-            'label'               => 'Started a revision draft',
-            'meta'                => [
-                'version_number'          => $revision->version_number,
-                'status'                  => $revision->status,
-                'workflow_type'           => $inheritedFlow,
-                'routing_mode'            => $inheritedRouting,
-                'based_on_version_number' => $latestOfficial->version_number,
-                'based_on_status'         => $latestOfficial->status,
-            ],
-        ]);
+        $this->logActivity('version.revision_created', 'Started a revision draft', $request->user()?->id, $request->user()?->office_id, [
+            'version_number'          => $revision->version_number,
+            'status'                  => $revision->status,
+            'workflow_type'           => $inheritedFlow,
+            'routing_mode'            => $inheritedRouting,
+            'based_on_version_number' => $latestOfficial->version_number,
+            'based_on_status'         => $latestOfficial->status,
+        ], $document->id, $revision->id, $assignedOfficeId);
 
         return response()->json($revision, 201);
     }
@@ -736,21 +695,12 @@ class DocumentController extends Controller
             ? 'version.signed_file_uploaded'
             : 'version.file_replaced';
 
-        ActivityLog::create([
-            'document_id'         => $version->document_id,
-            'document_version_id' => $version->id,
-            'actor_user_id'       => $request->user()?->id,
-            'actor_office_id'     => $request->user()?->office_id,
-            'target_office_id'    => null,
-            'event'               => $event,
-            'label'               => $label,
-            'meta'                => [
-                'status'         => $version->status,
-                'version_number' => $version->version_number,
-                'filename'       => $freshVersion->original_filename,
-                'is_signed'      => $isDuringApproval,
-            ],
-        ]);
+        $this->logActivity($event, $label, $request->user()?->id, $request->user()?->office_id, [
+            'status'         => $version->status,
+            'version_number' => $version->version_number,
+            'filename'       => $freshVersion->original_filename,
+            'is_signed'      => $isDuringApproval,
+        ], $version->document_id, $version->id);
 
         return response()->json($freshVersion->fresh(), 200);
     }
@@ -778,23 +728,14 @@ class DocumentController extends Controller
 
         $version->save();
 
-        \App\Models\ActivityLog::create([
-            'document_id' => $version->document_id,
-            'document_version_id' => $version->id,
-            'actor_user_id' => $request->user()?->id,
-            'actor_office_id' => $request->user()?->office_id,
-            'target_office_id' => null,
-            'event' => 'version.updated',
-            'label' => 'Updated draft version fields',
-            'meta' => [
-                'version_number' => $version->version_number,
-                'status' => $version->status,
-                'changed' => [
-                    'description' => array_key_exists('description', $data),
-                    'effective_date' => array_key_exists('effective_date', $data),
-                ],
+        $this->logActivity('version.updated', 'Updated draft version fields', $request->user()?->id, $request->user()?->office_id, [
+            'version_number' => $version->version_number,
+            'status' => $version->status,
+            'changed' => [
+                'description' => array_key_exists('description', $data),
+                'effective_date' => array_key_exists('effective_date', $data),
             ],
-        ]);
+        ], $version->document_id, $version->id);
 
         return response()->json(['version' => $version->fresh()], 200);
     }
@@ -803,7 +744,7 @@ class DocumentController extends Controller
     // GET /api/document-versions/{version}/preview
     public function previewVersion(Request $request, DocumentVersion $version)
     {
-        $roleName = $request->user()?->role?->name ? strtolower(trim($request->user()->role->name)) : null;
+        $roleName = $this->roleName($request) ?: null;
 
         if ($roleName === 'auditor' && $version->status !== 'Distributed') {
             return response()->json(['message' => 'Only Distributed versions can be previewed.'], 422);
@@ -842,19 +783,10 @@ class DocumentController extends Controller
 
         $downloadName = $version->original_filename ?? 'document';
 
-        \App\Models\ActivityLog::create([
-            'document_id' => $version->document_id,
-            'document_version_id' => $version->id,
-            'actor_user_id' => $request->user()?->id,
-            'actor_office_id' => $request->user()?->office_id,
-            'target_office_id' => null,
-            'event' => 'version.downloaded',
-            'label' => 'Downloaded a document file',
-            'meta' => [
-                'status' => $version->status,
-                'version_number' => $version->version_number,
-            ],
-        ]);
+        $this->logActivity('version.downloaded', 'Downloaded a document file', $request->user()?->id, $request->user()?->office_id, [
+            'status' => $version->status,
+            'version_number' => $version->version_number,
+        ], $version->document_id, $version->id);
 
         $stream = Storage::disk()->readStream($version->file_path);
 
@@ -882,19 +814,10 @@ class DocumentController extends Controller
             $version->cancelled_at = now();
             $version->save();
 
-            ActivityLog::create([
-                'document_id' => $version->document_id,
-                'document_version_id' => $version->id,
-                'actor_user_id' => $request->user()?->id,
-                'actor_office_id' => $request->user()?->office_id,
-                'target_office_id' => null,
-                'event' => 'version.cancelled',
-                'label' => 'Cancelled a draft version',
-                'meta' => [
-                    'version_number' => $version->version_number, // <-- keep if your column is version_number
-                    'previous_status' => 'Draft',
-                ],
-            ]);
+            $this->logActivity('version.cancelled', 'Cancelled a draft version', $request->user()?->id, $request->user()?->office_id, [
+                'version_number' => $version->version_number, // <-- keep if your column is version_number
+                'previous_status' => 'Draft',
+            ], $version->document_id, $version->id);
 
             // 2) Close any open tasks on this cancelled version
             WorkflowTask::query()
@@ -943,20 +866,11 @@ class DocumentController extends Controller
 
         $document = $version->document()->first();
 
-        ActivityLog::create([
-            'document_id' => $version->document_id,
-            'document_version_id' => $version->id,
-            'actor_user_id' => $request->user()?->id,
-            'actor_office_id' => $request->user()?->office_id,
-            'target_office_id' => null,
-            'event' => 'version.deleted',
-            'label' => 'Deleted a draft version',
-            'meta' => [
-                'version_number' => $version->version_number,
-                'status' => $version->status,
-                'deleted_document_family' => ((int) $version->version_number === 0),
-            ],
-        ]);
+        $this->logActivity('version.deleted', 'Deleted a draft version', $request->user()?->id, $request->user()?->office_id, [
+            'version_number' => $version->version_number,
+            'status' => $version->status,
+            'deleted_document_family' => ((int) $version->version_number === 0),
+        ], $version->document_id, $version->id);
 
         $this->versionFiles->deleteVersionFiles($version);
         $version->delete();
@@ -1070,7 +984,7 @@ class DocumentController extends Controller
     {
         $user     = $request->user();
         $officeId = (int) ($user?->office_id ?? 0);
-        $role = strtolower(trim((string) ($user?->role?->name ?? '')));
+        $role = $this->roleNameOf($user);
         $isQa = in_array($role, ['qa', 'sysadmin', 'admin'], true);
         $perPage  = min((int) ($request->query('per_page', 15)), 50);
         $page     = max((int) ($request->query('page', 1)), 1);

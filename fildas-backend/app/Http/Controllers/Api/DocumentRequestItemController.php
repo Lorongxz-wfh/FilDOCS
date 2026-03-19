@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Services\DocumentRequests\DocumentRequestFileService;
+use App\Traits\RoleNameTrait;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -13,18 +15,9 @@ use Illuminate\Support\Facades\URL;
 
 class DocumentRequestItemController extends Controller
 {
-    public function __construct(private DocumentRequestFileService $files) {}
+    use RoleNameTrait, LogsActivityTrait;
 
-    private function roleName(Request $request): string
-    {
-        $user = $request->user();
-        $raw  =
-            (optional($user?->role)->name ?? null) ??
-            ($user?->role_name ?? null) ??
-            ($user?->role ?? null) ??
-            '';
-        return strtolower(trim((string) $raw));
-    }
+    public function __construct(private DocumentRequestFileService $files) {}
 
     // POST /api/document-request-items/{item}/example
     public function uploadExample(Request $request, int $itemId)
@@ -50,19 +43,10 @@ class DocumentRequestItemController extends Controller
             'updated_at'                => now(),
         ]);
 
-        ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $request->user()->id,
-            'actor_office_id'     => $request->user()->office_id,
-            'target_office_id'    => null,
-            'event'               => 'document_request_item.example_uploaded',
-            'label'               => 'Uploaded example file for document request item',
-            'meta'                => [
-                'item_id'    => $itemId,
-                'request_id' => $item->request_id,
-                'filename'   => $payload['original_filename'],
-            ],
+        $this->logActivity('document_request_item.example_uploaded', 'Uploaded example file for document request item', $request->user()->id, $request->user()->office_id, [
+            'item_id'    => $itemId,
+            'request_id' => $item->request_id,
+            'filename'   => $payload['original_filename'],
         ]);
 
         return response()->json([

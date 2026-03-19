@@ -17,124 +17,13 @@ import {
 } from "../lib/roleFilters";
 import PageFrame from "../components/layout/PageFrame";
 import Button from "../components/ui/Button";
-import InlineSpinner from "../components/ui/loader/InlineSpinner";
 import SkeletonList from "../components/ui/loader/SkeletonList";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
-import { RefreshCw, CheckCircle2, FileText, Search, X } from "lucide-react";
-
-// ── Stat card ──────────────────────────────────────────────────────────────
-const StatCard: React.FC<{
-  label: string;
-  value: number | null;
-  loading: boolean;
-}> = ({ label, value, loading }) => (
-  <div className="flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3">
-    <div className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
-      {loading ? (
-        <InlineSpinner className="h-5 w-5 border-2" />
-      ) : (
-        (value ?? 0)
-      )}
-    </div>
-    <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-      {label}
-    </div>
-  </div>
-);
-
-// ── Queue item card ────────────────────────────────────────────────────────
-const QueueCard: React.FC<{
-  item: WorkQueueItem;
-  onClick: (id: number) => void;
-}> = ({ item, onClick }) => {
-  const doc = item.document;
-  const ver = item.version;
-
-  const statusColor = (s: string) => {
-    const sl = s.toLowerCase();
-    if (sl.includes("draft"))
-      return "bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300";
-    if (sl.includes("review"))
-      return "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400";
-    if (sl.includes("approval"))
-      return "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400";
-    if (sl.includes("distribut"))
-      return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400";
-    return "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400";
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(doc.id)}
-      className="w-full text-left flex items-center gap-4 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3 transition hover:border-slate-300 dark:hover:border-slate-600"
-    >
-      <div className="shrink-0">
-        <span
-          className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium ${statusColor(ver.status)}`}
-        >
-          {ver.status}
-        </span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-          {doc.title}
-        </p>
-        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-          {doc.code} · v{ver.version_number}
-        </p>
-      </div>
-      <div className="shrink-0">
-        {item.can_act ? (
-          <span className="inline-flex items-center gap-1 rounded bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 px-2 py-0.5 text-[10px] font-semibold text-sky-700 dark:text-sky-400">
-            Action needed →
-          </span>
-        ) : (
-          <span className="inline-flex items-center rounded bg-slate-50 dark:bg-surface-400 border border-slate-200 dark:border-surface-400 px-2 py-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-            Monitoring
-          </span>
-        )}
-      </div>
-    </button>
-  );
-};
-
-// ── Finished doc card ──────────────────────────────────────────────────────
-const FinishedCard: React.FC<{
-  doc: FinishedDocumentRow;
-  onClick: () => void;
-}> = ({ doc, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="w-full text-left flex items-center gap-4 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3 transition hover:border-slate-300 dark:hover:border-slate-600 group"
-  >
-    <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600">
-      <FileText className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-        {doc.title}
-      </p>
-      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-        {doc.code ?? "—"} · v{doc.version_number}
-        {doc.owner_office_code && ` · ${doc.owner_office_code}`}
-      </p>
-    </div>
-    <div className="shrink-0 flex flex-col items-end gap-1">
-      <span className="inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-surface-400 border border-slate-200 dark:border-surface-400 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">
-        <CheckCircle2 className="h-2.5 w-2.5" />
-        Distributed
-      </span>
-      {doc.distributed_at && (
-        <span className="text-[10px] text-slate-400 dark:text-slate-500">
-          {new Date(doc.distributed_at).toLocaleDateString()}
-        </span>
-      )}
-    </div>
-  </button>
-);
+import { RefreshCw, CheckCircle2, Search, X } from "lucide-react";
+import StatCard from "../components/workQueue/StatCard";
+import QueueCard from "../components/workQueue/QueueCard";
+import FinishedCard from "../components/workQueue/FinishedCard";
 
 // ── Main page ──────────────────────────────────────────────────────────────
 type QueueTab = "all" | "active" | "done";
@@ -338,14 +227,6 @@ const MyWorkQueuePage: React.FC = () => {
               className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
             />
           </button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => navigate("/documents")}
-          >
-            Library
-          </Button>
           {canCreate && (
             <Button
               type="button"

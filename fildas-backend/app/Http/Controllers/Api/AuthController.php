@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -10,6 +11,8 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
+    use LogsActivityTrait;
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -57,16 +60,7 @@ class AuthController extends Controller
             ], 403);
         }
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $user->id,
-            'actor_office_id'     => $user->office_id,
-            'target_office_id'    => null,
-            'event'               => 'auth.login',
-            'label'               => 'Logged in',
-            'meta'                => ['role' => $roleName],
-        ]);
+        $this->logActivity('auth.login', 'Logged in', $user->id, $user->office_id, ['role' => $roleName]);
 
         return response()->json([
             'token' => $token,
@@ -95,16 +89,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        \App\Models\ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $user->id,
-            'actor_office_id'     => $user->office_id,
-            'target_office_id'    => null,
-            'event'               => 'auth.logout',
-            'label'               => 'Logged out',
-            'meta'                => null,
-        ]);
+        $this->logActivity('auth.logout', 'Logged out', $user->id, $user->office_id);
 
         $user->currentAccessToken()->delete();
 

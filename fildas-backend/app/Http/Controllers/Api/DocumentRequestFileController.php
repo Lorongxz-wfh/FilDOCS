@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\RoleNameTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -12,20 +13,11 @@ use Illuminate\Support\Facades\URL;
 
 class DocumentRequestFileController extends Controller
 {
-    private function roleNameFor(User $user): string
-    {
-        $raw =
-            (optional($user?->role)->name ?? null) ??
-            ($user->role_name ?? null) ??
-            ($user->role ?? null) ??
-            '';
-
-        return strtolower(trim((string) $raw));
-    }
+    use RoleNameTrait;
 
     private function canViewDocumentRequest(User $user, object $requestRow): bool
     {
-        $role = $this->roleNameFor($user);
+        $role = $this->roleNameOf($user);
 
         // QA/SYSADMIN can view everything
         if (in_array($role, ['qa', 'sysadmin', 'admin'], true)) return true;
@@ -42,7 +34,7 @@ class DocumentRequestFileController extends Controller
 
     private function canViewSubmissionFile(User $user, object $fileRow): bool
     {
-        $role = $this->roleNameFor($user);
+        $role = $this->roleNameOf($user);
         if (in_array($role, ['qa', 'sysadmin', 'admin'], true)) return true;
 
         $officeId = (int) ($user->office_id ?? 0);

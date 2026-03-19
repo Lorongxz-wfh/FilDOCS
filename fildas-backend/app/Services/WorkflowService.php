@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\DocumentMessage;
 use App\Models\DocumentVersion;
@@ -10,12 +9,18 @@ use App\Models\Notification;
 use App\Models\Office;
 use App\Models\User;
 use App\Models\WorkflowTask;
+use App\Services\Workflow\WorkflowValidationService;
+use App\Traits\RoleNameTrait;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Support\Facades\DB;
 
 class WorkflowService
 {
+    use RoleNameTrait, LogsActivityTrait;
+
     public function __construct(
         private OfficeHierarchyService $hierarchy,
+        private WorkflowValidationService $validator,
     ) {}
 
     // ──────────────────────────────────────────────────────────────────────
@@ -73,34 +78,6 @@ class WorkflowService
         $version->save();
     }
 
-    private function isApprovalStep(string $step): bool
-    {
-        $approvalSteps = [
-            WorkflowSteps::STEP_QA_OFFICE_APPROVAL,
-            WorkflowSteps::STEP_QA_VP_APPROVAL,
-            WorkflowSteps::STEP_QA_PRES_APPROVAL,
-            WorkflowSteps::STEP_OFFICE_HEAD_APPROVAL,
-            WorkflowSteps::STEP_OFFICE_VP_APPROVAL,
-            WorkflowSteps::STEP_OFFICE_PRES_APPROVAL,
-            WorkflowSteps::STEP_CUSTOM_OFFICE_APPROVAL,
-        ];
-        return in_array($step, $approvalSteps, true);
-    }
-
-    private function isForwardActionDuringApproval(string $action): bool
-    {
-        // Only actions that FORWARD the document to the next approver
-        // President approve + finalization go to check/finalization steps — excluded
-        $forwardActions = [
-            WorkflowSteps::ACTION_QA_OFFICE_FORWARD_TO_VP_APPR,
-            WorkflowSteps::ACTION_QA_VP_FORWARD_TO_PRESIDENT,
-            WorkflowSteps::ACTION_OFFICE_HEAD_FORWARD_TO_VP_APPR,
-            WorkflowSteps::ACTION_OFFICE_VP_FORWARD_TO_PRESIDENT,
-            WorkflowSteps::ACTION_CUSTOM_FORWARD,
-        ];
-        return in_array($action, $forwardActions, true);
-    }
-
     public function applyAction(
         DocumentVersion $version,
         User $user,
@@ -131,41 +108,8 @@ class WorkflowService
             $flow    = $version->workflow_type;
             $routing = $version->routing_mode;
 
-            // ── Signing enforcement ────────────────────────────────────────
-            // During approval phase, a forward action requires a signed file
-            if (
-                $task &&
-                $this->isApprovalStep($task->step) &&
-                $this->isForwardActionDuringApproval($action) &&
-                empty($version->signed_file_path)
-            ) {
-                throw new \InvalidArgumentException(
-                    'A signed copy of the document must be uploaded before forwarding during the approval phase.'
-                );
-            }
-
-            // ── Revision draft enforcement ────────────────────────────────
-            // Revisions must have a new file uploaded before the first forward from draft
-            $draftForwardActions = [
-                WorkflowSteps::ACTION_QA_SEND_TO_OFFICE_REVIEW,
-                WorkflowSteps::ACTION_OFFICE_SEND_TO_HEAD,
-                WorkflowSteps::ACTION_CUSTOM_FORWARD,
-            ];
-            if (
-                $task &&
-                WorkflowSteps::isDraftStep($task->step) &&
-                in_array($action, $draftForwardActions, true) &&
-                (int) $version->version_number > 0
-            ) {
-                $hasNewFile = ActivityLog::where('document_version_id', $version->id)
-                    ->whereIn('event', ['version.file_replaced', 'version.file_uploaded'])
-                    ->exists();
-                if (!$hasNewFile) {
-                    throw new \InvalidArgumentException(
-                        'Upload a new version of the document before forwarding this revision.'
-                    );
-                }
-            }
+            // ── Pre-action validation ──────────────────────────────────────
+            $this->validator->assertActionAllowed($version, $task, $action);
 
             if ($routing === 'custom') {
                 return $this->applyCustomAction($version, $task, $user, $action, $note, $effectiveDate);
@@ -662,20 +606,11 @@ class WorkflowService
         }
 
         // Activity log
-        ActivityLog::create([
-            'document_id'         => $version->document_id,
-            'document_version_id' => $version->id,
-            'actor_user_id'       => $user->id,
-            'actor_office_id'     => $user->office_id,
-            'target_office_id'    => null,
-            'event'               => 'workflow.cancelled',
-            'label'               => 'Document cancelled',
-            'meta'                => [
-                'from_status' => $fromStatus,
-                'to_status'   => WorkflowSteps::STATUS_CANCELLED,
-                'reason'      => $reason,
-            ],
-        ]);
+        $this->logActivity('workflow.cancelled', 'Document cancelled', $user->id, $user->office_id, [
+            'from_status' => $fromStatus,
+            'to_status'   => WorkflowSteps::STATUS_CANCELLED,
+            'reason'      => $reason,
+        ], $version->document_id, $version->id);
 
         // Return the last task as a dummy result (cancel doesn't create a new task)
         return WorkflowTask::where('document_version_id', $version->id)
@@ -686,7 +621,7 @@ class WorkflowService
     private function canCancelDocument(DocumentVersion $version, User $user): bool
     {
         // Admin/SysAdmin can always cancel
-        $role = strtolower($user->role?->name ?? '');
+        $role = $this->roleNameOf($user);
         if (in_array($role, ['admin', 'sysadmin', 'system admin'], true)) return true;
 
         // Owner/QA: must be the document's owner office
@@ -940,22 +875,13 @@ class WorkflowService
         bool $isReject,
     ): void {
         [$event, $label] = $this->resolveEventAndLabel($step, $toStatus, $isReject);
-        ActivityLog::create([
-            'document_id'         => $version->document_id,
-            'document_version_id' => $version->id,
-            'actor_user_id'       => $actor->id,
-            'actor_office_id'     => $actor->office_id,
-            'target_office_id'    => $targetOfficeId,
-            'event'               => $event,
-            'label'               => $label,
-            'meta'                => [
-                'from_status' => $fromStatus,
-                'to_status'   => $toStatus,
-                'phase'       => $phase,
-                'step'        => $step,
-                'note'        => $note,
-            ],
-        ]);
+        $this->logActivity($event, $label, $actor->id, $actor->office_id, [
+            'from_status' => $fromStatus,
+            'to_status'   => $toStatus,
+            'phase'       => $phase,
+            'step'        => $step,
+            'note'        => $note,
+        ], $version->document_id, $version->id, $targetOfficeId);
     }
 
     private function resolveEventAndLabel(string $step, string $toStatus, bool $isReject): array

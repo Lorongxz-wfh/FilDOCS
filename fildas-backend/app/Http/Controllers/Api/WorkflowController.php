@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\DocumentVersion;
 use App\Models\WorkflowTask;
 use App\Services\WorkflowService;
+use App\Traits\RoleNameTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class WorkflowController extends Controller
 {
+    use RoleNameTrait;
+
     public function __construct(
         private WorkflowService $workflow,
     ) {}
@@ -20,7 +23,7 @@ class WorkflowController extends Controller
     {
         $user         = request()->user();
         $userOfficeId = (int) ($user?->office_id ?? 0);
-        $roleName     = strtolower(trim((string) ($user?->role?->name ?? '')));
+        $roleName     = $this->roleNameOf($user);
         $isAdmin      = in_array($roleName, ['admin', 'sysadmin'], true);
 
         if (!$userOfficeId && !$isAdmin) {
@@ -33,7 +36,7 @@ class WorkflowController extends Controller
 
         $qaOfficeId   = (int) (\App\Models\Office::where('code', 'QA')->value('id') ?? 0);
         $presOfficeId = (int) (\App\Models\Office::where('code', 'PO')->value('id') ?? 0);
-        $roleName     = strtolower(trim((string) ($user?->role?->name ?? '')));
+        $roleName     = $this->roleNameOf($user);
         $canSeeAll    = $userOfficeId === $qaOfficeId
             || $userOfficeId === $presOfficeId
             || in_array($roleName, ['admin', 'sysadmin'], true);
@@ -70,7 +73,7 @@ class WorkflowController extends Controller
     {
         $user         = request()->user();
         $userOfficeId = (int) ($user?->office_id ?? 0);
-        $roleName     = strtolower(trim((string) ($user?->role?->name ?? '')));
+        $roleName     = $this->roleNameOf($user);
         $isAdmin      = in_array($roleName, ['admin', 'sysadmin'], true);
 
         if (!$userOfficeId && !$isAdmin) {
@@ -79,7 +82,7 @@ class WorkflowController extends Controller
 
         $qaOfficeId   = (int) (\App\Models\Office::where('code', 'QA')->value('id') ?? 0);
         $presOfficeId = (int) (\App\Models\Office::where('code', 'PO')->value('id') ?? 0);
-        $roleName     = strtolower(trim((string) ($user?->role?->name ?? '')));
+        $roleName     = $this->roleNameOf($user);
         $canSeeAll    = $userOfficeId === $qaOfficeId
             || $userOfficeId === $presOfficeId
             || in_array($roleName, ['admin', 'sysadmin'], true);
@@ -147,7 +150,7 @@ class WorkflowController extends Controller
     {
         $user         = $request->user();
         $userOfficeId = (int) ($user?->office_id ?? 0);
-        $roleName     = strtolower(trim((string) ($user?->role?->name ?? '')));
+        $roleName     = $this->roleNameOf($user);
         $isAdmin      = in_array($roleName, ['admin', 'sysadmin'], true);
 
         // Admin/Sysadmin: return all open tasks as monitoring (read-only)

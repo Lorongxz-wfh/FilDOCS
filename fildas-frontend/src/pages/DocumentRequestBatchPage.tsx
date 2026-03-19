@@ -9,137 +9,13 @@ import {
   type DocumentRequestItemRow,
   type DocumentRequestProgress,
 } from "../services/documentRequests";
-import { Users, FileStack, Check, Pencil, X, RefreshCw, Ban } from "lucide-react";
+import { Users, FileStack, RefreshCw, Ban, Check, Pencil } from "lucide-react";
 import { roleLower, StatusBadge } from "../components/documentRequests/shared";
 import RequestActivityPanel from "../components/documentRequests/RequestActivityPanel";
 import RequestPreviewModal from "../components/documentRequests/RequestPreviewModal";
-
-const inputCls =
-  "w-full rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition";
-
-// ── Inline editable field ──────────────────────────────────────────────────
-const InlineEdit: React.FC<{
-  value: string;
-  onSave: (v: string) => Promise<void>;
-  placeholder?: string;
-  className?: string;
-}> = ({ value, onSave, placeholder, className }) => {
-  const [editing, setEditing] = React.useState(false);
-  const [draft, setDraft] = React.useState(value);
-  const [saving, setSaving] = React.useState(false);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-
-  React.useEffect(() => {
-    setDraft(value);
-  }, [value]);
-  React.useEffect(() => {
-    if (editing) inputRef.current?.focus();
-  }, [editing]);
-
-  const save = async () => {
-    if (!draft.trim() || draft.trim() === value) {
-      setEditing(false);
-      return;
-    }
-    setSaving(true);
-    try {
-      await onSave(draft.trim());
-      setEditing(false);
-    } catch {
-      /* keep editing open on error */
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (!editing) {
-    return (
-      <button
-        type="button"
-        onClick={() => setEditing(true)}
-        className={`group flex items-center gap-1.5 text-left hover:opacity-80 transition ${className ?? ""}`}
-      >
-        <span>{value || placeholder}</span>
-        <Pencil className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 transition shrink-0" />
-      </button>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-1.5 flex-1">
-      <input
-        ref={inputRef}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") save();
-          if (e.key === "Escape") {
-            setDraft(value);
-            setEditing(false);
-          }
-        }}
-        disabled={saving}
-        className="flex-1 rounded-lg border border-sky-400 bg-white dark:bg-surface-600 px-2 py-1 text-sm font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition disabled:opacity-50"
-      />
-      <button
-        type="button"
-        onClick={save}
-        disabled={saving}
-        className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition disabled:opacity-40"
-      >
-        <Check className="h-3.5 w-3.5" />
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          setDraft(value);
-          setEditing(false);
-        }}
-        className="p-1 rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-surface-400 transition"
-      >
-        <X className="h-3.5 w-3.5" />
-      </button>
-    </div>
-  );
-};
-
-// ── 3-layer progress bar ───────────────────────────────────────────────────
-const ProgressBar: React.FC<{ progress: DocumentRequestProgress }> = ({
-  progress,
-}) => {
-  const { total, submitted, accepted } = progress;
-  if (total === 0) return null;
-  const submittedPct = Math.round((submitted / total) * 100);
-  const acceptedPct = Math.round((accepted / total) * 100);
-  return (
-    <div className="flex items-center gap-3">
-      <div className="relative flex-1 h-2 rounded-full bg-slate-200 dark:bg-surface-400 overflow-hidden">
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-sky-300 dark:bg-sky-700 transition-all"
-          style={{ width: `${submittedPct}%` }}
-        />
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-emerald-500 dark:bg-emerald-400 transition-all"
-          style={{ width: `${acceptedPct}%` }}
-        />
-      </div>
-      <div className="shrink-0 flex items-center gap-3 text-[11px]">
-        <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-          <span className="h-2 w-2 rounded-full bg-slate-300 dark:bg-surface-300 inline-block" />
-          Total: <strong>{total}</strong>
-        </span>
-        <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400">
-          <span className="h-2 w-2 rounded-full bg-sky-300 dark:bg-sky-700 inline-block" />
-          Submitted: <strong>{submitted}</strong>
-        </span>
-        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400 inline-block" />
-          Accepted: <strong>{accepted}</strong>
-        </span>
-      </div>
-    </div>
-  );
-};
+import InlineEditField from "../components/documentRequests/InlineEditField";
+import RequestProgressBar from "../components/documentRequests/RequestProgressBar";
+import { inputCls } from "../utils/formStyles";
 
 export default function DocumentRequestBatchPage() {
   const navigate = useNavigate();
@@ -243,7 +119,7 @@ export default function DocumentRequestBatchPage() {
     try {
       const { default: api } = await import("../services/api");
       const res = await api.get("/activity", {
-        params: { scope: "request", document_id: requestId, per_page: 50 },
+        params: { scope: "request", request_id: requestId, per_page: 50 },
       });
       setActivityLogs(res.data?.data ?? []);
     } catch {
@@ -374,7 +250,7 @@ export default function DocumentRequestBatchPage() {
                 #{requestId}
               </span>
               {isQa ? (
-                <InlineEdit
+                <InlineEditField
                   value={req.title ?? ""}
                   onSave={saveTitle}
                   className="flex-1 text-base font-bold tracking-tight text-slate-900 dark:text-slate-100"
@@ -509,7 +385,7 @@ export default function DocumentRequestBatchPage() {
               <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-3">
                 {isMultiDoc ? "Document Progress" : "Office Progress"}
               </p>
-              <ProgressBar progress={req.progress} />
+              <RequestProgressBar progress={req.progress} />
             </div>
           )}
 

@@ -240,4 +240,87 @@ final class WorkflowSteps
             self::STEP_DISTRIBUTED,
         ], true);
     }
+
+    /** All review-phase steps (office head / VP / custom recipient review). */
+    public static function reviewSteps(): array
+    {
+        return [
+            self::STEP_QA_OFFICE_REVIEW,
+            self::STEP_QA_VP_REVIEW,
+            self::STEP_OFFICE_HEAD_REVIEW,
+            self::STEP_OFFICE_VP_REVIEW,
+            self::STEP_CUSTOM_OFFICE_REVIEW,
+        ];
+    }
+
+    /** All approval-phase steps (office head / VP / President / QA double-check). */
+    public static function approvalSteps(): array
+    {
+        return [
+            self::STEP_QA_OFFICE_APPROVAL,
+            self::STEP_QA_VP_APPROVAL,
+            self::STEP_QA_PRES_APPROVAL,
+            self::STEP_QA_APPROVAL_FINAL_CHECK,
+            self::STEP_OFFICE_HEAD_APPROVAL,
+            self::STEP_OFFICE_VP_APPROVAL,
+            self::STEP_OFFICE_PRES_APPROVAL,
+            self::STEP_OFFICE_APPROVAL_FINAL_CHECK,
+            self::STEP_CUSTOM_OFFICE_APPROVAL,
+            self::STEP_CUSTOM_APPROVAL_BACK_TO_OWNER,
+        ];
+    }
+
+    /** All finalization-phase steps. */
+    public static function finalizationSteps(): array
+    {
+        return [
+            self::STEP_QA_REGISTRATION,
+            self::STEP_QA_DISTRIBUTION,
+            self::STEP_OFFICE_REGISTRATION,
+            self::STEP_OFFICE_DISTRIBUTION,
+            self::STEP_CUSTOM_REGISTRATION,
+            self::STEP_CUSTOM_DISTRIBUTION,
+            self::STEP_DISTRIBUTED,
+        ];
+    }
+
+    /**
+     * Step groupings used by the compliance/approval reports.
+     * Returns an array keyed by stage label, each with a 'steps' sub-array.
+     */
+    public static function reportStageGroups(): array
+    {
+        return [
+            'Review' => [
+                self::STEP_QA_OFFICE_REVIEW,
+                self::STEP_OFFICE_HEAD_REVIEW,
+                self::STEP_CUSTOM_OFFICE_REVIEW,
+            ],
+            'VP / President' => [
+                self::STEP_QA_VP_REVIEW,
+                self::STEP_QA_PRES_APPROVAL,
+                self::STEP_OFFICE_VP_REVIEW,
+                self::STEP_OFFICE_VP_APPROVAL,
+                self::STEP_OFFICE_PRES_APPROVAL,
+                self::STEP_QA_VP_APPROVAL,
+            ],
+            'Approval Check' => [
+                self::STEP_QA_APPROVAL_FINAL_CHECK,
+                self::STEP_OFFICE_APPROVAL_FINAL_CHECK,
+                self::STEP_CUSTOM_APPROVAL_BACK_TO_OWNER,
+                self::STEP_QA_OFFICE_APPROVAL,
+                self::STEP_OFFICE_HEAD_APPROVAL,
+                self::STEP_CUSTOM_OFFICE_APPROVAL,
+            ],
+            'Finalization' => [
+                self::STEP_QA_REGISTRATION,
+                self::STEP_QA_DISTRIBUTION,
+                self::STEP_OFFICE_REGISTRATION,
+                self::STEP_OFFICE_DISTRIBUTION,
+                self::STEP_CUSTOM_REGISTRATION,
+                self::STEP_CUSTOM_DISTRIBUTION,
+                self::STEP_DISTRIBUTED,
+            ],
+        ];
+    }
 }

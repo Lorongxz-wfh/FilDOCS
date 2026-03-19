@@ -1,21 +1,26 @@
 import React from "react";
 import PageFrame from "../components/layout/PageFrame.tsx";
 import Button from "../components/ui/Button.tsx";
+import Table, { type TableColumn } from "../components/ui/Table";
 import {
   listDocumentRequestInbox,
   listDocumentRequests,
+  listDocumentRequestIndividual,
   type DocumentRequestProgress,
 } from "../services/documentRequests";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getAuthUser } from "../lib/auth.ts";
 import CreateDocumentRequestModal from "../components/documentRequests/CreateDocumentRequestModal";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
-import { RefreshCw, Search, X, Users, FileStack } from "lucide-react";
+import { Search, X, Users, FileStack, LayoutList, TableProperties } from "lucide-react";
+import { inputCls, selectCls } from "../utils/formStyles";
+import { formatDate } from "../utils/formatters";
+import Alert from "../components/ui/Alert";
+import EmptyState from "../components/ui/EmptyState";
+import LoadMoreButton from "../components/ui/LoadMoreButton";
+import RefreshButton from "../components/ui/RefreshButton";
 
-function formatDate(iso: string | null | undefined) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
-}
+type ViewTab = "batches" | "all";
 
 function roleLower(me: any) {
   const raw =
@@ -40,19 +45,15 @@ const ProgressBar: React.FC<{ progress: DocumentRequestProgress }> = ({
 }) => {
   const { total, submitted, accepted } = progress;
   if (total === 0) return null;
-
   const submittedPct = Math.round((submitted / total) * 100);
   const acceptedPct = Math.round((accepted / total) * 100);
-
   return (
     <div className="flex items-center gap-2 min-w-0">
       <div className="relative flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-surface-400 overflow-hidden">
-        {/* submitted layer */}
         <div
           className="absolute inset-y-0 left-0 rounded-full bg-sky-300 dark:bg-sky-700 transition-all"
           style={{ width: `${submittedPct}%` }}
         />
-        {/* accepted layer — on top */}
         <div
           className="absolute inset-y-0 left-0 rounded-full bg-emerald-500 dark:bg-emerald-400 transition-all"
           style={{ width: `${acceptedPct}%` }}
@@ -70,18 +71,13 @@ function StatusBadge({ status }: { status: string }) {
   const s = String(status).toLowerCase();
   const map: Record<string, string> = {
     open: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
-    closed:
-      "bg-slate-100 text-slate-600 border-slate-200 dark:bg-surface-400 dark:text-slate-400 dark:border-surface-300",
-    cancelled:
-      "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
-    pending:
-      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+    closed: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-surface-400 dark:text-slate-400 dark:border-surface-300",
+    cancelled: "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
+    pending: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
   };
   const cls = map[s] ?? "bg-slate-100 text-slate-600 border-slate-200";
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide ${cls}`}
-    >
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide ${cls}`}>
       {String(status).toUpperCase()}
     </span>
   );
@@ -99,77 +95,68 @@ function ModeBadge({ mode }: { mode: string }) {
           : "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-400",
       ].join(" ")}
     >
-      {isMultiDoc ? (
-        <FileStack className="h-2.5 w-2.5" />
-      ) : (
-        <Users className="h-2.5 w-2.5" />
-      )}
+      {isMultiDoc ? <FileStack className="h-2.5 w-2.5" /> : <Users className="h-2.5 w-2.5" />}
       {isMultiDoc ? "Multi-Doc" : "Multi-Office"}
     </span>
   );
 }
 
-// ── Request row ────────────────────────────────────────────────────────────
+// ── Batch request row (card style) ─────────────────────────────────────────
 const RequestRow: React.FC<{
   row: any;
   isQaAdmin: boolean;
   onClick: () => void;
-}> = ({ row, isQaAdmin, onClick }) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition border-b border-slate-100 dark:border-surface-400 last:border-0"
-    >
-      {/* Title + mode */}
-      <div className="flex-1 min-w-0 flex flex-col gap-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-            {row.title}
-          </span>
-          {isQaAdmin && <ModeBadge mode={row.mode} />}
-          <StatusBadge status={row.status} />
-        </div>
-        {/* Progress bar */}
-        {row.progress && <ProgressBar progress={row.progress} />}
+}> = ({ row, isQaAdmin, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="group w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition border-b border-slate-100 dark:border-surface-400 last:border-0"
+  >
+    <div className="flex-1 min-w-0 flex flex-col gap-1">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+          {row.title}
+        </span>
+        {isQaAdmin && <ModeBadge mode={row.mode} />}
+        <StatusBadge status={row.status} />
       </div>
+      {row.progress && <ProgressBar progress={row.progress} />}
+    </div>
 
-      {/* Office info — QA only */}
-      {isQaAdmin && (
-        <div className="shrink-0 hidden sm:block text-xs text-slate-400 dark:text-slate-500 text-right">
-          {row.office_name ?? "—"}
-          {row.office_code && (
-            <span className="ml-1 text-slate-300 dark:text-slate-600">
-              ({row.office_code})
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Due + created */}
-      <div className="shrink-0 hidden md:flex flex-col items-end gap-0.5">
-        {row.due_at && (
-          <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-            Due {formatDate(row.due_at)}
+    {isQaAdmin && (
+      <div className="shrink-0 hidden sm:block text-xs text-slate-400 dark:text-slate-500 text-right">
+        {row.office_name ?? "—"}
+        {row.office_code && (
+          <span className="ml-1 text-slate-300 dark:text-slate-600">
+            ({row.office_code})
           </span>
         )}
-        <span className="text-[11px] text-slate-400 dark:text-slate-500">
-          {formatDate(row.created_at)}
-        </span>
       </div>
-    </button>
-  );
-};
+    )}
 
+    <div className="shrink-0 hidden md:flex flex-col items-end gap-0.5">
+      {row.due_at && (
+        <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+          Due {formatDate(row.due_at)}
+        </span>
+      )}
+      <span className="text-[11px] text-slate-400 dark:text-slate-500">
+        {formatDate(row.created_at)}
+      </span>
+    </div>
+  </button>
+);
+
+// ── Main page ──────────────────────────────────────────────────────────────
 export default function DocumentRequestListPage() {
   const me = getAuthUser();
   const role = roleLower(me);
   const isQaAdmin = ["qa", "sysadmin", "admin"].includes(role);
 
+  const [tab, setTab] = React.useState<ViewTab>("batches");
   const [q, setQ] = React.useState("");
-  const [status, setStatus] = React.useState<
-    "" | "open" | "closed" | "cancelled"
-  >("");
+  const [status, setStatus] = React.useState<"" | "open" | "closed" | "cancelled">("");
+  const [recipientStatus, setRecipientStatus] = React.useState<"" | "pending" | "submitted" | "accepted" | "rejected">("");
   const location = useLocation();
   const [createOpen, setCreateOpen] = React.useState(
     () => (location.state as any)?.openModal === true,
@@ -195,7 +182,6 @@ export default function DocumentRequestListPage() {
   const { refresh: refreshRequests, refreshing: refreshingRequests } =
     usePageBurstRefresh(reloadRequests);
 
-  // Poll every 30s for new/updated requests
   React.useEffect(() => {
     const id = window.setInterval(() => {
       reloadRequests().catch(() => {});
@@ -203,12 +189,13 @@ export default function DocumentRequestListPage() {
     return () => window.clearInterval(id);
   }, [reloadRequests]);
 
+  // Reset on filter/tab change
   React.useEffect(() => {
     setRows([]);
     setPage(1);
     setHasMore(true);
     setInitialLoading(true);
-  }, [qDebounced, status, isQaAdmin]);
+  }, [tab, qDebounced, status, recipientStatus, isQaAdmin]);
 
   React.useEffect(() => {
     let alive = true;
@@ -217,19 +204,22 @@ export default function DocumentRequestListPage() {
       setLoading(true);
       setError(null);
       try {
-        const params: any = {
-          q: qDebounced.trim() || undefined,
-          per_page: 25,
-          page,
-        };
-        if (isQaAdmin) params.status = status || undefined;
+        const baseParams = { q: qDebounced.trim() || undefined, per_page: 25, page };
+        let data: any;
 
-        const data = isQaAdmin
-          ? await listDocumentRequests(params)
-          : await listDocumentRequestInbox(params);
+        if (tab === "all") {
+          data = await listDocumentRequestIndividual({
+            ...baseParams,
+            request_status: isQaAdmin ? (status || undefined) : undefined,
+            status: recipientStatus || undefined,
+          });
+        } else if (isQaAdmin) {
+          data = await listDocumentRequests({ ...baseParams, status: status || undefined });
+        } else {
+          data = await listDocumentRequestInbox(baseParams);
+        }
 
         if (!alive) return;
-
         const incoming = Array.isArray(data?.data) ? data.data : [];
         setRows((prev) => (page === 1 ? incoming : [...prev, ...incoming]));
         setHasMore(
@@ -247,27 +237,142 @@ export default function DocumentRequestListPage() {
       }
     };
     load();
-    return () => {
-      alive = false;
+    return () => { alive = false; };
+  }, [tab, page, qDebounced, status, recipientStatus, isQaAdmin, hasMore]);
+
+  function handleBatchRowClick(row: any) {
+    // Batches tab: row.id = batch id, row.recipient_id from inbox
+    if (isQaAdmin || row.mode === "multi_doc") {
+      navigate(`/document-requests/${row.id}`);
+    } else {
+      navigate(`/document-requests/${row.id}/recipients/${row.recipient_id}`);
+    }
+  }
+
+  function handleRecipientRowClick(row: any) {
+    if (row.row_type === "item") {
+      navigate(`/document-requests/${row.request_id}/items/${row.item_id}`);
+    } else {
+      navigate(`/document-requests/${row.request_id}/recipients/${row.recipient_id}`);
+    }
+  }
+
+  // ── Item/recipient status badge ───────────────────────────────────────────
+  function RecipientStatusBadge({ status }: { status: string }) {
+    const s = String(status).toLowerCase();
+    const map: Record<string, string> = {
+      pending:   "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+      submitted: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-800",
+      accepted:  "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
+      rejected:  "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
     };
-  }, [page, qDebounced, status, isQaAdmin, hasMore]);
+    const cls = map[s] ?? "bg-slate-100 text-slate-600 border-slate-200";
+    return (
+      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide ${cls}`}>
+        {s.toUpperCase()}
+      </span>
+    );
+  }
+
+  // ── Table columns for "All Requests" tab (individual items/recipients) ────
+  const allColumns: TableColumn<any>[] = React.useMemo(() => {
+    const cols: TableColumn<any>[] = [
+      {
+        key: "title",
+        header: "Request",
+        render: (r) => {
+          const primary = r.item_title ?? r.batch_title;
+          const sub     = r.item_title ? r.batch_title : r.office_name;
+          return (
+            <div className="min-w-0">
+              <div className="font-medium text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                {primary}
+              </div>
+              {sub && (
+                <div className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                  {sub}
+                </div>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        key: "mode",
+        header: "Type",
+        render: (r) => <ModeBadge mode={r.batch_mode} />,
+      },
+      {
+        key: "batch_status",
+        header: "Batch",
+        render: (r) => <StatusBadge status={r.batch_status} />,
+      },
+      {
+        key: "item_status",
+        header: "Status",
+        render: (r) => <RecipientStatusBadge status={r.item_status ?? "pending"} />,
+      },
+      {
+        key: "due",
+        header: "Due",
+        render: (r) =>
+          r.due_at ? (
+            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium whitespace-nowrap">
+              {formatDate(r.due_at)}
+            </span>
+          ) : (
+            <span className="text-xs text-slate-400">—</span>
+          ),
+      },
+      {
+        key: "created",
+        header: "Created",
+        render: (r) => (
+          <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            {formatDate(r.created_at)}
+          </span>
+        ),
+      },
+    ];
+
+    // Office column for QA/Admin (after item_status, before Due)
+    if (isQaAdmin) {
+      cols.splice(4, 0, {
+        key: "office",
+        header: "Office",
+        render: (r) => (
+          <div className="min-w-0">
+            <div className="text-xs text-slate-600 dark:text-slate-300 truncate">
+              {r.office_name ?? "—"}
+            </div>
+            {r.office_code && (
+              <div className="text-[10px] text-slate-400 dark:text-slate-500">
+                {r.office_code}
+              </div>
+            )}
+          </div>
+        ),
+      });
+    }
+
+    return cols;
+  }, [isQaAdmin]);
+
+  const gridCols = isQaAdmin
+    ? "2fr 8rem 6rem 7rem 9rem 7rem 7rem"
+    : "2fr 8rem 6rem 7rem 7rem 7rem";
 
   return (
     <PageFrame
       title="Document Requests"
       right={
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <RefreshButton
             onClick={refreshRequests}
-            disabled={refreshingRequests || loading}
+            loading={refreshingRequests}
+            disabled={loading}
             title="Refresh requests"
-            className="flex items-center justify-center h-8 w-8 rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${refreshingRequests ? "animate-spin" : ""}`}
-            />
-          </button>
+          />
           {isQaAdmin && (
             <Button
               type="button"
@@ -280,17 +385,47 @@ export default function DocumentRequestListPage() {
           )}
         </div>
       }
-      contentClassName="flex flex-col min-h-0 gap-4"
+      contentClassName="flex flex-col min-h-0 gap-0 h-full overflow-hidden"
     >
+      {/* Tabs */}
+      <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0">
+        <button
+          type="button"
+          onClick={() => { setTab("batches"); setRecipientStatus(""); }}
+          className={[
+            "flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors -mb-px",
+            tab === "batches"
+              ? "border-sky-500 text-sky-600 dark:text-sky-400"
+              : "border-transparent text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300",
+          ].join(" ")}
+        >
+          <LayoutList className="h-3.5 w-3.5" />
+          Batches
+        </button>
+        <button
+          type="button"
+          onClick={() => { setTab("all"); setStatus(""); }}
+          className={[
+            "flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors -mb-px",
+            tab === "all"
+              ? "border-sky-500 text-sky-600 dark:text-sky-400"
+              : "border-transparent text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300",
+          ].join(" ")}
+        >
+          <TableProperties className="h-3.5 w-3.5" />
+          All Requests
+        </button>
+      </div>
+
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2 shrink-0">
+      <div className="flex flex-wrap items-center gap-2 shrink-0 pt-4 pb-0">
         <div className="relative w-full sm:w-60">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search title/description…"
-            className="w-full rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 pl-9 pr-8 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
+            className={`${inputCls} pl-9 pr-8`}
           />
           {q && (
             <button
@@ -302,11 +437,12 @@ export default function DocumentRequestListPage() {
             </button>
           )}
         </div>
-        {isQaAdmin && (
+        {/* Batch status filter — batches tab (QA only) */}
+        {isQaAdmin && tab === "batches" && (
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as any)}
-            className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
+            className={selectCls}
           >
             <option value="">All statuses</option>
             <option value="open">Open</option>
@@ -314,64 +450,95 @@ export default function DocumentRequestListPage() {
             <option value="cancelled">Cancelled</option>
           </select>
         )}
-        {error && <span className="text-xs text-rose-500">{error}</span>}
+        {/* All Requests tab: batch status + recipient status filters */}
+        {tab === "all" && (
+          <>
+            {isQaAdmin && (
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
+                className={selectCls}
+              >
+                <option value="">All batches</option>
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            )}
+            <select
+              value={recipientStatus}
+              onChange={(e) => setRecipientStatus(e.target.value as any)}
+              className={selectCls}
+            >
+              <option value="">All progress</option>
+              <option value="pending">Pending</option>
+              <option value="submitted">Submitted</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </>
+        )}
+        {error && <Alert variant="danger">{error}</Alert>}
       </div>
 
-      {/* List */}
-      <div
-        className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden overflow-y-auto"
-        style={{ height: "calc(100vh - 217px)" }}
-      >
-        {initialLoading ? (
-          <div className="space-y-0 divide-y divide-slate-100 dark:divide-surface-400">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="px-4 py-3 flex items-center gap-4">
-                <div className="flex-1 flex flex-col gap-2">
-                  <div className="h-4 w-2/3 rounded-md bg-slate-100 dark:bg-surface-400 animate-pulse" />
-                  <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-surface-400 animate-pulse" />
-                </div>
-                <div className="h-3 w-20 rounded-md bg-slate-100 dark:bg-surface-400 animate-pulse" />
+      {/* Content area */}
+      <div className="flex-1 min-h-0 mt-4 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
+
+        {/* ── Batches tab ── */}
+        {tab === "batches" && (
+          <div className="h-full overflow-y-auto">
+            {initialLoading ? (
+              <div className="divide-y divide-slate-100 dark:divide-surface-400">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="px-4 py-3 flex items-center gap-4">
+                    <div className="flex-1 flex flex-col gap-2">
+                      <div className="h-4 w-2/3 rounded-md bg-slate-100 dark:bg-surface-400 animate-pulse" />
+                      <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-surface-400 animate-pulse" />
+                    </div>
+                    <div className="h-3 w-20 rounded-md bg-slate-100 dark:bg-surface-400 animate-pulse" />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : rows.length === 0 ? (
-          <div className="flex h-40 items-center justify-center text-sm text-slate-400 dark:text-slate-500">
-            No requests found.
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100 dark:divide-surface-400">
-            {rows.map((row) => (
-              <RequestRow
-                key={row.id}
-                row={row}
-                isQaAdmin={isQaAdmin}
-                onClick={() => {
-                  if (isQaAdmin || row.mode === "multi_doc") {
-                    // QA/Admin: always batch view
-                    // multi_doc: office user sees the batch to pick which item to submit
-                    navigate(`/document-requests/${row.id}`);
-                  } else {
-                    // multi_office: office user goes directly to their specific recipient view
-                    navigate(
-                      `/document-requests/${row.id}/recipients/${row.recipient_id}`,
-                    );
-                  }
-                }}
-              />
-            ))}
-            {hasMore && (
-              <div className="flex justify-center py-3">
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={loading}
-                  className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
-                >
-                  {loading ? "Loading…" : "Load more"}
-                </button>
+            ) : rows.length === 0 ? (
+              <EmptyState label="No requests found." />
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-surface-400">
+                {rows.map((row) => (
+                  <RequestRow
+                    key={row.id}
+                    row={row}
+                    isQaAdmin={isQaAdmin}
+                    onClick={() => handleBatchRowClick(row)}
+                  />
+                ))}
+                {hasMore && (
+                  <LoadMoreButton
+                    loading={loading}
+                    onClick={() => setPage((p) => p + 1)}
+                  />
+                )}
               </div>
             )}
           </div>
+        )}
+
+        {/* ── All Requests tab ── */}
+        {tab === "all" && (
+          <Table
+            bare
+            className="h-full"
+            columns={allColumns}
+            rows={rows}
+            rowKey={(r) => `${r.row_type}-${r.row_id}`}
+            onRowClick={handleRecipientRowClick}
+            loading={loading}
+            initialLoading={initialLoading}
+            error={error}
+            emptyMessage="No requests found."
+            hasMore={hasMore}
+            onLoadMore={() => setPage((p) => p + 1)}
+            gridTemplateColumns={gridCols}
+          />
         )}
       </div>
 

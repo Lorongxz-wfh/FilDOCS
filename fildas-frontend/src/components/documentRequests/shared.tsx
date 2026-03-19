@@ -5,18 +5,7 @@ export function roleLower(me: any): string {
   return String(raw ?? "").toLowerCase();
 }
 
-export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
-}
-
-export function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
+export { formatDate, formatDateTime } from "../../utils/formatters";
 
 export function StatusBadge({ status }: { status: string }) {
   const s = String(status).toLowerCase();

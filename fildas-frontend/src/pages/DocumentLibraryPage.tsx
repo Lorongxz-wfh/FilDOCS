@@ -8,14 +8,23 @@ import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
 import { getUserRole, isQA, isSysAdmin } from "../lib/roleFilters";
 import ShareDocumentModal from "../components/documents/ShareDocumentModal";
-import { Search, X, RefreshCw, BookOpen, FileText, Share2 } from "lucide-react";
-import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
+import { Search, X, BookOpen, FileText, Share2, Users, ArrowDownToLine } from "lucide-react";
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-function formatDate(iso: string | null | undefined) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
-}
+import { inputCls, selectCls } from "../utils/formStyles";
+import { formatDate } from "../utils/formatters";
+import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
+import Alert from "../components/ui/Alert";
+import EmptyState from "../components/ui/EmptyState";
+import DateRangeInput from "../components/ui/DateRangeInput";
+import LoadMoreButton from "../components/ui/LoadMoreButton";
+import RefreshButton from "../components/ui/RefreshButton";
+
+// ── Doc icon colors by type ─────────────────────────────────────────────────
+const ICON_BG: Record<string, string> = {
+  internal: "bg-sky-50 dark:bg-sky-950/40 border-sky-100 dark:border-sky-900/40 text-sky-400 dark:text-sky-500",
+  external: "bg-orange-50 dark:bg-orange-950/40 border-orange-100 dark:border-orange-900/40 text-orange-400 dark:text-orange-500",
+  forms: "bg-violet-50 dark:bg-violet-950/40 border-violet-100 dark:border-violet-900/40 text-violet-400 dark:text-violet-500",
+};
 
 // ── Type badge ─────────────────────────────────────────────────────────────
 const TYPE_STYLES: Record<string, string> = {
@@ -74,15 +83,19 @@ const DocRow: React.FC<{
   canShare: boolean;
   onClick: () => void;
   onShare: () => void;
-}> = ({ doc, source, canShare, onClick, onShare }) => (
+}> = ({ doc, source, canShare, onClick, onShare }) => {
+  const iconCls =
+    ICON_BG[doc.doctype?.toLowerCase()] ??
+    "bg-slate-50 dark:bg-surface-400 border-slate-200 dark:border-surface-400 text-slate-400 dark:text-slate-500";
+  return (
   <button
     type="button"
     onClick={onClick}
-    className="group w-full flex items-center gap-4 px-4 py-3.5 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition border-b border-slate-100 dark:border-surface-400 last:border-0"
+    className="group w-full flex items-center gap-4 px-4 py-3.5 text-left hover:bg-slate-50 dark:hover:bg-surface-400/60 transition border-b border-slate-100 dark:border-surface-400 last:border-0"
   >
     {/* Icon */}
-    <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600">
-      <FileText className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+    <div className={`shrink-0 flex h-9 w-9 items-center justify-center rounded-xl border ${iconCls}`}>
+      <FileText className="h-4 w-4" />
     </div>
 
     {/* Main info */}
@@ -148,7 +161,8 @@ const DocRow: React.FC<{
       )}
     </div>
   </button>
-);
+  );
+};
 
 // ── Tab type ───────────────────────────────────────────────────────────────
 type LibTab = "all" | "created" | "requested" | "shared";
@@ -158,6 +172,13 @@ const TAB_LABELS: Record<LibTab, string> = {
   created: "Created",
   requested: "Requested",
   shared: "Shared",
+};
+
+const TAB_ICONS: Record<LibTab, React.ReactNode> = {
+  all: <BookOpen className="h-3.5 w-3.5" />,
+  created: <FileText className="h-3.5 w-3.5" />,
+  requested: <ArrowDownToLine className="h-3.5 w-3.5" />,
+  shared: <Users className="h-3.5 w-3.5" />,
 };
 
 // ── Determine source label per doc ─────────────────────────────────────────
@@ -279,24 +300,17 @@ export default function DocumentLibraryPage() {
     <PageFrame
       title="Document Library"
       right={
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={refresh}
-            disabled={refreshing || loading}
-            title="Refresh library"
-            className="flex items-center justify-center h-8 w-8 rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
-            />
-          </button>
-        </div>
+        <RefreshButton
+          onClick={refresh}
+          loading={refreshing}
+          disabled={loading}
+          title="Refresh library"
+        />
       }
       contentClassName="flex flex-col min-h-0 gap-4 h-full"
     >
       {/* Tabs */}
-      <div className="flex items-center gap-0 border-b border-slate-200 dark:border-surface-400 shrink-0">
+      <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0">
         {(["all", "created", "requested", "shared"] as LibTab[]).map((t) => (
           <button
             key={t}
@@ -306,10 +320,10 @@ export default function DocumentLibraryPage() {
               "flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors -mb-px",
               tab === t
                 ? "border-sky-500 text-sky-600 dark:text-sky-400"
-                : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
+                : "border-transparent text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300",
             ].join(" ")}
           >
-            <BookOpen className="h-3.5 w-3.5" />
+            {TAB_ICONS[t]}
             {TAB_LABELS[t]}
           </button>
         ))}
@@ -323,7 +337,7 @@ export default function DocumentLibraryPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search title, code…"
-            className="w-full rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 pl-9 pr-8 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
+            className={`${inputCls} pl-9 pr-8`}
           />
           {q && (
             <button
@@ -339,7 +353,7 @@ export default function DocumentLibraryPage() {
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
+          className={selectCls}
         >
           <option value="ALL">All types</option>
           <option value="internal">Internal</option>
@@ -347,22 +361,12 @@ export default function DocumentLibraryPage() {
           <option value="forms">Forms</option>
         </select>
 
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">From</span>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
-          />
-          <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">To</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/30 transition"
-          />
-        </div>
+        <DateRangeInput
+          from={dateFrom}
+          to={dateTo}
+          onFromChange={setDateFrom}
+          onToChange={setDateTo}
+        />
 
         {(q || typeFilter !== "ALL" || dateFrom || dateTo) && (
           <button
@@ -373,13 +377,13 @@ export default function DocumentLibraryPage() {
               setDateFrom("");
               setDateTo("");
             }}
-            className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-2 text-sm text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+            className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
           >
             Clear
           </button>
         )}
 
-        {error && <span className="text-xs text-rose-500">{error}</span>}
+        {error && <Alert variant="danger">{error}</Alert>}
       </div>
 
       {/* Doc list */}
@@ -398,14 +402,14 @@ export default function DocumentLibraryPage() {
             ))}
           </div>
         ) : rows.length === 0 ? (
-          <div className="flex h-48 flex-col items-center justify-center gap-3">
-            <BookOpen className="h-8 w-8 text-slate-300 dark:text-slate-600" />
-            <p className="text-sm text-slate-400 dark:text-slate-500">
-              {tab === "all"
+          <EmptyState
+            icon={<BookOpen className="h-8 w-8" />}
+            label={
+              tab === "all"
                 ? "No distributed documents yet."
-                : `No ${TAB_LABELS[tab].toLowerCase()} documents found.`}
-            </p>
-          </div>
+                : `No ${TAB_LABELS[tab].toLowerCase()} documents found.`
+            }
+          />
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-surface-400">
             {rows.map((doc) => {
@@ -429,16 +433,10 @@ export default function DocumentLibraryPage() {
               );
             })}
             {hasMore && (
-              <div className="flex justify-center py-3">
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={loading}
-                  className="rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
-                >
-                  {loading ? "Loading…" : "Load more"}
-                </button>
-              </div>
+              <LoadMoreButton
+                loading={loading}
+                onClick={() => setPage((p) => p + 1)}
+              />
             )}
           </div>
         )}

@@ -34,19 +34,7 @@ import {
 } from "lucide-react";
 import CommentBubble from "../components/documents/documentFlow/CommentBubble";
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-function formatDate(iso: string | null | undefined) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
-}
-
-function formatDateTime(iso: string | null | undefined) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
+import { formatDate, formatDateTime } from "../utils/formatters";
 
 const TYPE_STYLES: Record<string, string> = {
   internal: "bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",

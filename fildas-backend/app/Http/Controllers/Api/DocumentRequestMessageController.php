@@ -4,17 +4,21 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Traits\RoleNameTrait;
+use App\Traits\LogsActivityTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DocumentRequestMessageController extends Controller
 {
+    use RoleNameTrait, LogsActivityTrait;
+
     private function canAccess(Request $request, int $requestId): bool
     {
         $user = $request->user();
-        $role = strtolower(trim((string) ($user?->role?->name ?? '')));
+        $role = $this->roleName($request);
 
-        if (in_array($role, ['qa', 'sysadmin', 'admin'], true)) {
+        if ($this->isQaOrAdmin($role)) {
             return true;
         }
 
@@ -103,18 +107,9 @@ class DocumentRequestMessageController extends Controller
             'updated_at'          => $now,
         ]);
 
-        ActivityLog::create([
-            'document_id'         => null,
-            'document_version_id' => null,
-            'actor_user_id'       => $user->id,
-            'actor_office_id'     => $user->office_id,
-            'target_office_id'    => null,
-            'event'               => 'document_request.message.posted',
-            'label'               => 'Posted a comment on a document request',
-            'meta'                => [
-                'document_request_id' => $requestId,
-                'message_id'          => $id,
-            ],
+        $this->logActivity('document_request.message.posted', 'Posted a comment on a document request', $user->id, $user->office_id, [
+            'document_request_id' => $requestId,
+            'message_id'          => $id,
         ]);
 
         $message = DB::table('document_request_messages as m')

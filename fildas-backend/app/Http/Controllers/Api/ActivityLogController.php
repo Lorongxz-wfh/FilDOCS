@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\DocumentVersion;
+use App\Traits\RoleNameTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class ActivityLogController extends Controller
 {
+    use RoleNameTrait;
+
     // POST /api/activity/opened-version
     public function openedVersion(Request $request)
     {
@@ -42,6 +45,7 @@ class ActivityLogController extends Controller
         $data = $request->validate([
             'scope' => 'nullable|in:office,mine,document,request,all',
             'document_id' => 'nullable|integer|exists:documents,id',
+            'request_id' => 'nullable|integer|exists:document_requests,id',
             'document_version_id' => 'nullable|integer|exists:document_versions,id',
             'per_page' => 'nullable|integer|min:1|max:50',
             'page' => 'nullable|integer|min:1',
@@ -117,17 +121,18 @@ class ActivityLogController extends Controller
                 return response()->json(['message' => 'document_id or document_version_id is required for scope=document'], 422);
             }
         } elseif ($scope === 'request') {
-            if (empty($data['document_id'])) {
+            $reqId = (int) ($data['request_id'] ?? 0);
+            if ($reqId <= 0) {
                 return response()->json(['message' => 'request_id is required for scope=request'], 422);
             }
 
             // Access check: QA/admin sees all, office user must be a recipient
-            $roleName = strtolower(trim((string) ($user?->role?->name ?? '')));
-            $isQa = in_array($roleName, ['qa', 'sysadmin', 'admin'], true);
+            $roleName = $this->roleNameOf($user);
+            $isQa = $this->isQaOrAdmin($roleName);
 
             if (!$isQa) {
                 $isRecipient = \Illuminate\Support\Facades\DB::table('document_request_recipients')
-                    ->where('request_id', (int) $data['document_id'])
+                    ->where('request_id', $reqId)
                     ->where('office_id', $userOfficeId)
                     ->exists();
 
@@ -138,7 +143,7 @@ class ActivityLogController extends Controller
 
             // Fetch activity logs where meta->document_request_id matches
             $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(meta, '$.document_request_id')) = ?", [
-                (string) (int) $data['document_id']
+                (string) $reqId
             ]);
         } elseif ($scope === 'office') {
             if (!$userOfficeId) {

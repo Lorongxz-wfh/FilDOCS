@@ -6,45 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Office;
 use App\Models\WorkflowTask;
 use App\Models\DocumentVersion;
+use App\Services\Reports\ClusterAnalysisService;
+use App\Services\WorkflowSteps;
+use App\Traits\RoleNameTrait;
 use Illuminate\Http\Request;
 
 class ReportsController extends Controller
 {
-    private function officeIdByCode(string $code): ?int
-    {
-        return Office::where('code', $code)->value('id');
-    }
+    use RoleNameTrait;
 
-    private function clusters(): array
-    {
-        return ['VAd', 'VA', 'VF', 'VR', 'PO'];
-    }
-
-    private function clusterByOfficeId(?int $officeId, array $officeById): ?string
-    {
-        if (!$officeId) return null;
-        $o = $officeById[$officeId] ?? null;
-        if (!$o) return null;
-
-        $code = strtoupper((string) ($o['code'] ?? ''));
-        if (in_array($code, $this->clusters(), true)) return $code;
-
-        // Walk up parent chain until we hit a cluster office code
-        $guard = 0;
-        $parentId = $o['parent_office_id'] ?? null;
-        while ($parentId && $guard < 10) {
-            $guard++;
-            $p = $officeById[$parentId] ?? null;
-            if (!$p) break;
-
-            $pCode = strtoupper((string) ($p['code'] ?? ''));
-            if (in_array($pCode, $this->clusters(), true)) return $pCode;
-
-            $parentId = $p['parent_office_id'] ?? null;
-        }
-
-        return null;
-    }
+    public function __construct(private ClusterAnalysisService $clusterAnalysis) {}
 
     // Backward-compatible alias (old endpoint name)
     public function compliance(Request $request)
@@ -58,11 +29,11 @@ class ReportsController extends Controller
     {
 
         $user = $request->user();
-        $roleName = strtolower(trim((string) ($user?->role?->name ?? '')));
+        $roleName = $this->roleNameOf($user);
         $userOfficeId = (int) ($user?->office_id ?? 0);
 
         // QA-only for now (your requirement)
-        $qaOfficeId = (int) ($this->officeIdByCode('QA') ?? 0);
+        $qaOfficeId = (int) ($this->clusterAnalysis->officeIdByCode('QA') ?? 0);
         $isQA = ($roleName === 'qa') || ($qaOfficeId && $userOfficeId === $qaOfficeId);
 
         $isAdmin = in_array($roleName, ['admin', 'sysadmin'], true);
@@ -94,7 +65,7 @@ class ReportsController extends Controller
             ];
         })->all();
 
-        $clusters = $this->clusters();
+        $clusters = $this->clusterAnalysis->clusters();
 
         // If parent filter is set, only include that cluster in the output (exclude others).
         $allowedClusters = ($parent !== 'ALL') ? [$parent] : $clusters;
@@ -107,40 +78,9 @@ class ReportsController extends Controller
         $officeAcc = []; // [officeId => ['office_id'=>..,'office_code'=>..,'cluster'=>..,'assigned'=>..,'approved'=>..,'returned'=>..]]
 
 
-        // All step codes across QA, Office, and Custom flows
-        // Review steps (office head / VP / custom recipient review)
-        $reviewSteps = [
-            'qa_office_review',           // QA flow: office reviews
-            'qa_vp_review',               // QA flow: VP reviews
-            'office_head_review',         // Office flow: head reviews
-            'office_vp_review',           // Office flow: VP reviews
-            'custom_office_review',       // Custom flow: recipient reviews
-        ];
-
-        // Approval steps (office head / VP / President / QA check)
-        $approvalSteps = [
-            'qa_office_approval',         // QA flow: office approves
-            'qa_vp_approval',             // QA flow: VP approves
-            'qa_pres_approval',           // QA flow: President approves
-            'qa_approval_final_check',    // QA flow: QA double-check before finalization
-            'office_head_approval',       // Office flow: head approves
-            'office_vp_approval',         // Office flow: VP approves
-            'office_pres_approval',       // Office flow: President approves
-            'office_approval_final_check', // Office flow: staff double-check
-            'custom_office_approval',     // Custom flow: recipient approves
-            'custom_approval_back_to_owner', // Custom flow: back to owner check
-        ];
-
-        // Finalization steps
-        $finalizationSteps = [
-            'qa_registration',
-            'qa_distribution',
-            'office_registration',
-            'office_distribution',
-            'custom_registration',
-            'custom_distribution',
-            'distributed',
-        ];
+        $reviewSteps      = WorkflowSteps::reviewSteps();
+        $approvalSteps    = WorkflowSteps::approvalSteps();
+        $finalizationSteps = WorkflowSteps::finalizationSteps();
 
         $allTrackedSteps = array_merge($reviewSteps, $approvalSteps, $finalizationSteps);
 
@@ -188,7 +128,7 @@ class ReportsController extends Controller
             }
 
             $assignedOfficeId = (int) ($t->assigned_office_id ?? 0);
-            $cluster = $this->clusterByOfficeId($assignedOfficeId ?: null, $officeById);
+            $cluster = $this->clusterAnalysis->clusterByOfficeId($assignedOfficeId ?: null, $officeById);
             if ($cluster) {
                 $versionFlags[$vid]['clusters'][$cluster] = true;
 
@@ -260,7 +200,7 @@ class ReportsController extends Controller
                         $officeAcc[$oid] ??= [
                             'office_id' => $oid,
                             'office_code' => $o['code'] ?? null,
-                            'cluster' => $this->clusterByOfficeId($oid, $officeById),
+                            'cluster' => $this->clusterAnalysis->clusterByOfficeId($oid, $officeById),
                             'in_review' => 0,
                             'sent_to_qa' => 0,
                             'approved' => 0,
@@ -280,7 +220,7 @@ class ReportsController extends Controller
                     $officeAcc[$oid] ??= [
                         'office_id' => $oid,
                         'office_code' => $o['code'] ?? null,
-                        'cluster' => $this->clusterByOfficeId($oid, $officeById),
+                        'cluster' => $this->clusterAnalysis->clusterByOfficeId($oid, $officeById),
                         'in_review' => 0,
                         'sent_to_qa' => 0,
                         'approved' => 0,
@@ -331,7 +271,7 @@ class ReportsController extends Controller
         foreach ($tasks as $t) {
             // Parent filter: only include tasks routed to allowed clusters
             $assignedOfficeId = (int) ($t->assigned_office_id ?? 0);
-            $cluster = $this->clusterByOfficeId($assignedOfficeId ?: null, $officeById);
+            $cluster = $this->clusterAnalysis->clusterByOfficeId($assignedOfficeId ?: null, $officeById);
             if (!$cluster) continue;
             if (!isset($acc[$cluster])) continue;
 
@@ -470,59 +410,16 @@ class ReportsController extends Controller
         $cycleSecondsTotal = 0;
         $cycleCount = 0;
 
-        // stage buckets
-        $stageBuckets = [
-            'Review' => [
-                'steps' => [
-                    'qa_office_review',
-                    'office_head_review',
-                    'custom_office_review',
-                ],
+        // stage buckets — build tracking structure from canonical step groupings
+        $stageBuckets = [];
+        foreach (WorkflowSteps::reportStageGroups() as $stageName => $steps) {
+            $stageBuckets[$stageName] = [
+                'steps'         => $steps,
                 'total_seconds' => 0,
-                'task_count' => 0,
-                'version_ids' => [],
-            ],
-            'VP / President' => [
-                'steps' => [
-                    'qa_vp_review',
-                    'qa_pres_approval',
-                    'office_vp_review',
-                    'office_vp_approval',
-                    'office_pres_approval',
-                    'qa_vp_approval',
-                ],
-                'total_seconds' => 0,
-                'task_count' => 0,
-                'version_ids' => [],
-            ],
-            'Approval Check' => [
-                'steps' => [
-                    'qa_approval_final_check',
-                    'office_approval_final_check',
-                    'custom_approval_back_to_owner',
-                    'qa_office_approval',
-                    'office_head_approval',
-                    'custom_office_approval',
-                ],
-                'total_seconds' => 0,
-                'task_count' => 0,
-                'version_ids' => [],
-            ],
-            'Finalization' => [
-                'steps' => [
-                    'qa_registration',
-                    'qa_distribution',
-                    'office_registration',
-                    'office_distribution',
-                    'custom_registration',
-                    'custom_distribution',
-                    'distributed',
-                ],
-                'total_seconds' => 0,
-                'task_count' => 0,
-                'version_ids' => [],
-            ],
-        ];
+                'task_count'    => 0,
+                'version_ids'   => [],
+            ];
+        }
 
 
         // If you choose Option B later, we’ll add: 'Drafting' => ['steps' => ['office_draft'], ...]
