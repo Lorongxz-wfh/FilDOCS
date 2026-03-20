@@ -4,6 +4,8 @@ import { getAuthUser } from "../lib/auth";
 import {
   createDocumentWithProgress,
   setDocumentTags,
+  listOffices,
+  type Office,
 } from "../services/documents";
 import {
   createTempPreview,
@@ -97,7 +99,12 @@ export default function CreateDocumentPage() {
       ? (me as any).role
       : (me as any).role?.name;
   const roleName = String(rawRole ?? "").toLowerCase();
-  if (!new Set(["qa", "office_staff", "office_head"]).has(roleName))
+  const isAdminUser = roleName === "admin" || roleName === "sysadmin";
+  const adminDebugOn =
+    isAdminUser &&
+    localStorage.getItem(`pref_debug_mode_${(me as any).id}`) === "1";
+
+  if (!new Set(["qa", "office_staff", "office_head"]).has(roleName) && !adminDebugOn)
     return <Navigate to="/work-queue" replace />;
 
   const isQA = roleName === "qa";
@@ -135,6 +142,14 @@ export default function CreateDocumentPage() {
   > | null>(null);
   const [uploadPct] = useState(0);
   const previewSeqRef = React.useRef(0);
+
+  // ── Admin: office picker ───────────────────────────────────────────────────
+  const [allOffices, setAllOffices] = useState<Office[]>([]);
+  const [actingOfficeId, setActingOfficeId] = useState<number | null>(null);
+  useEffect(() => {
+    if (!isAdminUser) return;
+    listOffices().then(setAllOffices).catch(() => {});
+  }, [isAdminUser]);
 
   // ── Office names for chain display ─────────────────────────────────────────
   const [officeCodes, setOfficeCodes] = useState<string[]>([]);
@@ -219,6 +234,10 @@ export default function CreateDocumentPage() {
         setError("Please attach a file.");
         return;
       }
+      if (isAdminUser && !actingOfficeId) {
+        setError("Please select an office to create this document on behalf of.");
+        return;
+      }
       const result = await createDocumentWithProgress({
         title,
         workflow_type: isQA ? "qa" : "office",
@@ -233,6 +252,7 @@ export default function CreateDocumentPage() {
         description,
         effective_date:
           isQA && effectiveDate.trim() ? effectiveDate.trim() : null,
+        ...(isAdminUser && actingOfficeId ? { acting_as_office_id: actingOfficeId } : {}),
       });
       if (tags.length > 0) {
         try {
@@ -348,6 +368,22 @@ export default function CreateDocumentPage() {
                   </div>
 
                   <div className="px-5 py-5 flex flex-col gap-5">
+                    {isAdminUser && (
+                      <Field label="Acting as office" required hint="Document will be created on behalf of this office.">
+                        <select
+                          value={actingOfficeId ?? ""}
+                          onChange={(e) => setActingOfficeId(Number(e.target.value) || null)}
+                          required
+                          className={inputCls}
+                        >
+                          <option value="">Select an office…</option>
+                          {allOffices.map((o) => (
+                            <option key={o.id} value={o.id}>{o.name}</option>
+                          ))}
+                        </select>
+                      </Field>
+                    )}
+
                     <Field label="Title" required>
                       <input
                         type="text"

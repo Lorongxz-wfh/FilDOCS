@@ -71,6 +71,7 @@ interface DocumentFlowProps {
   onHeaderStateChange?: (s: DocumentFlowHeaderState) => void;
   onAfterActionClose?: () => void;
   onRightPanelContent?: (content: React.ReactNode) => void;
+  adminDebugMode?: boolean;
 }
 
 // ── RightPanel: preview + collapsible versions shelf ────────────────────────
@@ -186,6 +187,7 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
   onHeaderStateChange,
   onAfterActionClose,
   onRightPanelContent,
+  adminDebugMode = false,
 }) => {
   const { push } = useToast();
   const myOfficeId = getCurrentUserOfficeId();
@@ -355,6 +357,7 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
     onAfterActionClose,
     myOfficeId,
     qaOfficeId,
+    adminDebugMode,
   });
 
   // ── Auto-save hook ───────────────────────────────────────────
@@ -545,7 +548,8 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
 
   const assignedOfficeId = currentTask?.assigned_office_id ?? null;
   const canAct =
-    !!assignedOfficeId && Number(myOfficeId) === Number(assignedOfficeId);
+    adminDebugMode ||
+    (!!assignedOfficeId && Number(myOfficeId) === Number(assignedOfficeId));
   const fullCode = document?.code ?? "CODE-NOT-AVAILABLE";
 
   // ── Signing state ─────────────────────────────────────────────────────
@@ -614,10 +618,10 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
           code === "REJECT" || code === "CANCEL_DOCUMENT"
             ? "danger"
             : "primary",
-        // CANCEL_DOCUMENT is always clickable for owner/admin — backend enforces who can cancel
+        // CANCEL_DOCUMENT requires canAct — admin observer (no office, debug OFF) cannot cancel
         disabled:
           workflow.isChangingStatus ||
-          (code !== "CANCEL_DOCUMENT" && !canAct) ||
+          !canAct ||
           (needsSignedFile && !["REJECT", "CANCEL_DOCUMENT"].includes(code)) ||
           (needsFileReplacement &&
             !["REJECT", "CANCEL_DOCUMENT"].includes(code)),

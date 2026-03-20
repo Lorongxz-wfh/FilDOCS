@@ -137,7 +137,6 @@ export type AdminUserUpdatePayload = Partial<{
   email: string | null;
   office_id: number | null;
   role_id: number | null;
-  password: string | null;
 }>;
 
 export async function updateAdminUser(
@@ -154,7 +153,6 @@ export type AdminUserCreatePayload = {
   last_name: string;
   suffix?: string | null;
   email: string;
-  password: string;
   office_id?: number | null;
   role_id?: number | null;
 };

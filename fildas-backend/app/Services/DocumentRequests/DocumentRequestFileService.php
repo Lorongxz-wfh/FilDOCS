@@ -14,27 +14,32 @@ class DocumentRequestFileService
         $storedName = 'example.' . $extension;
         $r2Folder = $year . '/document_requests/' . $requestId;
         $originalName = $file->getClientOriginalName();
+        $filePath = $r2Folder . '/' . $storedName;
 
-        // Upload original to storage
         Storage::disk()->putFileAs($r2Folder, $file, $storedName);
 
-        // Generate preview via tmp
+        // PDFs are natively previewable — use the file itself as the preview
+        if ($extension === 'pdf') {
+            return [
+                'original_filename' => $originalName,
+                'file_path'         => $filePath,
+                'preview_path'      => $filePath,
+            ];
+        }
+
+        // Non-PDF: attempt LibreOffice conversion
         $tmpDir = sys_get_temp_dir() . '/fildas/doc_requests/' . $requestId;
         if (!is_dir($tmpDir)) mkdir($tmpDir, 0775, true);
 
         $tmpFilePath = $tmpDir . '/' . $storedName;
-        copy($file->getRealPath() ?: (Storage::disk()->path($r2Folder . '/' . $storedName)), $tmpFilePath);
+        copy($file->getRealPath() ?: Storage::disk()->path($filePath), $tmpFilePath);
 
         $previewFileName = DocumentPreviewService::generatePreview($tmpDir, $tmpFilePath);
         $previewPath = null;
 
         if ($previewFileName) {
             $tmpPreviewPath = $tmpDir . '/' . $previewFileName;
-            Storage::disk()->putFileAs(
-                $r2Folder,
-                new \Illuminate\Http\File($tmpPreviewPath),
-                $previewFileName
-            );
+            Storage::disk()->putFileAs($r2Folder, new \Illuminate\Http\File($tmpPreviewPath), $previewFileName);
             $previewPath = $r2Folder . '/' . $previewFileName;
             @unlink($tmpPreviewPath);
         }
@@ -44,8 +49,8 @@ class DocumentRequestFileService
 
         return [
             'original_filename' => $originalName,
-            'file_path' => $r2Folder . '/' . $storedName,
-            'preview_path' => $previewPath,
+            'file_path'         => $filePath,
+            'preview_path'      => $previewPath,
         ];
     }
 
@@ -56,25 +61,32 @@ class DocumentRequestFileService
         $storedName = 'example.' . $extension;
         $r2Folder = $year . '/document_request_items/' . $itemId;
         $originalName = $file->getClientOriginalName();
+        $filePath = $r2Folder . '/' . $storedName;
 
         Storage::disk()->putFileAs($r2Folder, $file, $storedName);
 
+        // PDFs are natively previewable — use the file itself as the preview
+        if ($extension === 'pdf') {
+            return [
+                'original_filename' => $originalName,
+                'file_path'         => $filePath,
+                'preview_path'      => $filePath,
+            ];
+        }
+
+        // Non-PDF: attempt LibreOffice conversion
         $tmpDir = sys_get_temp_dir() . '/fildas/doc_request_items/' . $itemId;
         if (!is_dir($tmpDir)) mkdir($tmpDir, 0775, true);
 
         $tmpFilePath = $tmpDir . '/' . $storedName;
-        copy($file->getRealPath() ?: (Storage::disk()->path($r2Folder . '/' . $storedName)), $tmpFilePath);
+        copy($file->getRealPath() ?: Storage::disk()->path($filePath), $tmpFilePath);
 
         $previewFileName = DocumentPreviewService::generatePreview($tmpDir, $tmpFilePath);
         $previewPath = null;
 
         if ($previewFileName) {
             $tmpPreviewPath = $tmpDir . '/' . $previewFileName;
-            Storage::disk()->putFileAs(
-                $r2Folder,
-                new \Illuminate\Http\File($tmpPreviewPath),
-                $previewFileName
-            );
+            Storage::disk()->putFileAs($r2Folder, new \Illuminate\Http\File($tmpPreviewPath), $previewFileName);
             $previewPath = $r2Folder . '/' . $previewFileName;
             @unlink($tmpPreviewPath);
         }
@@ -84,7 +96,7 @@ class DocumentRequestFileService
 
         return [
             'original_filename' => $originalName,
-            'file_path'         => $r2Folder . '/' . $storedName,
+            'file_path'         => $filePath,
             'preview_path'      => $previewPath,
         ];
     }
@@ -101,10 +113,22 @@ class DocumentRequestFileService
         $sizeBytes = (int) $file->getSize();
         $tmpRealPath = $file->getRealPath();
 
-        // Upload original to storage
+        $filePath = $r2Folder . '/' . $storedName;
+
         Storage::disk()->putFileAs($r2Folder, $file, $storedName);
 
-        // Generate preview via tmp
+        // PDFs are natively previewable — use the file itself as the preview
+        if ($extension === 'pdf') {
+            return [
+                'original_filename' => $originalName,
+                'file_path'         => $filePath,
+                'preview_path'      => $filePath,
+                'mime'              => $mime,
+                'size_bytes'        => $sizeBytes,
+            ];
+        }
+
+        // Non-PDF: attempt LibreOffice conversion
         $tmpDir = sys_get_temp_dir() . '/fildas/doc_request_submissions/' . $submissionId;
         if (!is_dir($tmpDir)) mkdir($tmpDir, 0775, true);
 
@@ -116,11 +140,7 @@ class DocumentRequestFileService
 
         if ($previewFileName) {
             $tmpPreviewPath = $tmpDir . '/' . $previewFileName;
-            Storage::disk()->putFileAs(
-                $r2Folder,
-                new \Illuminate\Http\File($tmpPreviewPath),
-                $previewFileName
-            );
+            Storage::disk()->putFileAs($r2Folder, new \Illuminate\Http\File($tmpPreviewPath), $previewFileName);
             $previewPath = $r2Folder . '/' . $previewFileName;
             @unlink($tmpPreviewPath);
         }
@@ -130,10 +150,10 @@ class DocumentRequestFileService
 
         return [
             'original_filename' => $originalName,
-            'file_path' => $r2Folder . '/' . $storedName,
-            'preview_path' => $previewPath,
-            'mime' => $mime,
-            'size_bytes' => $sizeBytes,
+            'file_path'         => $filePath,
+            'preview_path'      => $previewPath,
+            'mime'              => $mime,
+            'size_bytes'        => $sizeBytes,
         ];
     }
 

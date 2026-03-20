@@ -10,6 +10,7 @@ import { useToast } from "../components/ui/toast/ToastContext";
 import { Search, X, ChevronDown, Tag, LayoutGrid, List } from "lucide-react";
 import { inputCls } from "../utils/formStyles";
 import { getAuthUser } from "../lib/auth";
+import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 
 import {
   listTemplates,
@@ -30,6 +31,11 @@ const TemplatesPage: React.FC = () => {
   const authUser = getAuthUser();
   const userRole = authUser?.role?.toLowerCase() ?? "";
   const canChooseScope = userRole === "qa" || userRole === "sysadmin";
+  const isAdminUser = userRole === "admin" || userRole === "sysadmin";
+  const adminDebugMode = useAdminDebugMode();
+  const canUpload =
+    ["qa", "sysadmin", "office_staff", "office_head"].includes(userRole) ||
+    (isAdminUser && adminDebugMode);
 
   const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,14 +155,16 @@ const TemplatesPage: React.FC = () => {
         right={
           <div className="flex items-center gap-2">
             <RefreshButton onClick={fetchTemplates} loading={loading} title="Refresh templates" />
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={() => setModalOpen(true)}
-            >
-              Upload template
-            </Button>
+            {canUpload && (
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => setModalOpen(true)}
+              >
+                Upload template
+              </Button>
+            )}
           </div>
         }
       >

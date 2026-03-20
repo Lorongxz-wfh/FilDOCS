@@ -38,19 +38,36 @@ class UserSeeder extends Seeder
         $presRole = Role::where('name', 'president')->firstOrFail();
 
         User::updateOrCreate(
-            ['email' => 'admin@example.com'],
+            ['email' => 'lorongxz.wfh@gmail.com'],
             [
-                'first_name' => 'System',
+                'first_name' => 'Lorongxz',
                 'middle_name' => null,
                 'last_name' => 'Admin',
                 'suffix' => null,
                 'profile_photo_path' => null,
 
-                'password' => Hash::make('password'),
+                'password' => Hash::make('Posa123'),
                 'role_id'  => $adminRole->id,
                 'office_id' => null,
             ]
         );
+
+        User::updateOrCreate(
+            ['email' => 'laquino@filamer.edu.ph'],
+            [
+                'first_name' => 'Lor Frederick James',
+                'middle_name' => 'Roxas',
+                'last_name' => 'Aquino',
+                'suffix' => null,
+                'profile_photo_path' => null,
+
+                'password' => Hash::make('Posa123'),
+                'role_id'  => $deptRole->id,
+                'office_id' => $officeId('CS'),
+            ]
+        );
+
+
 
         User::updateOrCreate(
             ['email' => 'auditor@example.com'],
@@ -189,6 +206,34 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'role_id'  => $presRole->id,
                 'office_id' => $officeId('PO'),
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'josephbanay030@gmail.com'],
+            [
+                'first_name'         => 'Joseph',
+                'middle_name'        => null,
+                'last_name'          => 'Banay',
+                'suffix'             => null,
+                'profile_photo_path' => null,
+                'password'           => Hash::make('password'),
+                'role_id'            => $officeHeadRole->id,
+                'office_id'          => $officeId('CB'),
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'Ebacuadomentino@gmail.com'],
+            [
+                'first_name'         => 'Mentino',
+                'middle_name'        => null,
+                'last_name'          => 'Ebacuado',
+                'suffix'             => null,
+                'profile_photo_path' => null,
+                'password'           => Hash::make('password'),
+                'role_id'            => $officeHeadRole->id,
+                'office_id'          => $officeId('CN'),
             ]
         );
 

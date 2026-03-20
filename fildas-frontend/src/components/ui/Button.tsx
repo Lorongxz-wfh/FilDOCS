@@ -10,7 +10,7 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const base =
-  "inline-flex items-center justify-center font-medium rounded transition disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
+  "cursor-pointer inline-flex items-center justify-center font-medium rounded transition disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
 
 const variants: Record<Variant, string> = {
   primary:

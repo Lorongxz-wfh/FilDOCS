@@ -37,3 +37,11 @@ export async function removeProfilePhoto() {
   const { data } = await api.delete("/profile/photo");
   return data.user;
 }
+
+export async function updateNotificationPreferences(payload: {
+  email_doc_updates: boolean;
+  email_approvals: boolean;
+}) {
+  const { data } = await api.patch("/profile/notification-preferences", payload);
+  return data as { email_doc_updates: boolean; email_approvals: boolean };
+}

@@ -50,6 +50,9 @@ export async function createDocumentWithProgress(
     formData.append("effective_date", payload.effective_date);
   }
 
+  if (payload.acting_as_office_id)
+    formData.append("acting_as_office_id", String(payload.acting_as_office_id));
+
   if (payload.file) formData.append("file", payload.file);
 
   const token = localStorage.getItem("auth_token");
@@ -120,7 +123,7 @@ export async function listDocumentsPage(params?: {
   date_to?: string;   // YYYY-MM-DD
 
   // NEW: document library scope
-  scope?: "all" | "owned" | "shared" | "assigned";
+  scope?: "all" | "owned" | "shared" | "assigned" | "participant";
 }): Promise<Paginated<Document>> {
   try {
     const api = await getApi();

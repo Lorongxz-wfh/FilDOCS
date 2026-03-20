@@ -6,12 +6,15 @@ import {
   changePassword,
   uploadProfilePhoto,
   removeProfilePhoto,
+  updateNotificationPreferences,
   type ProfileUpdatePayload,
 } from "../services/profile";
-import { Camera, Trash2, KeyRound, User, Bell, Volume2 } from "lucide-react";
+import { Camera, Trash2, KeyRound, User, Bell, Volume2, Wrench } from "lucide-react";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 import { inputCls } from "../utils/formStyles";
+import { getUserRole, isSysAdmin } from "../lib/roleFilters";
+import { getAuthUser } from "../lib/auth";
 
 const Field: React.FC<{
   label: string;
@@ -261,36 +264,54 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  // ── Notification prefs (localStorage, per-user) ───────────────────────
+  // ── Role / admin ──────────────────────────────────────────────────────
+  const role = getUserRole();
+  const currentUser = getAuthUser();
+  const isAdminUser = role === "ADMIN" || isSysAdmin(role);
+
+  // ── Notification prefs ────────────────────────────────────────────────
   const prefKey = (key: string) => `pref_${key}_${user?.id ?? "guest"}`;
 
   const [emailDocUpdates, setEmailDocUpdates] = useState(false);
   const [emailApprovals, setEmailApprovals] = useState(false);
   const [soundNotif, setSoundNotif] = useState(false);
+  const [adminDebugMode, setAdminDebugMode] = useState(() =>
+    isAdminUser ? localStorage.getItem(`pref_debug_mode_${currentUser?.id}`) === "1" : false,
+  );
 
-  // Re-read prefs once user is resolved
+  // Seed from DB values (via user object) once resolved, then keep localStorage in sync
   useEffect(() => {
     if (!user?.id) return;
-    setEmailDocUpdates(
-      localStorage.getItem(prefKey("email_doc_updates")) !== "false",
-    );
-    setEmailApprovals(
-      localStorage.getItem(prefKey("email_approvals")) !== "false",
-    );
+    const dbDocUpdates = (user as any).email_doc_updates;
+    const dbApprovals  = (user as any).email_approvals;
+    setEmailDocUpdates(dbDocUpdates !== undefined ? Boolean(dbDocUpdates) : localStorage.getItem(prefKey("email_doc_updates")) !== "false");
+    setEmailApprovals(dbApprovals  !== undefined ? Boolean(dbApprovals)  : localStorage.getItem(prefKey("email_approvals")) !== "false");
     setSoundNotif(localStorage.getItem(prefKey("sound_notif")) !== "false");
   }, [user?.id]);
 
-  const handleEmailDocUpdates = (v: boolean) => {
+  const handleEmailDocUpdates = async (v: boolean) => {
     setEmailDocUpdates(v);
     localStorage.setItem(prefKey("email_doc_updates"), String(v));
+    try {
+      await updateNotificationPreferences({ email_doc_updates: v, email_approvals: emailApprovals });
+    } catch { /* silent — localStorage is the fallback */ }
   };
-  const handleEmailApprovals = (v: boolean) => {
+  const handleEmailApprovals = async (v: boolean) => {
     setEmailApprovals(v);
     localStorage.setItem(prefKey("email_approvals"), String(v));
+    try {
+      await updateNotificationPreferences({ email_doc_updates: emailDocUpdates, email_approvals: v });
+    } catch { /* silent */ }
   };
   const handleSoundNotif = (v: boolean) => {
     setSoundNotif(v);
     localStorage.setItem(prefKey("sound_notif"), String(v));
+  };
+
+  const handleDebugModeToggle = (v: boolean) => {
+    setAdminDebugMode(v);
+    localStorage.setItem(`pref_debug_mode_${currentUser?.id}`, v ? "1" : "0");
+    window.dispatchEvent(new CustomEvent("admin_debug_mode_changed"));
   };
 
   // ── Initials avatar ───────────────────────────────────────────────────
@@ -542,6 +563,23 @@ const SettingsPage: React.FC = () => {
               />
             </div>
           </SectionCard>
+
+          {isAdminUser && (
+            <SectionCard
+              icon={<Wrench className="h-4 w-4" />}
+              title="Developer tools"
+              subtitle="Admin-only tools for testing and debugging."
+            >
+              <div className="divide-y divide-slate-100 dark:divide-surface-400">
+                <Toggle
+                  checked={adminDebugMode}
+                  onChange={handleDebugModeToggle}
+                  label="Developer / debug mode"
+                  description="Allow admin to perform workflow actions and create documents on behalf of offices. Use with care."
+                />
+              </div>
+            </SectionCard>
+          )}
         </div>
       </div>
     </PageFrame>

@@ -37,6 +37,9 @@ class DocumentStoreRequest extends FormRequest
                 : 'nullable|integer|exists:offices,id',
 
 
+            // Admin-only: create on behalf of an office
+            'acting_as_office_id' => 'nullable|integer|exists:offices,id',
+
             'visibility_scope' => 'sometimes|in:office,global',
             'school_year' => 'nullable|string|max:20',
             'semester' => 'nullable|string|max:20',

@@ -127,10 +127,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/search', \App\Http\Controllers\Api\SearchController::class);
 
     // ── Profile ────────────────────────────────────────────────────────────────
-    Route::patch('/profile',          [\App\Http\Controllers\Api\ProfileController::class, 'update']);
-    Route::post('/profile/password',  [\App\Http\Controllers\Api\ProfileController::class, 'changePassword']);
-    Route::post('/profile/photo',     [\App\Http\Controllers\Api\ProfileController::class, 'uploadPhoto']);
-    Route::delete('/profile/photo',   [\App\Http\Controllers\Api\ProfileController::class, 'removePhoto']);
+    Route::patch('/profile',                              [\App\Http\Controllers\Api\ProfileController::class, 'update']);
+    Route::post('/profile/password',                      [\App\Http\Controllers\Api\ProfileController::class, 'changePassword']);
+    Route::post('/profile/photo',                         [\App\Http\Controllers\Api\ProfileController::class, 'uploadPhoto']);
+    Route::delete('/profile/photo',                       [\App\Http\Controllers\Api\ProfileController::class, 'removePhoto']);
+    Route::patch('/profile/notification-preferences',     [\App\Http\Controllers\Api\ProfileController::class, 'updateNotificationPreferences']);
 
     // ── Reports ────────────────────────────────────────────────────────────────
     Route::get('/reports/approval',    [ReportsController::class, 'approval']);

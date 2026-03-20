@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import PageFrame from "../components/layout/PageFrame";
 import Alert from "../components/ui/Alert";
 import Button from "../components/ui/Button";
+import Tooltip from "../components/ui/Tooltip";
 import Skeleton from "../components/ui/loader/Skeleton";
 
 // Shared charts
@@ -12,7 +12,6 @@ import VolumeTrendChart from "../components/charts/VolumeTrendChart";
 import StageDelayChart from "../components/charts/StageDelayChart";
 
 // Shared dashboard components
-import DashboardGreeting from "../components/dashboard/DashboardGreeting";
 import DashboardStatRow from "../components/dashboard/DashboardStatRow";
 import DashboardPendingList from "../components/dashboard/DashboardPendingList";
 import DashboardRecentActivity from "../components/dashboard/DashboardRecentActivity";
@@ -31,12 +30,15 @@ import {
   isOfficeStaff,
   isOfficeHead,
 } from "../lib/roleFilters";
+import { getAuthUser } from "../lib/auth";
 import {
   FolderOpen,
   ClipboardList,
   Inbox,
   Clock,
   RefreshCw,
+  Hand,
+  CheckCircle2,
 } from "lucide-react";
 
 // ─── Shared card wrapper ───────────────────────────────────────────────────
@@ -450,49 +452,119 @@ const DashboardPage: React.FC = () => {
 
   const { refresh, refreshing } = usePageBurstRefresh(dashData.reload);
 
+  // Greeting data (previously in DashboardGreeting)
+  const user = getAuthUser();
+  const firstName =
+    user?.first_name?.trim() || user?.full_name?.split(" ")[0] || "there";
+  const initials = (user?.full_name ?? "")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("") || "?";
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const today = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+  const pendingCount = dashData.pending.length;
+
   return (
-    <PageFrame
-      title="Dashboard"
-      right={
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={refresh}
-            disabled={refreshing || loading}
-            title="Refresh dashboard"
-            className="flex items-center justify-center h-7 w-7 rounded border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
-            />
-          </button>
-          {canCreate && (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => navigate("/documents/create")}
-            >
-              + New document
-            </Button>
+    <div className="min-h-0 flex flex-1 flex-col overflow-hidden">
+      {/* ── Greeting header (replaces PageFrame title bar) ── */}
+      <div className="shrink-0 border-b border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-600 px-4 sm:px-6 py-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          {/* Left: avatar + greeting */}
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md overflow-hidden bg-brand-100 dark:bg-brand-900/40 text-sm font-bold text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+              {(user as any)?.profile_photo_url ? (
+                <img
+                  src={(user as any).profile_photo_url}
+                  alt={user?.full_name ?? ""}
+                  className="h-full w-full object-cover"
+                />
+              ) : initials}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                Dashboard &middot; {today}
+              </p>
+              <h1 className="flex items-center gap-1.5 text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                {greeting}, {firstName}
+                <Hand className="h-4 w-4 text-amber-400 shrink-0" />
+              </h1>
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                {loading
+                  ? "Loading your workspace…"
+                  : pendingCount > 0
+                    ? `${pendingCount} task${pendingCount !== 1 ? "s" : ""} need${pendingCount === 1 ? "s" : ""} your attention`
+                    : "Everything is up to date"}
+              </p>
+            </div>
+          </div>
+
+          {/* Right: pending badge + actions */}
+          <div className="flex shrink-0 items-center gap-2">
+            {/* Pending / all-caught-up badge */}
+            {!loading && (
+              pendingCount > 0 ? (
+                <div className="hidden sm:flex items-center gap-1.5 rounded border border-rose-200 bg-rose-50 px-2.5 py-1 dark:border-rose-800 dark:bg-rose-950/30">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+                  </span>
+                  <span className="text-xs font-semibold text-rose-700 dark:text-rose-400">
+                    {pendingCount} pending
+                  </span>
+                </div>
+              ) : (
+                <div className="hidden sm:flex items-center gap-1.5 rounded border border-emerald-200 bg-emerald-50 px-2.5 py-1 dark:border-emerald-800 dark:bg-emerald-950/30">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                  <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                    All caught up
+                  </span>
+                </div>
+              )
+            )}
+
+            <Tooltip text="Refresh dashboard" side="bottom">
+              <button
+                type="button"
+                onClick={refresh}
+                disabled={refreshing || loading}
+                className="cursor-pointer flex items-center justify-center h-8 w-8 rounded border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+              </button>
+            </Tooltip>
+
+            {canCreate && (
+              <Button variant="primary" size="sm" onClick={() => navigate("/documents/create")}>
+                + New document
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Scrollable content ── */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-4 py-4 sm:px-6 sm:py-5 space-y-5">
+          {error && <Alert variant="danger">{error}</Alert>}
+
+          {isAdmin ? (
+            <AdminDashboard {...dashData} navigate={navigate} />
+          ) : isQA(role) ? (
+            <QADashboard {...dashData} navigate={navigate} />
+          ) : (
+            <OfficeDashboard {...dashData} navigate={navigate} role={role} />
           )}
         </div>
-      }
-      contentClassName="space-y-5"
-    >
-      {error && <Alert variant="danger">{error}</Alert>}
-      <DashboardGreeting
-        pendingCount={dashData.pending.length}
-        loading={loading}
-      />
-
-      {isAdmin ? (
-        <AdminDashboard {...dashData} navigate={navigate} />
-      ) : isQA(role) ? (
-        <QADashboard {...dashData} navigate={navigate} />
-      ) : (
-        <OfficeDashboard {...dashData} navigate={navigate} role={role} />
-      )}
-    </PageFrame>
+      </div>
+    </div>
   );
 };
 

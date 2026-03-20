@@ -23,7 +23,7 @@ class DocumentIndexRequest extends FormRequest
             'visibility_scope' => 'nullable|in:office,global',
 
             // frontend filter
-            'scope' => 'nullable|in:all,owned,shared,assigned',
+            'scope' => 'nullable|in:all,owned,shared,assigned,participant',
 
             // date range filter
             'date_from' => 'nullable|date_format:Y-m-d',

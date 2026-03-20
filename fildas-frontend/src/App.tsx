@@ -37,6 +37,7 @@ const DocumentRequestPage = React.lazy(
   () => import("./pages/DocumentRequestPage"),
 );
 const TemplatesPage = React.lazy(() => import("./pages/TemplatesPage"));
+const MyWorkQueueListPage = React.lazy(() => import("./pages/MyWorkQueueListPage"));
 
 import ProtectedLayout from "./lib/guards/ProtectedLayout";
 import RequireRole from "./lib/guards/RequireRole";
@@ -102,6 +103,9 @@ export default function App() {
           <Route path="/documents/:id/view" element={<DocumentViewPage />} />
           {/* DocumentFlow is ok to open normally */}
           <Route path="/documents/:id" element={<DocumentFlowPage />} />
+
+          {/* All workflow docs — full table across all statuses */}
+          <Route path="/documents/all" element={<MyWorkQueueListPage />} />
 
           {/* Document library should be reachable from sidebar */}
           <Route path="/documents" element={<DocumentLibraryPage />} />

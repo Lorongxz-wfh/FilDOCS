@@ -213,7 +213,7 @@ export default function DocumentViewPage() {
   const myOfficeId = Number(me?.office?.id ?? 0);
   const canOpenFlow = React.useMemo(() => {
     if (!doc) return false;
-    if (isQA(role) || isSysAdmin(role)) return true;
+    if (isQA(role) || isSysAdmin(role) || role === "ADMIN") return true;
     if (doc.owner_office_id && myOfficeId === Number(doc.owner_office_id))
       return true;
     if (doc.created_by && doc.created_by === myId) return true;

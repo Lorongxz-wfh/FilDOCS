@@ -9,7 +9,7 @@ import {
   type DocumentRequestItemRow,
   // type DocumentRequestProgress,
 } from "../services/documentRequests";
-import { Users, FileStack, RefreshCw, Ban, Check, Pencil } from "lucide-react";
+import { Users, FileStack, RefreshCw, Ban, Check, Pencil, AlertTriangle } from "lucide-react";
 import { roleLower, StatusBadge } from "../components/documentRequests/shared";
 import RequestActivityPanel from "../components/documentRequests/RequestActivityPanel";
 import RequestPreviewModal from "../components/documentRequests/RequestPreviewModal";
@@ -88,23 +88,29 @@ export default function DocumentRequestBatchPage() {
   }, [load]);
 
   const [statusUpdating, setStatusUpdating] = React.useState(false);
-  const handleStatusChange = React.useCallback(
-    async (status: "closed" | "cancelled") => {
-      const label = status === "closed" ? "close" : "cancel";
-      if (!window.confirm(`Are you sure you want to ${label} this request?`))
-        return;
-      setStatusUpdating(true);
-      try {
-        await updateDocumentRequestStatus(requestId!, status);
-        await load();
-      } catch (e: any) {
-        alert(e?.response?.data?.message ?? `Failed to ${label} request.`);
-      } finally {
-        setStatusUpdating(false);
-      }
-    },
-    [requestId, load],
-  );
+  const [confirmModal, setConfirmModal] = React.useState<{
+    status: "closed" | "cancelled";
+    label: string;
+  } | null>(null);
+
+  const handleStatusChange = React.useCallback((status: "closed" | "cancelled") => {
+    setConfirmModal({ status, label: status === "closed" ? "close" : "cancel" });
+  }, []);
+
+  const handleConfirmStatus = React.useCallback(async () => {
+    if (!confirmModal) return;
+    const { status, label } = confirmModal;
+    setConfirmModal(null);
+    setStatusUpdating(true);
+    try {
+      await updateDocumentRequestStatus(requestId!, status);
+      await load();
+    } catch (e: any) {
+      alert(e?.response?.data?.message ?? `Failed to ${label} request.`);
+    } finally {
+      setStatusUpdating(false);
+    }
+  }, [confirmModal, requestId, load]);
 
   // Sync edit fields when req loads
   React.useEffect(() => {
@@ -584,6 +590,46 @@ export default function DocumentRequestBatchPage() {
           filename={previewModal.filename}
           onClose={() => setPreviewModal(null)}
         />
+      )}
+
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm mx-4 rounded-2xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shadow-xl p-6 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <span className={`flex items-center justify-center h-9 w-9 rounded-full ${confirmModal.status === "cancelled" ? "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" : "bg-slate-100 dark:bg-surface-500 text-slate-600 dark:text-slate-300"}`}>
+                <AlertTriangle className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 capitalize">
+                  {confirmModal.label} this request?
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {confirmModal.status === "cancelled"
+                    ? "This will void the request. This action cannot be undone."
+                    : "This will mark the request as closed and stop accepting submissions."}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                disabled={statusUpdating}
+                className="px-4 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
+              >
+                Go back
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmStatus}
+                disabled={statusUpdating}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 transition ${confirmModal.status === "cancelled" ? "bg-rose-600 hover:bg-rose-700 text-white" : "bg-slate-800 hover:bg-slate-900 dark:bg-slate-200 dark:hover:bg-white dark:text-slate-900 text-white"}`}
+              >
+                {statusUpdating ? "Processing…" : `Yes, ${confirmModal.label}`}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </PageFrame>
   );

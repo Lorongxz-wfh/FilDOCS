@@ -15,6 +15,7 @@ import {
   isOfficeStaff,
   isOfficeHead,
 } from "../lib/roleFilters";
+import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import PageFrame from "../components/layout/PageFrame";
 import Button from "../components/ui/Button";
 import SkeletonList from "../components/ui/loader/SkeletonList";
@@ -80,8 +81,9 @@ const MyWorkQueuePage: React.FC = () => {
         const [s, a] = await Promise.all([
           getDocumentStats(),
           // Workflow-only events for recent activity
+          // Admin/sysadmin: use scope="all" since they have no office
           listActivityLogs({
-            scope: "mine",
+            scope: isAdmin ? "all" : "mine",
             per_page: 10,
             category: "workflow",
           }),
@@ -152,13 +154,16 @@ const MyWorkQueuePage: React.FC = () => {
     if (docId) return openByDocId(docId);
   };
 
+  const isAdmin = userRole === "ADMIN" || userRole === "SYSADMIN";
+  const adminDebugMode = useAdminDebugMode();
   const canCreate =
-    isQA(userRole) || isOfficeStaff(userRole) || isOfficeHead(userRole);
+    isQA(userRole) || isOfficeStaff(userRole) || isOfficeHead(userRole) || (isAdmin && adminDebugMode);
 
   // Combined + filtered lists
   const allItems = React.useMemo(() => {
     const seen = new Set<string>();
     return [...assignedItems, ...monitoringItems].filter((item) => {
+      if (!item?.document?.id || !item?.version?.id) return false;
       const key = `${item.document.id}-${item.version.id}`;
       if (seen.has(key)) return false;
       seen.add(key);
@@ -212,7 +217,7 @@ const MyWorkQueuePage: React.FC = () => {
 
   return (
     <PageFrame
-      title="My Work Queue"
+      title={isAdmin ? "Work Queue" : "My Work Queue"}
       contentClassName="flex flex-col min-h-0 gap-5"
       right={
         <div className="flex items-center gap-2">
@@ -227,6 +232,14 @@ const MyWorkQueuePage: React.FC = () => {
               className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
             />
           </button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/documents/all")}
+          >
+            All workflows
+          </Button>
           {canCreate && (
             <Button
               type="button"

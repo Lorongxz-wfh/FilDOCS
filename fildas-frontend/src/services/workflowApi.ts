@@ -30,12 +30,14 @@ export async function submitWorkflowAction(
   versionId: number,
   action: WorkflowActionCode,
   note?: string,
+  debug = false,
 ): Promise<WorkflowActionResult> {
   try {
     const api = await getApi();
     const res = await api.post(`/document-versions/${versionId}/actions`, {
       action,
       note,
+      ...(debug ? { debug: true } : {}),
     });
     return res.data as WorkflowActionResult;
   } catch (e: any) {
@@ -49,11 +51,13 @@ export async function submitWorkflowAction(
 
 export async function getAvailableActions(
   versionId: number,
+  debug = false,
 ): Promise<WorkflowActionCode[]> {
   try {
     const api = await getApi();
     const res = await api.get(
       `/document-versions/${versionId}/available-actions`,
+      debug ? { params: { debug: 1 } } : undefined,
     );
     const data = res.data as AvailableActionsResponse;
     return data.actions ?? [];

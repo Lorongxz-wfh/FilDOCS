@@ -198,7 +198,7 @@ export async function createDocumentRequest(
   const res = await api.post("/document-requests", form, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return res.data as { message: string; id: number };
+  return res.data as { message: string; id: number; item_ids?: number[] };
 }
 
 // ── Submit evidence ────────────────────────────────────────────────────────

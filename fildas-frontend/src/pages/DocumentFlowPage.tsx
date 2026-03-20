@@ -25,11 +25,29 @@ import BackButton from "../components/ui/buttons/BackButton";
 import Skeleton from "../components/ui/loader/Skeleton";
 import { replaceDocumentVersionFileWithProgress } from "../services/documents";
 import { useToast } from "../components/ui/toast/ToastContext";
+import { getUserRole } from "../lib/roleFilters";
+import { getAuthUser } from "../lib/auth";
 
 const DocumentFlowPage: React.FC = () => {
   const params = useParams();
   const id = Number(params.id);
   const navigate = useNavigate();
+
+  const role = getUserRole();
+  const isAdmin = role === "ADMIN" || role === "SYSADMIN";
+  const currentUserId = getAuthUser()?.id;
+  const debugKey = `pref_debug_mode_${currentUserId}`;
+
+  const [adminDebugMode, setAdminDebugMode] = React.useState<boolean>(() =>
+    isAdmin ? localStorage.getItem(debugKey) === "1" : false,
+  );
+
+  React.useEffect(() => {
+    if (!isAdmin) return;
+    const sync = () => setAdminDebugMode(localStorage.getItem(debugKey) === "1");
+    window.addEventListener("admin_debug_mode_changed", sync);
+    return () => window.removeEventListener("admin_debug_mode_changed", sync);
+  }, [isAdmin, debugKey]);
 
   const location = useLocation();
   const fromPath: string = (location.state as any)?.from ?? "/work-queue";
@@ -476,7 +494,7 @@ const DocumentFlowPage: React.FC = () => {
       )
     : false;
 
-  const isRevisable = isLatestSelected && current?.status === "Distributed";
+  const isRevisable = isLatestSelected && current?.status === "Distributed" && (!isAdmin || adminDebugMode);
 
   return (
     <>
@@ -703,6 +721,7 @@ const DocumentFlowPage: React.FC = () => {
             <DocumentFlow
               isPageLoading={loading}
               isExternalUploading={pendingUploadPct !== null}
+              adminDebugMode={adminDebugMode}
               document={document}
               version={selectedVersion}
               allVersions={allVersions}

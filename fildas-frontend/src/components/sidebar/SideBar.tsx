@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { getUserRole } from "../../lib/roleFilters";
+import { getUserRole, isSysAdmin } from "../../lib/roleFilters";
+import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
 import { navGroups, settingsNavItem, newActions } from "./navConfig";
 import {
   PanelLeftClose,
@@ -25,6 +26,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onMobileClose,
 }) => {
   const role = getUserRole();
+  const isAdminUser = role === "ADMIN" || isSysAdmin(role);
+  const adminDebugMode = useAdminDebugMode();
   const { collapsed, toggle } = useSidebarCollapsed();
   const user = useAuthUser();
 
@@ -50,9 +53,14 @@ const Sidebar: React.FC<SidebarProps> = ({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const visibleNewActions = newActions.filter(
-    (a) => !a.roles || a.roles.includes(role),
-  );
+  // Doc/request/template create actions shown for ADMIN only when debug mode is on
+  const DOC_CREATE_ROUTES = ["/documents/create", "/document-requests", "/templates"];
+  const visibleNewActions = newActions.filter((a) => {
+    if (!a.roles) return true;
+    if (a.roles.includes(role)) return true;
+    if (role === "ADMIN" && adminDebugMode && DOC_CREATE_ROUTES.includes(a.to)) return true;
+    return false;
+  });
 
   const handleLogout = () => {
     if (!confirmLogout) {
@@ -80,9 +88,9 @@ const Sidebar: React.FC<SidebarProps> = ({
           onClick={toggle}
           title="Expand sidebar"
           className={[
-            "fixed top-[calc(3.5rem/2)] -translate-y-1/2 z-[60]",
+            "fixed top-7 -translate-y-1/2 z-60",
             "left-[calc(3.5rem-12px)]",
-            "flex items-center justify-center h-6 w-6 rounded-md",
+            "cursor-pointer flex items-center justify-center h-6 w-6 rounded-md",
             "border border-slate-200 dark:border-surface-300",
             "bg-white dark:bg-surface-500",
             "text-slate-400 hover:bg-slate-100 dark:hover:bg-surface-400",
@@ -137,7 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               type="button"
               onClick={toggle}
               title="Collapse sidebar"
-              className="shrink-0 flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-500 text-slate-400 hover:bg-slate-100 dark:hover:bg-surface-400 hover:text-slate-700 dark:hover:text-slate-200 shadow-sm transition-colors"
+              className="cursor-pointer shrink-0 flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-500 text-slate-400 hover:bg-slate-100 dark:hover:bg-surface-400 hover:text-slate-700 dark:hover:text-slate-200 shadow-sm transition-colors"
             >
               <PanelLeftClose className="h-3.5 w-3.5" />
             </button>
@@ -152,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 type="button"
                 onClick={() => setNewOpen((o) => !o)}
                 className={[
-                  "flex items-center rounded-md text-sm font-semibold transition-all",
+                  "cursor-pointer flex items-center rounded-md text-sm font-semibold transition-all",
                   "bg-brand-500 hover:bg-brand-600 text-white",
                   collapsed
                     ? "justify-center w-full px-0 h-9"
@@ -179,7 +187,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                             action.state ? { state: action.state } : undefined,
                           );
                         }}
-                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors"
+                        className="cursor-pointer flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors"
                       >
                         <Icon className="h-4 w-4 text-slate-400 dark:text-slate-500 shrink-0" />
                         {action.label}
@@ -187,6 +195,27 @@ const Sidebar: React.FC<SidebarProps> = ({
                     );
                   })}
                 </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Admin debug mode indicator */}
+        {isAdminUser && adminDebugMode && (
+          <div className="shrink-0 px-2 pb-1">
+            <div
+              className={[
+                "flex items-center gap-1.5 rounded-md border px-2 py-1",
+                "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800",
+                collapsed ? "justify-center" : "",
+              ].join(" ")}
+              title="Developer mode is active"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0 animate-pulse" />
+              {!collapsed && (
+                <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                  Dev mode
+                </span>
               )}
             </div>
           </div>
@@ -229,7 +258,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                           title={collapsed ? item.label : undefined}
                           className={({ isActive }) =>
                             [
-                              "group flex w-full items-center rounded-md text-sm font-medium transition-all",
+                              "cursor-pointer group flex w-full items-center rounded-md text-sm font-medium transition-all",
                               collapsed
                                 ? "justify-center px-0 py-2"
                                 : "gap-3 px-3 py-2",
@@ -285,7 +314,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               title={collapsed ? settingsNavItem.label : undefined}
               className={({ isActive }) =>
                 [
-                  "group relative flex w-full items-center rounded-md text-sm font-medium transition-all",
+                  "cursor-pointer group relative flex w-full items-center rounded-md text-sm font-medium transition-all",
                   collapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-2",
                   isActive
                     ? "bg-brand-50 text-brand-500 dark:bg-surface-400 dark:text-brand-300"
@@ -331,7 +360,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     : `Logout ${user?.full_name ?? ""}`
                 }
                 className={[
-                  "flex w-full items-center justify-center rounded-md py-2 transition-colors",
+                  "cursor-pointer flex w-full items-center justify-center rounded-md py-2 transition-colors",
                   confirmLogout
                     ? "text-rose-500 bg-rose-50 dark:bg-rose-950/40"
                     : "text-slate-400 hover:bg-slate-50 hover:text-rose-500 dark:hover:bg-surface-400 dark:hover:text-rose-400",
@@ -341,8 +370,14 @@ const Sidebar: React.FC<SidebarProps> = ({
               </button>
             ) : (
               <div className="flex items-center gap-2.5 px-1 pt-1">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-slate-200 dark:bg-surface-400 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                  {initials || "?"}
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded overflow-hidden bg-slate-200 dark:bg-surface-400 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  {(user as any)?.profile_photo_url ? (
+                    <img
+                      src={(user as any).profile_photo_url}
+                      alt={user?.full_name ?? ""}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (initials || "?")}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
@@ -363,7 +398,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     confirmLogout ? "Click again to confirm logout" : "Logout"
                   }
                   className={[
-                    "shrink-0 rounded-md p-1.5 transition-colors",
+                    "cursor-pointer shrink-0 rounded-md p-1.5 transition-colors",
                     confirmLogout
                       ? "bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400"
                       : "text-slate-400 hover:bg-slate-100 hover:text-rose-500 dark:hover:bg-surface-400 dark:hover:text-rose-400",

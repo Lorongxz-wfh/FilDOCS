@@ -60,7 +60,7 @@ class DocumentIndexService
             return Office::where('code', 'QA')->value('id');
         });
 
-        $canSeeAll = in_array($roleName, ['admin', 'president', 'qa'], true);
+        $canSeeAll = in_array($roleName, ['admin', 'sysadmin', 'president', 'qa'], true);
         $vpOfficeIds = $this->vpOfficeIdsForRole($roleName);
 
         $query = Document::query();
@@ -151,6 +151,11 @@ class DocumentIndexService
                 $v->whereHas('tasks', function ($t) use ($userOfficeId) {
                     $t->where('status', 'open')->where('assigned_office_id', $userOfficeId);
                 });
+            });
+        } elseif ($scope === 'participant') {
+            // Had a workflow task in any version (was a participant in the flow)
+            $query->whereHas('versions', function ($v) use ($userOfficeId) {
+                $v->whereHas('tasks', fn($t) => $t->where('assigned_office_id', $userOfficeId));
             });
         }
 

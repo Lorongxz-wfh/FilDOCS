@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\WorkflowNotificationMail;
 use App\Models\ActivityLog;
 use App\Models\DocumentRequest;
 use App\Models\DocumentRequestItem;
@@ -14,6 +15,7 @@ use App\Traits\RoleNameTrait;
 use App\Traits\LogsActivityTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class DocumentRequestController extends Controller
 {
@@ -564,8 +566,9 @@ class DocumentRequestController extends Controller
                 ]);
 
                 // Create items — example files uploaded separately after creation
+                $itemIds = [];
                 foreach (($data['items'] ?? []) as $i => $itemData) {
-                    DB::table('document_request_items')->insert([
+                    $itemIds[] = DB::table('document_request_items')->insertGetId([
                         'request_id'  => $requestId,
                         'title'       => $itemData['title'],
                         'description' => $itemData['description'] ?? null,
@@ -585,9 +588,13 @@ class DocumentRequestController extends Controller
             ]);
 
             // Notifications
+            $actor     = $request->user();
+            $actorName = trim(($actor->first_name ?? '') . ' ' . ($actor->last_name ?? '')) ?: 'QA';
+            $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
+
             $users = User::query()
                 ->whereIn('office_id', $officeIds)
-                ->select(['id', 'office_id'])
+                ->select(['id', 'office_id', 'email', 'first_name', 'last_name', 'email_doc_updates'])
                 ->get();
 
             foreach ($users as $u) {
@@ -604,11 +611,31 @@ class DocumentRequestController extends Controller
                     ],
                     'read_at' => null,
                 ]);
+
+                if ($u->email && (bool) ($u->email_doc_updates ?? true)) {
+                    try {
+                        Mail::to($u->email)->queue(new WorkflowNotificationMail(
+                            recipientName:   trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')) ?: $u->email,
+                            notifTitle:      'New document request',
+                            notifBody:       $data['title'],
+                            documentTitle:   $data['title'],
+                            documentStatus:  'Open',
+                            isReject:        false,
+                            actorName:       $actorName,
+                            documentId:      null,
+                            cardLabel:       'Document Request',
+                            appUrl:          $frontendUrl,
+                            appName:         config('app.name', 'FilDAS'),
+                            overrideLinkUrl: $frontendUrl . '/document-requests/' . $requestId,
+                        ));
+                    } catch (\Throwable) {}
+                }
             }
 
             return response()->json([
-                'message' => 'Document request created.',
-                'id'      => $requestId,
+                'message'  => 'Document request created.',
+                'id'       => $requestId,
+                'item_ids' => $itemIds ?? [],
             ], 201);
         });
     }
@@ -722,9 +749,13 @@ class DocumentRequestController extends Controller
             ]);
 
             // Notify QA
+            $submitter     = $request->user();
+            $submitterName = trim(($submitter->first_name ?? '') . ' ' . ($submitter->last_name ?? '')) ?: 'An office';
+            $frontendUrl   = rtrim(env('FRONTEND_URL', config('app.url')), '/');
+
             $qaUsers = User::query()
                 ->whereHas('role', fn($q) => $q->whereIn('name', ['QA', 'SYSADMIN']))
-                ->select(['id', 'office_id'])
+                ->select(['id', 'office_id', 'email', 'first_name', 'last_name', 'email_doc_updates'])
                 ->get();
 
             foreach ($qaUsers as $u) {
@@ -743,6 +774,25 @@ class DocumentRequestController extends Controller
                     ],
                     'read_at' => null,
                 ]);
+
+                if ($u->email && (bool) ($u->email_doc_updates ?? true)) {
+                    try {
+                        Mail::to($u->email)->queue(new WorkflowNotificationMail(
+                            recipientName:   trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')) ?: $u->email,
+                            notifTitle:      'Document request submission received',
+                            notifBody:       $submitterName . ' submitted evidence for a document request.',
+                            documentTitle:   'Document Request #' . $requestId,
+                            documentStatus:  'Submitted',
+                            isReject:        false,
+                            actorName:       $submitterName,
+                            documentId:      null,
+                            cardLabel:       'Document Request',
+                            appUrl:          $frontendUrl,
+                            appName:         config('app.name', 'FilDAS'),
+                            overrideLinkUrl: $frontendUrl . '/document-requests/' . $requestId,
+                        ));
+                    } catch (\Throwable) {}
+                }
             }
 
             return response()->json([

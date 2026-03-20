@@ -1,4 +1,5 @@
 import React from "react";
+import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import PageFrame from "../components/layout/PageFrame.tsx";
 import Button from "../components/ui/Button.tsx";
 import Table, { type TableColumn } from "../components/ui/Table";
@@ -151,7 +152,8 @@ const RequestRow: React.FC<{
 export default function DocumentRequestListPage() {
   const me = getAuthUser();
   const role = roleLower(me);
-  const isQaAdmin = ["qa", "sysadmin", "admin"].includes(role);
+  const adminDebugMode = useAdminDebugMode();
+  const isQaAdmin = ["qa", "sysadmin"].includes(role) || (role === "admin" && adminDebugMode);
 
   const [tab, setTab] = React.useState<ViewTab>("batches");
   const [q, setQ] = React.useState("");

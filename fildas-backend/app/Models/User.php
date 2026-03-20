@@ -34,6 +34,8 @@ class User extends Authenticatable
         'password',
         'office_id',
         'role_id',
+        'email_doc_updates',
+        'email_approvals',
     ];
 
     /**
@@ -63,9 +65,11 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'disabled_at' => 'datetime',
-            'password' => 'hashed',
+            'email_verified_at'  => 'datetime',
+            'disabled_at'        => 'datetime',
+            'password'           => 'hashed',
+            'email_doc_updates'  => 'boolean',
+            'email_approvals'    => 'boolean',
         ];
     }
 

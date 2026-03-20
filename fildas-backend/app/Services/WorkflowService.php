@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\WorkflowNotificationMail;
 use App\Models\Document;
 use App\Models\DocumentMessage;
 use App\Models\DocumentVersion;
@@ -13,6 +14,7 @@ use App\Services\Workflow\WorkflowValidationService;
 use App\Traits\RoleNameTrait;
 use App\Traits\LogsActivityTrait;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class WorkflowService
 {
@@ -40,11 +42,14 @@ class WorkflowService
 
         $userOfficeId = (int) ($user->office_id ?? 0);
         $taskOfficeId = (int) ($task->assigned_office_id ?? 0);
+        $roleName     = strtolower($this->roleNameOf($user));
+        $isAdmin      = in_array($roleName, ['admin', 'sysadmin'], true);
 
         $actions = [];
 
-        // Only add workflow actions if this user's office is the assigned one
-        if ($userOfficeId === $taskOfficeId) {
+        // Admin always receives the full action list (for observer UI);
+        // normal users only see actions when their office is the assigned one.
+        if ($isAdmin || $userOfficeId === $taskOfficeId) {
             $flow    = $version->workflow_type;
             $routing = $version->routing_mode;
             $step    = $task->step;
@@ -847,9 +852,13 @@ class WorkflowService
             . ($office ? ' • Assigned to ' . $office->code : '')
             . ' • By ' . $actorName;
 
-        $users = User::where('office_id', $officeId)->get(['id']);
+        $users = User::where('office_id', $officeId)
+            ->select(['id', 'first_name', 'last_name', 'email', 'office_id', 'email_doc_updates', 'email_approvals'])
+            ->get();
         foreach ($users as $u) {
             if ((int) $u->id === (int) $actor->id) continue;
+
+            // In-app notification
             Notification::create([
                 'user_id'             => $u->id,
                 'document_id'         => $version->document_id,
@@ -860,6 +869,30 @@ class WorkflowService
                 'meta'                => ['to_status' => $toStatus],
                 'read_at'             => null,
             ]);
+
+            // Email notification — only if user has enabled the relevant preference
+            $shouldEmail = $isReject
+                ? (bool) ($u->email_doc_updates ?? true)
+                : (bool) ($u->email_approvals ?? true);
+
+            if ($shouldEmail && $u->email) {
+                try {
+                    Mail::to($u->email)->queue(new WorkflowNotificationMail(
+                        recipientName:   trim($u->first_name . ' ' . $u->last_name) ?: $u->email,
+                        notifTitle:      $title,
+                        notifBody:       $body,
+                        documentTitle:   $doc->title ?? 'Untitled Document',
+                        documentStatus:  $toStatus,
+                        isReject:        $isReject,
+                        actorName:       $actorName,
+                        documentId:      $version->document_id,
+                        appUrl:          rtrim(env('FRONTEND_URL', config('app.url')), '/'),
+                        appName:         config('app.name', 'FilDAS'),
+                    ));
+                } catch (\Throwable) {
+                    // Email failure must never break the workflow action
+                }
+            }
         }
     }
 

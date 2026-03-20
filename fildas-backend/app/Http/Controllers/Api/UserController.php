@@ -86,7 +86,6 @@ class UserController extends Controller
             'suffix' => ['nullable', 'string', 'max:20'],
 
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
-            'password' => ['required', 'string', 'min:6'],
 
             'office_id' => ['nullable', 'integer', 'exists:offices,id'],
             'role_id' => ['nullable', 'integer', 'exists:roles,id'],
@@ -110,11 +109,21 @@ class UserController extends Controller
             'role_id' => $roleId,
         ]);
 
-        // hashed automatically by cast
-        $user->password = $data['password'];
+        // Generate a random temporary password — sent to user via email
+        $tempPassword = \Illuminate\Support\Str::random(12);
+        $user->password = $tempPassword; // hashed automatically by cast
         $user->save();
 
         $user->load(['role', 'office']);
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\WelcomePasswordMail(
+                recipientName: trim($user->first_name . ' ' . $user->last_name) ?: $user->email,
+                tempPassword:  $tempPassword,
+                appUrl:        rtrim(env('FRONTEND_URL', config('app.url')), '/'),
+                appName:       config('app.name', 'FilDAS'),
+            ));
+        } catch (\Throwable) {}
 
         $this->logActivity('user.created', 'Created a user account', $request->user()->id, $request->user()->office_id, [
             'target_user_id' => $user->id,

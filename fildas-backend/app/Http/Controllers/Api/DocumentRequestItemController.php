@@ -61,7 +61,12 @@ class DocumentRequestItemController extends Controller
     public function examplePreviewLink(Request $request, int $itemId)
     {
         $item = DB::table('document_request_items')->where('id', $itemId)->first();
-        if (!$item || !$item->example_preview_path) {
+        if (!$item) return response()->json(['message' => 'No preview available.'], 404);
+
+        // Allow preview if preview_path is set, OR if the file is a PDF (natively previewable)
+        $ext = strtolower(pathinfo($item->example_file_path ?? '', PATHINFO_EXTENSION));
+        $canPreview = $item->example_preview_path || ($ext === 'pdf' && $item->example_file_path);
+        if (!$canPreview) {
             return response()->json(['message' => 'No preview available.'], 404);
         }
 
@@ -125,20 +130,27 @@ class DocumentRequestItemController extends Controller
     public function examplePreviewSigned(Request $request, int $itemId)
     {
         $item = DB::table('document_request_items')->where('id', $itemId)->first();
-        if (!$item || !$item->example_preview_path) {
+        if (!$item) abort(404);
+
+        // Use preview_path if set; fall back to file_path for PDFs
+        $pathToServe = $item->example_preview_path;
+        if (!$pathToServe) {
+            $ext = strtolower(pathinfo($item->example_file_path ?? '', PATHINFO_EXTENSION));
+            if ($ext === 'pdf' && $item->example_file_path) {
+                $pathToServe = $item->example_file_path;
+            }
+        }
+
+        if (!$pathToServe || !Storage::disk()->exists($pathToServe)) {
             abort(404);
         }
 
-        if (!Storage::disk()->exists($item->example_preview_path)) {
-            abort(404);
-        }
-
-        $ext      = strtolower(pathinfo($item->example_preview_path, PATHINFO_EXTENSION));
+        $ext      = strtolower(pathinfo($pathToServe, PATHINFO_EXTENSION));
         $mimeMap  = ['pdf' => 'application/pdf', 'png' => 'image/png', 'jpg' => 'image/jpeg'];
         $mimeType = $mimeMap[$ext] ?? 'application/octet-stream';
 
-        return response()->stream(function () use ($item) {
-            $stream = Storage::disk()->readStream($item->example_preview_path);
+        return response()->stream(function () use ($pathToServe) {
+            $stream = Storage::disk()->readStream($pathToServe);
             fpassthru($stream);
             fclose($stream);
         }, 200, [

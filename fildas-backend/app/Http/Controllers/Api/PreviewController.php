@@ -40,7 +40,7 @@ class PreviewController extends Controller
             $previewFileName = DocumentPreviewService::generatePreview($tmpDir, $tmpOriginalPath);
 
             if (!$previewFileName) {
-                return response()->json(['message' => 'Preview generation failed.'], 422);
+                return response()->json(['id' => null, 'year' => $year, 'url' => null], 200);
             }
 
             $tmpPreviewPath = $tmpDir . '/preview.pdf';

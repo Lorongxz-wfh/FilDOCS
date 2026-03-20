@@ -30,6 +30,10 @@ return new class extends Migration
             $table->foreignId('office_id')->nullable()->constrained('offices')->nullOnDelete();
             $table->foreignId('role_id')->constrained('roles')->restrictOnDelete();
 
+            // Email notification preferences
+            $table->boolean('email_doc_updates')->default(true);
+            $table->boolean('email_approvals')->default(true);
+
             // Account status
             $table->timestamp('disabled_at')->nullable();
             $table->foreignId('disabled_by')->nullable()->constrained('users')->nullOnDelete();

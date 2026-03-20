@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { getAuthUser } from "../lib/auth";
-import { createDocumentRequest } from "../services/documentRequests";
+import { createDocumentRequest, uploadDocumentRequestItemExample } from "../services/documentRequests";
 import type { RequestMode } from "../services/documentRequests";
 import {
   createTempPreview,
@@ -290,6 +290,14 @@ export default function CreateDocumentRequestPage() {
             description: it.description.trim() || null,
           })),
         });
+        const itemIds: number[] = (result as any).item_ids ?? [];
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].file && itemIds[i]) {
+            try {
+              await uploadDocumentRequestItemExample(itemIds[i], items[i].file!);
+            } catch { /* example upload failure is non-blocking */ }
+          }
+        }
         items.forEach((it) => cleanupPreview(it.tempPreview));
       }
 

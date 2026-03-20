@@ -65,23 +65,27 @@ class DocumentController extends Controller
         });
 
         $roleName = $this->roleNameOf($user) ?: null;
+        $isAdmin  = in_array($roleName, ['admin', 'sysadmin'], true);
 
         $visibleDocs = Document::query();
 
-        if ($qaOfficeId && (int) $userOfficeId !== (int) $qaOfficeId) {
-            $visibleDocs->whereHas('latestVersion', function ($v) use ($userOfficeId) {
-                $v->whereHas('tasks', function ($t) use ($userOfficeId) {
-                    $t->where('status', 'open')
-                        ->where('assigned_office_id', $userOfficeId);
+        // Admin/sysadmin see ALL documents — skip office-based visibility filter
+        if (!$isAdmin) {
+            if ($qaOfficeId && (int) $userOfficeId !== (int) $qaOfficeId) {
+                $visibleDocs->whereHas('latestVersion', function ($v) use ($userOfficeId) {
+                    $v->whereHas('tasks', function ($t) use ($userOfficeId) {
+                        $t->where('status', 'open')
+                            ->where('assigned_office_id', $userOfficeId);
+                    });
                 });
-            });
-        }
+            }
 
-        if ($roleName === 'auditor') {
-            // Auditor: only docs whose latest version is Distributed
-            $visibleDocs->whereHas('latestVersion', function ($v) {
-                $v->where('status', 'Distributed');
-            });
+            if ($roleName === 'auditor') {
+                // Auditor: only docs whose latest version is Distributed
+                $visibleDocs->whereHas('latestVersion', function ($v) {
+                    $v->where('status', 'Distributed');
+                });
+            }
         }
 
         $total = (clone $visibleDocs)->count();
@@ -90,28 +94,29 @@ class DocumentController extends Controller
             $v->where('status', 'Distributed');
         })->count();
 
-        $pendingQuery = WorkflowTask::query()
-            ->where('workflow_tasks.status', 'open')
-            ->where('workflow_tasks.assigned_office_id', $userOfficeId)
-            ->join('document_versions', 'workflow_tasks.document_version_id', '=', 'document_versions.id')
-            ->join('documents', 'document_versions.document_id', '=', 'documents.id')
-
-            ->joinSub(
-                DocumentVersion::query()
-                    ->selectRaw('document_id, MAX(version_number) as max_version_number')
-                    ->groupBy('document_id'),
-                'dv_max',
-                function ($join) {
-                    $join->on('dv_max.document_id', '=', 'document_versions.document_id')
-                        ->on('dv_max.max_version_number', '=', 'document_versions.version_number');
-                }
-            )
-            ->selectRaw('COUNT(DISTINCT documents.id) as cnt');
-
-        if ($roleName === 'auditor') {
+        if ($isAdmin) {
+            // Pending = total open workflow tasks across all docs
+            $pending = (int) WorkflowTask::where('status', 'open')->count();
+        } elseif ($roleName === 'auditor') {
             $pending = 0;
         } else {
-            $pending = (int) ($pendingQuery->value('cnt') ?? 0);
+            $pending = (int) (WorkflowTask::query()
+                ->where('workflow_tasks.status', 'open')
+                ->where('workflow_tasks.assigned_office_id', $userOfficeId)
+                ->join('document_versions', 'workflow_tasks.document_version_id', '=', 'document_versions.id')
+                ->join('documents', 'document_versions.document_id', '=', 'documents.id')
+                ->joinSub(
+                    DocumentVersion::query()
+                        ->selectRaw('document_id, MAX(version_number) as max_version_number')
+                        ->groupBy('document_id'),
+                    'dv_max',
+                    function ($join) {
+                        $join->on('dv_max.document_id', '=', 'document_versions.document_id')
+                            ->on('dv_max.max_version_number', '=', 'document_versions.version_number');
+                    }
+                )
+                ->selectRaw('COUNT(DISTINCT documents.id) as cnt')
+                ->value('cnt') ?? 0);
         }
 
         return response()->json([
@@ -346,9 +351,18 @@ class DocumentController extends Controller
 
         $data = $request->validated();
 
-        $userOfficeId = $request->user()?->office_id;
-        if (!$userOfficeId) {
-            return response()->json(['message' => 'Your account has no office assigned.'], 422);
+        $isAdmin = in_array(strtolower($roleName ?? ''), ['admin', 'sysadmin'], true);
+
+        if ($isAdmin) {
+            $userOfficeId = (int) ($data['acting_as_office_id'] ?? 0) ?: null;
+            if (!$userOfficeId) {
+                return response()->json(['message' => 'Choose an office to create this document on behalf of.'], 422);
+            }
+        } else {
+            $userOfficeId = $request->user()?->office_id;
+            if (!$userOfficeId) {
+                return response()->json(['message' => 'Your account has no office assigned.'], 422);
+            }
         }
 
         $routingMode = strtolower(trim((string) ($data['routing_mode'] ?? 'default')));
@@ -519,6 +533,12 @@ class DocumentController extends Controller
 
         $document->fill($data);
         $document->save();
+
+        $user = $request->user();
+        $this->logActivity('document.updated', 'Updated document metadata', $user?->id, $user?->office_id, [
+            'document_id' => $document->id,
+            'fields'      => array_keys($data),
+        ], $document->id);
 
         return new DocumentResource($document->load(['ownerOffice', 'latestVersion']));
     }

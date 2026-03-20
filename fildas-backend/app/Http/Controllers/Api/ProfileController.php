@@ -101,6 +101,26 @@ class ProfileController extends Controller
         return response()->json(['user' => $this->userPayload($user)]);
     }
 
+    // PATCH /api/profile/notification-preferences
+    public function updateNotificationPreferences(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        $data = $request->validate([
+            'email_doc_updates' => ['required', 'boolean'],
+            'email_approvals'   => ['required', 'boolean'],
+        ]);
+
+        $user->fill($data);
+        $user->save();
+
+        return response()->json([
+            'email_doc_updates' => (bool) $user->email_doc_updates,
+            'email_approvals'   => (bool) $user->email_approvals,
+        ]);
+    }
+
     private function userPayload(\App\Models\User $user): array
     {
         $user->load(['role', 'office']);
@@ -122,6 +142,8 @@ class ProfileController extends Controller
                 'name' => $user->office->name,
                 'code' => $user->office->code,
             ] : null,
+            'email_doc_updates'   => (bool) ($user->email_doc_updates ?? true),
+            'email_approvals'     => (bool) ($user->email_approvals ?? true),
         ];
     }
 }

@@ -178,7 +178,10 @@ const NotificationBell: React.FC = () => {
                                 ? undefined
                                 : { state: { from: "/work-queue" } },
                             );
-                          } else navigate("/inbox");
+                          } else {
+                            const reqId = (n as any)?.meta?.document_request_id;
+                            navigate(reqId ? `/document-requests/${reqId}` : "/inbox");
+                          }
                         } catch {
                           /* ignore */
                         }

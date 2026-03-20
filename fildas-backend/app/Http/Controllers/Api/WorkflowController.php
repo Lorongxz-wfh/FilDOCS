@@ -116,12 +116,21 @@ class WorkflowController extends Controller
             'action'         => 'required|string',
             'note'           => 'nullable|string',
             'effective_date' => 'nullable|date',
+            'debug'          => 'nullable|boolean',
         ]);
 
-        $user = $request->user();
+        $user     = $request->user();
+        $roleName = strtolower($this->roleNameOf($user));
+        $isAdmin  = in_array($roleName, ['admin', 'sysadmin'], true);
+        $debug    = (bool) ($data['debug'] ?? false);
 
         if (!$user?->office_id) {
-            return response()->json(['message' => 'Your account has no office assigned.'], 422);
+            if (!($isAdmin && $debug)) {
+                $msg = $isAdmin
+                    ? 'Enable developer mode in Settings to perform workflow actions.'
+                    : 'Your account has no office assigned.';
+                return response()->json(['message' => $msg], 422);
+            }
         }
 
         try {
@@ -153,20 +162,29 @@ class WorkflowController extends Controller
         $roleName     = $this->roleNameOf($user);
         $isAdmin      = in_array($roleName, ['admin', 'sysadmin'], true);
 
-        // Admin/Sysadmin: return all open tasks as monitoring (read-only)
+        // Admin/Sysadmin: return ALL documents as monitoring (read-only observer)
         if ($isAdmin) {
-            $allOpenTasks = WorkflowTask::where('status', 'open')
-                ->with(['version.document.ownerOffice'])
-                ->orderByDesc('id')
+            $documents = \App\Models\Document::query()
+                ->with([
+                    'ownerOffice',
+                    'latestVersion',
+                    'latestVersion.tasks' => fn($q) => $q->where('status', 'open')->orderByDesc('id'),
+                ])
+                ->orderByDesc('updated_at')
                 ->limit(100)
                 ->get();
 
-            $monitoring = $allOpenTasks->map(fn($t) => [
-                'task'     => $t,
-                'version'  => $t->version,
-                'document' => $t->version?->document,
-                'can_act'  => false,
-            ])->values();
+            $monitoring = $documents->map(function ($doc) {
+                $version = $doc->latestVersion;
+                if (!$version) return null;
+                $openTask = $version->relationLoaded('tasks') ? $version->tasks->first() : null;
+                return [
+                    'task'     => $openTask,
+                    'version'  => $version,
+                    'document' => $doc,
+                    'can_act'  => false,
+                ];
+            })->filter()->values();
 
             return response()->json([
                 'assigned'   => [],

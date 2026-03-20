@@ -45,7 +45,6 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
   const [email, setEmail] = useState("");
   const [roleId, setRoleId] = useState<number | null>(null);
   const [officeId, setOfficeId] = useState<number | null>(null);
-  const [password, setPassword] = useState("");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
 
@@ -62,7 +61,6 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
       setEmail("");
       setRoleId(null);
       setOfficeId(null);
-      setPassword("");
       setPendingPhotoFile(null);
       return;
     }
@@ -74,7 +72,6 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
     setEmail(user?.email ?? "");
     setRoleId(user?.role_id ?? null);
     setOfficeId(user?.office_id ?? null);
-    setPassword("");
   }, [open, user, mode]);
 
   useEffect(() => {
@@ -115,9 +112,8 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
     if (mode === "edit" && !user) return false;
     if (mode === "edit" && user?.deleted_at) return false;
     if (!firstName.trim() || !lastName.trim() || !email.trim()) return false;
-    if (mode === "create" && password.trim().length < 6) return false;
     return true;
-  }, [mode, user, firstName, lastName, email, password]);
+  }, [mode, user, firstName, lastName, email]);
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -221,7 +217,6 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
           last_name: lastName.trim(),
           suffix: suffix.trim() || null,
           email: email.trim(),
-          password,
           role_id: roleId,
           office_id: effectiveOfficeId,
         });
@@ -499,21 +494,11 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
         />
       </div>
 
-      {/* Password — create only */}
+      {/* Password info — create only */}
       {mode === "create" && (
-        <div className="mt-3">
-          <label className={labelCls}>
-            Password <span className="text-rose-500">*</span>
-          </label>
-          <input
-            type="password"
-            className={inputCls}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={saving}
-            placeholder="Min 6 characters"
-          />
-        </div>
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-surface-600 rounded-lg px-3 py-2 border border-slate-200 dark:border-surface-400">
+          A temporary password will be generated and emailed to the user.
+        </p>
       )}
 
       {/* Role + Office */}

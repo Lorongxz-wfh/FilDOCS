@@ -22,6 +22,7 @@ export interface CreateDocumentPayload {
   school_year?: string;
   semester?: string;
   file?: File | null;
+  acting_as_office_id?: number;
 }
 
 export interface Document {

@@ -21,6 +21,7 @@ export async function createTempPreview(file: File): Promise<TempPreview> {
   const api = await getApi();
   const res = await api.post("/previews", form);
 
+  if (!res.data.url) throw new Error("Preview not available for this file type.");
   return res.data as TempPreview;
 }
 

@@ -21,6 +21,7 @@ type Options = {
   onAfterActionClose?: () => void;
   myOfficeId: number | null;
   qaOfficeId: number | null;
+  adminDebugMode?: boolean;
 };
 
 // Polling intervals
@@ -37,6 +38,7 @@ export function useDocumentWorkflow({
   onAfterActionClose,
   myOfficeId,
   qaOfficeId,
+  adminDebugMode = false,
 }: Options) {
   const [tasks, setTasks] = useState<WorkflowTask[]>([]);
   const [availableActions, setAvailableActions] = useState<
@@ -95,7 +97,7 @@ export function useDocumentWorkflow({
       try {
         const [t, actions] = await Promise.all([
           listWorkflowTasks(id),
-          getAvailableActions(id),
+          getAvailableActions(id, adminDebugMode),
         ]);
 
         if (!isFirstTaskLoadRef.current) {
@@ -223,7 +225,7 @@ export function useDocumentWorkflow({
       try {
         const [t, actions] = await Promise.all([
           listWorkflowTasks(versionId),
-          getAvailableActions(versionId),
+          getAvailableActions(versionId, adminDebugMode),
         ]);
         if (!alive) return;
         setTasks(t);
@@ -326,7 +328,7 @@ export function useDocumentWorkflow({
     async (code: WorkflowActionCode, note?: string) => {
       setIsChangingStatus(true);
       try {
-        const res = await submitWorkflowAction(versionId, code, note);
+        const res = await submitWorkflowAction(versionId, code, note, adminDebugMode);
         window.dispatchEvent(new Event("notifications:refresh"));
 
         // Refresh tasks immediately

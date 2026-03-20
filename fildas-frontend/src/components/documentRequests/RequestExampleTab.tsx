@@ -37,8 +37,8 @@ export default function RequestExampleTab({
         error={examplePreviewError}
         filename={req.example_original_filename}
         emptyLabel={
-          req.example_preview_path
-            ? "Preview not loaded."
+          req.example_file_path
+            ? "Preview not available for this file type."
             : "No example file attached."
         }
         onRefresh={req.example_preview_path ? onRefresh : undefined}
