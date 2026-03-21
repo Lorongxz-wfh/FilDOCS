@@ -14,6 +14,20 @@ type Props = {
   size?: number;
 };
 
+const CustomTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  const entry = payload[0];
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white dark:border-surface-300 dark:bg-surface-500 px-3 py-2 shadow-md">
+      <div className="flex items-center gap-2">
+        <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.payload.color }} />
+        <span className="text-xs text-slate-600 dark:text-slate-300">{entry.name}</span>
+        <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 pl-2">{entry.value}</span>
+      </div>
+    </div>
+  );
+};
+
 const StatusDonutChart: React.FC<Props> = ({
   segments,
   centerLabel,
@@ -22,51 +36,41 @@ const StatusDonutChart: React.FC<Props> = ({
 }) => {
   const total = segments.reduce((s, x) => s + x.value, 0);
   const data = segments.filter((s) => s.value > 0);
+  const displayData = data.length ? data : [{ label: "Empty", value: 1, color: "#e2e8f0" }];
 
   return (
     <div className="flex items-center gap-6">
+      {/* Donut */}
       <div style={{ width: size, height: size }} className="relative shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={
-                data.length
-                  ? data
-                  : [{ label: "Empty", value: 1, color: "#e2e8f0" }]
-              }
+              data={displayData}
               cx="50%"
               cy="50%"
-              innerRadius="62%"
-              outerRadius="85%"
+              innerRadius="64%"
+              outerRadius="86%"
               dataKey="value"
-              paddingAngle={data.length > 1 ? 3 : 0}
+              paddingAngle={data.length > 1 ? 2 : 0}
               strokeWidth={0}
+              startAngle={90}
+              endAngle={-270}
             >
-              {(data.length
-                ? data
-                : [{ label: "Empty", value: 1, color: "#e2e8f0" }]
-              ).map((entry, i) => (
+              {displayData.map((entry, i) => (
                 <Cell key={i} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip
-              contentStyle={{
-                borderRadius: "8px",
-                border: "1px solid #e2e8f0",
-                fontSize: "12px",
-              }}
-            />
+            <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
 
-        {/* Center text */}
         {centerValue !== undefined && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 leading-none">
+            <span className="text-2xl font-bold leading-none text-slate-900 dark:text-slate-100">
               {centerValue}
             </span>
             {centerLabel && (
-              <span className="mt-0.5 text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+              <span className="mt-1 text-[10px] font-medium uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 {centerLabel}
               </span>
             )}
@@ -75,26 +79,30 @@ const StatusDonutChart: React.FC<Props> = ({
       </div>
 
       {/* Legend */}
-      <div className="space-y-2 min-w-0">
-        {segments.map((s) => (
-          <div key={s.label} className="flex items-center gap-2">
-            <span
-              className="h-2.5 w-2.5 shrink-0 rounded-full"
-              style={{ backgroundColor: s.color }}
-            />
-            <span className="text-xs text-slate-600 dark:text-slate-400 truncate">
-              {s.label}
-            </span>
-            <span className="ml-auto text-xs font-semibold text-slate-900 dark:text-slate-100">
-              {s.value}
-            </span>
-            {total > 0 && (
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 w-8 text-right">
-                {Math.round((s.value / total) * 100)}%
-              </span>
-            )}
-          </div>
-        ))}
+      <div className="flex-1 min-w-0 space-y-1.5">
+        {segments.map((s) => {
+          const pct = total > 0 ? Math.round((s.value / total) * 100) : 0;
+          return (
+            <div key={s.label} className="group">
+              <div className="flex items-center justify-between gap-2 mb-0.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
+                  <span className="text-xs text-slate-500 dark:text-slate-400 truncate">{s.label}</span>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{s.value}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 w-7 text-right">{pct}%</span>
+                </div>
+              </div>
+              <div className="h-0.5 w-full rounded-full bg-slate-100 dark:bg-surface-400 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${pct}%`, backgroundColor: s.color, opacity: 0.7 }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
