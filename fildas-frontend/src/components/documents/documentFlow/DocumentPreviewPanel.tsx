@@ -1,7 +1,7 @@
 import React from "react";
 import InlineSpinner from "../../ui/loader/InlineSpinner";
 import UploadProgress from "../../ui/loader/UploadProgress";
-import { Download, Maximize2, RotateCcw, X } from "lucide-react";
+import { Download, Maximize2, RotateCcw, Upload, X } from "lucide-react";
 
 // ── Preview modal ────────────────────────────────────────────────────────────
 function PreviewModal({
@@ -90,6 +90,10 @@ type Props = {
   onFileSelect: (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => Promise<void> | void;
+  isActiveApprover?: boolean;
+  approverHasDownloaded?: boolean;
+  onApproverDownload?: () => Promise<void>;
+  onApproverUpload?: () => void;
 };
 
 const DocumentPreviewPanel: React.FC<Props> = ({
@@ -114,6 +118,10 @@ const DocumentPreviewPanel: React.FC<Props> = ({
   onDragOver,
   onDragLeave,
   onFileSelect,
+  isActiveApprover = false,
+  approverHasDownloaded = false,
+  onApproverDownload,
+  onApproverUpload,
 }) => {
   const hasPreview = !!filePath && !!previewPath;
   const [modal, setModal] = React.useState(false);
@@ -146,12 +154,33 @@ const DocumentPreviewPanel: React.FC<Props> = ({
             )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            {isActiveApprover && onApproverDownload && (
+              <button
+                type="button"
+                onClick={onApproverDownload}
+                title="Download for signing"
+                className="cursor-pointer flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition shadow-sm"
+              >
+                <Download size={13} />
+              </button>
+            )}
+            {isActiveApprover && onApproverUpload && (
+              <button
+                type="button"
+                onClick={onApproverUpload}
+                title="Upload signed copy"
+                disabled={isUploading}
+                className="cursor-pointer flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Upload size={13} />
+              </button>
+            )}
             {hasPreview && onReloadPreview && (
               <button
                 type="button"
                 onClick={onReloadPreview}
                 title="Reload preview"
-                className="flex items-center gap-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-2 py-1 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition shadow-sm"
+                className="cursor-pointer flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition shadow-sm"
               >
                 <RotateCcw size={12} />
               </button>
@@ -160,9 +189,10 @@ const DocumentPreviewPanel: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={openModal}
-                className="flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-700 dark:hover:bg-sky-950/30 dark:hover:border-sky-700 dark:hover:text-sky-400 transition shadow-sm"
+                title="View fullscreen"
+                className="cursor-pointer flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-700 dark:hover:bg-sky-950/30 dark:hover:border-sky-700 dark:hover:text-sky-400 transition shadow-sm"
               >
-                <Maximize2 size={11} /> View
+                <Maximize2 size={13} />
               </button>
             )}
             {canReplace && (
@@ -172,7 +202,7 @@ const DocumentPreviewPanel: React.FC<Props> = ({
                 onClick={() => {
                   if (!isUploading && !isExternalUploading) onClickReplace();
                 }}
-                className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition shadow-sm disabled:opacity-50 border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400"
+                className="cursor-pointer flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400"
               >
                 Replace
               </button>

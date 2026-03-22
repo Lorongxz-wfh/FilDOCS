@@ -78,25 +78,21 @@ const MyWorkQueuePage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const [s, a] = await Promise.all([
-          getDocumentStats(),
-          // Workflow-only events for recent activity
-          // Admin/sysadmin: use scope="all" since they have no office
+        const [s, a, q] = await Promise.all([
+          getDocumentStats().catch(() => null),
           listActivityLogs({
             scope: isAdmin ? "all" : "mine",
             per_page: 10,
             category: "workflow",
-          }),
+          }).catch(() => ({ data: [] })),
+          getWorkQueue().catch(() => ({ assigned: [], monitoring: [] })),
         ]);
 
         if (!alive) return;
-        setStats(s);
+        if (s) setStats(s);
         setRecentActivity((a as any)?.data ?? []);
-
-        const q = await getWorkQueue();
-        if (!alive) return;
-        setAssignedItems(q.assigned ?? []);
-        setMonitoringItems(q.monitoring ?? []);
+        setAssignedItems((q as any)?.assigned ?? []);
+        setMonitoringItems((q as any)?.monitoring ?? []);
       } catch (e: any) {
         if (alive) setError(e?.message ?? "Failed to load work queue");
       } finally {
@@ -157,7 +153,10 @@ const MyWorkQueuePage: React.FC = () => {
   const isAdmin = userRole === "ADMIN" || userRole === "SYSADMIN";
   const adminDebugMode = useAdminDebugMode();
   const canCreate =
-    isQA(userRole) || isOfficeStaff(userRole) || isOfficeHead(userRole) || (isAdmin && adminDebugMode);
+    isQA(userRole) ||
+    isOfficeStaff(userRole) ||
+    isOfficeHead(userRole) ||
+    (isAdmin && adminDebugMode);
 
   // Combined + filtered lists
   const allItems = React.useMemo(() => {
@@ -182,21 +181,25 @@ const MyWorkQueuePage: React.FC = () => {
   };
 
   const loadAll = useCallback(async () => {
-    const [s, a] = await Promise.all([
-      getDocumentStats(),
-      listActivityLogs({ scope: "mine", per_page: 10, category: "workflow" }),
+    const [s, a, q] = await Promise.all([
+      getDocumentStats().catch(() => null),
+      listActivityLogs({
+        scope: isAdmin ? "all" : "mine",
+        per_page: 10,
+        category: "workflow",
+      }).catch(() => ({ data: [] })),
+      getWorkQueue().catch(() => ({ assigned: [], monitoring: [] })),
     ]);
-    setStats(s);
+    if (s) setStats(s);
     setRecentActivity((a as any)?.data ?? []);
-    const q = await getWorkQueue();
-    setAssignedItems(q.assigned ?? []);
-    setMonitoringItems(q.monitoring ?? []);
+    setAssignedItems((q as any)?.assigned ?? []);
+    setMonitoringItems((q as any)?.monitoring ?? []);
     if (tab === "done") {
       setFinishedDocs([]);
       setFinishedPage(1);
       await loadFinished(1);
     }
-  }, [tab, loadFinished]);
+  }, [tab, loadFinished, isAdmin]);
 
   const { refresh, refreshing } = usePageBurstRefresh(loadAll);
 
@@ -285,23 +288,25 @@ const MyWorkQueuePage: React.FC = () => {
       </div>
 
       {/* Main 2-col layout */}
-      <div
-        className="flex gap-5 flex-col lg:flex-row flex-1 min-h-0"
-      >
+      <div className="flex gap-5 flex-col lg:flex-row flex-1 min-h-0">
         {/* Queue panel */}
         <div className="flex flex-col flex-1 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
           {/* Panel header + tabs */}
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {tab === "done" ? "Completed flows" : tab === "active" ? "Needs action" : "All documents"}
+                {tab === "done"
+                  ? "Completed flows"
+                  : tab === "active"
+                    ? "Needs action"
+                    : "All documents"}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {tab === "done"
                   ? "Distributed documents you were involved in"
                   : tab === "active"
-                  ? "Assigned to your office — action required"
-                  : "All active + Distributed Documents"}
+                    ? "Assigned to your office — action required"
+                    : "All active + Distributed Documents"}
               </p>
             </div>
 
@@ -406,40 +411,42 @@ const MyWorkQueuePage: React.FC = () => {
               )
             ) : loading ? (
               <SkeletonList rows={4} rowClassName="h-14 rounded-md" />
-            ) : (() => {
-              const displayItems = filterItems(
-                tab === "active" ? assignedItems : allItems,
-              );
-              return displayItems.length === 0 ? (
-                <div className="flex h-full min-h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600">
-                  <div className="text-center">
-                    <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded bg-slate-100 dark:bg-surface-400 text-slate-400 dark:text-slate-500">
-                      <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              (() => {
+                const displayItems = filterItems(
+                  tab === "active" ? assignedItems : allItems,
+                );
+                return displayItems.length === 0 ? (
+                  <div className="flex h-full min-h-40 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600">
+                    <div className="text-center">
+                      <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded bg-slate-100 dark:bg-surface-400 text-slate-400 dark:text-slate-500">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        {search ? "No results" : "All caught up"}
+                      </p>
+                      <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                        {search
+                          ? "Try a different search term."
+                          : tab === "active"
+                            ? "No tasks assigned to your office right now."
+                            : "No documents in your queue."}
+                      </p>
                     </div>
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      {search ? "No results" : "All caught up"}
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-                      {search
-                        ? "Try a different search term."
-                        : tab === "active"
-                        ? "No tasks assigned to your office right now."
-                        : "No documents in your queue."}
-                    </p>
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {displayItems.map((item) => (
-                    <QueueCard
-                      key={`${item.document.id}-${item.version.id}`}
-                      item={item}
-                      onClick={openByDocId}
-                    />
-                  ))}
-                </div>
-              );
-            })()}
+                ) : (
+                  <div className="space-y-2">
+                    {displayItems.map((item) => (
+                      <QueueCard
+                        key={`${item.document.id}-${item.version.id}`}
+                        item={item}
+                        onClick={openByDocId}
+                      />
+                    ))}
+                  </div>
+                );
+              })()
+            )}
           </div>
         </div>
 

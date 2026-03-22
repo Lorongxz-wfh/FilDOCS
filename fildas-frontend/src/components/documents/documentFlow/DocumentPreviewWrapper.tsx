@@ -24,6 +24,10 @@ type Props = {
   onSelectVersion?: (v: DocumentVersion) => void;
   isLoadingSelectedVersion?: boolean;
   canReplace?: boolean;
+  isActiveApprover?: boolean;
+  approverHasDownloaded?: boolean;
+  onApproverDownload?: () => Promise<void>;
+  onApproverUpload?: () => void;
 };
 
 const DocumentPreviewWrapper: React.FC<Props> = ({
@@ -44,6 +48,10 @@ const DocumentPreviewWrapper: React.FC<Props> = ({
   onDragLeave,
   onFileSelect,
   canReplace = false,
+  isActiveApprover = false,
+  approverHasDownloaded = false,
+  onApproverDownload,
+  onApproverUpload,
 }) => {
   return (
     <div
@@ -74,6 +82,10 @@ const DocumentPreviewWrapper: React.FC<Props> = ({
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onFileSelect={onFileSelect}
+          isActiveApprover={isActiveApprover}
+          approverHasDownloaded={approverHasDownloaded}
+          onApproverDownload={onApproverDownload}
+          onApproverUpload={onApproverUpload}
         />
       </div>
     </div>

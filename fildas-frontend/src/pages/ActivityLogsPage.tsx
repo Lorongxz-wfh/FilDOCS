@@ -7,6 +7,8 @@ import { listActivityLogs, getDocumentVersion } from "../services/documents";
 import ActivityCalendar from "../components/activityLogs/ActivityCalendar";
 import ActivityDetailModal from "../components/activityLogs/ActivityDetailModal";
 import { List, CalendarDays, X } from "lucide-react";
+import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
+import RefreshButton from "../components/ui/RefreshButton";
 import { selectCls } from "../utils/formStyles";
 import Alert from "../components/ui/Alert";
 import DateRangeInput from "../components/ui/DateRangeInput";
@@ -119,6 +121,16 @@ const ActivityLogsPage: React.FC = () => {
 
   const hasFilters = category || q || dateFrom || dateTo || scope !== "all";
 
+  const reloadLogs = () => {
+    setRows([]);
+    setPage(1);
+    setHasMore(true);
+    setInitialLoading(true);
+    setError(null);
+  };
+
+  const { refresh, refreshing } = usePageBurstRefresh(reloadLogs);
+
   const columns: TableColumn<any>[] = [
     {
       key: "when",
@@ -180,6 +192,11 @@ const ActivityLogsPage: React.FC = () => {
       contentClassName="flex flex-col min-h-0 gap-4 h-full"
       right={
         <div className="flex items-center gap-2">
+          <RefreshButton
+            onClick={refresh}
+            loading={refreshing}
+            title="Refresh logs"
+          />
           <div className="flex items-center rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 p-0.5">
             <button
               type="button"

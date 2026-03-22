@@ -21,10 +21,10 @@ class WorkflowNotificationMail extends Mailable
         public readonly bool   $isReject,
         public readonly string $actorName,
         public readonly ?int   $documentId,
-        public readonly ?string $overrideLinkUrl = null,
-        public readonly string $cardLabel = 'Document',
         public readonly string $appUrl,
         public readonly string $appName,
+        public readonly ?string $overrideLinkUrl = null,
+        public readonly string $cardLabel = 'Document',
     ) {}
 
     public function envelope(): Envelope

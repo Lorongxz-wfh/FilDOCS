@@ -94,7 +94,9 @@ export function useDashboardData(role: UserRole): DashboardData {
           setRecentActivity(activityData.data ?? []);
         }
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Failed to load dashboard.");
+        if (!silent) {
+          setError(e instanceof Error ? e.message : "Failed to load stats");
+        }
       } finally {
         setLoading(false);
       }

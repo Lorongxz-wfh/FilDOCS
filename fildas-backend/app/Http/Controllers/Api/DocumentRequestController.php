@@ -1282,6 +1282,46 @@ class DocumentRequestController extends Controller
             'updated_at'          => $now,
         ]);
 
+        // Notify recipient offices on close/cancel
+        $recipientOfficeIds = DB::table('document_request_recipients')
+            ->where('request_id', $requestId)
+            ->pluck('office_id')
+            ->all();
+
+        if (!empty($recipientOfficeIds)) {
+            $actor     = $request->user();
+            $actorName = trim(($actor->first_name ?? '') . ' ' . ($actor->last_name ?? '')) ?: 'QA';
+            $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
+            $statusLabel = ucfirst($data['status']);
+            $notifTitle  = 'Document request ' . $data['status'];
+            $notifBody   = ($row->title ?? 'A document request') . ' has been ' . $data['status'] . ($data['reason'] ? ': ' . $data['reason'] : '') . ' by ' . $actorName . '.';
+
+            $users = User::whereIn('office_id', $recipientOfficeIds)
+                ->select(['id', 'first_name', 'last_name', 'email', 'email_doc_updates'])
+                ->get();
+
+            foreach ($users as $u) {
+                if (!(bool) ($u->email_doc_updates ?? true) || !$u->email) continue;
+                try {
+                    Mail::to($u->email)->queue(new \App\Mail\WorkflowNotificationMail(
+                        recipientName: trim($u->first_name . ' ' . $u->last_name) ?: $u->email,
+                        notifTitle: $notifTitle,
+                        notifBody: $notifBody,
+                        documentTitle: $row->title ?? 'Document Request',
+                        documentStatus: $statusLabel,
+                        isReject: $data['status'] === 'cancelled',
+                        actorName: $actorName,
+                        documentId: null,
+                        appUrl: $frontendUrl,
+                        appName: config('app.name', 'FilDAS'),
+                        overrideLinkUrl: $frontendUrl . '/document-requests/' . $requestId,
+                        cardLabel: 'Document Request',
+                    ));
+                } catch (\Throwable) {
+                }
+            }
+        }
+
         return response()->json(['message' => ucfirst($data['status']) . '.', 'id' => $requestId]);
     }
 }

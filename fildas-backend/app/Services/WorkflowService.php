@@ -592,12 +592,22 @@ class WorkflowService
             'message'             => "Document cancelled: {$reason}",
         ]);
 
-        // Notify all involved offices
+        // Notify all involved offices — only if cancelled during review/approval (not draft)
+        $draftStatuses = ['Draft', 'Office Draft'];
+        $wasDraft = in_array($fromStatus, $draftStatuses, true);
+
         $involvedOfficeIds = $this->involvedOfficeIds($version);
+        $appUrl  = rtrim(env('FRONTEND_URL', config('app.url')), '/');
+        $appName = config('app.name', 'FilDAS');
+        $actorName = trim($user->first_name . ' ' . $user->last_name) ?: 'Someone';
+
         foreach ($involvedOfficeIds as $officeId) {
-            $officeUsers = User::where('office_id', $officeId)->get(['id']);
+            $officeUsers = User::where('office_id', $officeId)
+                ->select(['id', 'first_name', 'last_name', 'email', 'email_doc_updates'])
+                ->get();
             foreach ($officeUsers as $u) {
                 if ((int) $u->id === (int) $user->id) continue;
+
                 Notification::create([
                     'user_id'             => $u->id,
                     'document_id'         => $version->document_id,
@@ -608,6 +618,24 @@ class WorkflowService
                     'meta'                => ['from_status' => $fromStatus],
                     'read_at'             => null,
                 ]);
+
+                if (!$wasDraft && (bool) ($u->email_doc_updates ?? true) && $u->email) {
+                    try {
+                        Mail::to($u->email)->queue(new \App\Mail\WorkflowNotificationMail(
+                            recipientName: trim($u->first_name . ' ' . $u->last_name) ?: $u->email,
+                            notifTitle: 'Document cancelled',
+                            notifBody: ($doc->title ?? 'A document') . ' has been cancelled by ' . $actorName . '. Reason: ' . $reason,
+                            documentTitle: $doc->title ?? 'Untitled Document',
+                            documentStatus: 'Cancelled',
+                            isReject: false,
+                            actorName: $actorName,
+                            documentId: $version->document_id,
+                            appUrl: $appUrl,
+                            appName: $appName,
+                        ));
+                    } catch (\Throwable) {
+                    }
+                }
             }
         }
 
