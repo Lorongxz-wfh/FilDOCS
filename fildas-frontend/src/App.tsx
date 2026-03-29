@@ -2,6 +2,30 @@ import React, { Suspense } from "react";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 
+class ChunkErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: boolean }
+> {
+  state = { error: false };
+  static getDerivedStateFromError() { return { error: true }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-white dark:bg-surface-600">
+          <p className="text-sm text-slate-500 dark:text-slate-400">Something went wrong loading this page.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded-md bg-brand-400 px-4 py-2 text-sm font-medium text-white hover:bg-brand-500 transition"
+          >
+            Reload
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 import LoginPage from "./pages/LoginPage";
 
 const DashboardPage = React.lazy(() => import("./pages/DashboardPage"));
@@ -54,6 +78,7 @@ const ReportsRoute: React.FC = () => {
 
 export default function App() {
   return (
+    <ChunkErrorBoundary>
     <Suspense
       fallback={
         <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-surface-600 z-50">
@@ -143,5 +168,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Suspense>
+    </ChunkErrorBoundary>
   );
 }

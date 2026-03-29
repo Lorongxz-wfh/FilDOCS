@@ -13,7 +13,7 @@ echo "=== Storage link ==="
 php artisan storage:link --force || true
 
 echo "=== Running migrate:fresh --seed ==="
-php artisan migrate:fresh --force --seed
+# php artisan migrate:fresh --force --seed
 
 echo "=== Backfilling template thumbnails ==="
 php artisan templates:backfill-thumbnails || true

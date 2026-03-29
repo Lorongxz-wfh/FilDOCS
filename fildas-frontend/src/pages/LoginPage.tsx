@@ -38,6 +38,8 @@ const LoginPage: React.FC = () => {
       const data = await res.json();
       localStorage.setItem("auth_token", data.token);
       setAuthUser(data.user);
+      // Preload the dashboard chunk while the splash is animating
+      import("./DashboardPage").catch(() => {});
       window.dispatchEvent(new Event("show_splash"));
       navigate("/dashboard", { replace: true });
     } catch {
