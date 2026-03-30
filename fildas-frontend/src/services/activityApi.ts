@@ -59,3 +59,45 @@ export async function listActivityLogs(params: {
     throw new Error(msg);
   }
 }
+
+export async function exportActivityLogs(params: {
+  scope?: "office" | "mine" | "document" | "all";
+  document_id?: number;
+  document_version_id?: number;
+  q?: string;
+  event?: string;
+  office_id?: number;
+  date_from?: string; // YYYY-MM-DD
+  date_to?: string; // YYYY-MM-DD
+  category?:
+    | "workflow"
+    | "request"
+    | "document"
+    | "user"
+    | "template"
+    | "profile";
+  sort_by?: "created_at" | "event" | "label";
+  sort_dir?: "asc" | "desc";
+}): Promise<ActivityLogItem[]> {
+  try {
+    const api = await getApi();
+    const res = await api.get("/activity/export", {
+      params: {
+        scope: params.scope ?? "office",
+        document_id: params.document_id,
+        document_version_id: params.document_version_id,
+        q: params.q,
+        event: params.event,
+        office_id: params.office_id,
+        date_from: params.date_from,
+        date_to: params.date_to,
+        category: params.category,
+        sort_by: params.sort_by,
+        sort_dir: params.sort_dir,
+      },
+    });
+    return res.data;
+  } catch (e: any) {
+    throw new Error(`Failed to export activity logs: ${e.message}`);
+  }
+}

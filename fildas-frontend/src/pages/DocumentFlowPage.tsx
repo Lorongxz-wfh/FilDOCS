@@ -390,6 +390,7 @@ const refreshAndSelectBest = React.useCallback(
     Number(myOfficeId) === Number(document.owner_office_id);
 
   const isRevisable =
+    role !== "AUDITOR" &&
     isLatestSelected &&
     current?.status === "Distributed" &&
     (!isAdmin || adminDebugMode) &&
@@ -497,7 +498,7 @@ const refreshAndSelectBest = React.useCallback(
               loading={isRefreshing}
               title="Refresh document"
             />
-            {current?.status === "Distributed" && isOwner && (
+            {current?.status === "Distributed" && isOwner && role !== "AUDITOR" && (
               <Button
                 type="button"
                 variant="outline"

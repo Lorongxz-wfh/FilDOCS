@@ -236,6 +236,33 @@ const MyActivityPage: React.FC = () => {
     },
   ];
 
+  const [exporting, setExporting] = useState(false);
+  const handleExport = async (format: "csv" | "pdf") => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const { exportActivityLogs } = await import("../services/activityApi");
+      const { exportActivityCsv, exportActivityPdf } = await import("../services/activityExport");
+      
+      const payload = {
+        scope: "mine" as const,
+        q: qDebounced.trim() || undefined,
+        category: category || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+      };
+      
+      const data = await exportActivityLogs(payload);
+      
+      if (format === "csv") await exportActivityCsv(data);
+      else await exportActivityPdf(data);
+    } catch (e: any) {
+      setError(e?.message ?? "Export failed.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <PageFrame
       title="My Activity"
@@ -243,7 +270,29 @@ const MyActivityPage: React.FC = () => {
       contentClassName="flex flex-col gap-4 h-full"
       onBack={() => navigate(-1)}
       right={
-        <RefreshButton onRefresh={refresh} title="Refresh activity" />
+        <div className="flex items-center gap-2">
+          <div className="flex items-center rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden text-xs font-medium shrink-0 shadow-sm">
+            <button
+              type="button"
+              onClick={() => handleExport("csv")}
+              disabled={exporting || initialLoading}
+              title="Export current view to CSV"
+              className="px-2.5 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition border-r border-slate-200 dark:border-surface-400 disabled:opacity-50"
+            >
+              CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => handleExport("pdf")}
+              disabled={exporting || initialLoading}
+              title="Export current view to PDF"
+              className="px-2.5 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition disabled:opacity-50"
+            >
+              PDF
+            </button>
+          </div>
+          <RefreshButton onRefresh={refresh} loading={exporting} title="Refresh activity" />
+        </div>
       }
     >
       {/* Filters bar */}

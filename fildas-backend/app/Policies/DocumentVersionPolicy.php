@@ -42,15 +42,15 @@ class DocumentVersionPolicy
             return Response::allow();
         }
 
-        if (!$user->office_id) {
-            return Response::deny('Your account has no office assigned.');
-        }
-
         // Auditor: only Distributed
         if ($roleName === 'auditor') {
             return $version->status === 'Distributed'
                 ? Response::allow()
                 : Response::deny('Only Distributed versions are accessible for Auditor.');
+        }
+
+        if (!$user->office_id) {
+            return Response::deny('Your account has no office assigned.');
         }
 
         if ($this->canSeeAll($roleName)) {

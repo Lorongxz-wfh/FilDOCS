@@ -335,6 +335,26 @@ export interface ActivityLogItem {
   meta: any | null;
   created_at: string;
   updated_at: string;
+
+  actor_user?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    name?: string;
+    full_name?: string;
+  } | null;
+
+  actor_office?: {
+    id: number;
+    code: string;
+    name: string;
+  } | null;
+
+  document?: {
+    id: number;
+    title: string;
+    code: string | null;
+  } | null;
 }
 
 export type DocumentStats = {

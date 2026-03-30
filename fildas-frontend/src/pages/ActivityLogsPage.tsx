@@ -281,18 +281,69 @@ const ActivityLogsPage: React.FC = () => {
     },
   ];
 
+  const [exporting, setExporting] = React.useState(false);
+  const handleExport = async (format: "csv" | "pdf") => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const { exportActivityLogs } = await import("../services/activityApi");
+      const { exportActivityCsv, exportActivityPdf } = await import("../services/activityExport");
+      
+      const payload = {
+        scope,
+        q: qDebounced.trim() || undefined,
+        category: category || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+        sort_by: sortBy,
+        sort_dir: sortDir,
+      };
+      
+      const data = await exportActivityLogs(payload);
+      
+      if (format === "csv") await exportActivityCsv(data);
+      else await exportActivityPdf(data);
+    } catch (e: any) {
+      setError(e?.message ?? "Export failed.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <PageFrame
       title="Activity Logs"
       contentClassName="flex flex-col min-h-0 gap-4 h-full"
       right={
         <div className="flex items-center gap-2">
+          {tab === "log" && (
+            <div className="flex items-center rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden text-xs font-medium shrink-0 shadow-sm">
+              <button
+                type="button"
+                onClick={() => handleExport("csv")}
+                disabled={exporting || initialLoading}
+                title="Export current view to CSV"
+                className="px-2.5 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition border-r border-slate-200 dark:border-surface-400 disabled:opacity-50"
+              >
+                CSV
+              </button>
+              <button
+                type="button"
+                onClick={() => handleExport("pdf")}
+                disabled={exporting || initialLoading}
+                title="Export current view to PDF"
+                className="px-2.5 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition disabled:opacity-50"
+              >
+                PDF
+              </button>
+            </div>
+          )}
           <RefreshButton
             onRefresh={refresh}
-            loading={refreshing}
+            loading={refreshing || exporting}
             title="Refresh logs"
           />
-          <div className="flex items-center rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 p-0.5">
+          <div className="flex items-center rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 p-0.5 shadow-sm">
             <button
               type="button"
               onClick={() => setTab("log")}
@@ -313,7 +364,7 @@ const ActivityLogsPage: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate("/my-activity")}
-            className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+            className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition shadow-sm"
           >
             My activity →
           </button>

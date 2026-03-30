@@ -14,6 +14,7 @@ import {
   isSysAdmin,
   isOfficeStaff,
   isOfficeHead,
+  isAuditor,
 } from "../lib/roleFilters";
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import Button from "../components/ui/Button";
@@ -271,7 +272,7 @@ export default function DocumentLibraryPage() {
                 sort_dir: sortDir,
               })
             : null,
-          allReqHasMore
+          allReqHasMore && !isAuditor(role)
             ? listDocumentRequestIndividual({
                 status: "accepted",
                 q: qDebounced.trim() || undefined,
@@ -505,7 +506,10 @@ export default function DocumentLibraryPage() {
     >
       {/* Tabs */}
       <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0">
-        {(["all", "created", "requested", "shared"] as LibTab[]).map((t) => (
+        {(isAuditor(role)
+          ? (["all"] as LibTab[])
+          : (["all", "created", "requested", "shared"] as LibTab[])
+        ).map((t) => (
           <button
             key={t}
             type="button"
@@ -560,7 +564,7 @@ export default function DocumentLibraryPage() {
           </select>
         )}
 
-        {tab === "all" && (
+        {tab === "all" && !isAuditor(role) && (
           <select
             value={sourceFilter}
             onChange={(e) =>

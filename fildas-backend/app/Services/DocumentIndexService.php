@@ -51,6 +51,45 @@ class DocumentIndexService
         });
     }
 
+    public function applyVisibility($query, User $user)
+    {
+        $roleName = $this->roleNameOf($user) ?: null;
+        $userOfficeId = $user->office_id;
+        $canSeeAll = in_array($roleName, ['admin', 'sysadmin', 'president', 'qa'], true);
+        $vpOfficeIds = $this->vpOfficeIdsForRole($roleName);
+
+        // Auditor: only docs whose latest version is Distributed
+        if ($roleName === 'auditor') {
+            $query->whereHas('versions', fn($v) => $v->where('status', 'Distributed'));
+        } else if (!$canSeeAll) {
+            $query->where(function ($q) use ($vpOfficeIds, $userOfficeId) {
+                // Has an open task assigned to this office on the latest version
+                $q->orWhereHas('latestVersion', function ($v) use ($userOfficeId) {
+                    $v->whereHas('tasks', function ($t) use ($userOfficeId) {
+                        $t->where('status', 'open')->where('assigned_office_id', $userOfficeId);
+                    });
+                });
+
+                // Owns the document
+                if (is_array($vpOfficeIds)) $q->orWhereIn('documents.owner_office_id', $vpOfficeIds);
+                else $q->orWhere('documents.owner_office_id', $userOfficeId);
+
+                // Shared directly to this office
+                $q->orWhereHas('sharedOffices', fn($s) => $s->where('offices.id', $userOfficeId));
+
+                // Was a workflow participant (had a task at any point) and doc is now Distributed
+                $q->orWhere(function ($inner) use ($userOfficeId) {
+                    $inner->whereHas('versions', fn($v) => $v->where('status', 'Distributed'))
+                        ->whereHas('versions', function ($v) use ($userOfficeId) {
+                            $v->whereHas('tasks', fn($t) => $t->where('assigned_office_id', $userOfficeId));
+                        });
+                });
+            });
+        }
+        
+        return $query;
+    }
+
     public function paginateForUser(User $user, array $data)
     {
         $roleName = $this->roleNameOf($user) ?: null;
@@ -111,34 +150,8 @@ class DocumentIndexService
             });
         }
 
-        // Auditor: only docs whose latest version is Distributed
-        if ($roleName === 'auditor') {
-            $query->whereHas('versions', fn($v) => $v->where('status', 'Distributed'));
-        } else if (!$canSeeAll) {
-            $query->where(function ($q) use ($vpOfficeIds, $userOfficeId) {
-                // Has an open task assigned to this office on the latest version
-                $q->orWhereHas('latestVersion', function ($v) use ($userOfficeId) {
-                    $v->whereHas('tasks', function ($t) use ($userOfficeId) {
-                        $t->where('status', 'open')->where('assigned_office_id', $userOfficeId);
-                    });
-                });
-
-                // Owns the document
-                if (is_array($vpOfficeIds)) $q->orWhereIn('documents.owner_office_id', $vpOfficeIds);
-                else $q->orWhere('documents.owner_office_id', $userOfficeId);
-
-                // Shared directly to this office
-                $q->orWhereHas('sharedOffices', fn($s) => $s->where('offices.id', $userOfficeId));
-
-                // Was a workflow participant (had a task at any point) and doc is now Distributed
-                $q->orWhere(function ($inner) use ($userOfficeId) {
-                    $inner->whereHas('versions', fn($v) => $v->where('status', 'Distributed'))
-                        ->whereHas('versions', function ($v) use ($userOfficeId) {
-                            $v->whereHas('tasks', fn($t) => $t->where('assigned_office_id', $userOfficeId));
-                        });
-                });
-            });
-        }
+        // Apply base visibility rules
+        $query = $this->applyVisibility($query, $user);
 
         // Apply scope filter AFTER base visibility rules
         if ($scope === 'owned') {

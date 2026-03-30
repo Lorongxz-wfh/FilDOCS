@@ -16,7 +16,7 @@ import { Camera, Trash2, KeyRound, User, Bell, Volume2, Wrench, PenLine } from "
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 import { inputCls } from "../utils/formStyles";
-import { getUserRole, isSysAdmin } from "../lib/roleFilters";
+import { getUserRole, isSysAdmin, isAuditor } from "../lib/roleFilters";
 import { getAuthUser } from "../lib/auth";
 
 const Field: React.FC<{
@@ -323,6 +323,7 @@ const SettingsPage: React.FC = () => {
   const role = getUserRole();
   const currentUser = getAuthUser();
   const isAdminUser = role === "ADMIN" || isSysAdmin(role);
+  const isAuditorUser = isAuditor(role);
 
   // ── Notification prefs ────────────────────────────────────────────────
   const prefKey = (key: string) => `pref_${key}_${user?.id ?? "guest"}`;
@@ -406,14 +407,16 @@ const SettingsPage: React.FC = () => {
                     {initials || "?"}
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={photoLoading}
-                  className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 hover:bg-brand-400 text-white shadow transition-colors disabled:opacity-50"
-                >
-                  <Camera className="h-3 w-3" />
-                </button>
+                {!isAuditorUser && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={photoLoading}
+                    className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 hover:bg-brand-400 text-white shadow transition-colors disabled:opacity-50"
+                  >
+                    <Camera className="h-3 w-3" />
+                  </button>
+                )}
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
@@ -422,31 +425,33 @@ const SettingsPage: React.FC = () => {
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 capitalize">
                   {(user as any)?.role ?? ""}
                 </p>
-                <div className="mt-2 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={photoLoading}
-                    className="text-xs font-medium text-brand-500 dark:text-brand-400 hover:underline disabled:opacity-50"
-                  >
-                    {photoLoading ? "Uploading…" : "Change photo"}
-                  </button>
-                  {photoUrl && (
-                    <>
-                      <span className="text-slate-300 dark:text-surface-400">
-                        ·
-                      </span>
-                      <button
-                        type="button"
-                        onClick={handlePhotoRemove}
-                        disabled={photoLoading}
-                        className="text-xs font-medium text-rose-500 hover:underline disabled:opacity-50 flex items-center gap-1"
-                      >
-                        <Trash2 className="h-3 w-3" /> Remove
-                      </button>
-                    </>
-                  )}
-                </div>
+                {!isAuditorUser && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={photoLoading}
+                      className="text-xs font-medium text-brand-500 dark:text-brand-400 hover:underline disabled:opacity-50"
+                    >
+                      {photoLoading ? "Uploading…" : "Change photo"}
+                    </button>
+                    {photoUrl && (
+                      <>
+                        <span className="text-slate-300 dark:text-surface-400">
+                          ·
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handlePhotoRemove}
+                          disabled={photoLoading}
+                          className="text-xs font-medium text-rose-500 hover:underline disabled:opacity-50 flex items-center gap-1"
+                        >
+                          <Trash2 className="h-3 w-3" /> Remove
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
                 {photoError && (
                   <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400">
                     {photoError}
@@ -463,7 +468,7 @@ const SettingsPage: React.FC = () => {
             </div>
 
             <form
-              onSubmit={handleProfileSubmit}
+              onSubmit={!isAuditorUser ? handleProfileSubmit : (e) => e.preventDefault()}
               className="flex flex-col gap-4"
             >
               <div className="grid grid-cols-2 gap-4">
@@ -474,6 +479,7 @@ const SettingsPage: React.FC = () => {
                     onChange={(e) =>
                       setProfile((p) => ({ ...p, first_name: e.target.value }))
                     }
+                    disabled={isAuditorUser}
                     required
                   />
                 </Field>
@@ -484,6 +490,7 @@ const SettingsPage: React.FC = () => {
                     onChange={(e) =>
                       setProfile((p) => ({ ...p, last_name: e.target.value }))
                     }
+                    disabled={isAuditorUser}
                     required
                   />
                 </Field>
@@ -496,6 +503,7 @@ const SettingsPage: React.FC = () => {
                     onChange={(e) =>
                       setProfile((p) => ({ ...p, middle_name: e.target.value }))
                     }
+                    disabled={isAuditorUser}
                   />
                 </Field>
                 <Field label="Suffix" hint="e.g. Jr., III">
@@ -505,6 +513,7 @@ const SettingsPage: React.FC = () => {
                     onChange={(e) =>
                       setProfile((p) => ({ ...p, suffix: e.target.value }))
                     }
+                    disabled={isAuditorUser}
                   />
                 </Field>
               </div>
@@ -516,87 +525,92 @@ const SettingsPage: React.FC = () => {
                   onChange={(e) =>
                     setProfile((p) => ({ ...p, email: e.target.value }))
                   }
+                  disabled={isAuditorUser}
                   required
                 />
               </Field>
               <StatusMsg success={profileSuccess} error={profileError} />
-              <div className="flex justify-end">
-                <SaveButton loading={profileLoading} />
-              </div>
+              {!isAuditorUser && (
+                <div className="flex justify-end">
+                  <SaveButton loading={profileLoading} />
+                </div>
+              )}
             </form>
           </SectionCard>
 
           {/* Signature */}
-          <SectionCard
-            icon={<PenLine className="h-4 w-4" />}
-            title="E-signature"
-            subtitle="Upload your signature to sign documents directly in FilDAS."
-          >
-            <div className="flex items-start gap-4">
-              {/* Preview box */}
-              <div className="relative shrink-0">
-                <div className="flex h-16 w-40 items-center justify-center rounded-md border border-dashed border-slate-300 dark:border-surface-300 bg-slate-50 dark:bg-surface-600 overflow-hidden">
-                  {sigUrl ? (
-                    <img
-                      src={sigUrl}
-                      alt="Signature"
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  ) : (
-                    <span className="text-xs text-slate-400 dark:text-slate-500">No signature</span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => sigInputRef.current?.click()}
-                  disabled={sigLoading}
-                  className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 hover:bg-brand-400 text-white shadow transition-colors disabled:opacity-50"
-                >
-                  <Camera className="h-3 w-3" />
-                </button>
-              </div>
-
-              {/* Controls */}
-              <div className="flex flex-col gap-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Upload a PNG or JPG image of your signature. Max 1 MB.
-                </p>
-                <div className="mt-1.5 flex items-center gap-2">
+          {!isAuditorUser && (
+            <SectionCard
+              icon={<PenLine className="h-4 w-4" />}
+              title="E-signature"
+              subtitle="Upload your signature to sign documents directly in FilDAS."
+            >
+              <div className="flex items-start gap-4">
+                {/* Preview box */}
+                <div className="relative shrink-0">
+                  <div className="flex h-16 w-40 items-center justify-center rounded-md border border-dashed border-slate-300 dark:border-surface-300 bg-slate-50 dark:bg-surface-600 overflow-hidden">
+                    {sigUrl ? (
+                      <img
+                        src={sigUrl}
+                        alt="Signature"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-xs text-slate-400 dark:text-slate-500">No signature</span>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={() => sigInputRef.current?.click()}
                     disabled={sigLoading}
-                    className="text-xs font-medium text-brand-500 dark:text-brand-400 hover:underline disabled:opacity-50"
+                    className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 hover:bg-brand-400 text-white shadow transition-colors disabled:opacity-50"
                   >
-                    {sigLoading ? "Uploading…" : sigUrl ? "Change signature" : "Upload signature"}
+                    <Camera className="h-3 w-3" />
                   </button>
-                  {sigUrl && (
-                    <>
-                      <span className="text-slate-300 dark:text-surface-400">·</span>
-                      <button
-                        type="button"
-                        onClick={handleSigRemove}
-                        disabled={sigLoading}
-                        className="text-xs font-medium text-rose-500 hover:underline disabled:opacity-50 flex items-center gap-1"
-                      >
-                        <Trash2 className="h-3 w-3" /> Remove
-                      </button>
-                    </>
+                </div>
+
+                {/* Controls */}
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Upload a PNG or JPG image of your signature. Max 1 MB.
+                  </p>
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => sigInputRef.current?.click()}
+                      disabled={sigLoading}
+                      className="text-xs font-medium text-brand-500 dark:text-brand-400 hover:underline disabled:opacity-50"
+                    >
+                      {sigLoading ? "Uploading…" : sigUrl ? "Change signature" : "Upload signature"}
+                    </button>
+                    {sigUrl && (
+                      <>
+                        <span className="text-slate-300 dark:text-surface-400">·</span>
+                        <button
+                          type="button"
+                          onClick={handleSigRemove}
+                          disabled={sigLoading}
+                          className="text-xs font-medium text-rose-500 hover:underline disabled:opacity-50 flex items-center gap-1"
+                        >
+                          <Trash2 className="h-3 w-3" /> Remove
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {sigError && (
+                    <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400">{sigError}</p>
                   )}
                 </div>
-                {sigError && (
-                  <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400">{sigError}</p>
-                )}
               </div>
-            </div>
-            <input
-              ref={sigInputRef}
-              type="file"
-              accept="image/png,image/jpeg"
-              className="hidden"
-              onChange={handleSigUpload}
-            />
-          </SectionCard>
+              <input
+                ref={sigInputRef}
+                type="file"
+                accept="image/png,image/jpeg"
+                className="hidden"
+                onChange={handleSigUpload}
+              />
+            </SectionCard>
+          )}
 
           {/* Password */}
           <SectionCard

@@ -10,13 +10,15 @@ export type UserRole =
   | "VPR"
   | "PRESIDENT"
   | "SYSADMIN"
-  | "ADMIN";
+  | "ADMIN"
+  | "AUDITOR";
 
 export const getUserRole = (): UserRole => {
   const user = getAuthUser();
   const raw = String(user?.role ?? "").toUpperCase();
 
   if (raw === "QA") return "QA";
+  if (raw === "AUDITOR") return "AUDITOR";
   if (raw === "OFFICE_STAFF" || raw === "OFFICESTAFF" || raw === "OFFICE STAFF")
     return "OFFICE_STAFF";
   if (raw === "OFFICE_HEAD" || raw === "OFFICEHEAD" || raw === "OFFICE HEAD")
@@ -65,6 +67,7 @@ export const isPendingForRole = (_status: string, _role: UserRole): boolean => {
 };
 
 export const isQA = (role: UserRole): boolean => role === "QA";
+export const isAuditor = (role: UserRole): boolean => role === "AUDITOR";
 export const isOfficeStaff = (role: UserRole): boolean =>
   role === "OFFICE_STAFF";
 export const isOfficeHead = (role: UserRole): boolean => role === "OFFICE_HEAD";

@@ -140,6 +140,7 @@ Route::get('/notifications',                          [NotificationController::c
 
     // ── Activity ───────────────────────────────────────────────────────────
     Route::post('/activity/opened-version', [ActivityLogController::class, 'openedVersion']);
+    Route::get('/activity/export',          [ActivityLogController::class, 'export']);
     Route::get('/activity',                 [ActivityLogController::class, 'index']);
 
     // ── Search ─────────────────────────────────────────────────────────────────

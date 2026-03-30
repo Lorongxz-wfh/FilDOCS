@@ -15,7 +15,7 @@ import {
   listDocumentRequests,
   listDocumentRequestInbox,
 } from "../services/documentRequests";
-import { isQA, type UserRole } from "../lib/roleFilters";
+import { isQA, isAuditor, type UserRole } from "../lib/roleFilters";
 
 const emptyReport: ComplianceReport = {
   clusters: [],
@@ -109,6 +109,18 @@ export function useDashboardData(role: UserRole): DashboardData {
           if (reqRes.status === "fulfilled")
             setPendingRequestsCount(reqRes.value?.meta?.total ?? 0);
           const firstErr = [statsRes, queueRes, activityRes].find(
+            (r) => r.status === "rejected",
+          ) as PromiseRejectedResult | undefined;
+          if (firstErr && !silent)
+            setError(
+              firstErr.reason instanceof Error
+                ? firstErr.reason.message
+                : "Failed to load stats",
+            );
+        } else if (isAuditor(role)) {
+          const [statsRes] = await Promise.allSettled([getDocumentStats()]);
+          if (statsRes.status === "fulfilled") setStats(statsRes.value);
+          const firstErr = [statsRes].find(
             (r) => r.status === "rejected",
           ) as PromiseRejectedResult | undefined;
           if (firstErr && !silent)

@@ -36,10 +36,14 @@ class SearchController extends Controller
         $isAdmin  = in_array($roleName, ['admin', 'sysadmin'], true);
 
         // Documents — title / description match
-        $documents = Document::query()
+        $documentQuery = Document::query()
             ->where(function ($query) use ($like, $op) {
                 $query->where('title', $op, $like);
-            })
+            });
+
+        $documentQuery = app(\App\Services\DocumentIndexService::class)->applyVisibility($documentQuery, $actor);
+
+        $documents = $documentQuery
             ->with(['latestVersion' => function ($q) {
                 $q->select([
                     'document_versions.id',

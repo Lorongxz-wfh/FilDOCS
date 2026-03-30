@@ -82,6 +82,21 @@ const ReportsRoute: React.FC = () => {
     : <ReportsPage />;
 };
 
+import type { UserRole } from "./lib/roleFilters";
+const nonAuditorRoles: UserRole[] = [
+  "QA",
+  "SYSADMIN",
+  "ADMIN",
+  "OFFICE_HEAD",
+  "OFFICE_STAFF",
+  "VPAA",
+  "VPAD",
+  "VPF",
+  "VPR",
+  "PRESIDENT",
+];
+
+
 export default function App() {
   return (
     <ChunkErrorBoundary>
@@ -106,15 +121,28 @@ export default function App() {
           <Route element={<ProtectedLayout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/work-queue" element={<MyWorkQueuePage />} />
-            <Route path="/my-activity" element={<MyActivityPage />} />
-            <Route path="/inbox" element={<InboxPage />} />
+            <Route element={<RequireRole allow={nonAuditorRoles} />}>
+              <Route path="/work-queue" element={<MyWorkQueuePage />} />
+              <Route path="/inbox" element={<InboxPage />} />
+              <Route
+                path="/document-requests"
+                element={<DocumentRequestListPage />}
+              />
+              <Route
+                path="/document-requests/:id"
+                element={<DocumentRequestBatchPage />}
+              />
+              <Route
+                path="/document-requests/:id/recipients/:recipientId"
+                element={<DocumentRequestPage />}
+              />
+              <Route
+                path="/document-requests/:id/items/:itemId"
+                element={<DocumentRequestPage />}
+              />
+              <Route path="/templates" element={<TemplatesPage />} />
+            </Route>
 
-            {/* Document Requests */}
-            <Route
-              path="/document-requests"
-              element={<DocumentRequestListPage />}
-            />
             <Route
               element={<RequireRole allow={["QA", "SYSADMIN", "ADMIN"]} />}
             >
@@ -123,18 +151,6 @@ export default function App() {
                 element={<CreateDocumentRequestPage />}
               />
             </Route>
-            <Route
-              path="/document-requests/:id"
-              element={<DocumentRequestBatchPage />}
-            />
-            <Route
-              path="/document-requests/:id/recipients/:recipientId"
-              element={<DocumentRequestPage />}
-            />
-            <Route
-              path="/document-requests/:id/items/:itemId"
-              element={<DocumentRequestPage />}
-            />
 
             {/* Back-compat */}
             <Route
@@ -214,9 +230,9 @@ export default function App() {
               <Route path="/office-manager" element={<OfficeManagerPage />} />
             </Route>
 
-            <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/archive" element={<ArchivePage />} />
             <Route path="/announcements" element={<AnnouncementsPage />} />
+            <Route path="/my-activity" element={<MyActivityPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

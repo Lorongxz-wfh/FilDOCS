@@ -24,7 +24,7 @@ import { useDashboardData } from "../hooks/useDashboardData";
 import { useAnnouncements } from "../hooks/useAnnouncements";
 import AnnouncementsBanner from "../components/dashboard/AnnouncementsBanner";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
-import { getUserRole, isQA } from "../lib/roleFilters";
+import { getUserRole, isQA, isAuditor } from "../lib/roleFilters";
 import { getAuthUser } from "../lib/auth";
 import {
   FolderOpen,
@@ -465,6 +465,70 @@ const AdminDashboard: React.FC<
   </div>
 );
 
+// ─── Auditor Dashboard ─────────────────────────────────────────────────────
+const AuditorDashboard: React.FC<
+  ReturnType<typeof useDashboardData> & {
+    navigate: ReturnType<typeof useNavigate>;
+    announcements: AnnouncementsHook;
+  }
+> = ({ stats, loading, navigate, announcements }) => {
+  return (
+    <div className="space-y-4">
+      <AnnouncementsBanner
+        announcements={announcements.announcements}
+        loading={announcements.loading}
+        onDeleted={() => announcements.reload()}
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <button
+          type="button"
+          onClick={() => navigate("/documents")}
+          className="min-w-0 rounded-md border border-slate-200 bg-white px-4 py-3.5 text-left transition-colors hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:hover:bg-surface-400"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight">
+              Distributed Documents
+            </p>
+            <span className="shrink-0 text-emerald-400 dark:text-emerald-400">
+              <FolderOpen className="h-4 w-4" />
+            </span>
+          </div>
+          {loading ? (
+            <Skeleton className="mt-3 h-7 w-14" />
+          ) : (
+            <p className="mt-2.5 text-2xl font-bold tabular-nums leading-none text-slate-900 dark:text-slate-100">
+              {stats?.distributed ?? 0}
+            </p>
+          )}
+          <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+            open library to view documents
+          </p>
+        </button>
+      </div>
+
+      <div className="rounded-md border border-slate-200 bg-white px-8 py-12 text-center dark:border-surface-400 dark:bg-surface-500">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-50 text-sky-500 dark:bg-sky-950/30 dark:text-sky-400">
+          <FolderOpen className="h-8 w-8" />
+        </div>
+        <h2 className="mt-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+          You have read-only Auditor access.
+        </h2>
+        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+          You can browse the Document Library to view and download all fully distributed documents across all offices.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate("/documents")}
+          className="cursor-pointer mt-6 rounded border border-transparent bg-brand-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand-600 dark:hover:bg-brand-400"
+        >
+          Go to Document Library
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ─── Root ──────────────────────────────────────────────────────────────────
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -578,6 +642,12 @@ const DashboardPage: React.FC = () => {
         <div className="px-5 py-4 space-y-4">
           {isAdmin ? (
             <AdminDashboard
+              {...dashData}
+              navigate={navigate}
+              announcements={announcements}
+            />
+          ) : isAuditor(role) ? (
+            <AuditorDashboard
               {...dashData}
               navigate={navigate}
               announcements={announcements}

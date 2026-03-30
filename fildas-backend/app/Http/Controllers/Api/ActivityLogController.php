@@ -39,12 +39,52 @@ class ActivityLogController extends Controller
     // GET /api/activity?scope=office|mine|document|all&document_id=&document_version_id=&per_page=&page=&q=&event=&office_id=&date_from=&date_to=
     public function index(Request $request)
     {
-        $user = $request->user();
-        $roleName = $this->roleNameOf($user);
-        $userOfficeId = (int) ($user?->office_id ?? 0);
-        $canSeeAll = in_array($roleName, ['qa', 'admin', 'sysadmin', 'office_head'], true);
+        $data = $this->validateQueryParams($request);
+        $perPage = (int) ($data['per_page'] ?? 25);
+        $result = $this->buildQuery($request, $data);
 
-        $data = $request->validate([
+        if ($result instanceof \Illuminate\Http\JsonResponse) {
+            return $result;
+        }
+
+        $paginated = $result->with([
+            'actorUser' => function ($query) {
+                $query->withTrashed();
+            },
+            'actorOffice:id,name,code',
+            'targetOffice:id,name,code',
+            'document:id,title,code',
+        ])->paginate($perPage);
+
+        return response()->json($paginated);
+    }
+
+    // GET /api/activity/export
+    public function export(Request $request)
+    {
+        $data = $this->validateQueryParams($request);
+        $result = $this->buildQuery($request, $data);
+
+        if ($result instanceof \Illuminate\Http\JsonResponse) {
+            return $result;
+        }
+
+        // Limit to 5000 max to prevent memory exhaustion
+        $logs = $result->with([
+            'actorUser' => function ($query) {
+                $query->withTrashed();
+            },
+            'actorOffice:id,name,code',
+            'targetOffice:id,name,code',
+            'document:id,title,code',
+        ])->limit(5000)->get();
+
+        return response()->json($logs);
+    }
+
+    private function validateQueryParams(Request $request)
+    {
+        return $request->validate([
             'scope' => 'nullable|in:office,mine,document,request,all',
             'document_id' => 'nullable|integer|exists:documents,id',
             'request_id' => 'nullable|integer|exists:document_requests,id',
@@ -58,9 +98,16 @@ class ActivityLogController extends Controller
             'date_to'  => 'nullable|date',
             'category' => 'nullable|in:workflow,request,document,user,template,profile,actions',
         ]);
+    }
+
+    private function buildQuery(Request $request, array $data)
+    {
+        $user = $request->user();
+        $roleName = $this->roleNameOf($user);
+        $userOfficeId = (int) ($user?->office_id ?? 0);
+        $canSeeAll = in_array($roleName, ['qa', 'admin', 'sysadmin', 'office_head'], true);
 
         $scope = $data['scope'] ?? 'office';
-        $perPage = (int) ($data['per_page'] ?? 25);
 
         $allowedSorts = ['created_at', 'event', 'label'];
         $sortBy  = in_array($request->query('sort_by'), $allowedSorts, true)
@@ -174,15 +221,6 @@ class ActivityLogController extends Controller
             }
         }
 
-        $paginated = $q->with([
-            'actorUser' => function ($query) {
-                $query->withTrashed();
-            },
-            'actorOffice:id,name,code',
-            'targetOffice:id,name,code',
-            'document:id,title,code',
-        ])->paginate($perPage);
-
-        return response()->json($paginated);
+        return $q;
     }
 }
