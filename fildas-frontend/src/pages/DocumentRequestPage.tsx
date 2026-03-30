@@ -1,5 +1,10 @@
 import React from "react";
-import { Navigate, useNavigate, useParams, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  useNavigate,
+  useParams,
+  useLocation,
+} from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
 import { getAuthUser } from "../lib/auth";
 import {
@@ -18,7 +23,8 @@ import {
   updateDocumentRequestRecipient,
   type DocumentRequestMessageRow,
 } from "../services/documentRequests";
-import { MessageSquare, Activity, Pencil} from "lucide-react";
+import { MessageSquare, Activity, Pencil, Megaphone } from "lucide-react";
+import RefreshButton from "../components/ui/RefreshButton";
 import { roleLower, TabBar } from "../components/documentRequests/shared";
 import RequestHeaderCard from "../components/documentRequests/RequestHeaderCard";
 import RequestCommentsPanel from "../components/documentRequests/RequestCommentsPanel";
@@ -68,6 +74,14 @@ export default function DocumentRequestPage() {
   const [leftTab, setLeftTab] = React.useState<"comments" | "activity">(
     "comments",
   );
+  // For multi-office recipient view: private vs broadcast thread
+  const [commentThread, setCommentThread] = React.useState<
+    "private" | "broadcast"
+  >("private");
+  const [broadcastUnread, setBroadcastUnread] = React.useState(0);
+  const [privateUnread, setPrivateUnread] = React.useState(0);
+  const prevBroadcastCountRef = React.useRef(0);
+  const prevPrivateCountRef = React.useRef(0);
   const [rightTab, setRightTab] = React.useState<"example" | "submission">(
     "example",
   );
@@ -118,6 +132,30 @@ export default function DocumentRequestPage() {
   const [reviewErr, setReviewErr] = React.useState<string | null>(null);
   const [reviewMsg, setReviewMsg] = React.useState<string | null>(null);
 
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const msgCountRef = React.useRef(messages.length);
+  React.useEffect(() => {
+    msgCountRef.current = messages.length;
+  }, [messages.length]);
+
+  const handleRefresh = async (): Promise<string | false> => {
+    setRefreshing(true);
+    const before = msgCountRef.current;
+    try {
+      await Promise.all([load(), loadMessages()]);
+      const after = msgCountRef.current;
+      const diff = after - before;
+      if (diff > 0)
+        return `${diff} new message${diff === 1 ? "" : "s"} received.`;
+      return "Already up to date.";
+    } catch {
+      throw new Error("Refresh failed.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   // ── Edit panel (QA only) ───────────────────────────────────────────────────
   const [editOpen, setEditOpen] = React.useState(false);
   const [editTitle, setEditTitle] = React.useState("");
@@ -167,9 +205,8 @@ export default function DocumentRequestPage() {
       ? req.item_title
       : (req?.title ?? `Request #${requestId}`);
 
-  const stateCrumbs: { label: string; to?: string }[] =
-    (location.state as any)?.breadcrumbs ??
-    [{ label: "Document Requests", to: "/document-requests" }];
+  const stateCrumbs: { label: string; to?: string }[] = (location.state as any)
+    ?.breadcrumbs ?? [{ label: "Document Requests", to: "/document-requests" }];
 
   // Effective due date — individual override > batch due
   const effectiveDueAt = isItemView
@@ -225,16 +262,27 @@ export default function DocumentRequestPage() {
   }, [req?.id, recipient?.id]);
 
   // ── Messages ───────────────────────────────────────────────────────────────
+  // Scope: item view → item thread, recipient view → private or broadcast
+  const messageScope = React.useMemo(() => {
+    if (isItemView) return { item_id: itemId! };
+    if (recipientId) {
+      return commentThread === "broadcast"
+        ? { thread: "batch" as const }
+        : { recipient_id: recipientId };
+    }
+    return { thread: "batch" as const };
+  }, [isItemView, itemId, recipientId, commentThread]);
+
   const loadMessages = React.useCallback(async () => {
     setMessagesLoading(true);
     try {
-      setMessages(await getDocumentRequestMessages(requestId));
+      setMessages(await getDocumentRequestMessages(requestId, messageScope));
     } catch {
       /* silent */
     } finally {
       setMessagesLoading(false);
     }
-  }, [requestId]);
+  }, [requestId, messageScope]);
 
   React.useEffect(() => {
     loadMessages().catch(() => {});
@@ -251,6 +299,37 @@ export default function DocumentRequestPage() {
     }, 10_000);
     return () => window.clearInterval(interval);
   }, [loadMessages, messages.length]);
+
+  // Poll inactive thread for unread indicator — recipient multi-office only
+  React.useEffect(() => {
+    if (isItemView || !recipientId || isQa) return;
+    const pollInactive = async () => {
+      try {
+        const inactiveScope =
+          commentThread === "private"
+            ? { thread: "batch" as const }
+            : { recipient_id: recipientId };
+        const msgs = await getDocumentRequestMessages(requestId, inactiveScope);
+        const count = msgs.length;
+        if (commentThread === "private") {
+          const prev = prevBroadcastCountRef.current;
+          if (prev > 0 && count > prev)
+            setBroadcastUnread((u) => u + (count - prev));
+          prevBroadcastCountRef.current = count;
+        } else {
+          const prev = prevPrivateCountRef.current;
+          if (prev > 0 && count > prev)
+            setPrivateUnread((u) => u + (count - prev));
+          prevPrivateCountRef.current = count;
+        }
+      } catch {
+        /* silent */
+      }
+    };
+    pollInactive();
+    const id = window.setInterval(pollInactive, 15_000);
+    return () => window.clearInterval(id);
+  }, [requestId, recipientId, isQa, isItemView, commentThread]);
 
   React.useEffect(() => {
     if (isFirstMsgLoadRef.current) return;
@@ -368,7 +447,11 @@ export default function DocumentRequestPage() {
     setPosting(true);
     setPostErr(null);
     try {
-      const msg = await postDocumentRequestMessage(requestId, text);
+      const msg = await postDocumentRequestMessage(
+        requestId,
+        text,
+        messageScope,
+      );
       setMessages((prev) => [...prev, msg]);
       setCommentText("");
     } catch (e: any) {
@@ -502,7 +585,18 @@ export default function DocumentRequestPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <PageFrame title={pageTitle} onBack={() => navigate(backUrl)} breadcrumbs={stateCrumbs}>
+    <PageFrame
+      title={pageTitle}
+      onBack={() => navigate(backUrl)}
+      breadcrumbs={stateCrumbs}
+      right={
+        <RefreshButton
+          onRefresh={handleRefresh}
+          loading={refreshing || loading}
+          title="Refresh page"
+        />
+      }
+    >
       <div className="grid h-full min-h-0 overflow-hidden grid-cols-1 gap-5 lg:grid-cols-12">
         {/* ── LEFT ── */}
         <section className="lg:col-span-7 min-w-0 flex flex-col gap-5">
@@ -648,19 +742,91 @@ export default function DocumentRequestPage() {
               }}
             />
             {leftTab === "comments" ? (
-              <RequestCommentsPanel
-                messages={messages}
-                loading={messagesLoading}
-                myUserId={myUserId}
-                commentText={commentText}
-                posting={posting}
-                postErr={postErr}
-                messagesEndRef={messagesEndRef}
-                onCommentChange={setCommentText}
-                onPost={postComment}
-                newMessageCount={newMsgCount}
-                onClearNewMessages={() => setNewMsgCount(0)}
-              />
+              <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                {/* Private / Broadcast thread switcher — recipient view only, non-QA */}
+                {!isItemView && recipientId && !isQa && (
+                  <div className="shrink-0 border-b border-slate-100 dark:border-surface-400 px-3 py-2 flex flex-col gap-2">
+                    {/* Tab row */}
+                    <div className="flex items-center gap-1 justify-between">
+                      <div className="flex items-center gap-1">
+                        {(["private", "broadcast"] as const).map((t) => {
+                          const isActive = commentThread === t;
+                          const hasNew =
+                            t === commentThread
+                              ? newMsgCount > 0
+                              : t === "broadcast"
+                                ? broadcastUnread > 0
+                                : privateUnread > 0;
+                          const badgeCount =
+                            t === commentThread
+                              ? newMsgCount
+                              : t === "broadcast"
+                                ? broadcastUnread
+                                : privateUnread;
+                          return (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => {
+                                setCommentThread(t);
+                                setMessages([]);
+                                setNewMsgCount(0);
+                                if (t === "broadcast") setBroadcastUnread(0);
+                                if (t === "private") setPrivateUnread(0);
+                              }}
+                              className={`relative flex items-center gap-1.5 rounded px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                                isActive
+                                  ? "bg-brand-500 text-white"
+                                  : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-surface-400"
+                              }`}
+                            >
+                              {t === "broadcast" ? (
+                                <Megaphone className="h-3 w-3 shrink-0" />
+                              ) : (
+                                <MessageSquare className="h-3 w-3 shrink-0" />
+                              )}
+                              {t === "private" ? "Private" : "Broadcast"}
+                              {hasNew && (
+                                <span className="inline-flex items-center justify-center h-3.5 min-w-3.5 px-1 rounded-full bg-rose-500 text-[9px] font-bold text-white leading-none">
+                                  {badgeCount > 9 ? "9+" : badgeCount}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Broadcast info banner */}
+                    {commentThread === "broadcast" && (
+                      <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 dark:border-amber-800/50 dark:bg-amber-950/20">
+                        <Megaphone className="h-3 w-3 shrink-0 text-amber-500 dark:text-amber-400" />
+                        <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-tight">
+                          Announcements from QA to all offices — read only
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <RequestCommentsPanel
+                  messages={messages}
+                  loading={messagesLoading}
+                  myUserId={myUserId}
+                  commentText={commentText}
+                  posting={posting}
+                  postErr={postErr}
+                  messagesEndRef={messagesEndRef}
+                  onCommentChange={setCommentText}
+                  onPost={postComment}
+                  newMessageCount={newMsgCount}
+                  onClearNewMessages={() => setNewMsgCount(0)}
+                  readOnly={
+                    !isItemView && !isQa && commentThread === "broadcast"
+                  }
+                  readOnlyLabel="This is a broadcast thread from QA. You can read but not reply here."
+                />
+              </div>
             ) : (
               <RequestActivityPanel
                 logs={activityLogs}
@@ -712,15 +878,26 @@ export default function DocumentRequestPage() {
                   canQaReview={canQaReview}
                   onQaNoteChange={setQaNote}
                   onQaReview={qaReview}
-                  hasExample={!!(isItemView ? req.item_example_preview_path : req.example_preview_path)}
+                  hasExample={
+                    !!(isItemView
+                      ? req.item_example_preview_path
+                      : req.example_preview_path)
+                  }
                   onDownloadExample={async () => {
                     const win = window.open("about:blank", "_blank");
                     try {
-                      const res = isItemView && itemId
-                        ? await getDocumentRequestItemExampleDownloadLink(itemId)
-                        : await getDocumentRequestExampleDownloadLink(requestId);
+                      const res =
+                        isItemView && itemId
+                          ? await getDocumentRequestItemExampleDownloadLink(
+                              itemId,
+                            )
+                          : await getDocumentRequestExampleDownloadLink(
+                              requestId,
+                            );
                       if (win) win.location.href = res.url;
-                    } catch { if (win) win.close(); }
+                    } catch {
+                      if (win) win.close();
+                    }
                   }}
                   files={files}
                   localPreviewUrl={localPreviewUrl}

@@ -17,7 +17,14 @@ import { friendlyEvent } from "../utils/activityFormatters";
 import { formatDateTime } from "../utils/formatters";
 
 type Scope = "all" | "office" | "mine";
-type Category = "" | "workflow" | "request" | "document" | "user" | "template" | "profile";
+type Category =
+  | ""
+  | "workflow"
+  | "request"
+  | "document"
+  | "user"
+  | "template"
+  | "profile";
 type TabView = "log" | "calendar";
 
 const ActivityLogsPage: React.FC = () => {
@@ -46,7 +53,11 @@ const ActivityLogsPage: React.FC = () => {
     return () => window.clearTimeout(t);
   }, [q]);
 
-  const _alc = pageCache.get<any>("activity-logs", '{"q":"","scope":"all","category":"","dateFrom":"","dateTo":""}', 2 * 60_000);
+  const _alc = pageCache.get<any>(
+    "activity-logs",
+    '{"q":"","scope":"all","category":"","dateFrom":"","dateTo":""}',
+    2 * 60_000,
+  );
   const [rows, setRows] = React.useState<any[]>(_alc?.rows ?? []);
   const [page, setPage] = React.useState(1);
   const [hasMore, setHasMore] = React.useState(_alc?.hasMore ?? true);
@@ -97,7 +108,13 @@ const ActivityLogsPage: React.FC = () => {
         hasMoreRef.current = more;
         setHasMore(more);
         if (page === 1) {
-          const filterKey = JSON.stringify({ q: qDebounced.trim(), scope, category, dateFrom, dateTo });
+          const filterKey = JSON.stringify({
+            q: qDebounced.trim(),
+            scope,
+            category,
+            dateFrom,
+            dateTo,
+          });
           pageCache.set("activity-logs", filterKey, incoming, more);
         }
       } catch (e: any) {
@@ -113,8 +130,8 @@ const ActivityLogsPage: React.FC = () => {
     return () => {
       alive = false;
     };
-  // hasMore intentionally omitted — tracked via hasMoreRef to avoid re-trigger
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // hasMore intentionally omitted — tracked via hasMoreRef to avoid re-trigger
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, scope, qDebounced, category, dateFrom, dateTo]);
 
   // Navigate from activity row
@@ -143,7 +160,8 @@ const ActivityLogsPage: React.FC = () => {
     }
   };
 
-  const hasFilters = category || q || dateFrom || dateTo || (!isOfficeHead && scope !== "all");
+  const hasFilters =
+    category || q || dateFrom || dateTo || (!isOfficeHead && scope !== "all");
 
   const reloadLogs = () => {
     setRows([]);
@@ -157,7 +175,7 @@ const ActivityLogsPage: React.FC = () => {
 
   // Direct fetch for the manual refresh button — returns a smart message
   const firstIdRef = React.useRef<number | null>(null);
-  const refresh = React.useCallback(async (): Promise<string | void> => {
+  const refresh = React.useCallback(async (): Promise<string | false> => {
     const prevFirstId = firstIdRef.current;
     manualRefreshInProgress.current = true;
     setLoading(true);
@@ -187,9 +205,9 @@ const ActivityLogsPage: React.FC = () => {
       setHasMore(more);
       setError(null); // ensure any stale concurrent error is cleared
       setInitialLoading(false);
-      if (prevFirstId === null) return; // initial load
+      if (prevFirstId === null) return false; // initial load — suppress toast
       return incoming[0]?.id !== prevFirstId
-        ? "Logs updated."
+        ? "New activity entries loaded."
         : "Already up to date.";
     } catch (e: any) {
       setError(e?.message ?? "Failed to load activity logs.");

@@ -38,10 +38,16 @@ class SearchController extends Controller
         // Documents — title / description match
         $documents = Document::query()
             ->where(function ($query) use ($like, $op) {
-                $query->where('title', $op, $like)
-                    ->orWhere('description', $op, $like);
+                $query->where('title', $op, $like);
             })
-            ->with('latestVersion:id,document_id,status')
+            ->with(['latestVersion' => function ($q) {
+                $q->select([
+                    'document_versions.id',
+                    'document_versions.document_id',
+                    'document_versions.status',
+                    'document_versions.version_number',
+                ]);
+            }])
             ->limit(6)
             ->get(['id', 'title', 'description'])
             ->map(fn($d) => [

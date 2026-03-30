@@ -313,7 +313,7 @@ const TemplatesPage: React.FC = () => {
               className={[
                 "flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition",
                 activeTag
-                  ? "border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-950/30 dark:text-brand-400"
+                  ? "border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-surface-400 dark:text-brand-400"
                   : "border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400",
               ].join(" ")}
             >
@@ -358,8 +358,8 @@ const TemplatesPage: React.FC = () => {
                         className={[
                           "w-full rounded-md px-3 py-1.5 text-left text-xs font-medium transition",
                           activeTag === tag
-                            ? "bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-400"
-                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-500",
+                            ? "bg-brand-50 dark:bg-surface-400 text-brand-700 dark:text-brand-400"
+                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400",
                         ].join(" ")}
                       >
                         {tag}

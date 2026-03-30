@@ -148,10 +148,21 @@ export default function MyWorkQueueListPage() {
       }
     };
     load();
-    return () => { alive = false; };
-  // hasMore intentionally omitted — tracked via hasMoreRef to avoid re-trigger
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, qDebounced, statusParam, typeFilter, dateFrom, dateTo]);
+    return () => {
+      alive = false;
+    };
+    // hasMore intentionally omitted — tracked via hasMoreRef to avoid re-trigger
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    page,
+    qDebounced,
+    statusParam,
+    typeFilter,
+    dateFrom,
+    dateTo,
+    sortBy,
+    sortDir,
+  ]);
 
   const reload = useCallback(() => {
     setRows([]);

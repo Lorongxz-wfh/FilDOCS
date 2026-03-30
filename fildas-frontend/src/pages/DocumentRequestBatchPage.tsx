@@ -9,13 +9,33 @@ import {
   type DocumentRequestItemRow,
   // type DocumentRequestProgress,
 } from "../services/documentRequests";
-import { Users, FileStack, RefreshCw, Ban, Check, Pencil, AlertTriangle } from "lucide-react";
-import { roleLower, StatusBadge } from "../components/documentRequests/shared";
+import {
+  Users,
+  FileStack,
+  Ban,
+  Check,
+  Pencil,
+  AlertTriangle,
+  MessageSquare,
+  Activity,
+} from "lucide-react";
+import RefreshButton from "../components/ui/RefreshButton";
+import {
+  roleLower,
+  StatusBadge,
+  TabBar,
+} from "../components/documentRequests/shared";
 import RequestActivityPanel from "../components/documentRequests/RequestActivityPanel";
+import RequestCommentsPanel from "../components/documentRequests/RequestCommentsPanel";
 import RequestPreviewModal from "../components/documentRequests/RequestPreviewModal";
 import InlineEditField from "../components/documentRequests/InlineEditField";
 import RequestProgressBar from "../components/documentRequests/RequestProgressBar";
 import { inputCls } from "../utils/formStyles";
+import {
+  getDocumentRequestMessages,
+  postDocumentRequestMessage,
+  type DocumentRequestMessageRow,
+} from "../services/documentRequests";
 
 export default function DocumentRequestBatchPage() {
   const navigate = useNavigate();
@@ -38,6 +58,39 @@ export default function DocumentRequestBatchPage() {
   const [items, setItems] = React.useState<DocumentRequestItemRow[]>([]);
   const [activityLogs, setActivityLogs] = React.useState<any[]>([]);
   const [activityLoading, setActivityLoading] = React.useState(false);
+
+  // ── Right panel tabs + comments ────────────────────────────────────────────
+  const [rightTab, setRightTab] = React.useState<"comments" | "activity">(
+    "comments",
+  );
+
+  // For multi-office: which recipient thread is selected (QA switcher)
+  // Default to null = shared/batch thread
+  const [activeRecipientId, setActiveRecipientId] = React.useState<
+    number | null
+  >(null);
+
+  // When recipients load for multi-office, keep null (shared) as default — no auto-select
+  React.useEffect(() => {
+    if (!isMultiDoc && recipients.length > 0 && activeRecipientId !== null)
+      return;
+    setActiveRecipientId(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [req?.id]);
+
+  const [messages, setMessages] = React.useState<DocumentRequestMessageRow[]>(
+    [],
+  );
+  const [messagesLoading, setMessagesLoading] = React.useState(false);
+  const [commentText, setCommentText] = React.useState("");
+  const [posting, setPosting] = React.useState(false);
+  const [postErr, setPostErr] = React.useState<string | null>(null);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const [newMsgCount, setNewMsgCount] = React.useState(0);
+  const prevMsgCountRef = React.useRef(0);
+  const isFirstMsgLoadRef = React.useRef(true);
+  const myUserId = Number(getAuthUser()?.id ?? 0);
+
   const [previewModal, setPreviewModal] = React.useState<{
     url: string;
     filename?: string;
@@ -81,11 +134,25 @@ export default function DocumentRequestBatchPage() {
   }, [load]);
 
   const [refreshing, setRefreshing] = React.useState(false);
-  const handleRefresh = React.useCallback(async () => {
+  const prevProgressRef = React.useRef<string>("");
+
+  const handleRefresh = React.useCallback(async (): Promise<string | false> => {
     setRefreshing(true);
-    await load().catch(() => {});
-    setRefreshing(false);
-  }, [load]);
+    const prevProgress = prevProgressRef.current;
+    try {
+      await load();
+      const nextProgress = `${req?.progress?.submitted ?? 0}-${req?.progress?.accepted ?? 0}`;
+      prevProgressRef.current = nextProgress;
+      if (!prevProgress) return false; // initial load
+      return nextProgress !== prevProgress
+        ? "Request progress updated."
+        : "Already up to date.";
+    } catch {
+      throw new Error("Refresh failed.");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load, req?.progress]);
 
   const [statusUpdating, setStatusUpdating] = React.useState(false);
   const [confirmModal, setConfirmModal] = React.useState<{
@@ -93,9 +160,15 @@ export default function DocumentRequestBatchPage() {
     label: string;
   } | null>(null);
 
-  const handleStatusChange = React.useCallback((status: "closed" | "cancelled") => {
-    setConfirmModal({ status, label: status === "closed" ? "close" : "cancel" });
-  }, []);
+  const handleStatusChange = React.useCallback(
+    (status: "closed" | "cancelled") => {
+      setConfirmModal({
+        status,
+        label: status === "closed" ? "close" : "cancel",
+      });
+    },
+    [],
+  );
 
   const handleConfirmStatus = React.useCallback(async () => {
     if (!confirmModal) return;
@@ -138,6 +211,77 @@ export default function DocumentRequestBatchPage() {
   React.useEffect(() => {
     loadActivity().catch(() => {});
   }, [loadActivity]);
+
+  // ── Messages ───────────────────────────────────────────────────────────────
+  // For multi-office: scope to selected recipient thread
+  // For multi-doc: batch thread (both null)
+  const messageScope = React.useMemo(() => {
+    if (isMultiDoc) return { thread: "batch" as const };
+    if (activeRecipientId) return { recipient_id: activeRecipientId };
+    return { thread: "batch" as const };
+  }, [isMultiDoc, activeRecipientId]);
+
+  const loadMessages = React.useCallback(async () => {
+    setMessagesLoading(true);
+    try {
+      setMessages(await getDocumentRequestMessages(requestId, messageScope));
+    } catch {
+      /* silent */
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, [requestId, messageScope]);
+
+  React.useEffect(() => {
+    loadMessages().catch(() => {});
+  }, [loadMessages]);
+
+  // Poll messages every 10s when on comments tab
+  React.useEffect(() => {
+    if (rightTab !== "comments") return;
+    const id = window.setInterval(() => loadMessages().catch(() => {}), 10_000);
+    return () => window.clearInterval(id);
+  }, [loadMessages, rightTab]);
+
+  // New message badge
+  React.useEffect(() => {
+    if (isFirstMsgLoadRef.current) {
+      isFirstMsgLoadRef.current = false;
+      prevMsgCountRef.current = messages.length;
+      return;
+    }
+    const n = messages.length - prevMsgCountRef.current;
+    if (n > 0) setNewMsgCount((p) => p + n);
+    prevMsgCountRef.current = messages.length;
+  }, [messages.length]);
+
+  // Reset messages when switching recipient thread
+  React.useEffect(() => {
+    setMessages([]);
+    isFirstMsgLoadRef.current = true;
+    prevMsgCountRef.current = 0;
+    setNewMsgCount(0);
+  }, [activeRecipientId]);
+
+  const postComment = async () => {
+    const text = commentText.trim();
+    if (!text || posting) return;
+    setPosting(true);
+    setPostErr(null);
+    try {
+      const msg = await postDocumentRequestMessage(
+        requestId,
+        text,
+        messageScope,
+      );
+      setMessages((prev) => [...prev, msg]);
+      setCommentText("");
+    } catch (e: any) {
+      setPostErr(e?.response?.data?.message ?? "Failed to post.");
+    } finally {
+      setPosting(false);
+    }
+  };
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const saveTitle = async (title: string) => {
@@ -215,15 +359,11 @@ export default function DocumentRequestBatchPage() {
       breadcrumbs={[{ label: "Document Requests", to: "/document-requests" }]}
       right={
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={refreshing || loading}
-            title="Refresh"
-            className="flex items-center justify-center h-8 w-8 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-40 transition"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
-          </button>
+          <RefreshButton
+            onRefresh={handleRefresh}
+            loading={refreshing || loading}
+            title="Refresh request"
+          />
           {isQa && req?.status === "open" && (
             <>
               <button
@@ -397,9 +537,7 @@ export default function DocumentRequestBatchPage() {
           )}
 
           {/* Items / recipients list */}
-          <div
-            className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden flex flex-col min-h-[30vh]"
-          >
+          <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden flex flex-col min-h-[30vh]">
             <div className="shrink-0 px-4 py-3 border-b border-slate-200 dark:border-surface-400 bg-slate-50/80 dark:bg-surface-600/80 flex items-center gap-2">
               {isMultiDoc ? (
                 <FileStack className="h-4 w-4 text-violet-500" />
@@ -425,7 +563,20 @@ export default function DocumentRequestBatchPage() {
                         onClick={() =>
                           navigate(
                             `/document-requests/${requestId}/items/${item.id}`,
-                            { state: { breadcrumbs: [{ label: "Document Requests", to: "/document-requests" }, { label: req.title ?? `Request #${requestId}`, to: `/document-requests/${requestId}` }] } },
+                            {
+                              state: {
+                                breadcrumbs: [
+                                  {
+                                    label: "Document Requests",
+                                    to: "/document-requests",
+                                  },
+                                  {
+                                    label: req.title ?? `Request #${requestId}`,
+                                    to: `/document-requests/${requestId}`,
+                                  },
+                                ],
+                              },
+                            },
                           )
                         }
                         className="group w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition"
@@ -463,7 +614,20 @@ export default function DocumentRequestBatchPage() {
                       onClick={() =>
                         navigate(
                           `/document-requests/${requestId}/recipients/${r.id}`,
-                          { state: { breadcrumbs: [{ label: "Document Requests", to: "/document-requests" }, { label: req.title ?? `Request #${requestId}`, to: `/document-requests/${requestId}` }] } },
+                          {
+                            state: {
+                              breadcrumbs: [
+                                {
+                                  label: "Document Requests",
+                                  to: "/document-requests",
+                                },
+                                {
+                                  label: req.title ?? `Request #${requestId}`,
+                                  to: `/document-requests/${requestId}`,
+                                },
+                              ],
+                            },
+                          },
                         )
                       }
                       className="group w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition"
@@ -502,10 +666,10 @@ export default function DocumentRequestBatchPage() {
         </section>
 
         {/* ── RIGHT ── */}
-        <aside className="lg:col-span-5 flex flex-col gap-4">
+        <aside className="lg:col-span-5 flex flex-col gap-4 min-h-0">
           {/* Summary — QA only */}
           {isQa && (
-            <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
+            <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shrink-0">
               <div className="px-4 py-3 border-b border-slate-200 dark:border-surface-400 bg-slate-50/80 dark:bg-surface-600/80">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Summary
@@ -561,7 +725,7 @@ export default function DocumentRequestBatchPage() {
 
           {/* Instructions — non-QA */}
           {!isQa && req.description && (
-            <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 px-4 py-4">
+            <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 px-4 py-4 shrink-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-blue-500 dark:text-blue-400 mb-2">
                 Instructions
               </p>
@@ -571,17 +735,95 @@ export default function DocumentRequestBatchPage() {
             </div>
           )}
 
-          {/* Activity */}
-          <div className="flex flex-col rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden flex-1 min-h-0">
-            <div className="shrink-0 border-b border-slate-200 dark:border-surface-400 px-4 py-2.5">
-              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
-                Activity
-              </p>
-            </div>
-            <RequestActivityPanel
-              logs={activityLogs}
-              loading={activityLoading}
+          {/* Comments + Activity tabbed panel */}
+          <div
+            className="flex flex-col rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden flex-1 min-h-0"
+            style={{ minHeight: "360px" }}
+          >
+            <TabBar
+              tabs={[
+                {
+                  value: "comments" as const,
+                  label: "Comments",
+                  icon: <MessageSquare size={12} />,
+                },
+                {
+                  value: "activity" as const,
+                  label: "Activity",
+                  icon: <Activity size={12} />,
+                },
+              ]}
+              active={rightTab}
+              onChange={setRightTab}
+              badge={{
+                comments: messages.length > 0 ? messages.length : undefined,
+              }}
             />
+
+            {rightTab === "comments" ? (
+              <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                {/* Multi-office: recipient thread switcher — QA only */}
+                {!isMultiDoc && isQa && recipients.length > 0 && (
+                  <div className="shrink-0 border-b border-slate-100 dark:border-surface-400 px-3 py-2 flex items-center gap-1.5 overflow-x-auto">
+                    <button
+                      type="button"
+                      onClick={() => setActiveRecipientId(null)}
+                      className={`shrink-0 rounded px-2.5 py-1 text-[11px] font-medium transition-colors whitespace-nowrap ${
+                        activeRecipientId === null
+                          ? "bg-brand-500 text-white"
+                          : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-surface-400"
+                      }`}
+                    >
+                      Shared
+                    </button>
+                    {recipients.map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setActiveRecipientId(Number(r.id))}
+                        className={`shrink-0 rounded px-2.5 py-1 text-[11px] font-medium transition-colors whitespace-nowrap ${
+                          activeRecipientId === Number(r.id)
+                            ? "bg-brand-500 text-white"
+                            : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-surface-400"
+                        }`}
+                      >
+                        {r.office_code ?? r.office_name ?? `#${r.id}`}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Thread label */}
+                {!isMultiDoc && isQa && (
+                  <div className="shrink-0 px-4 py-1.5 bg-slate-50 dark:bg-surface-600/50 border-b border-slate-100 dark:border-surface-400">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                      {activeRecipientId
+                        ? `Thread — ${recipients.find((r) => Number(r.id) === activeRecipientId)?.office_name ?? "Office"}`
+                        : "Shared batch thread"}
+                    </p>
+                  </div>
+                )}
+
+                <RequestCommentsPanel
+                  messages={messages}
+                  loading={messagesLoading}
+                  myUserId={myUserId}
+                  commentText={commentText}
+                  posting={posting}
+                  postErr={postErr}
+                  messagesEndRef={messagesEndRef}
+                  onCommentChange={setCommentText}
+                  onPost={postComment}
+                  newMessageCount={newMsgCount}
+                  onClearNewMessages={() => setNewMsgCount(0)}
+                />
+              </div>
+            ) : (
+              <RequestActivityPanel
+                logs={activityLogs}
+                loading={activityLoading}
+              />
+            )}
           </div>
         </aside>
       </div>
@@ -598,7 +840,9 @@ export default function DocumentRequestBatchPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-sm mx-4 rounded-2xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shadow-xl p-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <span className={`flex items-center justify-center h-9 w-9 rounded-full ${confirmModal.status === "cancelled" ? "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" : "bg-slate-100 dark:bg-surface-500 text-slate-600 dark:text-slate-300"}`}>
+              <span
+                className={`flex items-center justify-center h-9 w-9 rounded-full ${confirmModal.status === "cancelled" ? "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" : "bg-slate-100 dark:bg-surface-500 text-slate-600 dark:text-slate-300"}`}
+              >
                 <AlertTriangle className="h-4 w-4" />
               </span>
               <div>

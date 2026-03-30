@@ -16,6 +16,8 @@ type Props = {
   onPost: () => void;
   newMessageCount?: number;
   onClearNewMessages?: () => void;
+  readOnly?: boolean;
+  readOnlyLabel?: string;
 };
 
 export default function RequestCommentsPanel({
@@ -30,6 +32,8 @@ export default function RequestCommentsPanel({
   onPost,
   newMessageCount = 0,
   onClearNewMessages,
+  readOnly = false,
+  readOnlyLabel = "This thread is read-only.",
 }: Props) {
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
@@ -118,40 +122,48 @@ export default function RequestCommentsPanel({
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 dark:border-surface-400 dark:bg-surface-500">
-        {postErr && (
-          <p className="mb-2 text-xs text-rose-600 dark:text-rose-400">
-            {postErr}
+      {readOnly ? (
+        <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 py-3 dark:border-surface-400 dark:bg-surface-600/50">
+          <p className="text-center text-[11px] text-slate-400 dark:text-slate-500">
+            {readOnlyLabel}
           </p>
-        )}
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={commentText}
-            onChange={(e) => onCommentChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                onPost();
-              }
-            }}
-            placeholder="Write a comment…"
-            disabled={posting}
-            className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-sky-500 disabled:opacity-50 dark:border-surface-400 dark:bg-surface-600 dark:text-slate-200 dark:placeholder-slate-500"
-          />
-          <button
-            onClick={onPost}
-            disabled={!commentText.trim() || posting}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white transition hover:bg-sky-700 disabled:opacity-40"
-          >
-            {posting ? (
-              <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-            ) : (
-              <Send size={14} />
-            )}
-          </button>
         </div>
-      </div>
+      ) : (
+        <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 dark:border-surface-400 dark:bg-surface-500">
+          {postErr && (
+            <p className="mb-2 text-xs text-rose-600 dark:text-rose-400">
+              {postErr}
+            </p>
+          )}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={commentText}
+              onChange={(e) => onCommentChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  onPost();
+                }
+              }}
+              placeholder="Write a comment…"
+              disabled={posting}
+              className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-sky-500 disabled:opacity-50 dark:border-surface-400 dark:bg-surface-600 dark:text-slate-200 dark:placeholder-slate-500"
+            />
+            <button
+              onClick={onPost}
+              disabled={!commentText.trim() || posting}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white transition hover:bg-sky-700 disabled:opacity-40"
+            >
+              {posting ? (
+                <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              ) : (
+                <Send size={14} />
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -30,10 +30,16 @@ const UserManagerPage: React.FC = () => {
 
   const [search, setSearch] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"" | "active" | "disabled">("");
+  const [statusFilter, setStatusFilter] = useState<"" | "active" | "disabled">(
+    "",
+  );
   const [roleFilter, setRoleFilter] = useState<number | "">("");
   const [roles, setRoles] = useState<AdminRole[]>([]);
   const [reloadTick, setReloadTick] = useState(0);
+  const [sortBy, setSortBy] = useState<
+    "first_name" | "last_name" | "email" | "created_at"
+  >("created_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const location = useLocation();
   const [isEditOpen, setIsEditOpen] = useState(
@@ -61,7 +67,7 @@ const UserManagerPage: React.FC = () => {
     setPage(1);
     setHasMore(true);
     setInitialLoading(true);
-  }, [searchDebounced, statusFilter, roleFilter, reloadTick]);
+  }, [searchDebounced, statusFilter, roleFilter, reloadTick, sortBy, sortDir]);
 
   useEffect(() => {
     let alive = true;
@@ -77,6 +83,8 @@ const UserManagerPage: React.FC = () => {
           q: searchDebounced || undefined,
           status: statusFilter || undefined,
           role_id: roleFilter || undefined,
+          sort_by: sortBy,
+          sort_dir: sortDir,
         });
         if (!alive) return;
         const incoming = res.data ?? [];
@@ -129,6 +137,7 @@ const UserManagerPage: React.FC = () => {
       {
         key: "name",
         header: "Name",
+        sortKey: "last_name",
         render: (u) => (
           <div className="font-medium text-slate-900 dark:text-slate-100 truncate">
             {u.full_name}
@@ -138,6 +147,7 @@ const UserManagerPage: React.FC = () => {
       {
         key: "email",
         header: "Email",
+        sortKey: "email",
         render: (u) => (
           <div className="text-sm text-slate-600 dark:text-slate-400 truncate">
             {u.email}
@@ -158,7 +168,9 @@ const UserManagerPage: React.FC = () => {
         header: "Role",
         render: (u) => {
           const role = u.role?.name ?? "none";
-          const isAdminRole = ["admin", "sysadmin"].includes(role.toLowerCase());
+          const isAdminRole = ["admin", "sysadmin"].includes(
+            role.toLowerCase(),
+          );
           return (
             <span
               className={[
@@ -222,14 +234,20 @@ const UserManagerPage: React.FC = () => {
         <div className="relative w-full sm:w-64">
           <input
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             placeholder="Search name / email…"
             className={`${inputCls} pr-8`}
           />
           {search && (
             <button
               type="button"
-              onClick={() => { setSearch(""); setPage(1); }}
+              onClick={() => {
+                setSearch("");
+                setPage(1);
+              }}
               title="Clear"
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             >
@@ -252,7 +270,9 @@ const UserManagerPage: React.FC = () => {
         {/* Role filter */}
         <select
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value === "" ? "" : Number(e.target.value))}
+          onChange={(e) =>
+            setRoleFilter(e.target.value === "" ? "" : Number(e.target.value))
+          }
           className={selectCls}
         >
           <option value="">All roles</option>
@@ -293,6 +313,12 @@ const UserManagerPage: React.FC = () => {
           hasMore={hasMore}
           onLoadMore={() => setPage((p) => p + 1)}
           gridTemplateColumns="1fr 1fr 1fr 8rem 7rem"
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSortChange={(key, dir) => {
+            setSortBy(key as typeof sortBy);
+            setSortDir(dir);
+          }}
         />
       </div>
 

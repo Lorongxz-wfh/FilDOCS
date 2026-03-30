@@ -57,16 +57,7 @@ class Document extends Model
     public function latestVersion()
     {
         return $this->hasOne(DocumentVersion::class)
-            ->latestOfMany('version_number')
-            ->select([
-                'document_versions.id',
-                'document_versions.document_id',
-                'document_versions.version_number',
-                'document_versions.status',
-                'document_versions.workflow_type',
-                'document_versions.updated_at',
-                'document_versions.created_at',
-            ]);
+            ->latestOfMany('version_number');
     }
 
     public function latestDistributedVersion()

@@ -30,7 +30,6 @@ import {
   FolderOpen,
   ClipboardList,
   Inbox,
-  Clock,
   Percent,
   Timer,
   AlertCircle,
@@ -123,14 +122,12 @@ const QADashboard: React.FC<
 
   return (
     <div className="space-y-4">
-      {/* Announcements */}
       <AnnouncementsBanner
         announcements={announcements.announcements}
         loading={announcements.loading}
         onDeleted={() => announcements.reload()}
       />
 
-      {/* Row 1 — existing stat strip */}
       <DashboardStatRow
         role="QA"
         stats={stats}
@@ -139,7 +136,6 @@ const QADashboard: React.FC<
         loading={loading}
       />
 
-      {/* Row 2 — quality KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {kpiCards.map((k) => (
           <div
@@ -168,7 +164,6 @@ const QADashboard: React.FC<
         ))}
       </div>
 
-      {/* Row 3 — volume trend + phase distribution */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card
           title="Document volume"
@@ -202,7 +197,6 @@ const QADashboard: React.FC<
         </Card>
       </div>
 
-      {/* Row 4 — pending list + stage delay */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DashboardPendingList items={pending} loading={loading} />
         <Card
@@ -221,7 +215,6 @@ const QADashboard: React.FC<
         </Card>
       </div>
 
-      {/* Row 5 — recent activity */}
       <Card
         title="Recent activity"
         sub="Latest actions in the system."
@@ -251,7 +244,47 @@ const OfficeDashboard: React.FC<
   navigate,
   role,
   announcements,
+  pendingRequestsInboxCount,
 }) => {
+  const inboxCount = pendingRequestsInboxCount ?? 0;
+  const totalPendingActions = pending.length + inboxCount;
+
+  const kpiCards = [
+    {
+      label: "Pending actions",
+      value: totalPendingActions,
+      sub: "tasks + requests combined",
+      icon: <ClipboardList className="h-4 w-4" />,
+      iconCls: "text-brand-400 dark:text-brand-400",
+      valueCls:
+        totalPendingActions > 0
+          ? "text-brand-600 dark:text-brand-400"
+          : "text-slate-900 dark:text-slate-100",
+      onClick: () => navigate("/work-queue"),
+    },
+    {
+      label: "Doc requests",
+      value: inboxCount,
+      sub: "pending in your inbox",
+      icon: <Inbox className="h-4 w-4" />,
+      iconCls: "text-violet-400 dark:text-violet-400",
+      valueCls:
+        inboxCount > 0
+          ? "text-violet-600 dark:text-violet-400"
+          : "text-slate-900 dark:text-slate-100",
+      onClick: () => navigate("/document-requests"),
+    },
+    {
+      label: "My documents",
+      value: stats?.total ?? 0,
+      sub: "created by your office",
+      icon: <FolderOpen className="h-4 w-4" />,
+      iconCls: "text-sky-400 dark:text-sky-400",
+      valueCls: "text-slate-900 dark:text-slate-100",
+      onClick: () => navigate("/documents"),
+    },
+  ];
+
   const donutSegments = [
     { label: "Distributed", value: stats?.distributed ?? 0, color: "#10b981" },
     { label: "In progress", value: stats?.pending ?? 0, color: "#f59e0b" },
@@ -267,7 +300,6 @@ const OfficeDashboard: React.FC<
 
   return (
     <div className="space-y-4">
-      {/* Announcements */}
       <AnnouncementsBanner
         announcements={announcements.announcements}
         loading={announcements.loading}
@@ -278,14 +310,46 @@ const OfficeDashboard: React.FC<
         role={role}
         stats={stats}
         pendingCount={pending.length}
-        pendingRequestsCount={0}
+        pendingRequestsCount={inboxCount}
         loading={loading}
       />
 
+      {/* KPI cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {kpiCards.map((k) => (
+          <button
+            key={k.label}
+            type="button"
+            onClick={k.onClick}
+            className="min-w-0 rounded-md border border-slate-200 bg-white px-4 py-3.5 text-left transition-colors hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:hover:bg-surface-400"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight">
+                {k.label}
+              </p>
+              <span className={`shrink-0 ${k.iconCls}`}>{k.icon}</span>
+            </div>
+            {loading ? (
+              <Skeleton className="mt-3 h-7 w-14" />
+            ) : (
+              <p
+                className={`mt-2.5 text-2xl font-bold tabular-nums leading-none ${k.valueCls}`}
+              >
+                {k.value}
+              </p>
+            )}
+            <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+              {k.sub}
+            </p>
+          </button>
+        ))}
+      </div>
+
+      {/* Document summary + pending work queue */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card
           title="My document summary"
-          sub="Status of documents assigned to your office."
+          sub="Status of documents created by your office."
           action={{
             label: "Open library",
             onClick: () => navigate("/documents"),
@@ -309,70 +373,20 @@ const OfficeDashboard: React.FC<
           )}
         </Card>
 
-        <Card title="Quick actions">
-          <div className="grid grid-cols-2 gap-2.5">
-            {[
-              {
-                label: "My documents",
-                path: "/documents",
-                icon: FolderOpen,
-                iconCls: "text-sky-500 bg-sky-50 dark:bg-sky-950/40",
-              },
-              {
-                label: "Work queue",
-                path: "/work-queue",
-                icon: ClipboardList,
-                iconCls: "text-brand-500 bg-brand-50 dark:bg-brand-950/30",
-              },
-              {
-                label: "Doc requests",
-                path: "/document-requests",
-                icon: Inbox,
-                iconCls: "text-violet-500 bg-violet-50 dark:bg-violet-950/40",
-              },
-              {
-                label: "Activity logs",
-                path: "/activity-logs",
-                icon: Clock,
-                iconCls: "text-amber-500 bg-amber-50 dark:bg-amber-950/40",
-              },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.path}
-                  type="button"
-                  onClick={() => navigate(item.path)}
-                  className="flex items-center gap-2.5 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition-colors hover:bg-slate-100 dark:border-surface-400 dark:bg-surface-600 dark:hover:bg-surface-400"
-                >
-                  <div
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${item.iconCls}`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                  </div>
-                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </Card>
+        <DashboardPendingList items={pending} loading={loading} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <DashboardPendingList items={pending} loading={loading} />
-        <Card
-          title="Recent activity"
-          sub="Latest actions in the system."
-          action={{
-            label: "View all",
-            onClick: () => navigate("/activity-logs"),
-          }}
-        >
-          <DashboardRecentActivity logs={recentActivity} loading={loading} />
-        </Card>
-      </div>
+      {/* Recent activity */}
+      <Card
+        title="Recent activity"
+        sub="Latest actions on your office's documents."
+        action={{
+          label: "View all",
+          onClick: () => navigate("/activity-logs"),
+        }}
+      >
+        <DashboardRecentActivity logs={recentActivity} loading={loading} />
+      </Card>
     </div>
   );
 };
@@ -385,7 +399,6 @@ const AdminDashboard: React.FC<
   }
 > = ({ adminStats, recentActivity, loading, navigate, announcements }) => (
   <div className="space-y-4">
-    {/* Announcements */}
     <AnnouncementsBanner
       announcements={announcements.announcements}
       loading={announcements.loading}
@@ -463,7 +476,6 @@ const DashboardPage: React.FC = () => {
 
   const announcements = useAnnouncements();
 
-  // Keep burst refresh for event-based auto-refresh (notifications, remote triggers)
   usePageBurstRefresh(() => {
     dashData.reload();
   });
@@ -509,7 +521,6 @@ const DashboardPage: React.FC = () => {
       {/* ── Page header ── */}
       <div className="shrink-0 border-b border-slate-200 bg-slate-50 dark:border-surface-400 dark:bg-surface-600 px-5 py-3.5">
         <div className="flex items-center justify-between gap-4">
-          {/* Left: avatar + greeting */}
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md overflow-hidden bg-slate-100 dark:bg-surface-400 text-sm font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-surface-300">
               {(user as any)?.profile_photo_url ? (
@@ -532,7 +543,6 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: status badge + refresh */}
           <div className="flex shrink-0 items-center gap-2">
             {!loading &&
               (pendingCount > 0 ? (

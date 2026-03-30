@@ -105,7 +105,8 @@ class ActivityLogController extends Controller
             'document' => ['document.', 'version.', 'message.'],
             'user'     => ['user.', 'office.'],
             'template' => ['template.'],
-            'profile'  => ['profile.', 'auth.'],
+            'profile'       => ['profile.', 'auth.'],
+            'announcement'  => ['announcement.'],
             // All document/workflow/request actions — excludes auth, profile, user-mgmt, template noise
             'actions'  => ['workflow.', 'document.', 'version.', 'message.', 'document_request.'],
         ];

@@ -11,7 +11,10 @@ import {
   type ComplianceReportResponse as ComplianceReport,
   type AdminDashboardStats,
 } from "../services/documents";
-import { listDocumentRequests } from "../services/documentRequests";
+import {
+  listDocumentRequests,
+  listDocumentRequestInbox,
+} from "../services/documentRequests";
 import { isQA, type UserRole } from "../lib/roleFilters";
 
 const emptyReport: ComplianceReport = {
@@ -39,6 +42,7 @@ export type DashboardData = {
   report: ComplianceReport;
   adminStats: AdminDashboardStats | null;
   pendingRequestsCount: number;
+  pendingRequestsInboxCount: number;
   loading: boolean;
   error: string | null;
   reload: () => Promise<ReloadResult>;
@@ -59,6 +63,7 @@ export function useDashboardData(role: UserRole): DashboardData {
   const lastPendingCountRef = useRef(-1);
 
   const isAdmin = role === "ADMIN" || role === "SYSADMIN";
+  const [pendingRequestsInboxCount, setPendingRequestsInboxCount] = useState(0);
 
   const loadRef = useCallback(
     async (silent = false) => {
@@ -71,9 +76,17 @@ export function useDashboardData(role: UserRole): DashboardData {
             listActivityLogs({ scope: "all", per_page: 8 }),
           ]);
           if (adminRes.status === "fulfilled") setAdminStats(adminRes.value);
-          if (activityRes.status === "fulfilled") setRecentActivity(activityRes.value.data ?? []);
-          const firstErr = [adminRes, activityRes].find((r) => r.status === "rejected") as PromiseRejectedResult | undefined;
-          if (firstErr && !silent) setError(firstErr.reason instanceof Error ? firstErr.reason.message : "Failed to load stats");
+          if (activityRes.status === "fulfilled")
+            setRecentActivity(activityRes.value.data ?? []);
+          const firstErr = [adminRes, activityRes].find(
+            (r) => r.status === "rejected",
+          ) as PromiseRejectedResult | undefined;
+          if (firstErr && !silent)
+            setError(
+              firstErr.reason instanceof Error
+                ? firstErr.reason.message
+                : "Failed to load stats",
+            );
         } else if (isQA(role)) {
           const [statsRes, queueRes, activityRes, reportRes, reqRes] =
             await Promise.allSettled([
@@ -90,22 +103,48 @@ export function useDashboardData(role: UserRole): DashboardData {
             setMonitoring(queueRes.value.monitoring ?? []);
             lastPendingCountRef.current = assigned.length;
           }
-          if (activityRes.status === "fulfilled") setRecentActivity(activityRes.value.data ?? []);
+          if (activityRes.status === "fulfilled")
+            setRecentActivity(activityRes.value.data ?? []);
           if (reportRes.status === "fulfilled") setReport(reportRes.value);
-          if (reqRes.status === "fulfilled") setPendingRequestsCount(reqRes.value?.meta?.total ?? 0);
-          const firstErr = [statsRes, queueRes, activityRes].find((r) => r.status === "rejected") as PromiseRejectedResult | undefined;
-          if (firstErr && !silent) setError(firstErr.reason instanceof Error ? firstErr.reason.message : "Failed to load stats");
+          if (reqRes.status === "fulfilled")
+            setPendingRequestsCount(reqRes.value?.meta?.total ?? 0);
+          const firstErr = [statsRes, queueRes, activityRes].find(
+            (r) => r.status === "rejected",
+          ) as PromiseRejectedResult | undefined;
+          if (firstErr && !silent)
+            setError(
+              firstErr.reason instanceof Error
+                ? firstErr.reason.message
+                : "Failed to load stats",
+            );
         } else {
-          const [statsRes, queueRes, activityRes] = await Promise.allSettled([
-            getDocumentStats(),
-            getWorkQueue(),
-            listActivityLogs({ scope: "office", per_page: 8 }),
-          ]);
+          const [statsRes, queueRes, activityRes, inboxRes] =
+            await Promise.allSettled([
+              getDocumentStats(),
+              getWorkQueue(),
+              listActivityLogs({ scope: "office", per_page: 8 }),
+              listDocumentRequestInbox({ per_page: 1 }),
+            ]);
           if (statsRes.status === "fulfilled") setStats(statsRes.value);
-          if (queueRes.status === "fulfilled") { setPending(queueRes.value.assigned ?? []); setMonitoring(queueRes.value.monitoring ?? []); }
-          if (activityRes.status === "fulfilled") setRecentActivity(activityRes.value.data ?? []);
-          const firstErr = [statsRes, queueRes, activityRes].find((r) => r.status === "rejected") as PromiseRejectedResult | undefined;
-          if (firstErr && !silent) setError(firstErr.reason instanceof Error ? firstErr.reason.message : "Failed to load stats");
+          if (queueRes.status === "fulfilled") {
+            const assigned = queueRes.value.assigned ?? [];
+            setPending(assigned);
+            setMonitoring(queueRes.value.monitoring ?? []);
+            lastPendingCountRef.current = assigned.length;
+          }
+          if (activityRes.status === "fulfilled")
+            setRecentActivity(activityRes.value.data ?? []);
+          if (inboxRes.status === "fulfilled")
+            setPendingRequestsInboxCount(inboxRes.value?.meta?.total ?? 0);
+          const firstErr = [statsRes, queueRes, activityRes].find(
+            (r) => r.status === "rejected",
+          ) as PromiseRejectedResult | undefined;
+          if (firstErr && !silent)
+            setError(
+              firstErr.reason instanceof Error
+                ? firstErr.reason.message
+                : "Failed to load stats",
+            );
         }
       } catch (e: unknown) {
         if (!silent) {
@@ -140,6 +179,7 @@ export function useDashboardData(role: UserRole): DashboardData {
     report,
     adminStats,
     pendingRequestsCount,
+    pendingRequestsInboxCount,
     loading,
     error,
     reload,

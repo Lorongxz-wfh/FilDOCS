@@ -44,8 +44,24 @@ export default function RefreshButton({
       try {
         const result = await onRefresh();
         if (result === false) return;
-        const message = typeof result === "string" ? result : "Page refreshed.";
-        toast?.push({ type: "info", message, durationMs: 2500 });
+        if (typeof result === "string") {
+          // Caller controls the message — infer type from content
+          const isUpToDate =
+            result.toLowerCase().includes("up to date") ||
+            result.toLowerCase().includes("no new") ||
+            result.toLowerCase().includes("already");
+          toast?.push({
+            type: isUpToDate ? "info" : "success",
+            message: result,
+            durationMs: 2500,
+          });
+        } else {
+          toast?.push({
+            type: "info",
+            message: "Page refreshed.",
+            durationMs: 2500,
+          });
+        }
       } catch (err) {
         toast?.push({ type: "error", message: normalizeError(err) });
       } finally {

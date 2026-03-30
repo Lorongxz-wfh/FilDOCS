@@ -203,7 +203,7 @@ const MyWorkQueuePage: React.FC = () => {
     );
   };
 
-  const queueCountRef = useRef(0);
+  const queueCountRef = useRef<number | null>(null);
 
   const loadAll = useCallback(async () => {
     const [s, a, q] = await Promise.all([
@@ -256,7 +256,15 @@ const MyWorkQueuePage: React.FC = () => {
             onRefresh={async () => {
               const prevCount = queueCountRef.current;
               await loadAll();
-              return queueCountRef.current !== prevCount ? "Queue updated." : "Already up to date.";
+              const nextCount = queueCountRef.current;
+              if (prevCount === null) return false; // initial load — suppress toast
+              if (nextCount !== prevCount) {
+                const diff = (nextCount ?? 0) - (prevCount ?? 0);
+                return diff > 0
+                  ? `${diff} new task${diff === 1 ? "" : "s"} in your queue.`
+                  : `Queue updated — ${Math.abs(diff)} task${Math.abs(diff) === 1 ? "" : "s"} resolved.`;
+              }
+              return "Already up to date.";
             }}
             loading={refreshing || loading}
             title="Refresh queue"
@@ -508,8 +516,14 @@ const MyWorkQueuePage: React.FC = () => {
                   <div key={i} className="flex items-start gap-2.5 px-1 py-1.5">
                     <div className="mt-0.5 h-3.5 w-3.5 rounded-full bg-slate-100 dark:bg-surface-400 shrink-0" />
                     <div className="flex-1 space-y-1">
-                      <div className="h-2.5 rounded bg-slate-100 dark:bg-surface-400" style={{ width: `${50 + (i % 4) * 12}%` }} />
-                      <div className="h-2 rounded bg-slate-100 dark:bg-surface-400" style={{ width: "45%" }} />
+                      <div
+                        className="h-2.5 rounded bg-slate-100 dark:bg-surface-400"
+                        style={{ width: `${50 + (i % 4) * 12}%` }}
+                      />
+                      <div
+                        className="h-2 rounded bg-slate-100 dark:bg-surface-400"
+                        style={{ width: "45%" }}
+                      />
                     </div>
                   </div>
                 ))}

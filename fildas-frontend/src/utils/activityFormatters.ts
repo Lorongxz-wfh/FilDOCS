@@ -43,8 +43,15 @@ export const EVENT_LABELS: Record<string, string> = {
   "office.updated": "Office updated",
   "office.disabled": "Office disabled",
   "office.restored": "Office restored",
+
+  "announcement.created": "Announcement created",
+  "announcement.archived": "Announcement archived",
+  "announcement.unarchived": "Announcement restored",
+  "announcement.deleted": "Announcement deleted",
 };
 
 export function friendlyEvent(event: string): string {
-  return EVENT_LABELS[event] ?? event.replace(/[._]/g, " ");
+  if (EVENT_LABELS[event]) return EVENT_LABELS[event];
+  // Fallback: convert "announcement.created" → "Announcement Created"
+  return event.replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }

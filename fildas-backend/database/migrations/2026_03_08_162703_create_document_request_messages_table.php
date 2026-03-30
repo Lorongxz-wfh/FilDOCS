@@ -22,12 +22,25 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             // 'comment' is the only type for now; room to add 'system' later
+            // Thread scoping — both null = batch-level shared thread
+            $table->unsignedBigInteger('recipient_id')->nullable();
+            $table->foreign('recipient_id')
+                ->references('id')->on('document_request_recipients')
+                ->cascadeOnDelete();
+
+            $table->unsignedBigInteger('item_id')->nullable();
+            $table->foreign('item_id')
+                ->references('id')->on('document_request_items')
+                ->cascadeOnDelete();
+
             $table->string('type', 30)->default('comment');
             $table->text('message');
 
             $table->timestamps();
 
             $table->index('document_request_id');
+            $table->index(['document_request_id', 'recipient_id']);
+            $table->index(['document_request_id', 'item_id']);
         });
     }
 

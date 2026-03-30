@@ -691,12 +691,10 @@ class DocumentRequestController extends Controller
             $now    = now();
             $itemId = isset($data['item_id']) ? (int) $data['item_id'] : null;
 
-            // attempt_no scoped per recipient + item
-            $attemptQuery = DB::table('document_request_submissions')
-                ->where('recipient_id', $recipientId);
-            if ($itemId) $attemptQuery->where('item_id', $itemId);
-
-            $attemptNo = (int) ($attemptQuery->max('attempt_no') ?? 0) + 1;
+            // attempt_no scoped per recipient only (unique constraint is on recipient_id + attempt_no)
+            $attemptNo = (int) (DB::table('document_request_submissions')
+                ->where('recipient_id', $recipientId)
+                ->max('attempt_no') ?? 0) + 1;
 
             $submissionId = DB::table('document_request_submissions')->insertGetId([
                 'recipient_id'           => $recipientId,
@@ -746,11 +744,13 @@ class DocumentRequestController extends Controller
                 'attempt_no'          => $attemptNo,
             ]);
 
-            // System message for submission
+            // System message for submission — scoped to recipient thread
             $uploadMsg = "Submitted attempt #{$attemptNo}";
             if (!empty($data['note'])) $uploadMsg .= ": " . $data['note'];
             DB::table('document_request_messages')->insert([
                 'document_request_id' => $requestId,
+                'recipient_id'        => $recipientId,
+                'item_id'             => $itemId,
                 'sender_user_id'      => $user->id,
                 'type'                => 'upload',
                 'message'             => $uploadMsg,
@@ -888,13 +888,15 @@ class DocumentRequestController extends Controller
                 'decision'            => $data['decision'],
             ], null, null, (int) ($recipient->office_id ?? null));
 
-            // System message for review decision
+            // System message for review decision — scoped to recipient thread
             $reviewMsg = $data['decision'] === 'accepted'
                 ? 'Submission accepted'
                 : 'Submission rejected';
             if (!empty($data['note'])) $reviewMsg .= ": " . $data['note'];
             DB::table('document_request_messages')->insert([
                 'document_request_id' => (int) ($recipient->request_id ?? null),
+                'recipient_id'        => (int) $recipient->id,
+                'item_id'             => $submission->item_id ? (int) $submission->item_id : null,
                 'sender_user_id'      => $user->id,
                 'type'                => 'review',
                 'message'             => $reviewMsg,

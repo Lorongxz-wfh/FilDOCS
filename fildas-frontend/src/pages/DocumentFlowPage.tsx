@@ -30,6 +30,7 @@ import { useToast } from "../components/ui/toast/ToastContext";
 import { getUserRole } from "../lib/roleFilters";
 import { getAuthUser } from "../lib/auth";
 import { Library, Loader2, Copy, Check, FileX } from "lucide-react";
+import { StatusBadge } from "../components/ui/Badge";
 import { normalizeError } from "../lib/normalizeError";
 
 const DocumentFlowPage: React.FC = () => {
@@ -412,7 +413,7 @@ const refreshAndSelectBest = React.useCallback(
                 {loading ? (
                   <Skeleton className="h-5 w-7 rounded-full" />
                 ) : (
-                  <span className="rounded-full bg-slate-100 dark:bg-surface-400 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                  <span className="rounded-full bg-slate-100 dark:bg-surface-400 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-400">
                     v
                     {headerState?.versionNumber ??
                       current?.version_number ??
@@ -420,11 +421,11 @@ const refreshAndSelectBest = React.useCallback(
                   </span>
                 )}
                 {loading ? (
-                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-5 w-20 rounded-md" />
                 ) : (
-                  <span className="rounded border border-slate-200 dark:border-surface-300 bg-slate-50 dark:bg-surface-400 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                    {headerState?.status ?? current?.status ?? "-"}
-                  </span>
+                  <StatusBadge
+                    status={headerState?.status ?? current?.status ?? "-"}
+                  />
                 )}
               </div>
             </div>
@@ -481,10 +482,13 @@ const refreshAndSelectBest = React.useCallback(
                 const prevStatus = selectedVersion?.status;
                 const prevVersionCount = allVersions.length;
                 try {
-                  await refreshAndSelectBest({ preferVersionId: selectedVersion?.id });
+                  await refreshAndSelectBest({
+                    preferVersionId: selectedVersion?.id,
+                  });
                   const statusChanged = selectedVersion?.status !== prevStatus;
                   const newVersionAdded = allVersions.length > prevVersionCount;
-                  if (statusChanged || newVersionAdded) return "Document updated.";
+                  if (statusChanged || newVersionAdded)
+                    return "Document updated.";
                   return "Already up to date.";
                 } finally {
                   setIsRefreshing(false);
@@ -534,7 +538,10 @@ const refreshAndSelectBest = React.useCallback(
             ) : (
               (headerState?.headerActions ?? []).map((a: any) => {
                 const isThis = processingKey === a.key;
-                const isBusy = !!processingKey || isLoadingSelectedVersion || pendingUploadPct !== null;
+                const isBusy =
+                  !!processingKey ||
+                  isLoadingSelectedVersion ||
+                  pendingUploadPct !== null;
                 return (
                   <Button
                     key={a.key}
@@ -569,7 +576,11 @@ const refreshAndSelectBest = React.useCallback(
                       : "secondary"
                 }
                 onClick={() => a.onClick()}
-                disabled={!!processingKey || isLoadingSelectedVersion || pendingUploadPct !== null}
+                disabled={
+                  !!processingKey ||
+                  isLoadingSelectedVersion ||
+                  pendingUploadPct !== null
+                }
               >
                 {a.label}
               </Button>

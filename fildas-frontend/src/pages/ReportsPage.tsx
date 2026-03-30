@@ -254,6 +254,20 @@ const ReportsPage: React.FC = () => {
             loading={loading}
             onRefresh={async () => {
               setRefreshKey((k) => k + 1);
+              // Wait for the loading state to flip — reports useEffect is triggered by refreshKey
+              await new Promise<void>((resolve) => {
+                const check = setInterval(() => {
+                  if (!loading) {
+                    clearInterval(check);
+                    resolve();
+                  }
+                }, 100);
+                // Fallback timeout
+                setTimeout(() => {
+                  clearInterval(check);
+                  resolve();
+                }, 5000);
+              });
               return "Report data refreshed.";
             }}
             title="Refresh report"
@@ -303,7 +317,6 @@ const ReportsPage: React.FC = () => {
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div ref={tabContentRef} className="flex-1 min-w-0 overflow-y-auto">
           <div className="flex flex-col gap-5 p-4 sm:p-5">
-
             {/* ── Overview ──────────────────────────────────────────────── */}
             {activeTab === "overview" && (
               <>
@@ -314,7 +327,12 @@ const ReportsPage: React.FC = () => {
                     label="All documents"
                     value={kpis.total_created}
                     sub="All versions ever created"
-                    icon={<FileText size={16} className="text-sky-600 dark:text-sky-400" />}
+                    icon={
+                      <FileText
+                        size={16}
+                        className="text-sky-600 dark:text-sky-400"
+                      />
+                    }
                     iconBg="bg-sky-50 dark:bg-sky-900/30"
                   />
                   <KpiCard
@@ -322,7 +340,12 @@ const ReportsPage: React.FC = () => {
                     label="Distributed"
                     value={kpis.total_approved_final}
                     sub="Latest versions fully distributed"
-                    icon={<CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />}
+                    icon={
+                      <CheckCircle2
+                        size={16}
+                        className="text-emerald-600 dark:text-emerald-400"
+                      />
+                    }
                     iconBg="bg-emerald-50 dark:bg-emerald-900/30"
                   />
                   <KpiCard
@@ -330,7 +353,12 @@ const ReportsPage: React.FC = () => {
                     label="Ongoing"
                     value={ongoingCount}
                     sub="Documents currently in progress"
-                    icon={<Activity size={16} className="text-amber-600 dark:text-amber-400" />}
+                    icon={
+                      <Activity
+                        size={16}
+                        className="text-amber-600 dark:text-amber-400"
+                      />
+                    }
                     iconBg="bg-amber-50 dark:bg-amber-900/30"
                   />
                 </div>
@@ -343,7 +371,11 @@ const ReportsPage: React.FC = () => {
                       subtitle="Created vs distributed per period"
                       loading={loading}
                     >
-                      <VolumeTrendChart data={volumeSeries} height={220} loading={loading} />
+                      <VolumeTrendChart
+                        data={volumeSeries}
+                        height={220}
+                        loading={loading}
+                      />
                     </ReportChartCard>
                   </div>
                   <div className="lg:col-span-1">
@@ -368,7 +400,12 @@ const ReportsPage: React.FC = () => {
                     label="First pass yield"
                     value={`${kpis.first_pass_yield_pct}%`}
                     sub="Docs distributed with zero returns"
-                    icon={<Percent size={16} className="text-emerald-600 dark:text-emerald-400" />}
+                    icon={
+                      <Percent
+                        size={16}
+                        className="text-emerald-600 dark:text-emerald-400"
+                      />
+                    }
                     iconBg="bg-emerald-50 dark:bg-emerald-900/30"
                   />
                   <KpiCard
@@ -376,7 +413,12 @@ const ReportsPage: React.FC = () => {
                     label="Avg cycle time"
                     value={`${kpis.cycle_time_avg_days}d`}
                     sub="Draft to distributed, avg days"
-                    icon={<Clock size={16} className="text-sky-600 dark:text-sky-400" />}
+                    icon={
+                      <Clock
+                        size={16}
+                        className="text-sky-600 dark:text-sky-400"
+                      />
+                    }
                     iconBg="bg-sky-50 dark:bg-sky-900/30"
                   />
                   <KpiCard
@@ -384,7 +426,12 @@ const ReportsPage: React.FC = () => {
                     label="Ping-pong ratio"
                     value={kpis.pingpong_ratio}
                     sub="Avg return events per document"
-                    icon={<RotateCcw size={16} className="text-rose-500 dark:text-rose-400" />}
+                    icon={
+                      <RotateCcw
+                        size={16}
+                        className="text-rose-500 dark:text-rose-400"
+                      />
+                    }
                     iconBg="bg-rose-50 dark:bg-rose-900/30"
                   />
                 </div>
@@ -395,7 +442,11 @@ const ReportsPage: React.FC = () => {
                   subtitle="Median task hold time per workflow phase"
                   loading={loading}
                 >
-                  <StageDelayChart data={stageDelaysByPhase} height={160} loading={loading} />
+                  <StageDelayChart
+                    data={stageDelaysByPhase}
+                    height={160}
+                    loading={loading}
+                  />
                 </ReportChartCard>
               </>
             )}
@@ -410,7 +461,12 @@ const ReportsPage: React.FC = () => {
                     label="Total created"
                     value={kpis.total_created}
                     sub="All document versions created"
-                    icon={<FileText size={16} className="text-sky-600 dark:text-sky-400" />}
+                    icon={
+                      <FileText
+                        size={16}
+                        className="text-sky-600 dark:text-sky-400"
+                      />
+                    }
                     iconBg="bg-sky-50 dark:bg-sky-900/30"
                   />
                   <KpiCard
@@ -418,7 +474,12 @@ const ReportsPage: React.FC = () => {
                     label="Distributed"
                     value={kpis.total_approved_final}
                     sub="Fully completed and distributed"
-                    icon={<CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />}
+                    icon={
+                      <CheckCircle2
+                        size={16}
+                        className="text-emerald-600 dark:text-emerald-400"
+                      />
+                    }
                     iconBg="bg-emerald-50 dark:bg-emerald-900/30"
                   />
                   <KpiCard
@@ -426,7 +487,12 @@ const ReportsPage: React.FC = () => {
                     label="Active"
                     value={ongoingCount}
                     sub="Documents currently in progress"
-                    icon={<Activity size={16} className="text-amber-600 dark:text-amber-400" />}
+                    icon={
+                      <Activity
+                        size={16}
+                        className="text-amber-600 dark:text-amber-400"
+                      />
+                    }
                     iconBg="bg-amber-50 dark:bg-amber-900/30"
                   />
                   <KpiCard
@@ -434,7 +500,12 @@ const ReportsPage: React.FC = () => {
                     label="Avg cycle time"
                     value={`${kpis.cycle_time_avg_days}d`}
                     sub="Draft to distributed, avg days"
-                    icon={<Clock size={16} className="text-slate-500 dark:text-slate-400" />}
+                    icon={
+                      <Clock
+                        size={16}
+                        className="text-slate-500 dark:text-slate-400"
+                      />
+                    }
                     iconBg="bg-slate-100 dark:bg-surface-400"
                   />
                 </div>
@@ -447,7 +518,11 @@ const ReportsPage: React.FC = () => {
                       subtitle="Documents created vs distributed per period"
                       loading={loading}
                     >
-                      <VolumeTrendChart data={volumeSeries} height={220} loading={loading} />
+                      <VolumeTrendChart
+                        data={volumeSeries}
+                        height={220}
+                        loading={loading}
+                      />
                     </ReportChartCard>
                   </div>
                   <div className="lg:col-span-1">
@@ -456,7 +531,11 @@ const ReportsPage: React.FC = () => {
                       subtitle="Internal · External · Forms split"
                       loading={loading}
                     >
-                      <DocumentTypeChart data={doctypeDist} height={160} loading={loading} />
+                      <DocumentTypeChart
+                        data={doctypeDist}
+                        height={160}
+                        loading={loading}
+                      />
                     </ReportChartCard>
                   </div>
                 </div>
@@ -468,7 +547,10 @@ const ReportsPage: React.FC = () => {
                     subtitle="Ranked by creation volume"
                     loading={loading}
                   >
-                    <OfficeCreationChart data={creationByOffice} loading={loading} />
+                    <OfficeCreationChart
+                      data={creationByOffice}
+                      loading={loading}
+                    />
                   </ReportChartCard>
                   <div className="flex items-center justify-center rounded-lg border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/20 text-slate-400 dark:text-slate-500 text-xs">
                     companion chart TBD
@@ -481,7 +563,10 @@ const ReportsPage: React.FC = () => {
                   subtitle="How many documents pass each stage — creation date range applied"
                   loading={loading}
                 >
-                  <WorkflowFunnelChart data={lifecycleFunnel} loading={loading} />
+                  <WorkflowFunnelChart
+                    data={lifecycleFunnel}
+                    loading={loading}
+                  />
                 </ReportChartCard>
 
                 {/* Routing split + Revision stats */}
@@ -493,21 +578,39 @@ const ReportsPage: React.FC = () => {
                   >
                     <div className="flex flex-col gap-2">
                       {[
-                        { label: "Default flow", value: routingSplit.default_flow, color: "bg-sky-400" },
-                        { label: "Custom flow",  value: routingSplit.custom_flow,  color: "bg-violet-400" },
+                        {
+                          label: "Default flow",
+                          value: routingSplit.default_flow,
+                          color: "bg-sky-400",
+                        },
+                        {
+                          label: "Custom flow",
+                          value: routingSplit.custom_flow,
+                          color: "bg-violet-400",
+                        },
                       ].map(({ label, value, color }) => {
-                        const total = routingSplit.default_flow + routingSplit.custom_flow || 1;
+                        const total =
+                          routingSplit.default_flow +
+                            routingSplit.custom_flow || 1;
                         const pct = Math.round((value / total) * 100);
                         return (
                           <div key={label} className="flex flex-col gap-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-slate-600 dark:text-slate-300 font-medium">{label}</span>
+                              <span className="text-slate-600 dark:text-slate-300 font-medium">
+                                {label}
+                              </span>
                               <span className="tabular-nums font-semibold text-slate-700 dark:text-slate-200">
-                                {value} <span className="text-slate-400 dark:text-slate-500 font-normal">({pct}%)</span>
+                                {value}{" "}
+                                <span className="text-slate-400 dark:text-slate-500 font-normal">
+                                  ({pct}%)
+                                </span>
                               </span>
                             </div>
                             <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-surface-400 overflow-hidden">
-                              <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+                              <div
+                                className={`h-full rounded-full ${color}`}
+                                style={{ width: `${pct}%` }}
+                              />
                             </div>
                           </div>
                         );
@@ -522,20 +625,32 @@ const ReportsPage: React.FC = () => {
                   >
                     <div className="grid grid-cols-2 gap-3 h-full">
                       <div className="flex flex-col items-center justify-center rounded-md bg-slate-50 dark:bg-surface-600 border border-slate-100 dark:border-surface-400 py-4 px-3 text-center">
-                        {loading ? <Skeleton className="h-7 w-12 mb-1" /> : (
+                        {loading ? (
+                          <Skeleton className="h-7 w-12 mb-1" />
+                        ) : (
                           <p className="text-2xl font-bold tabular-nums text-amber-500 dark:text-amber-400 leading-none">
                             {revisionStats.docs_on_v2_plus}
                           </p>
                         )}
-                        <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-tight">docs revised<br/>(v2 or later)</p>
+                        <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                          docs revised
+                          <br />
+                          (v2 or later)
+                        </p>
                       </div>
                       <div className="flex flex-col items-center justify-center rounded-md bg-slate-50 dark:bg-surface-600 border border-slate-100 dark:border-surface-400 py-4 px-3 text-center">
-                        {loading ? <Skeleton className="h-7 w-12 mb-1" /> : (
+                        {loading ? (
+                          <Skeleton className="h-7 w-12 mb-1" />
+                        ) : (
                           <p className="text-2xl font-bold tabular-nums text-violet-500 dark:text-violet-400 leading-none">
                             {revisionStats.avg_versions}
                           </p>
                         )}
-                        <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-tight">avg versions<br/>per document</p>
+                        <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                          avg versions
+                          <br />
+                          per document
+                        </p>
                       </div>
                     </div>
                   </ReportChartCard>
@@ -554,7 +669,12 @@ const ReportsPage: React.FC = () => {
                     label="Total requests"
                     value={requestsReport?.kpis.total ?? 0}
                     sub="All requests submitted"
-                    icon={<Send size={16} className="text-sky-600 dark:text-sky-400" />}
+                    icon={
+                      <Send
+                        size={16}
+                        className="text-sky-600 dark:text-sky-400"
+                      />
+                    }
                     iconBg="bg-sky-50 dark:bg-sky-900/30"
                   />
                   <KpiCard
@@ -562,7 +682,12 @@ const ReportsPage: React.FC = () => {
                     label="Accepted"
                     value={requestsReport?.kpis.closed ?? 0}
                     sub="Requests fulfilled and closed"
-                    icon={<CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />}
+                    icon={
+                      <CheckCircle2
+                        size={16}
+                        className="text-emerald-600 dark:text-emerald-400"
+                      />
+                    }
                     iconBg="bg-emerald-50 dark:bg-emerald-900/30"
                   />
                   <KpiCard
@@ -570,7 +695,12 @@ const ReportsPage: React.FC = () => {
                     label="Pending"
                     value={requestsReport?.kpis.open ?? 0}
                     sub="Currently open requests"
-                    icon={<Activity size={16} className="text-amber-600 dark:text-amber-400" />}
+                    icon={
+                      <Activity
+                        size={16}
+                        className="text-amber-600 dark:text-amber-400"
+                      />
+                    }
                     iconBg="bg-amber-50 dark:bg-amber-900/30"
                   />
                   <KpiCard
@@ -578,7 +708,12 @@ const ReportsPage: React.FC = () => {
                     label="Overdue"
                     value={requestsReport?.kpis.overdue ?? 0}
                     sub="Past expected response date"
-                    icon={<AlertCircle size={16} className="text-rose-500 dark:text-rose-400" />}
+                    icon={
+                      <AlertCircle
+                        size={16}
+                        className="text-rose-500 dark:text-rose-400"
+                      />
+                    }
                     iconBg="bg-rose-50 dark:bg-rose-900/30"
                   />
                 </div>
@@ -590,7 +725,12 @@ const ReportsPage: React.FC = () => {
                     label="Cancelled"
                     value={requestsReport?.kpis.cancelled ?? 0}
                     sub="Requests withdrawn by requester"
-                    icon={<Ban size={16} className="text-slate-500 dark:text-slate-400" />}
+                    icon={
+                      <Ban
+                        size={16}
+                        className="text-slate-500 dark:text-slate-400"
+                      />
+                    }
                     iconBg="bg-slate-100 dark:bg-surface-400"
                   />
                   <KpiCard
@@ -598,7 +738,12 @@ const ReportsPage: React.FC = () => {
                     label="Acceptance rate"
                     value={`${requestsReport?.kpis.acceptance_rate ?? 0}%`}
                     sub="Accepted out of total submitted"
-                    icon={<TrendingUp size={16} className="text-violet-600 dark:text-violet-400" />}
+                    icon={
+                      <TrendingUp
+                        size={16}
+                        className="text-violet-600 dark:text-violet-400"
+                      />
+                    }
                     iconBg="bg-violet-50 dark:bg-violet-900/30"
                   />
                   <KpiCard
@@ -606,7 +751,12 @@ const ReportsPage: React.FC = () => {
                     label="Avg resubmissions"
                     value={requestsReport?.kpis.avg_resubmissions ?? 0}
                     sub="Avg attempts per request"
-                    icon={<RotateCcw size={16} className="text-amber-600 dark:text-amber-400" />}
+                    icon={
+                      <RotateCcw
+                        size={16}
+                        className="text-amber-600 dark:text-amber-400"
+                      />
+                    }
                     iconBg="bg-amber-50 dark:bg-amber-900/30"
                   />
                 </div>
@@ -620,11 +770,13 @@ const ReportsPage: React.FC = () => {
                       loading={requestsLoading}
                     >
                       <VolumeTrendChart
-                        data={(requestsReport?.volume_series ?? []).map((d) => ({
-                          label: d.label,
-                          created: d.created,
-                          approved_final: d.approved_final,
-                        }))}
+                        data={(requestsReport?.volume_series ?? []).map(
+                          (d) => ({
+                            label: d.label,
+                            created: d.created,
+                            approved_final: d.approved_final,
+                          }),
+                        )}
                         height={220}
                         loading={requestsLoading}
                       />
@@ -652,7 +804,10 @@ const ReportsPage: React.FC = () => {
                   loading={requestsLoading}
                 >
                   <WorkflowFunnelChart
-                    data={(requestsReport?.funnel ?? []).map((d) => ({ stage: d.stage, count: d.count }))}
+                    data={(requestsReport?.funnel ?? []).map((d) => ({
+                      stage: d.stage,
+                      count: d.count,
+                    }))}
                     loading={requestsLoading}
                   />
                 </ReportChartCard>
@@ -665,25 +820,48 @@ const ReportsPage: React.FC = () => {
                     loading={requestsLoading}
                   >
                     <div className="flex flex-col gap-2.5">
-                      {(requestsReport?.attempt_distribution ?? []).map((d, i) => {
-                        const total = (requestsReport?.attempt_distribution ?? []).reduce((s, x) => s + x.count, 0) || 1;
-                        const pct = Math.round((d.count / total) * 100);
-                        const colors = ["#38bdf8", "#a78bfa", "#f43f5e"];
-                        return (
-                          <div key={d.attempt} className="flex items-center gap-3">
-                            <span className="w-24 shrink-0 text-xs text-slate-600 dark:text-slate-300 font-medium truncate">{d.attempt}</span>
-                            <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-surface-400 overflow-hidden">
-                              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: colors[i] ?? "#94a3b8" }} />
+                      {(requestsReport?.attempt_distribution ?? []).map(
+                        (d, i) => {
+                          const total =
+                            (requestsReport?.attempt_distribution ?? []).reduce(
+                              (s, x) => s + x.count,
+                              0,
+                            ) || 1;
+                          const pct = Math.round((d.count / total) * 100);
+                          const colors = ["#38bdf8", "#a78bfa", "#f43f5e"];
+                          return (
+                            <div
+                              key={d.attempt}
+                              className="flex items-center gap-3"
+                            >
+                              <span className="w-24 shrink-0 text-xs text-slate-600 dark:text-slate-300 font-medium truncate">
+                                {d.attempt}
+                              </span>
+                              <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-surface-400 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-500"
+                                  style={{
+                                    width: `${pct}%`,
+                                    backgroundColor: colors[i] ?? "#94a3b8",
+                                  }}
+                                />
+                              </div>
+                              <span className="w-14 shrink-0 text-right text-xs tabular-nums text-slate-700 dark:text-slate-200">
+                                {d.count}{" "}
+                                <span className="text-slate-400 dark:text-slate-500">
+                                  ({pct}%)
+                                </span>
+                              </span>
                             </div>
-                            <span className="w-14 shrink-0 text-right text-xs tabular-nums text-slate-700 dark:text-slate-200">
-                              {d.count} <span className="text-slate-400 dark:text-slate-500">({pct}%)</span>
-                            </span>
-                          </div>
-                        );
-                      })}
-                      {!requestsLoading && !requestsReport?.attempt_distribution?.length && (
-                        <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-4">No data available</p>
+                          );
+                        },
                       )}
+                      {!requestsLoading &&
+                        !requestsReport?.attempt_distribution?.length && (
+                          <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-4">
+                            No data available
+                          </p>
+                        )}
                     </div>
                   </ReportChartCard>
 
@@ -694,32 +872,60 @@ const ReportsPage: React.FC = () => {
                   >
                     <div className="flex flex-col gap-0">
                       <div className="flex items-center gap-2 px-1 pb-1.5 border-b border-slate-100 dark:border-surface-400">
-                        <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Office</span>
-                        <span className="w-10 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Sent</span>
-                        <span className="w-10 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Acc.</span>
-                        <span className="w-12 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Rate</span>
+                        <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          Office
+                        </span>
+                        <span className="w-10 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          Sent
+                        </span>
+                        <span className="w-10 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          Acc.
+                        </span>
+                        <span className="w-12 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          Rate
+                        </span>
                       </div>
-                      <div className="overflow-y-auto divide-y divide-slate-50 dark:divide-surface-500" style={{ maxHeight: "13.5rem" }}>
+                      <div
+                        className="overflow-y-auto divide-y divide-slate-50 dark:divide-surface-500"
+                        style={{ maxHeight: "13.5rem" }}
+                      >
                         {requestsLoading ? (
-                          [1,2,3,4].map((i) => (
-                            <div key={i} className="flex items-center gap-2 px-1 py-2">
+                          [1, 2, 3, 4].map((i) => (
+                            <div
+                              key={i}
+                              className="flex items-center gap-2 px-1 py-2"
+                            >
                               <Skeleton className="flex-1 h-2.5" />
                               <Skeleton className="w-8 h-2.5 shrink-0" />
                               <Skeleton className="w-8 h-2.5 shrink-0" />
                               <Skeleton className="w-10 h-2.5 shrink-0" />
                             </div>
                           ))
-                        ) : (requestsReport?.office_acceptance ?? []).length === 0 ? (
-                          <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-6">No data available</p>
+                        ) : (requestsReport?.office_acceptance ?? []).length ===
+                          0 ? (
+                          <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-6">
+                            No data available
+                          </p>
                         ) : (
                           (requestsReport?.office_acceptance ?? [])
                             .sort((a, b) => b.rate - a.rate)
                             .map((o) => (
-                              <div key={o.office} className="flex items-center gap-2 px-1 py-2 hover:bg-slate-50 dark:hover:bg-surface-600/50 transition-colors">
-                                <span className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{o.office}</span>
-                                <span className="w-10 shrink-0 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">{o.sent}</span>
-                                <span className="w-10 shrink-0 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">{o.accepted}</span>
-                                <span className={`w-12 shrink-0 text-right text-xs font-bold tabular-nums ${o.rate >= 75 ? "text-emerald-500 dark:text-emerald-400" : o.rate >= 50 ? "text-amber-500 dark:text-amber-400" : "text-rose-500 dark:text-rose-400"}`}>
+                              <div
+                                key={o.office}
+                                className="flex items-center gap-2 px-1 py-2 hover:bg-slate-50 dark:hover:bg-surface-600/50 transition-colors"
+                              >
+                                <span className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-200 truncate">
+                                  {o.office}
+                                </span>
+                                <span className="w-10 shrink-0 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                                  {o.sent}
+                                </span>
+                                <span className="w-10 shrink-0 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                                  {o.accepted}
+                                </span>
+                                <span
+                                  className={`w-12 shrink-0 text-right text-xs font-bold tabular-nums ${o.rate >= 75 ? "text-emerald-500 dark:text-emerald-400" : o.rate >= 50 ? "text-amber-500 dark:text-amber-400" : "text-rose-500 dark:text-rose-400"}`}
+                                >
                                   {o.rate}%
                                 </span>
                               </div>
@@ -731,7 +937,6 @@ const ReportsPage: React.FC = () => {
                 </div>
               </>
             )}
-
           </div>
         </div>
 
@@ -740,7 +945,9 @@ const ReportsPage: React.FC = () => {
           <aside className="w-56 shrink-0 border-l border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-y-auto flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-surface-400">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-200">Filters</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                  Filters
+                </span>
                 {activeFilterCount > 0 && (
                   <span className="rounded-full bg-brand-400 px-1.5 py-0.5 text-[10px] font-semibold text-white leading-none">
                     {activeFilterCount}
@@ -768,20 +975,27 @@ const ReportsPage: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-5 p-4">
-
               {/* Office head: locked scope notice */}
               {isOfficeHead && (
                 <div className="rounded-md bg-slate-50 dark:bg-surface-600 border border-slate-200 dark:border-surface-400 px-3 py-2.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Data scope</p>
-                  <p className="text-xs font-medium text-slate-700 dark:text-slate-200">{me?.office?.name ?? "Your office"}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Scoped to your office only</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
+                    Data scope
+                  </p>
+                  <p className="text-xs font-medium text-slate-700 dark:text-slate-200">
+                    {me?.office?.name ?? "Your office"}
+                  </p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    Scoped to your office only
+                  </p>
                 </div>
               )}
 
               {/* View by — hidden for office head */}
               {!isOfficeHead && (
                 <div>
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">View by</p>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    View by
+                  </p>
                   <div className="flex overflow-hidden rounded-md border border-slate-200 dark:border-surface-400">
                     {(["offices", "clusters"] as Scope[]).map((s, i) => (
                       <button
@@ -794,7 +1008,9 @@ const ReportsPage: React.FC = () => {
                         }}
                         className={[
                           "flex-1 py-1.5 text-xs font-medium transition-colors",
-                          i > 0 ? "border-l border-slate-200 dark:border-surface-400" : "",
+                          i > 0
+                            ? "border-l border-slate-200 dark:border-surface-400"
+                            : "",
                           scope === s
                             ? "bg-brand-500 text-white"
                             : "bg-white dark:bg-surface-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-500",
@@ -810,8 +1026,14 @@ const ReportsPage: React.FC = () => {
               {/* Cluster picker */}
               {!isOfficeHead && scope === "clusters" && (
                 <div>
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Cluster</p>
-                  <select value={parent} onChange={(e) => setParent(e.target.value as Parent)} className={filterSelectCls}>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    Cluster
+                  </p>
+                  <select
+                    value={parent}
+                    onChange={(e) => setParent(e.target.value as Parent)}
+                    className={filterSelectCls}
+                  >
                     <option value="ALL">All clusters</option>
                     <option value="PO">President (PO)</option>
                     <option value="VAd">VP-Admin (VAd)</option>
@@ -825,24 +1047,40 @@ const ReportsPage: React.FC = () => {
               {/* Office picker */}
               {!isOfficeHead && scope === "offices" && (
                 <div>
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Office</p>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    Office
+                  </p>
                   <select
                     value={officeId ?? ""}
-                    onChange={(e) => setOfficeId(e.target.value ? Number(e.target.value) : null)}
+                    onChange={(e) =>
+                      setOfficeId(
+                        e.target.value ? Number(e.target.value) : null,
+                      )
+                    }
                     className={filterSelectCls}
                   >
                     <option value="">All offices</option>
-                    {[...officesList].sort((a, b) => a.code.localeCompare(b.code)).map((o) => (
-                      <option key={o.id} value={o.id}>{o.code} — {o.name}</option>
-                    ))}
+                    {[...officesList]
+                      .sort((a, b) => a.code.localeCompare(b.code))
+                      .map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.code} — {o.name}
+                        </option>
+                      ))}
                   </select>
                 </div>
               )}
 
               {/* Group by */}
               <div>
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Group by</p>
-                <select value={bucket} onChange={(e) => setBucket(e.target.value as Bucket)} className={filterSelectCls}>
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Group by
+                </p>
+                <select
+                  value={bucket}
+                  onChange={(e) => setBucket(e.target.value as Bucket)}
+                  className={filterSelectCls}
+                >
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
                   <option value="monthly">Monthly</option>
@@ -853,7 +1091,9 @@ const ReportsPage: React.FC = () => {
 
               {/* Date field */}
               <div>
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Date field</p>
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Date field
+                </p>
                 <div className="flex overflow-hidden rounded-md border border-slate-200 dark:border-surface-400">
                   {(["completed", "created"] as DateField[]).map((f, i) => (
                     <button
@@ -862,7 +1102,9 @@ const ReportsPage: React.FC = () => {
                       onClick={() => setDateField(f)}
                       className={[
                         "flex-1 py-1.5 text-xs font-medium transition-colors",
-                        i > 0 ? "border-l border-slate-200 dark:border-surface-400" : "",
+                        i > 0
+                          ? "border-l border-slate-200 dark:border-surface-400"
+                          : "",
                         dateField === f
                           ? "bg-brand-500 text-white"
                           : "bg-white dark:bg-surface-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-500",
@@ -876,19 +1118,34 @@ const ReportsPage: React.FC = () => {
 
               {/* Date range */}
               <div>
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Date range</p>
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Date range
+                </p>
                 <div className="flex flex-col gap-2">
                   <div>
-                    <p className="mb-1 text-[10px] text-slate-400 dark:text-slate-500">From</p>
-                    <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className={filterSelectCls} />
+                    <p className="mb-1 text-[10px] text-slate-400 dark:text-slate-500">
+                      From
+                    </p>
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className={filterSelectCls}
+                    />
                   </div>
                   <div>
-                    <p className="mb-1 text-[10px] text-slate-400 dark:text-slate-500">To</p>
-                    <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className={filterSelectCls} />
+                    <p className="mb-1 text-[10px] text-slate-400 dark:text-slate-500">
+                      To
+                    </p>
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className={filterSelectCls}
+                    />
                   </div>
                 </div>
               </div>
-
             </div>
           </aside>
         )}

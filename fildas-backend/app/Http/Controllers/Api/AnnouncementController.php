@@ -78,15 +78,32 @@ class AnnouncementController extends Controller
 
         $announcement->load('creator:id,first_name,middle_name,last_name,suffix');
 
+        $typeLabel   = ucfirst($announcement->type);
+        $pinnedLabel = $announcement->is_pinned ? 'Yes' : 'No';
+        $expiresLabel = $announcement->expires_at
+            ? $announcement->expires_at->format('F j, Y g:i A')
+            : 'No expiry set';
+
+        $this->log($request, 'announcement.created', "Posted a new announcement: \"{$announcement->title}\"", [
+            'Announcement ID' => $announcement->id,
+            'Title'           => $announcement->title,
+            'Priority'        => $typeLabel,
+            'Pinned'          => $pinnedLabel,
+            'Expires'         => $expiresLabel,
+            'Posted by'       => $request->user()->full_name,
+        ]);
+
         return response()->json([
-            'id'           => $announcement->id,
-            'title'        => $announcement->title,
-            'body'         => $announcement->body,
-            'type'         => $announcement->type,
-            'is_pinned'    => $announcement->is_pinned,
-            'expires_at'   => $announcement->expires_at?->toISOString(),
-            'created_at'   => $announcement->created_at->toISOString(),
-            'created_by'   => $announcement->creator->full_name ?? 'QA',
+            'id'          => $announcement->id,
+            'title'       => $announcement->title,
+            'body'        => $announcement->body,
+            'type'        => $announcement->type,
+            'is_pinned'   => $announcement->is_pinned,
+            'is_archived' => false,
+            'expires_at'  => $announcement->expires_at?->toISOString(),
+            'archived_at' => null,
+            'created_at'  => $announcement->created_at->toISOString(),
+            'created_by'  => $announcement->creator->full_name ?? 'QA',
         ], 201);
     }
 
@@ -95,6 +112,15 @@ class AnnouncementController extends Controller
     {
         $this->authorizeRole($request);
         $announcement->update(['archived_at' => now()]);
+
+        $this->log($request, 'announcement.archived', "Archived announcement: \"{$announcement->title}\"", [
+            'Announcement ID' => $announcement->id,
+            'Title'           => $announcement->title,
+            'Priority'        => ucfirst($announcement->type),
+            'Archived by'     => $request->user()->full_name,
+            'Archived at'     => now()->format('F j, Y g:i A'),
+        ]);
+
         return response()->json(['message' => 'Archived.']);
     }
 
@@ -103,6 +129,15 @@ class AnnouncementController extends Controller
     {
         $this->authorizeRole($request);
         $announcement->update(['archived_at' => null]);
+
+        $this->log($request, 'announcement.unarchived', "Restored announcement from archive: \"{$announcement->title}\"", [
+            'Announcement ID' => $announcement->id,
+            'Title'           => $announcement->title,
+            'Priority'        => ucfirst($announcement->type),
+            'Restored by'     => $request->user()->full_name,
+            'Restored at'     => now()->format('F j, Y g:i A'),
+        ]);
+
         return response()->json(['message' => 'Unarchived.']);
     }
 
@@ -110,6 +145,17 @@ class AnnouncementController extends Controller
     public function destroy(Request $request, Announcement $announcement): JsonResponse
     {
         $this->authorizeRole($request);
+
+        $this->log($request, 'announcement.deleted', "Permanently deleted announcement: \"{$announcement->title}\"", [
+            'Announcement ID' => $announcement->id,
+            'Title'           => $announcement->title,
+            'Priority'        => ucfirst($announcement->type),
+            'Was Pinned'      => $announcement->is_pinned ? 'Yes' : 'No',
+            'Was Archived'    => $announcement->archived_at ? 'Yes' : 'No',
+            'Deleted by'      => $request->user()->full_name,
+            'Deleted at'      => now()->format('F j, Y g:i A'),
+        ]);
+
         $announcement->delete();
         return response()->json(['message' => 'Deleted.']);
     }
@@ -120,5 +166,17 @@ class AnnouncementController extends Controller
         if (!in_array(strtolower($roleName), ['admin', 'qa', 'sysadmin'])) {
             abort(403, 'Unauthorized.');
         }
+    }
+
+    private function log(Request $request, string $event, string $label, array $meta = []): void
+    {
+        $user = $request->user();
+        \App\Models\ActivityLog::create([
+            'actor_user_id'   => $user->id,
+            'actor_office_id' => $user->office_id ?? null,
+            'event'           => $event,
+            'label'           => $label,
+            'meta'            => $meta,
+        ]);
     }
 }

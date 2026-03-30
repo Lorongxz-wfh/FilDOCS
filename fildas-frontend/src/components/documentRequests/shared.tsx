@@ -7,31 +7,7 @@ export function roleLower(me: any): string {
 
 export { formatDate, formatDateTime } from "../../utils/formatters";
 
-export function StatusBadge({ status }: { status: string }) {
-  const s = String(status).toLowerCase();
-  const map: Record<string, string> = {
-    open: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
-    closed:
-      "bg-slate-100 text-slate-600 border-slate-200 dark:bg-surface-400 dark:text-slate-400 dark:border-surface-300",
-    cancelled:
-      "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
-    pending:
-      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
-    submitted:
-      "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-800",
-    accepted:
-      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
-    rejected:
-      "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
-  };
-  return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold tracking-wide ${map[s] ?? "bg-slate-100 text-slate-600 border-slate-200"}`}
-    >
-      {String(status).toUpperCase()}
-    </span>
-  );
-}
+export { StatusBadge } from "../ui/Badge";
 
 export function RoleBadge({ role }: { role?: string | null }) {
   if (!role) return null;

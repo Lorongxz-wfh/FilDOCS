@@ -222,10 +222,12 @@ const DocumentInfoPanel: React.FC<Props> = ({
             label="Code"
             value={
               document.code ? (
-                document.code
+                <span className="font-mono">{document.code}</span>
               ) : (document as any).reserved_code ? (
-                <span className="flex items-center gap-1.5">
-                  {(document as any).reserved_code}
+                <span className="flex items-center justify-end gap-1.5">
+                  <span className="font-mono">
+                    {(document as any).reserved_code}
+                  </span>
                   <span className="rounded border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/15 px-1.5 py-0.5 text-[9px] font-semibold text-amber-600 dark:text-amber-300">
                     pending
                   </span>

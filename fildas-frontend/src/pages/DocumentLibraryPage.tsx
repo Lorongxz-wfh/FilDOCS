@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { pageCache } from "../lib/pageCache";
 import {
   listDocumentsPage,
@@ -60,8 +60,11 @@ export default function DocumentLibraryPage() {
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
-  const [sourceFilter, setSourceFilter] = useState<"all" | "doc" | "req">("all");
-  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+  const [sourceFilter, setSourceFilter] = useState<"all" | "doc" | "req">(
+    "all",
+  );
+  const [sortBy, setSortBy] = useState<"title" | "created_at">("created_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +85,11 @@ export default function DocumentLibraryPage() {
 
   // ── State: All tab (dual sources) ─────────────────────────────────────────
   const _libKey0 = '{"q":"","type":"ALL","dateFrom":"","dateTo":""}';
-  const _ladc = pageCache.get<Document>("library-all-doc", _libKey0, 3 * 60_000);
+  const _ladc = pageCache.get<Document>(
+    "library-all-doc",
+    _libKey0,
+    3 * 60_000,
+  );
   const _larc = pageCache.get<any>("library-all-req", _libKey0, 3 * 60_000);
   const [allDocRows, setAllDocRows] = useState<Document[]>(_ladc?.rows ?? []);
   const [allDocPage, setAllDocPage] = useState(1);
@@ -92,6 +99,7 @@ export default function DocumentLibraryPage() {
   const [allReqHasMore, setAllReqHasMore] = useState(_larc?.hasMore ?? true);
   const [allLoading, setAllLoading] = useState(false);
   const [allInitialLoading, setAllInitialLoading] = useState(!_ladc && !_larc);
+  const [fetchKey, setFetchKey] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
 
   // ── Share modal ───────────────────────────────────────────────────────────
@@ -106,17 +114,36 @@ export default function DocumentLibraryPage() {
 
   // Reset all state on tab / filter change
   useEffect(() => {
-    setDocRows([]); setDocPage(1); setDocHasMore(true); setDocInitialLoading(true); setDocLoading(false);
-    setReqRows([]); setReqPage(1); setReqHasMore(true); setReqInitialLoading(true); setReqLoading(false);
-    setAllDocRows([]); setAllDocPage(1); setAllDocHasMore(true);
-    setAllReqRows([]); setAllReqPage(1); setAllReqHasMore(true); setAllInitialLoading(true); setAllLoading(false);
+    setDocRows([]);
+    setDocPage(1);
+    setDocHasMore(true);
+    setDocInitialLoading(true);
+    setDocLoading(false);
+    setReqRows([]);
+    setReqPage(1);
+    setReqHasMore(true);
+    setReqInitialLoading(true);
+    setReqLoading(false);
+    setAllDocRows([]);
+    setAllDocPage(1);
+    setAllDocHasMore(true);
+    setAllReqRows([]);
+    setAllReqPage(1);
+    setAllReqHasMore(true);
+    setAllInitialLoading(true);
+    setAllLoading(false);
     setError(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, qDebounced, typeFilter, dateFrom, dateTo]);
+    setFetchKey((k) => k + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir]);
 
   // Reset "all" tab-only filters when leaving that tab
   useEffect(() => {
-    if (tab !== "all") { setSourceFilter("all"); setSortDir("desc"); }
+    if (tab !== "all") {
+      setSourceFilter("all");
+      setSortBy("created_at");
+      setSortDir("desc");
+    }
   }, [tab]);
 
   // ── Load: Created / Shared ────────────────────────────────────────────────
@@ -138,10 +165,14 @@ export default function DocumentLibraryPage() {
           scope,
           date_from: dateFrom || undefined,
           date_to: dateTo || undefined,
+          sort_by: sortBy,
+          sort_dir: sortDir,
         });
         if (!alive) return;
         const incoming = res.data ?? [];
-        setDocRows((prev) => (docPage === 1 ? incoming : [...prev, ...incoming]));
+        setDocRows((prev) =>
+          docPage === 1 ? incoming : [...prev, ...incoming],
+        );
         setDocHasMore(
           (res.meta?.current_page ?? 0) < (res.meta?.last_page ?? 0),
         );
@@ -155,9 +186,23 @@ export default function DocumentLibraryPage() {
       }
     };
     load();
-    return () => { alive = false; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, docPage, qDebounced, typeFilter, dateFrom, dateTo, isAdmin, reloadKey]);
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    tab,
+    docPage,
+    qDebounced,
+    typeFilter,
+    dateFrom,
+    dateTo,
+    isAdmin,
+    reloadKey,
+    sortBy,
+    sortDir,
+    fetchKey,
+  ]);
 
   // ── Load: Requested ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -176,7 +221,9 @@ export default function DocumentLibraryPage() {
         });
         if (!alive) return;
         const incoming = Array.isArray(res.data) ? res.data : [];
-        setReqRows((prev) => (reqPage === 1 ? incoming : [...prev, ...incoming]));
+        setReqRows((prev) =>
+          reqPage === 1 ? incoming : [...prev, ...incoming],
+        );
         setReqHasMore(
           res.current_page != null &&
             res.last_page != null &&
@@ -192,14 +239,18 @@ export default function DocumentLibraryPage() {
       }
     };
     load();
-    return () => { alive = false; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, reqPage, qDebounced, reloadKey]);
 
   // ── Load: All tab (parallel fetch) ───────────────────────────────────────
   useEffect(() => {
     if (tab !== "all") return;
-    if (!allDocHasMore && !allReqHasMore && allDocPage > 1) return;
+    // Only block on genuine "load more" exhaustion — not on fresh loads triggered by fetchKey
+    if (!allDocHasMore && !allReqHasMore && allDocPage > 1 && allReqPage > 1)
+      return;
     let alive = true;
     const load = async () => {
       setAllLoading(true);
@@ -216,6 +267,8 @@ export default function DocumentLibraryPage() {
                 scope: "all",
                 date_from: dateFrom || undefined,
                 date_to: dateTo || undefined,
+                sort_by: sortBy,
+                sort_dir: sortDir,
               })
             : null,
           allReqHasMore
@@ -228,13 +281,20 @@ export default function DocumentLibraryPage() {
             : null,
         ]);
         if (!alive) return;
-        const libFilterKey = JSON.stringify({ q: qDebounced.trim(), type: typeFilter, dateFrom, dateTo });
+        const libFilterKey = JSON.stringify({
+          q: qDebounced.trim(),
+          type: typeFilter,
+          dateFrom,
+          dateTo,
+        });
         if (docRes) {
           const inc = docRes.data ?? [];
-          const docMore = (docRes.meta?.current_page ?? 0) < (docRes.meta?.last_page ?? 0);
+          const docMore =
+            (docRes.meta?.current_page ?? 0) < (docRes.meta?.last_page ?? 0);
           setAllDocRows((prev) => (allDocPage === 1 ? inc : [...prev, ...inc]));
           setAllDocHasMore(docMore);
-          if (allDocPage === 1) pageCache.set("library-all-doc", libFilterKey, inc, docMore);
+          if (allDocPage === 1)
+            pageCache.set("library-all-doc", libFilterKey, inc, docMore);
         }
         if (reqRes) {
           const inc = Array.isArray(reqRes.data) ? reqRes.data : [];
@@ -244,7 +304,8 @@ export default function DocumentLibraryPage() {
             reqRes.current_page < reqRes.last_page;
           setAllReqRows((prev) => (allReqPage === 1 ? inc : [...prev, ...inc]));
           setAllReqHasMore(reqMore);
-          if (allReqPage === 1) pageCache.set("library-all-req", libFilterKey, inc, reqMore);
+          if (allReqPage === 1)
+            pageCache.set("library-all-req", libFilterKey, inc, reqMore);
         }
       } catch (e: any) {
         if (!alive) return;
@@ -256,9 +317,23 @@ export default function DocumentLibraryPage() {
       }
     };
     load();
-    return () => { alive = false; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, allDocPage, allReqPage, qDebounced, typeFilter, dateFrom, dateTo, reloadKey]);
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    tab,
+    allDocPage,
+    allReqPage,
+    qDebounced,
+    typeFilter,
+    dateFrom,
+    dateTo,
+    reloadKey,
+    sortBy,
+    sortDir,
+    fetchKey,
+  ]);
 
   // Merged + sorted All tab rows
   const merged = useMemo((): LibraryItem[] => {
@@ -270,41 +345,95 @@ export default function DocumentLibraryPage() {
       return docToLibraryItem(d, source);
     });
     const reqItems = allReqRows.map(reqToLibraryItem);
-    const items =
-      sourceFilter === "doc" ? docItems
-      : sourceFilter === "req" ? reqItems
-      : [...docItems, ...reqItems];
-    return items.sort((a, b) => {
-      const diff = new Date(b.date).getTime() - new Date(a.date).getTime();
-      return sortDir === "asc" ? -diff : diff;
-    });
-  }, [allDocRows, allReqRows, myOfficeId, isAdmin, sourceFilter, sortDir]);
+    return sourceFilter === "doc"
+      ? docItems
+      : sourceFilter === "req"
+        ? reqItems
+        : [...docItems, ...reqItems];
+  }, [allDocRows, allReqRows, myOfficeId, isAdmin, sourceFilter]);
 
-  // Reload (for refresh button)
+  // Reload (for burst refresh / filter changes)
   const reloadLibrary = () => {
-    setDocRows([]); setDocPage(1); setDocHasMore(true); setDocInitialLoading(true);
-    setReqRows([]); setReqPage(1); setReqHasMore(true); setReqInitialLoading(true);
-    setReloadKey(k => k + 1);
-    setAllDocRows([]); setAllDocPage(1); setAllDocHasMore(true);
-    setAllReqRows([]); setAllReqPage(1); setAllReqHasMore(true); setAllInitialLoading(true);
+    setDocRows([]);
+    setDocPage(1);
+    setDocHasMore(true);
+    setDocInitialLoading(true);
+    setReqRows([]);
+    setReqPage(1);
+    setReqHasMore(true);
+    setReqInitialLoading(true);
+    setReloadKey((k) => k + 1);
+    setAllDocRows([]);
+    setAllDocPage(1);
+    setAllDocHasMore(true);
+    setAllReqRows([]);
+    setAllReqPage(1);
+    setAllReqHasMore(true);
+    setAllInitialLoading(true);
     setError(null);
   };
 
-  const { refresh, refreshing } = usePageBurstRefresh(reloadLibrary);
+  const { refreshing } = usePageBurstRefresh(reloadLibrary);
+
+  // Manual refresh — fetches page 1 and compares first item id
+  const firstDocIdRef = useRef<number | null>(null);
+  const handleLibraryRefresh = useCallback(async (): Promise<
+    string | false
+  > => {
+    const prevFirstId = firstDocIdRef.current;
+    reloadLibrary();
+    // Give state resets a tick, then fetch page 1 directly
+    await new Promise((r) => setTimeout(r, 50));
+    try {
+      const scope =
+        tab === "created" ? "owned" : tab === "shared" ? "shared" : "all";
+      const res = await listDocumentsPage({
+        page: 1,
+        perPage: 10,
+        q: qDebounced.trim() || undefined,
+        status: "Distributed",
+        doctype: typeFilter !== "ALL" ? typeFilter : undefined,
+        scope,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+        sort_by: sortBy,
+        sort_dir: sortDir,
+      });
+      const incoming = res.data ?? [];
+      firstDocIdRef.current = incoming[0]?.id ?? null;
+      if (prevFirstId === null) return false;
+      return incoming[0]?.id !== prevFirstId
+        ? "Library updated with new documents."
+        : "Already up to date.";
+    } catch {
+      return false;
+    }
+  }, [tab, qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir]);
 
   // ── Column definitions ────────────────────────────────────────────────────
-  const handleShare = (id: number) => { setShareDocId(id); setShareOpen(true); };
+  const handleShare = (id: number) => {
+    setShareDocId(id);
+    setShareOpen(true);
+  };
 
   const baseDocColumns = useMemo(() => buildBaseDocColumns(), []);
-  const sharedColumns  = useMemo(() => buildSharedColumns(canShare, handleShare), [canShare]);
-  const requestedColumns = useMemo(() => buildRequestedColumns(isQaAdmin), [isQaAdmin]);
-  const allColumns     = useMemo(() => buildAllColumns(), []);
+  const sharedColumns = useMemo(
+    () => buildSharedColumns(canShare, handleShare),
+    [canShare],
+  );
+  const requestedColumns = useMemo(
+    () => buildRequestedColumns(isQaAdmin),
+    [isQaAdmin],
+  );
+  const allColumns = useMemo(() => buildAllColumns(), []);
 
   // ── Navigation ────────────────────────────────────────────────────────────
   const libCrumbs = [{ label: "Library", to: "/documents" }];
 
   const handleDocClick = (doc: Document) =>
-    navigate(`/documents/${doc.id}/view`, { state: { from: "/documents", breadcrumbs: libCrumbs } });
+    navigate(`/documents/${doc.id}/view`, {
+      state: { from: "/documents", breadcrumbs: libCrumbs },
+    });
 
   const handleReqRowClick = (row: any) => {
     if (row.row_type === "item") {
@@ -318,7 +447,9 @@ export default function DocumentLibraryPage() {
 
   const handleAllItemClick = (item: LibraryItem) => {
     if (item.docId) {
-      navigate(`/documents/${item.docId}/view`, { state: { from: "/documents", breadcrumbs: libCrumbs } });
+      navigate(`/documents/${item.docId}/view`, {
+        state: { from: "/documents", breadcrumbs: libCrumbs },
+      });
     } else if (item.itemId) {
       navigate(`/document-requests/${item.reqId}/items/${item.itemId}`);
     } else if (item.reqId && item.recipId) {
@@ -327,10 +458,14 @@ export default function DocumentLibraryPage() {
   };
 
   // ── Grid templates ────────────────────────────────────────────────────────
-  const createdGrid   = "80px 1fr 60px 100px 110px";
-  const sharedGrid    = canShare ? "80px 1fr 60px 100px 110px 80px" : "80px 1fr 60px 100px 110px";
-  const requestedGrid = isQaAdmin ? "110px 1fr 160px 120px 110px" : "110px 1fr 120px 110px";
-  const allGrid       = "90px 1fr 110px 150px 80px 110px";
+  const createdGrid = "80px 1fr 60px 100px 110px";
+  const sharedGrid = canShare
+    ? "80px 1fr 60px 100px 110px 80px"
+    : "80px 1fr 60px 100px 110px";
+  const requestedGrid = isQaAdmin
+    ? "110px 1fr 160px 120px 110px"
+    : "110px 1fr 120px 110px";
+  const allGrid = "90px 1fr 110px 150px 80px 110px";
 
   const emptyMessages: Record<LibTab, string> = {
     all: "No documents in your library yet.",
@@ -345,7 +480,7 @@ export default function DocumentLibraryPage() {
       right={
         <div className="flex items-center gap-2">
           <RefreshButton
-            onRefresh={refresh}
+            onRefresh={handleLibraryRefresh}
             loading={refreshing}
             title="Refresh library"
           />
@@ -356,7 +491,9 @@ export default function DocumentLibraryPage() {
               size="sm"
               onClick={() => {
                 markWorkQueueSession();
-                navigate("/documents/create", { state: { fromWorkQueue: true } });
+                navigate("/documents/create", {
+                  state: { fromWorkQueue: true },
+                });
               }}
             >
               + Create document
@@ -426,7 +563,9 @@ export default function DocumentLibraryPage() {
         {tab === "all" && (
           <select
             value={sourceFilter}
-            onChange={(e) => setSourceFilter(e.target.value as "all" | "doc" | "req")}
+            onChange={(e) =>
+              setSourceFilter(e.target.value as "all" | "doc" | "req")
+            }
             className={selectCls}
           >
             <option value="all">All sources</option>
@@ -444,18 +583,11 @@ export default function DocumentLibraryPage() {
           />
         )}
 
-        {tab === "all" && (
-          <select
-            value={sortDir}
-            onChange={(e) => setSortDir(e.target.value as "desc" | "asc")}
-            className={selectCls}
-          >
-            <option value="desc">Newest first</option>
-            <option value="asc">Oldest first</option>
-          </select>
-        )}
-
-        {(q || typeFilter !== "ALL" || dateFrom || dateTo || sourceFilter !== "all" || sortDir !== "desc") && (
+        {(q ||
+          typeFilter !== "ALL" ||
+          dateFrom ||
+          dateTo ||
+          sourceFilter !== "all") && (
           <button
             type="button"
             onClick={() => {
@@ -464,7 +596,6 @@ export default function DocumentLibraryPage() {
               setDateFrom("");
               setDateTo("");
               setSourceFilter("all");
-              setSortDir("desc");
             }}
             className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
           >
@@ -481,7 +612,9 @@ export default function DocumentLibraryPage() {
           columns={baseDocColumns}
           rows={docRows}
           loading={docLoading}
-          initialLoading={docInitialLoading}
+          initialLoading={
+            docInitialLoading || (docLoading && docRows.length === 0)
+          }
           emptyMessage={emptyMessages.created}
           rowKey={(doc) => doc.id}
           onRowClick={handleDocClick}
@@ -489,6 +622,12 @@ export default function DocumentLibraryPage() {
           onLoadMore={() => setDocPage((p) => p + 1)}
           gridTemplateColumns={createdGrid}
           className="flex-1 min-h-0"
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSortChange={(key, dir) => {
+            setSortBy(key as typeof sortBy);
+            setSortDir(dir);
+          }}
         />
       )}
 
@@ -498,7 +637,9 @@ export default function DocumentLibraryPage() {
           columns={sharedColumns}
           rows={docRows}
           loading={docLoading}
-          initialLoading={docInitialLoading}
+          initialLoading={
+            docInitialLoading || (docLoading && docRows.length === 0)
+          }
           emptyMessage={emptyMessages.shared}
           rowKey={(doc) => doc.id}
           onRowClick={handleDocClick}
@@ -506,6 +647,12 @@ export default function DocumentLibraryPage() {
           onLoadMore={() => setDocPage((p) => p + 1)}
           gridTemplateColumns={sharedGrid}
           className="flex-1 min-h-0"
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSortChange={(key, dir) => {
+            setSortBy(key as typeof sortBy);
+            setSortDir(dir);
+          }}
         />
       )}
 
@@ -532,7 +679,9 @@ export default function DocumentLibraryPage() {
           columns={allColumns}
           rows={merged}
           loading={allLoading}
-          initialLoading={allInitialLoading}
+          initialLoading={
+            allInitialLoading || (allLoading && merged.length === 0)
+          }
           emptyMessage={emptyMessages.all}
           rowKey={(item) => item._key}
           onRowClick={handleAllItemClick}
@@ -543,6 +692,12 @@ export default function DocumentLibraryPage() {
           }}
           gridTemplateColumns={allGrid}
           className="flex-1 min-h-0"
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSortChange={(key, dir) => {
+            setSortBy(key as typeof sortBy);
+            setSortDir(dir);
+          }}
         />
       )}
 

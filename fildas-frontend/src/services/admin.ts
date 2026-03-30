@@ -48,6 +48,8 @@ export async function getAdminUsers(params: {
   q?: string;
   status?: "active" | "disabled" | "";
   role_id?: number | "";
+  sort_by?: "first_name" | "last_name" | "email" | "created_at";
+  sort_dir?: "asc" | "desc";
 }): Promise<AdminUsersResponse> {
   const res = await api.get("/admin/users", { params });
   return res.data as AdminUsersResponse;
@@ -97,6 +99,8 @@ export async function getAdminOffices(params?: {
   type?: string;
   page?: number;
   per_page?: number;
+  sort_by?: "name" | "code" | "type";
+  sort_dir?: "asc" | "desc";
 }): Promise<AdminOfficesResponse> {
   const res = await api.get("/admin/offices", { params });
   return res.data as AdminOfficesResponse;

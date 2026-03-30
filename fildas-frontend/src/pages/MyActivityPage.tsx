@@ -158,7 +158,9 @@ const MyActivityPage: React.FC = () => {
       setHasMore(more);
       setInitialLoading(false);
       if (prevFirstId === null) return false;
-      return incoming[0]?.id !== prevFirstId ? "Activity updated." : "Already up to date.";
+      return incoming[0]?.id !== prevFirstId
+        ? "New activity entries loaded."
+        : "Already up to date.";
     } catch (e: any) {
       setError(e?.message ?? "Failed to load activity.");
       throw e;

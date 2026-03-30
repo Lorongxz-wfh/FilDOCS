@@ -15,8 +15,12 @@ const OFFICE_TYPES = ["office", "vp", "president", "committee", "unit"];
 export function OfficeManagerPage() {
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"active" | "disabled" | "all">("active");
+  const [statusFilter, setStatusFilter] = useState<
+    "active" | "disabled" | "all"
+  >("active");
   const [typeFilter, setTypeFilter] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "code" | "type">("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const _oc = pageCache.get<AdminOffice>("offices", '{"q":"","status":"active","type":""}', 10 * 60_000);
   const [items, setItems] = useState<AdminOffice[]>(_oc?.rows ?? []);
@@ -41,29 +45,38 @@ export function OfficeManagerPage() {
     return () => window.clearTimeout(t);
   }, [q]);
 
-  const load = useCallback(async (pageNum: number) => {
-    const filterKey = JSON.stringify({ q: qDebounced.trim(), status: statusFilter, type: typeFilter });
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await getAdminOffices({
-        q: qDebounced.trim() || undefined,
+  const load = useCallback(
+    async (pageNum: number) => {
+      const filterKey = JSON.stringify({
+        q: qDebounced.trim(),
         status: statusFilter,
-        type: typeFilter || undefined,
-        page: pageNum,
-        per_page: 10,
+        type: typeFilter,
       });
-      const more = res.meta.current_page < res.meta.last_page;
-      setItems((prev) => (pageNum === 1 ? res.data : [...prev, ...res.data]));
-      setHasMore(more);
-      if (pageNum === 1) pageCache.set("offices", filterKey, res.data, more);
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to load offices");
-    } finally {
-      setLoading(false);
-      setInitialLoading(false);
-    }
-  }, [qDebounced, statusFilter, typeFilter]);
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await getAdminOffices({
+          q: qDebounced.trim() || undefined,
+          status: statusFilter,
+          type: typeFilter || undefined,
+          page: pageNum,
+          per_page: 10,
+          sort_by: sortBy,
+          sort_dir: sortDir,
+        });
+        const more = res.meta.current_page < res.meta.last_page;
+        setItems((prev) => (pageNum === 1 ? res.data : [...prev, ...res.data]));
+        setHasMore(more);
+        if (pageNum === 1) pageCache.set("offices", filterKey, res.data, more);
+      } catch (e: any) {
+        setError(e?.message ?? "Failed to load offices");
+      } finally {
+        setLoading(false);
+        setInitialLoading(false);
+      }
+    },
+    [qDebounced, statusFilter, typeFilter, sortBy, sortDir],
+  );
 
   // Reset on filter change
   useEffect(() => {
@@ -102,6 +115,7 @@ export function OfficeManagerPage() {
     {
       key: "code",
       header: "Code",
+      sortKey: "code",
       render: (o) => (
         <span className="font-mono text-xs font-medium text-slate-700 dark:text-slate-300">
           {o.code}
@@ -111,6 +125,7 @@ export function OfficeManagerPage() {
     {
       key: "name",
       header: "Name",
+      sortKey: "name",
       render: (o) => (
         <span className="font-medium text-slate-900 dark:text-slate-100 truncate block">
           {o.name}
@@ -245,6 +260,12 @@ export function OfficeManagerPage() {
           hasMore={hasMore}
           onLoadMore={() => setPage((p) => p + 1)}
           gridTemplateColumns="6rem 1fr 7rem 1fr 7rem"
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSortChange={(key, dir) => {
+            setSortBy(key as typeof sortBy);
+            setSortDir(dir);
+          }}
         />
       </div>
 
@@ -253,7 +274,13 @@ export function OfficeManagerPage() {
         mode={modalMode}
         office={selected}
         onClose={() => setModalOpen(false)}
-        onSaved={() => { setPage(1); setItems([]); setHasMore(true); setInitialLoading(true); load(1); }}
+        onSaved={() => {
+          setPage(1);
+          setItems([]);
+          setHasMore(true);
+          setInitialLoading(true);
+          load(1);
+        }}
       />
     </PageFrame>
   );

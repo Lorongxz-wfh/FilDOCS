@@ -78,6 +78,8 @@ export type DocumentRequestSubmissionRow = {
 export type DocumentRequestMessageRow = {
   id: number;
   document_request_id: number;
+  recipient_id?: number | null;
+  item_id?: number | null;
   sender_user_id: number;
   type: "comment" | "system" | "review" | "upload";
   message: string;
@@ -302,17 +304,24 @@ export async function getDocumentRequestSubmissionFileDownloadLink(
 }
 
 // ── Messages ───────────────────────────────────────────────────────────────
-export async function getDocumentRequestMessages(requestId: number) {
-  const res = await api.get(`/document-requests/${requestId}/messages`);
+export async function getDocumentRequestMessages(
+  requestId: number,
+  scope?: { recipient_id?: number; item_id?: number; thread?: "batch" | "recipient" | "item" },
+) {
+  const res = await api.get(`/document-requests/${requestId}/messages`, {
+    params: scope,
+  });
   return res.data as DocumentRequestMessageRow[];
 }
 
 export async function postDocumentRequestMessage(
   requestId: number,
   message: string,
+  scope?: { recipient_id?: number; item_id?: number; thread?: "batch" | "recipient" | "item" },
 ) {
   const res = await api.post(`/document-requests/${requestId}/messages`, {
     message,
+    ...scope,
   });
   return res.data as DocumentRequestMessageRow;
 }

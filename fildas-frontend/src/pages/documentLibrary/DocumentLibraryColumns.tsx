@@ -85,6 +85,7 @@ export function buildBaseDocColumns(): TableColumn<Document>[] {
       key: "document",
       header: "Document",
       skeletonShape: "double",
+      sortKey: "title",
       render: (doc) => <DocTitle doc={doc} />,
     },
     {
@@ -116,6 +117,7 @@ export function buildBaseDocColumns(): TableColumn<Document>[] {
       key: "created",
       header: "Created",
       skeletonShape: "narrow",
+      sortKey: "created_at",
       render: (doc) => (
         <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
           {formatDate(doc.created_at)}
@@ -228,6 +230,7 @@ export function buildAllColumns(): TableColumn<LibraryItem>[] {
       key: "title",
       header: "Title",
       skeletonShape: "double",
+      sortKey: "title",
       render: (item) => (
         <div className="min-w-0">
           <div className="font-medium text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
@@ -281,6 +284,7 @@ export function buildAllColumns(): TableColumn<LibraryItem>[] {
       key: "date",
       header: "Date",
       skeletonShape: "narrow",
+      sortKey: "created_at",
       render: (item) => (
         <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
           {formatDate(item.date)}

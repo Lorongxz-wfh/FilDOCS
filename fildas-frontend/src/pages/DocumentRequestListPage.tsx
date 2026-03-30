@@ -13,9 +13,17 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { getAuthUser } from "../lib/auth.ts";
 import CreateDocumentRequestModal from "../components/documentRequests/CreateDocumentRequestModal";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
-import { Search, X, Users, FileStack, LayoutList, TableProperties } from "lucide-react";
+import {
+  Search,
+  X,
+  Users,
+  FileStack,
+  LayoutList,
+  TableProperties,
+} from "lucide-react";
 import { inputCls, selectCls } from "../utils/formStyles";
 import { formatDate } from "../utils/formatters";
+import { StatusBadge, TypePill } from "../components/ui/Badge";
 import Alert from "../components/ui/Alert";
 import EmptyState from "../components/ui/EmptyState";
 import LoadMoreButton from "../components/ui/LoadMoreButton";
@@ -67,38 +75,20 @@ const ProgressBar: React.FC<{ progress: DocumentRequestProgress }> = ({
   );
 };
 
-// ── Status badge ───────────────────────────────────────────────────────────
-function StatusBadge({ status }: { status: string }) {
-  const s = String(status).toLowerCase();
-  const map: Record<string, string> = {
-    open: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
-    closed: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-surface-400 dark:text-slate-400 dark:border-surface-300",
-    cancelled: "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
-    pending: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
-  };
-  const cls = map[s] ?? "bg-slate-100 text-slate-600 border-slate-200";
-  return (
-    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide ${cls}`}>
-      {String(status).toUpperCase()}
-    </span>
-  );
-}
-
 // ── Mode badge ─────────────────────────────────────────────────────────────
 function ModeBadge({ mode }: { mode: string }) {
   const isMultiDoc = mode === "multi_doc";
   return (
-    <span
-      className={[
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
-        isMultiDoc
-          ? "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-400"
-          : "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-400",
-      ].join(" ")}
-    >
-      {isMultiDoc ? <FileStack className="h-2.5 w-2.5" /> : <Users className="h-2.5 w-2.5" />}
-      {isMultiDoc ? "Multi-Doc" : "Multi-Office"}
-    </span>
+    <TypePill
+      label={isMultiDoc ? "Multi-doc" : "Multi-office"}
+      icon={
+        isMultiDoc ? (
+          <FileStack className="h-2.5 w-2.5" />
+        ) : (
+          <Users className="h-2.5 w-2.5" />
+        )
+      }
+    />
   );
 }
 
@@ -153,12 +143,17 @@ export default function DocumentRequestListPage() {
   const me = getAuthUser();
   const role = roleLower(me);
   const adminDebugMode = useAdminDebugMode();
-  const isQaAdmin = ["qa", "sysadmin"].includes(role) || (role === "admin" && adminDebugMode);
+  const isQaAdmin =
+    ["qa", "sysadmin"].includes(role) || (role === "admin" && adminDebugMode);
 
   const [tab, setTab] = React.useState<ViewTab>("batches");
   const [q, setQ] = React.useState("");
-  const [status, setStatus] = React.useState<"" | "open" | "closed" | "cancelled">("");
-  const [recipientStatus, setRecipientStatus] = React.useState<"" | "pending" | "submitted" | "accepted" | "rejected">("");
+  const [status, setStatus] = React.useState<
+    "" | "open" | "closed" | "cancelled"
+  >("");
+  const [recipientStatus, setRecipientStatus] = React.useState<
+    "" | "pending" | "submitted" | "accepted" | "rejected"
+  >("");
   const location = useLocation();
   const [createOpen, setCreateOpen] = React.useState(
     () => (location.state as any)?.openModal === true,
@@ -209,17 +204,24 @@ export default function DocumentRequestListPage() {
       setLoading(true);
       setError(null);
       try {
-        const baseParams = { q: qDebounced.trim() || undefined, per_page: 10, page };
+        const baseParams = {
+          q: qDebounced.trim() || undefined,
+          per_page: 10,
+          page,
+        };
         let data: any;
 
         if (tab === "all") {
           data = await listDocumentRequestIndividual({
             ...baseParams,
-            request_status: isQaAdmin ? (status || undefined) : undefined,
+            request_status: isQaAdmin ? status || undefined : undefined,
             status: recipientStatus || undefined,
           });
         } else if (isQaAdmin) {
-          data = await listDocumentRequests({ ...baseParams, status: status || undefined });
+          data = await listDocumentRequests({
+            ...baseParams,
+            status: status || undefined,
+          });
         } else {
           data = await listDocumentRequestInbox(baseParams);
         }
@@ -243,9 +245,11 @@ export default function DocumentRequestListPage() {
       }
     };
     load();
-    return () => { alive = false; };
-  // hasMore intentionally omitted — tracked via hasMoreRef to avoid re-trigger
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      alive = false;
+    };
+    // hasMore intentionally omitted — tracked via hasMoreRef to avoid re-trigger
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, page, qDebounced, status, recipientStatus, isQaAdmin]);
 
   function handleBatchRowClick(row: any) {
@@ -261,25 +265,14 @@ export default function DocumentRequestListPage() {
     if (row.row_type === "item") {
       navigate(`/document-requests/${row.request_id}/items/${row.item_id}`);
     } else {
-      navigate(`/document-requests/${row.request_id}/recipients/${row.recipient_id}`);
+      navigate(
+        `/document-requests/${row.request_id}/recipients/${row.recipient_id}`,
+      );
     }
   }
 
-  // ── Item/recipient status badge ───────────────────────────────────────────
   function RecipientStatusBadge({ status }: { status: string }) {
-    const s = String(status).toLowerCase();
-    const map: Record<string, string> = {
-      pending:   "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
-      submitted: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-800",
-      accepted:  "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
-      rejected:  "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
-    };
-    const cls = map[s] ?? "bg-slate-100 text-slate-600 border-slate-200";
-    return (
-      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide ${cls}`}>
-        {s.toUpperCase()}
-      </span>
-    );
+    return <StatusBadge status={status} />;
   }
 
   // ── Table columns for "All Requests" tab (individual items/recipients) ────
@@ -290,7 +283,7 @@ export default function DocumentRequestListPage() {
         header: "Request",
         render: (r) => {
           const primary = r.item_title ?? r.batch_title;
-          const sub     = r.item_title ? r.batch_title : r.office_name;
+          const sub = r.item_title ? r.batch_title : r.office_name;
           return (
             <div className="min-w-0">
               <div className="font-medium text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
@@ -318,7 +311,9 @@ export default function DocumentRequestListPage() {
       {
         key: "item_status",
         header: "Status",
-        render: (r) => <RecipientStatusBadge status={r.item_status ?? "pending"} />,
+        render: (r) => (
+          <RecipientStatusBadge status={r.item_status ?? "pending"} />
+        ),
       },
       {
         key: "due",
@@ -399,7 +394,10 @@ export default function DocumentRequestListPage() {
       <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0">
         <button
           type="button"
-          onClick={() => { setTab("batches"); setRecipientStatus(""); }}
+          onClick={() => {
+            setTab("batches");
+            setRecipientStatus("");
+          }}
           className={[
             "flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors -mb-px",
             tab === "batches"
@@ -412,7 +410,10 @@ export default function DocumentRequestListPage() {
         </button>
         <button
           type="button"
-          onClick={() => { setTab("all"); setStatus(""); }}
+          onClick={() => {
+            setTab("all");
+            setStatus("");
+          }}
           className={[
             "flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors -mb-px",
             tab === "all"
@@ -492,7 +493,6 @@ export default function DocumentRequestListPage() {
 
       {/* Content area */}
       <div className="flex-1 min-h-0 mt-4 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
-
         {/* ── Batches tab ── */}
         {tab === "batches" && (
           <div className="h-full overflow-y-auto">
