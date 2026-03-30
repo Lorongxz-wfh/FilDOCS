@@ -14,6 +14,7 @@ php artisan storage:link --force || true
 
 echo "=== Running migrate:fresh --seed ==="
 # php artisan migrate:fresh --force --seed
+php artisan migrate --force
 
 echo "=== Backfilling template thumbnails ==="
 php artisan templates:backfill-thumbnails || true
