@@ -9,6 +9,7 @@ import OfficeEditModal from "../components/admin/OfficeEditModal";
 import Alert from "../components/ui/Alert";
 import { inputCls, selectCls } from "../utils/formStyles";
 import { X } from "lucide-react";
+import { StatusBadge } from "../components/ui/Badge";
 
 const OFFICE_TYPES = ["office", "vp", "president", "committee", "unit"];
 
@@ -155,21 +156,7 @@ export function OfficeManagerPage() {
     {
       key: "status",
       header: "Status",
-      render: (o) => {
-        const isDisabled = !!o.deleted_at;
-        return (
-          <span
-            className={[
-              "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
-              isDisabled
-                ? "border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-400"
-                : "border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-400",
-            ].join(" ")}
-          >
-            {isDisabled ? "Disabled" : "Active"}
-          </span>
-        );
-      },
+      render: (o) => <StatusBadge status={o.deleted_at ? "Disabled" : "Active"} />,
     },
   ];
 

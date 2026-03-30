@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\AnnouncementController;
 // ── Public ─────────────────────────────────────────────────────────────────
 Route::get('/ping', fn() => response()->json(['status' => 'ok']));
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [\App\Http\Controllers\Api\PasswordResetController::class, 'forgot']);
+Route::post('/reset-password', [\App\Http\Controllers\Api\PasswordResetController::class, 'reset']);
 Route::get('/offices', [OfficeController::class, 'index']);
 
 // ── Signed URLs (no auth middleware — signature is the guard) ──────────────

@@ -4,6 +4,7 @@ import type { TableColumn } from "../../components/ui/Table";
 import type { Document } from "../../services/documents";
 import { formatDate } from "../../utils/formatters";
 import { TypeBadge, ModeBadge, SourceBadge } from "./DocumentLibraryBadges";
+import { StatusBadge } from "../../components/ui/Badge";
 import type { LibraryItem } from "./documentLibraryTypes";
 
 // ── DocTitle cell ─────────────────────────────────────────────────────────────
@@ -94,9 +95,9 @@ export function buildBaseDocColumns(): TableColumn<Document>[] {
       skeletonShape: "badge",
       align: "center" as const,
       render: (doc) => (
-        <span className="rounded-full bg-slate-100 dark:bg-surface-400 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">
-          v{doc.version_number}
-        </span>
+       <span className="rounded-full bg-slate-100 dark:bg-surface-400 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+            v{doc.version_number}
+          </span>
       ),
     },
     {
@@ -197,11 +198,7 @@ export function buildRequestedColumns(isQaAdmin: boolean): TableColumn<any>[] {
       key: "status",
       header: "Status",
       skeletonShape: "badge",
-      render: () => (
-        <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
-          ACCEPTED
-        </span>
-      ),
+      render: () => <StatusBadge status="Accepted" />,
     },
     {
       key: "date",
@@ -271,13 +268,11 @@ export function buildAllColumns(): TableColumn<LibraryItem>[] {
       skeletonShape: "badge",
       render: (item) =>
         item.version != null ? (
-          <span className="rounded-full bg-slate-100 dark:bg-surface-400 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+          <span className="rounded-full bg-slate-100 dark:bg-surface-400 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
             v{item.version}
           </span>
         ) : (
-          <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
-            ACCEPTED
-          </span>
+          <StatusBadge status="Accepted" />
         ),
     },
     {

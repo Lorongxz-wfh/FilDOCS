@@ -27,6 +27,9 @@ class ChunkErrorBoundary extends React.Component<
 }
 
 import LoginPage from "./pages/LoginPage";
+const ForgotPasswordPage = React.lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = React.lazy(() => import("./pages/ResetPasswordPage"));
+
 
 const DashboardPage = React.lazy(() => import("./pages/DashboardPage"));
 const MyWorkQueuePage = React.lazy(() => import("./pages/MyWorkQueuePage"));
@@ -96,6 +99,9 @@ export default function App() {
       >
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+
 
           <Route element={<ProtectedLayout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />

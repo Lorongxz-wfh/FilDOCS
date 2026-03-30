@@ -1,19 +1,17 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { setAuthUser } from "../lib/auth";
+import { Link } from "react-router-dom";
 import logoUrl from "../assets/FCU Logo.png";
-import { CheckCircle2, Sun, Moon, Mail, Lock } from "lucide-react";
+import { CheckCircle2, Sun, Moon, Mail, ArrowLeft } from "lucide-react";
 import { useTheme } from "../hooks/useTheme";
 import FormField from "../components/ui/FormField";
 import api from "../services/api";
 
-const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
+const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
   const { theme, toggle: toggleDark } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,17 +19,15 @@ const LoginPage: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
-      const res = await api.post("/login", { email, password });
-      const data = res.data;
-      localStorage.setItem("auth_token", data.token);
-      setAuthUser(data.user);
-      // Preload the dashboard chunk while the splash is animating
-      import("./DashboardPage").catch(() => {});
-      window.dispatchEvent(new Event("show_splash"));
-      navigate("/dashboard", { replace: true });
+      await api.post("/forgot-password", { email });
+      setSent(true);
     } catch (err: any) {
+      const status = err?.response?.status;
       const msg =
-        err?.response?.data?.message || err?.message || "Login failed";
+        err?.response?.data?.message ||
+        (status === 429
+          ? "Please wait a moment before requesting another reset link."
+          : "Something went wrong. Please try again.");
       setError(msg);
     } finally {
       setLoading(false);
@@ -67,7 +63,6 @@ const LoginPage: React.FC = () => {
         {/* ── Left panel ───────────────────────────────────────────────────── */}
         <div className="hidden lg:flex flex-col justify-between w-[430px] rounded-3xl rounded-r-none bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 text-white p-9 shadow-2xl">
           <div>
-            {/* Logo + name */}
             <div className="flex items-center gap-3 mb-10">
               <div className="h-11 w-11 overflow-hidden rounded-md border border-white/25 bg-white/15 backdrop-blur-sm shrink-0">
                 <img
@@ -84,7 +79,6 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Hero text */}
             <h1 className="text-[2.1rem] font-extrabold leading-[1.15] tracking-tight">
               Empowering
               <br />
@@ -97,10 +91,8 @@ const LoginPage: React.FC = () => {
               and institutional accountability.
             </p>
 
-            {/* Divider */}
             <div className="mt-8 mb-6 border-t border-white/15" />
 
-            {/* Feature list */}
             <ul className="space-y-3.5">
               {features.map((f) => (
                 <li key={f} className="flex items-center gap-3">
@@ -113,7 +105,6 @@ const LoginPage: React.FC = () => {
             </ul>
           </div>
 
-          {/* Footer */}
           <p className="text-[11px] text-blue-300/70 mt-8">
             Filamer Christian University • Quality Assurance Office
           </p>
@@ -132,83 +123,96 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          <h2 className="text-[1.6rem] font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Sign In
-          </h2>
-          <p className="mt-1 text-sm text-slate-400 dark:text-slate-400">
-            Enter your credentials to access your portal.
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            {/* Email */}
-            <FormField
-              label="Institutional Email"
-              type="text"
-              autoComplete="username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onBlur={() => setEmailTouched(true)}
-              placeholder="qa@example.com"
-              required
-              isRequired
-              icon={Mail}
-              error={
-                emailTouched &&
-                email &&
-                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-                  ? "Please enter a valid email address."
-                  : undefined
-              }
-              isValid={emailTouched && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
-            />
-
-            {/* Password */}
-            <FormField
-              label="Password"
-              isPassword
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              isRequired
-              icon={Lock}
-              hint="Use your institutional account password."
-            />
-
-            <div className="flex justify-end">
-              <Link
-                to="/forgot-password"
-                className="text-xs font-medium text-brand-400 hover:text-brand-500 dark:text-brand-300 dark:hover:text-brand-200 transition"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
-            {error && (
-              <div className="rounded-md border border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-950/40 px-4 py-3 text-xs text-rose-700 dark:text-rose-400">
-                {error}
+          {sent ? (
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/40">
+                <Mail className="h-6 w-6 text-emerald-500 dark:text-emerald-400" />
               </div>
-            )}
+              <div>
+                <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                  Check your email
+                </h2>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                  If <span className="font-semibold text-slate-700 dark:text-slate-200">{email}</span> is
+                  registered in our system, you'll receive a password reset link shortly.
+                </p>
+              </div>
+              <div className="w-full mt-4 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => { setSent(false); setEmail(""); }}
+                  className="w-full py-2.5 rounded-md border border-slate-200 dark:border-surface-400 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+                >
+                  Try a different email
+                </button>
+                <Link
+                  to="/login"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-sm font-semibold text-brand-400 hover:text-brand-500 dark:text-brand-300 dark:hover:text-brand-200 transition"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  Back to Sign In
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition mb-6"
+              >
+                <ArrowLeft className="h-3 w-3" />
+                Back to Sign In
+              </Link>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 rounded-md bg-brand-400 hover:bg-brand-500 dark:bg-brand-300 dark:hover:bg-brand-400 text-sm font-semibold text-white transition disabled:opacity-50"
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
-          </form>
+              <h2 className="text-[1.6rem] font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                Forgot Password
+              </h2>
+              <p className="mt-1 text-sm text-slate-400 dark:text-slate-400">
+                Enter your institutional email and we'll send you a reset link.
+              </p>
 
-          <p className="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
-            New to FilDAS?{" "}
-            <span className="font-semibold text-slate-600 dark:text-slate-300">
-              Contact System Administrator
-            </span>
-          </p>
+              <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+                <FormField
+                  label="Institutional Email"
+                  type="text"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setEmailTouched(true)}
+                  placeholder="you@example.com"
+                  required
+                  isRequired
+                  icon={Mail}
+                  error={
+                    emailTouched &&
+                    email &&
+                    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                      ? "Please enter a valid email address."
+                      : undefined
+                  }
+                  isValid={emailTouched && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+                />
+
+                {error && (
+                  <div className="rounded-md border border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-950/40 px-4 py-3 text-xs text-rose-700 dark:text-rose-400">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading || !email}
+                  className="w-full py-2.5 rounded-md bg-brand-400 hover:bg-brand-500 dark:bg-brand-300 dark:hover:bg-brand-400 text-sm font-semibold text-white transition disabled:opacity-50"
+                >
+                  {loading ? "Sending..." : "Send Reset Link"}
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </div>
     </main>
   );
 };
 
-export default LoginPage;
+export default ForgotPasswordPage;

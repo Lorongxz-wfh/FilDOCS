@@ -15,6 +15,7 @@ import UserEditModal from "../components/admin/UserEditModal";
 import Alert from "../components/ui/Alert";
 import { inputCls, selectCls } from "../utils/formStyles";
 import { X } from "lucide-react";
+import { StatusBadge, TypePill } from "../components/ui/Badge";
 
 const UserManagerPage: React.FC = () => {
   const me = getAuthUser();
@@ -168,41 +169,14 @@ const UserManagerPage: React.FC = () => {
         header: "Role",
         render: (u) => {
           const role = u.role?.name ?? "none";
-          const isAdminRole = ["admin", "sysadmin"].includes(
-            role.toLowerCase(),
-          );
-          return (
-            <span
-              className={[
-                "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
-                isAdminRole
-                  ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400"
-                  : "border border-slate-200 bg-slate-50 text-slate-700 dark:border-surface-400 dark:bg-surface-400 dark:text-slate-300",
-              ].join(" ")}
-            >
-              {role}
-            </span>
-          );
+          const label = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+          return <TypePill label={label} />;
         },
       },
       {
         key: "status",
         header: "Status",
-        render: (u) => {
-          const active = !u.disabled_at;
-          return (
-            <span
-              className={[
-                "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
-                active
-                  ? "border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-400"
-                  : "border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-400",
-              ].join(" ")}
-            >
-              {active ? "Active" : "Disabled"}
-            </span>
-          );
-        },
+        render: (u) => <StatusBadge status={u.disabled_at ? "Disabled" : "Active"} />,
       },
     ],
     [],

@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Megaphone, Pin } from "lucide-react";
+import { AnnouncementTypePill } from "../ui/Badge";
 import Skeleton from "../ui/loader/Skeleton";
 import { type Announcement } from "../../services/documents";
 import { getUserRole } from "../../lib/roleFilters";
@@ -11,22 +12,10 @@ interface Props {
   onDeleted?: (id: number) => void;
 }
 
-const TYPE_CONFIG = {
-  info: {
-    pill: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300",
-    bar: "bg-sky-500",
-    label: "Info",
-  },
-  warning: {
-    pill: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
-    bar: "bg-amber-400",
-    label: "Warning",
-  },
-  urgent: {
-    pill: "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300",
-    bar: "bg-rose-500",
-    label: "Urgent",
-  },
+const TYPE_BAR: Record<string, string> = {
+  info:    "bg-sky-400",
+  warning: "bg-amber-400",
+  urgent:  "bg-rose-500",
 };
 
 function timeAgo(iso: string): string {
@@ -91,10 +80,9 @@ const AnnouncementsBanner: React.FC<Props> = ({ announcements, loading }) => {
           </div>
         ) : (
           announcements.map((a) => {
-            const cfg = TYPE_CONFIG[a.type];
             return (
               <div key={a.id} className="flex items-stretch">
-                <div className={`w-1 shrink-0 rounded-l-sm ${cfg.bar}`} />
+                <div className={`w-1 shrink-0 rounded-l-sm ${TYPE_BAR[a.type] ?? "bg-slate-300"}`} />
                 <div className="flex flex-1 min-w-0 flex-col px-4 py-3 gap-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
@@ -103,11 +91,7 @@ const AnnouncementsBanner: React.FC<Props> = ({ announcements, loading }) => {
                     {a.is_pinned && (
                       <Pin className="h-3 w-3 text-slate-400 dark:text-slate-500 shrink-0" />
                     )}
-                    <span
-                      className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold ${cfg.pill}`}
-                    >
-                      {cfg.label}
-                    </span>
+                    <AnnouncementTypePill type={a.type} />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
                     {a.body}

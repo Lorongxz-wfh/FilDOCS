@@ -1,6 +1,7 @@
 import React from "react";
-import { CheckCircle2, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import type { FinishedDocumentRow } from "../../services/documents";
+import { StatusBadge } from "../ui/Badge";
 
 interface FinishedCardProps {
   doc: FinishedDocumentRow;
@@ -26,10 +27,7 @@ const FinishedCard: React.FC<FinishedCardProps> = ({ doc, onClick }) => (
       </p>
     </div>
     <div className="shrink-0 flex flex-col items-end gap-1">
-      <span className="inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-surface-400 border border-slate-200 dark:border-surface-400 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">
-        <CheckCircle2 className="h-2.5 w-2.5" />
-        Distributed
-      </span>
+      <StatusBadge status="Distributed" />
       {doc.distributed_at && (
         <span className="text-[10px] text-slate-400 dark:text-slate-500">
           {new Date(doc.distributed_at).toLocaleDateString()}

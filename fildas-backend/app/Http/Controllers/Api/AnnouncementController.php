@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -92,6 +93,41 @@ class AnnouncementController extends Controller
             'Expires'         => $expiresLabel,
             'Posted by'       => $request->user()->full_name,
         ]);
+
+        // Push in-app notification to all active users (except the author)
+        $authorId  = (int) $request->user()->id;
+        $typeEmoji = match ($announcement->type) {
+            'urgent'  => '🔴',
+            'warning' => '🟡',
+            default   => '🔵',
+        };
+
+        $recipientIds = User::whereNull('deleted_at')
+            ->whereNull('disabled_at')
+            ->where('id', '!=', $authorId)
+            ->pluck('id');
+
+        if ($recipientIds->isNotEmpty()) {
+            $now  = now();
+            $rows = $recipientIds->map(fn($userId) => [
+                'user_id'    => $userId,
+                'event'      => 'announcement.posted',
+                'title'      => "{$typeEmoji} Announcement: {$announcement->title}",
+                'body'       => \Illuminate\Support\Str::limit($announcement->body, 120),
+                'meta'       => json_encode([
+                    'announcement_id' => $announcement->id,
+                    'type'            => $announcement->type,
+                ]),
+                'read_at'    => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->all();
+
+            // Bulk insert in chunks of 500 for large user bases
+            foreach (array_chunk($rows, 500) as $chunk) {
+                \App\Models\Notification::insert($chunk);
+            }
+        }
 
         return response()->json([
             'id'          => $announcement->id,

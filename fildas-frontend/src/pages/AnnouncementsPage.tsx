@@ -18,28 +18,17 @@ import {
   type Announcement,
 } from "../services/documents";
 import { getUserRole } from "../lib/roleFilters";
+import { AnnouncementTypePill } from "../components/ui/Badge";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 type PageTab = "active" | "all";
 type DateFilter = "all" | "today" | "week" | "month" | "custom";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-const TYPE_CONFIG = {
-  info: {
-    pill: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300",
-    bar: "bg-sky-500",
-    label: "Info",
-  },
-  warning: {
-    pill: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
-    bar: "bg-amber-400",
-    label: "Warning",
-  },
-  urgent: {
-    pill: "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300",
-    bar: "bg-rose-500",
-    label: "Urgent",
-  },
+const TYPE_BAR: Record<string, string> = {
+  info:    "bg-sky-400",
+  warning: "bg-amber-400",
+  urgent:  "bg-rose-500",
 };
 
 function timeAgo(iso: string): string {
@@ -295,7 +284,6 @@ const AnnouncementCard: React.FC<{
   onUnarchive: (id: number) => void;
   onDelete: (id: number) => void;
 }> = ({ a, canManage, actionId, onArchive, onUnarchive, onDelete }) => {
-  const cfg = TYPE_CONFIG[a.type];
   const isExpired = a.expires_at && new Date(a.expires_at) < new Date();
   const isArchived = a.is_archived;
   const busy = actionId === a.id;
@@ -304,9 +292,8 @@ const AnnouncementCard: React.FC<{
     <div
       className={`flex items-stretch rounded-md border bg-white dark:bg-surface-500 transition-opacity ${isArchived ? "opacity-50 border-slate-100 dark:border-surface-400" : isExpired ? "opacity-60 border-slate-100 dark:border-surface-400" : "border-slate-200 dark:border-surface-400"}`}
     >
-      {/* Left color bar */}
       <div
-        className={`w-1 shrink-0 rounded-l-sm ${isArchived || isExpired ? "bg-slate-300 dark:bg-slate-600" : cfg.bar}`}
+        className={`w-1 shrink-0 rounded-l-sm ${isArchived || isExpired ? "bg-slate-300 dark:bg-slate-600" : (TYPE_BAR[a.type] ?? "bg-slate-300")}`}
       />
 
       {/* Content */}
@@ -321,15 +308,15 @@ const AnnouncementCard: React.FC<{
               <Pin className="h-3 w-3 text-slate-400 dark:text-slate-500 shrink-0" />
             )}
             {isArchived ? (
-              <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold bg-slate-100 text-slate-400 dark:bg-surface-400 dark:text-slate-500">
+              <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-500 dark:bg-surface-400 dark:text-slate-400">
                 <Archive className="h-2.5 w-2.5" /> Archived
               </span>
-            ) : (
-              <span
-                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold ${isExpired ? "bg-slate-100 text-slate-400 dark:bg-surface-400 dark:text-slate-500" : cfg.pill}`}
-              >
-                {isExpired ? "Expired" : cfg.label}
+            ) : isExpired ? (
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-500 dark:bg-surface-400 dark:text-slate-400">
+                Expired
               </span>
+            ) : (
+              <AnnouncementTypePill type={a.type} />
             )}
           </div>
 
