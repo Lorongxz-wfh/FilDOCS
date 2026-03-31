@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { pageCache } from "../lib/pageCache";
-import { getAuthUser } from "../lib/auth";
+// import { getAuthUser } from "../lib/auth";
 import { getUserRole } from "../lib/roleFilters";
 import PageFrame from "../components/layout/PageFrame";
 import Table, { type TableColumn } from "../components/ui/Table";
