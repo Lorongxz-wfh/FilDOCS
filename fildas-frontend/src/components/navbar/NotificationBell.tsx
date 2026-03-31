@@ -13,6 +13,7 @@ import {
   type Announcement,
 } from "../../services/documents";
 import { playNotificationChime } from "../../utils/notificationSound";
+import { useRealtimeUpdates } from "../../hooks/useRealtimeUpdates";
 
 const SEEN_AT_KEY = "notif_seen_at";
 
@@ -116,6 +117,27 @@ const NotificationBell: React.FC = () => {
     return () => stopPolling();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Realtime: instant notification updates via Pusher ──────────────────
+  useRealtimeUpdates({
+    onNotification: React.useCallback((newNotif: any) => {
+      playNotificationChime();
+      setUnseenCount((prev) => prev + 1);
+      setNotifItems((prev) => {
+        // Prepend if dropdown is open and item not already there
+        if (prev.find((n) => n.id === newNotif.id)) return prev;
+        return [newNotif, ...prev].slice(0, 5);
+      });
+    }, []),
+    onAnnouncement: React.useCallback((ann: Announcement) => {
+      setAnnouncements((prev) => {
+        if (prev.find((a) => a.id === ann.id)) return prev;
+        // Pinned go to top
+        const next = ann.is_pinned ? [ann, ...prev] : [...prev, ann];
+        return next;
+      });
+    }, []),
+  });
 
   // Click-outside to close
   React.useEffect(() => {
@@ -362,12 +384,30 @@ const NotificationBell: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        {isUnseen && (
-                          <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-sky-500" />
-                        )}
-                        {isSeenNotRead && (
-                          <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full border-2 border-slate-400 dark:border-slate-500" />
-                        )}
+                        {(() => {
+                          if (n.title.toLowerCase().includes("announcement")) {
+                            // Extract color indicator for announcements based on content/meta if available
+                            // fallback to title keyword checks for generic announcement styles
+                            const isUrgent = n.title.toLowerCase().includes("urgent") || n.body?.toLowerCase().includes("urgent");
+                            const isWarning = n.title.toLowerCase().includes("warning") || n.body?.toLowerCase().includes("warning");
+                            
+                            const colorCls = isUrgent 
+                              ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]" 
+                              : isWarning 
+                                ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]" 
+                                : "bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]";
+                                
+                            return <span className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${colorCls} ring-2 ring-white dark:ring-surface-600`} />;
+                          }
+
+                          if (isUnseen) {
+                            return <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-sky-500" />;
+                          }
+                          if (isSeenNotRead) {
+                            return <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full border-2 border-slate-400 dark:border-slate-500" />;
+                          }
+                          return null;
+                        })()}
                       </div>
                     </button>
                   );

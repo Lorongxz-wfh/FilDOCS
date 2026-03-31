@@ -86,6 +86,7 @@ const QADashboard: React.FC<
   report,
   recentActivity,
   pendingRequestsCount,
+  pendingActions,
   loading,
   navigate,
   announcements,
@@ -198,7 +199,7 @@ const QADashboard: React.FC<
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <DashboardPendingList items={pending} loading={loading} />
+        <DashboardPendingList items={pendingActions} loading={loading} />
         <Card
           title="Stage delay"
           sub="Median hold time per workflow phase"
@@ -238,16 +239,17 @@ const OfficeDashboard: React.FC<
   }
 > = ({
   stats,
-  pending,
+  pendingActions,
   recentActivity,
   loading,
   navigate,
   role,
   announcements,
   pendingRequestsInboxCount,
+  pending,
 }) => {
   const inboxCount = pendingRequestsInboxCount ?? 0;
-  const totalPendingActions = pending.length + inboxCount;
+  const totalPendingActions = pendingActions.length;
 
   const kpiCards = [
     {
@@ -373,7 +375,7 @@ const OfficeDashboard: React.FC<
           )}
         </Card>
 
-        <DashboardPendingList items={pending} loading={loading} />
+        <DashboardPendingList items={pendingActions} loading={loading} />
       </div>
 
       {/* Recent activity */}
@@ -592,7 +594,7 @@ const DashboardPage: React.FC = () => {
     month: "long",
     day: "numeric",
   });
-  const pendingCount = dashData.pending.length;
+  const pendingCount = dashData.pendingActions.length;
 
   return (
     <div className="min-h-0 flex flex-1 flex-col overflow-hidden">

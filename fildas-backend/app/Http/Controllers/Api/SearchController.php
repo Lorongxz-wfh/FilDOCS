@@ -155,6 +155,30 @@ class SearchController extends Controller
                 'url'         => "/document-requests/{$r->id}",
             ]);
 
+        // Announcements
+        $announcementQuery = \App\Models\Announcement::query()
+            ->where(function ($query) use ($like, $op) {
+                $query->where('title', $op, $like)
+                    ->orWhere('body', $op, $like);
+            })
+            ->where(function ($query) use ($actor) {
+                $query->whereNull('office_id')
+                    ->orWhere('office_id', $actor?->office_id);
+            })
+            ->where('is_archived', false);
+
+        $announcements = $announcementQuery
+            ->limit(4)
+            ->get(['id', 'title', 'body', 'type'])
+            ->map(fn($a) => [
+                'type'        => 'announcement',
+                'id'          => $a->id,
+                'title'       => $a->title,
+                'description' => \Illuminate\Support\Str::limit($a->body, 60),
+                'meta'        => $a->type,
+                'url'         => '/announcements',
+            ]);
+
         // Notifications — only current user's own
         $notifications = \App\Models\Notification::query()
             ->where('user_id', $actor?->id)
@@ -182,6 +206,7 @@ class SearchController extends Controller
             'offices'       => $offices->values(),
             'templates'     => $templates->values(),
             'requests'      => $requests->values(),
+            'announcements' => $announcements->values(),
             'notifications' => $notifications->values(),
         ]);
     }

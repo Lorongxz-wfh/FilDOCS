@@ -3,6 +3,7 @@ import {
   listActiveAnnouncements,
   type Announcement,
 } from "../services/documents";
+import { useRealtimeUpdates } from "./useRealtimeUpdates";
 
 interface UseAnnouncementsReturn {
   announcements: Announcement[];
@@ -48,6 +49,17 @@ export function useAnnouncements(): UseAnnouncementsReturn {
     const id = setInterval(load, POLL_INTERVAL);
     return () => clearInterval(id);
   }, [load]);
+
+  // ── Realtime: instant announcement updates via Pusher ──────────────────
+  useRealtimeUpdates({
+    onAnnouncement: React.useCallback((ann: Announcement) => {
+      setAnnouncements((prev) => {
+        if (prev.find((a) => a.id === ann.id)) return prev;
+        const next = ann.is_pinned ? [ann, ...prev] : [...prev, ann];
+        return next;
+      });
+    }, []),
+  });
 
   return { announcements, loading, error, reload: load };
 }

@@ -151,6 +151,24 @@ export type WorkQueueResponse = {
   monitoring: WorkQueueItem[];
 };
 
+export type PendingAction =
+  | {
+      type: "document";
+      id: number;
+      title: string;
+      code?: string | null;
+      status: string;
+      item: WorkQueueItem;
+    }
+  | {
+      type: "request";
+      id: number;
+      title: string;
+      code?: string | null;
+      status: string;
+      item: any; // DocumentRequestRow from inbox (has recipient_id/status)
+    };
+
 export type ComplianceClusterDatum = {
   cluster: string;
   in_review: number;

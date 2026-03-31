@@ -97,9 +97,12 @@ export default function RequestCommentsPanel({
         className="flex-1 overflow-y-auto px-4 py-3 bg-slate-50/30 dark:bg-surface-600/30 space-y-4"
       >
         {messages.length === 0 && !loading ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-2">
+          <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
             <p className="text-sm text-slate-400 dark:text-slate-500">
-              No comments yet. Start the conversation.
+              {readOnly 
+                ? "No announcements have been posted to this thread yet." 
+                : "No comments yet. Start the conversation."
+              }
             </p>
           </div>
         ) : (

@@ -11,6 +11,7 @@ import {
   X,
   ArrowRight,
   Hash,
+  Megaphone,
 } from "lucide-react";
 import { globalSearch, type SearchResultItem } from "../../services/search";
 import { navGroups, settingsNavItem, inboxNavItem } from "../sidebar/navConfig";
@@ -59,6 +60,7 @@ const ResultIcon: React.FC<{ type: SearchResultItem["type"] }> = ({ type }) => {
   if (type === "office") return <Building2 className={cls} />;
   if (type === "template") return <LayoutTemplate className={cls} />;
   if (type === "request") return <ClipboardList className={cls} />;
+  if (type === "announcement") return <Megaphone className={cls} />;
   if (type === "page") return <Hash className={cls} />;
   return <LayoutDashboard className={cls} />;
 };
@@ -70,6 +72,7 @@ const TYPE_ICON_BG: Record<string, string> = {
   template:
     "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400",
   request: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400",
+  announcement: "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400",
   page: "bg-slate-100 dark:bg-surface-400 text-slate-500 dark:text-slate-400",
 };
 
@@ -77,10 +80,11 @@ const TYPE_ICON_BG: Record<string, string> = {
 const emptyResults = {
   pages: [] as SearchResultItem[],
   documents: [] as SearchResultItem[],
+  requests: [] as SearchResultItem[],
+  announcements: [] as SearchResultItem[],
+  templates: [] as SearchResultItem[],
   users: [] as SearchResultItem[],
   offices: [] as SearchResultItem[],
-  templates: [] as SearchResultItem[],
-  requests: [] as SearchResultItem[],
 };
 
 // ── Command Menu ───────────────────────────────────────────────────────────
@@ -104,6 +108,7 @@ const SearchBar: React.FC = () => {
       ...results.pages,
       ...results.documents,
       ...results.requests,
+      ...results.announcements,
       ...results.templates,
       ...results.users,
       ...results.offices,
@@ -157,6 +162,7 @@ const SearchBar: React.FC = () => {
           offices: data.offices,
           templates: data.templates,
           requests: data.requests,
+          announcements: data.announcements || [],
         });
       } catch {
         // silent
@@ -277,7 +283,8 @@ const SearchBar: React.FC = () => {
   const pageStart = 0;
   const docStart = results.pages.length;
   const reqStart = docStart + results.documents.length;
-  const tplStart = reqStart + results.requests.length;
+  const annStart = reqStart + results.requests.length;
+  const tplStart = annStart + results.announcements.length;
   const usrStart = tplStart + results.templates.length;
   const offStart = usrStart + results.users.length;
 
@@ -379,6 +386,11 @@ const SearchBar: React.FC = () => {
                   label="Requests"
                   items={results.requests}
                   startIndex={reqStart}
+                />
+                <ResultGroup
+                  label="Announcements"
+                  items={results.announcements}
+                  startIndex={annStart}
                 />
                 <ResultGroup
                   label="Templates"

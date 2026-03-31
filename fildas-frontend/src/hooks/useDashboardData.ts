@@ -16,6 +16,8 @@ import {
   listDocumentRequestInbox,
 } from "../services/documentRequests";
 import { isQA, isAuditor, type UserRole } from "../lib/roleFilters";
+import type { PendingAction } from "../services/types";
+import { useRealtimeUpdates } from "./useRealtimeUpdates";
 
 const emptyReport: ComplianceReport = {
   clusters: [],
@@ -43,6 +45,7 @@ export type DashboardData = {
   adminStats: AdminDashboardStats | null;
   pendingRequestsCount: number;
   pendingRequestsInboxCount: number;
+  pendingActions: PendingAction[];
   loading: boolean;
   error: string | null;
   reload: () => Promise<ReloadResult>;
@@ -56,6 +59,7 @@ export function useDashboardData(role: UserRole): DashboardData {
   const [report, setReport] = useState<ComplianceReport>(emptyReport);
   const [adminStats, setAdminStats] = useState<AdminDashboardStats | null>(null);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -106,8 +110,40 @@ export function useDashboardData(role: UserRole): DashboardData {
           if (activityRes.status === "fulfilled")
             setRecentActivity(activityRes.value.data ?? []);
           if (reportRes.status === "fulfilled") setReport(reportRes.value);
-          if (reqRes.status === "fulfilled")
-            setPendingRequestsCount(reqRes.value?.meta?.total ?? 0);
+          if (reqRes.status === "fulfilled") {
+            const total = reqRes.value?.meta?.total ?? 0;
+            setPendingRequestsCount(total);
+
+            // For QA dashboard "Pending actions"
+            const docs = (queueRes.status === "fulfilled" ? queueRes.value.assigned : []).map(
+              (x) =>
+                ({
+                  type: "document",
+                  id: x.version.id,
+                  title: x.document.title,
+                  code: x.document.code,
+                  status: x.version.status,
+                  item: x,
+                } as PendingAction),
+            );
+
+            // Global requests (if any)
+            const reqs = (reqRes.value?.data ?? [])
+              .filter((r: any) => r.status === "open")
+              .map(
+                (r: any) =>
+                  ({
+                    type: "request",
+                    id: r.id,
+                    title: r.title,
+                    code: `Request #${r.id}`,
+                    status: "Open",
+                    item: r,
+                  } as PendingAction),
+              );
+
+            setPendingActions([...docs, ...reqs]);
+          }
           const firstErr = [statsRes, queueRes, activityRes].find(
             (r) => r.status === "rejected",
           ) as PromiseRejectedResult | undefined;
@@ -152,8 +188,45 @@ export function useDashboardData(role: UserRole): DashboardData {
           }
           if (activityRes.status === "fulfilled")
             setRecentActivity(activityRes.value.data ?? []);
-          if (inboxRes.status === "fulfilled")
-            setPendingRequestsInboxCount(inboxRes.value?.meta?.total ?? 0);
+          if (inboxRes.status === "fulfilled") {
+            const total = inboxRes.value?.meta?.total ?? 0;
+            setPendingRequestsInboxCount(total);
+
+            // Merge: filter for actions that need attention (e.g. pending/rejected)
+            const docs = (queueRes.status === "fulfilled" ? queueRes.value.assigned : []).map(
+              (x) =>
+                ({
+                  type: "document",
+                  id: x.version.id,
+                  title: x.document.title,
+                  code: x.document.code,
+                  status: x.version.status,
+                  item: x,
+                } as PendingAction),
+            );
+
+            const reqs = (inboxRes.value?.data ?? [])
+              .filter(
+                (r: any) =>
+                  r.recipient_status === "pending" ||
+                  r.recipient_status === "rejected",
+              )
+              .map(
+                (r: any) =>
+                  ({
+                    type: "request",
+                    id: r.id,
+                    title: r.title,
+                    code: `Request #${r.id}`,
+                    status:
+                      r.recipient_status === "pending" ? "Pending" : "Rejected",
+                    item: r,
+                  } as PendingAction),
+              );
+
+            // Simple merge — documents first, then requests
+            setPendingActions([...docs, ...reqs]);
+          }
           const firstErr = [statsRes, queueRes, activityRes].find(
             (r) => r.status === "rejected",
           ) as PromiseRejectedResult | undefined;
@@ -177,9 +250,22 @@ export function useDashboardData(role: UserRole): DashboardData {
 
   useEffect(() => {
     loadRef();
+    // Keep 60s fallback polling, but real-time will handle most cases
     const interval = window.setInterval(() => loadRef(true), 60_000);
     return () => window.clearInterval(interval);
   }, [loadRef]);
+
+  // ── Real-time Integration ──────────────────────────────────────────────
+  useRealtimeUpdates({
+    onWorkspaceChange: () => {
+      // Trigger a silent reload when any global document/request change occurs
+      loadRef(true).catch(() => {});
+    },
+    onWorkflowUpdate: () => {
+      // Trigger a silent reload when a workflow task is assigned to/updated for this user
+      loadRef(true).catch(() => {});
+    },
+  });
 
   const reload = useCallback(async (): Promise<ReloadResult> => {
     const prev = lastPendingCountRef.current;
@@ -198,6 +284,7 @@ export function useDashboardData(role: UserRole): DashboardData {
     adminStats,
     pendingRequestsCount,
     pendingRequestsInboxCount,
+    pendingActions,
     loading,
     error,
     reload,

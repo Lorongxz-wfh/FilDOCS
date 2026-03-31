@@ -142,6 +142,18 @@ class WorkflowController extends Controller
                 $data['effective_date'] ?? null,
             );
 
+            // ── Real-time: inform observers of the doc and the workspace of the change ──
+            try {
+                broadcast(new \App\Events\WorkflowUpdated($version->id, [
+                    'document_version_id' => $version->id,
+                    'action'             => strtoupper(trim($data['action'])),
+                    'assigned_office_id' => $newTask?->assigned_office_id,
+                ]));
+                broadcast(new \App\Events\WorkspaceChanged('workflow'));
+            } catch (\Throwable) {
+                // Pusher might be down, ignore
+            }
+
             return response()->json([
                 'message' => 'Workflow updated.',
                 'version' => $version->fresh(),

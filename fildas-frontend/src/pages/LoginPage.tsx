@@ -67,54 +67,61 @@ const LoginPage: React.FC = () => {
         {/* ── Left panel ───────────────────────────────────────────────────── */}
         <div className="hidden lg:flex flex-col justify-between w-[430px] rounded-3xl rounded-r-none bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 text-white p-9 shadow-2xl">
           <div>
-            {/* Logo + name */}
-            <div className="flex items-center gap-3 mb-10">
-              <div className="h-11 w-11 overflow-hidden rounded-md border border-white/25 bg-white/15 backdrop-blur-sm shrink-0">
+            {/* Institutional Header (Horizontal) */}
+            <div className="flex items-start gap-4 mb-14">
+              <div className="h-16 w-16 overflow-hidden rounded-2xl border border-white/25 bg-white/20 backdrop-blur-md shadow-lg shadow-blue-900/10 shrink-0">
                 <img
                   src={logoUrl}
                   alt="FCU Logo"
-                  className="h-full w-full object-contain p-1"
+                  className="h-full w-full object-contain p-0.5"
                 />
               </div>
-              <div className="leading-tight">
-                <div className="text-base font-bold tracking-tight">FilDAS</div>
-                <div className="text-[11px] uppercase tracking-wide text-blue-200 font-medium">
-                  Quality Assurance
-                </div>
+              <div className="flex flex-col pt-2">
+                <h3 className="text-[15.6px] font-black uppercase tracking-tight leading-none text-white">
+                  Filamer Christian University, Inc.
+                </h3>
+                <p className="text-[11px] text-blue-100/80 leading-tight mt-2 font-medium">
+                  Roxas Avenue, Roxas City, Capiz, Philippines
+                  <br />
+                  Quality Assurance Office
+                </p>
               </div>
             </div>
 
-            {/* Hero text */}
-            <h1 className="text-[2.1rem] font-extrabold leading-[1.15] tracking-tight">
-              Empowering
-              <br />
-              Document
-              <br />
-              Excellence.
-            </h1>
-            <p className="mt-4 text-sm text-blue-100/80 leading-relaxed max-w-[260px]">
-              A centralized workflow system built for seamless review, tracking,
-              and institutional accountability.
-            </p>
+            {/* Brand Section */}
+            <div className="mb-6">
+              <h1 className="text-[4.5rem] font-bold tracking-tighter text-white leading-none">
+                FilDAS
+              </h1>
+              <p className="text-xl font-bold text-blue-200 mt-2">
+                Filamer Digital Archiving System
+              </p>
+            </div>
 
-            {/* Divider */}
-            <div className="mt-8 mb-6 border-t border-white/15" />
+            {/* Hero & Features */}
+            <div>
+              <p className="text-sm text-blue-100/90 leading-relaxed max-w-[320px] mb-8 font-medium">
+                A centralized workflow system built for seamless review,
+                tracking, and institutional accountability.
+              </p>
 
-            {/* Feature list */}
-            <ul className="space-y-3.5">
-              {features.map((f) => (
-                <li key={f} className="flex items-center gap-3">
-                  <div className="shrink-0 h-6 w-6 rounded bg-white/15 flex items-center justify-center">
-                    <CheckCircle2 size={13} className="text-blue-200" />
-                  </div>
-                  <span className="text-sm font-medium text-white/90">{f}</span>
-                </li>
-              ))}
-            </ul>
+              <ul className="space-y-4">
+                {features.map((f) => (
+                  <li key={f} className="flex items-center gap-3.5">
+                    <div className="shrink-0 h-6 w-6 rounded-md bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                      <CheckCircle2 size={13} className="text-blue-200" />
+                    </div>
+                    <span className="text-[13px] font-bold tracking-tight text-white/95">
+                      {f}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* Footer */}
-          <p className="text-[11px] text-blue-300/70 mt-8">
+          <p className="text-[9px] mt-4 font-bold text-blue-300/60 uppercase tracking-widest">
             Filamer Christian University • Quality Assurance Office
           </p>
         </div>

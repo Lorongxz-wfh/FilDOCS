@@ -64,8 +64,8 @@ class DocumentRequestMessageController extends Controller
         $itemId      = isset($params['item_id'])      ? (int) $params['item_id']      : null;
         $thread      = $params['thread'] ?? null;
 
-        // Office users are always scoped to their own recipient thread
-        if (!$isQa) {
+        // Office users are scoped to their own recipient thread, UNLESS they specifically ask for the 'batch' thread (broadcast)
+        if (!$isQa && $thread !== 'batch') {
             $recipientId = $this->myRecipientId($request, $requestId);
         }
 
@@ -162,7 +162,7 @@ class DocumentRequestMessageController extends Controller
                 return response()->json(['message' => 'Forbidden. Offices cannot post to the broadcast thread.'], 403);
             }
             $recipientId = $this->myRecipientId($request, $requestId);
-            $itemId      = null;
+            // item_id is preserved if provided (e.g. for multi_doc item comments)
         }
 
         // If thread=batch, clear scoping (QA posting to shared thread)
@@ -218,7 +218,7 @@ class DocumentRequestMessageController extends Controller
             ])
             ->first();
 
-        return response()->json([
+        $messagePayload = [
             'id'                  => (int) $message->id,
             'document_request_id' => (int) $message->document_request_id,
             'recipient_id'        => $message->recipient_id ? (int) $message->recipient_id : null,
@@ -234,6 +234,16 @@ class DocumentRequestMessageController extends Controller
                 'profile_photo_path' => $message->profile_photo_path,
                 'role'               => $message->role_name,
             ],
-        ], 201);
+        ];
+
+        try {
+            broadcast(new \App\Events\RequestMessagePosted(
+                requestId: $requestId,
+                message: $messagePayload,
+            ));
+        } catch (\Throwable) {
+        }
+
+        return response()->json($messagePayload, 201);
     }
 }

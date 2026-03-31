@@ -642,6 +642,10 @@ class DocumentRequestController extends Controller
                 }
             }
 
+            try {
+                broadcast(new \App\Events\WorkspaceChanged('request'));
+            } catch (\Throwable) {}
+
             return response()->json([
                 'message'  => 'Document request created.',
                 'id'       => $requestId,
@@ -805,6 +809,10 @@ class DocumentRequestController extends Controller
                 }
             }
 
+            try {
+                broadcast(new \App\Events\WorkspaceChanged('request'));
+            } catch (\Throwable) {}
+
             return response()->json([
                 'message'       => 'Submission uploaded.',
                 'submission_id' => $submissionId,
@@ -953,6 +961,10 @@ class DocumentRequestController extends Controller
                     ));
                 } catch (\Throwable) {}
             }
+
+            try {
+                broadcast(new \App\Events\WorkspaceChanged('request'));
+            } catch (\Throwable) {}
 
             return response()->json(['message' => 'Reviewed.'], 200);
         });
@@ -1181,6 +1193,10 @@ class DocumentRequestController extends Controller
 
         $this->logActivity('document_request.updated', 'Updated document request', $request->user()->id, $request->user()->office_id, ['document_request_id' => $requestId, 'fields' => array_keys($payload)]);
 
+        try {
+            broadcast(new \App\Events\WorkspaceChanged('request'));
+        } catch (\Throwable) {}
+
         return response()->json(['message' => 'Updated.', 'id' => $requestId]);
     }
 
@@ -1333,6 +1349,10 @@ class DocumentRequestController extends Controller
                 }
             }
         }
+
+        try {
+            broadcast(new \App\Events\WorkspaceChanged('request'));
+        } catch (\Throwable) {}
 
         return response()->json(['message' => ucfirst($data['status']) . '.', 'id' => $requestId]);
     }

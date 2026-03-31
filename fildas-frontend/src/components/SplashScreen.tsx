@@ -65,7 +65,7 @@ export default function SplashScreen() {
 
         {/* Spinner + label */}
         <div className="flex flex-col items-center gap-2.5 mt-1">
-          <div className="h-4.5 w-4.5 rounded-full border-2 border-slate-200 dark:border-slate-700 border-t-sky-500 animate-spin" />
+          <div className="h-4.5 w-4.5 rounded-full border-2 border-slate-200 dark:border-slate-600 border-t-sky-500 animate-spin" />
           <p className="text-[11px] text-slate-400 dark:text-slate-600 tracking-wide">
             Signing you in…
           </p>

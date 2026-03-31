@@ -12,6 +12,7 @@ import {
   type DocumentMessage,
   type ActivityLogItem,
 } from "../services/documents";
+import { useRealtimeUpdates } from "./useRealtimeUpdates";
 
 type Options = {
   versionId: number;
@@ -271,6 +272,21 @@ export function useDocumentWorkflow({
 
     return () => stopAllPolling();
   }, [versionId, isTerminal, startIdlePolling, stopAllPolling, pollMessages]);
+
+  // ── Real-time Integration ──────────────────────────────────────────────
+  useRealtimeUpdates({
+    documentVersionId: versionId,
+    onWorkflowUpdate: () => {
+      // Trigger instant refresh of tasks/actions, and background refresh of logs/messages
+      refreshTasksAndActions(versionId, { isPolling: true }).catch(() => {});
+      silentRefreshLogs(versionId);
+      pollMessages(versionId);
+
+      // Notify parent if needed
+      if (onChanged) void Promise.resolve(onChanged()).catch(() => {});
+    },
+    requestId: null, // Workflow messages handled by pollMessages or existing logic
+  });
 
   // ── Reset load guards when versionId changes ────────────────────────────
   useEffect(() => {

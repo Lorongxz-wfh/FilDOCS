@@ -24,6 +24,7 @@ return [
         'http://localhost:3001',
         'http://localhost:3000',
         'https://fildas-v2.vercel.app',
+        'https://fildas-v2.vercel.app/',
     ],
 
     'allowed_origins_patterns' => [
@@ -37,6 +38,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];

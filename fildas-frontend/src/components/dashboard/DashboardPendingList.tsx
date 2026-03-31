@@ -1,15 +1,16 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "../ui/loader/Skeleton";
-import type { WorkQueueItem } from "../../services/documents";
-import { FileText, CheckCircle } from "lucide-react";
+import type { PendingAction } from "../../services/types";
+import { FileText, CheckCircle, Megaphone } from "lucide-react";
 
 type Props = {
-  items: WorkQueueItem[];
+  items: PendingAction[];
   loading: boolean;
 };
 
 const statusColor: Record<string, string> = {
+  // Document statuses
   Draft: "bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300",
   "For Office Review":
     "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
@@ -27,6 +28,10 @@ const statusColor: Record<string, string> = {
     "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
   "For QA Distribution":
     "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+  // Request statuses
+  Pending: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+  Rejected: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400",
+  Open: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
 };
 
 const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
@@ -80,31 +85,39 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
         ) : (
           items.slice(0, 5).map((x) => {
             const colorClass =
-              statusColor[x.version.status] ??
+              statusColor[x.status] ??
               "bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300";
+            
+            const isRequest = x.type === "request";
+            const Icon = isRequest ? Megaphone : FileText;
+
+            const handleClick = () => {
+              if (x.type === "document") {
+                navigate(`/documents/${x.item.document.id}?version_id=${x.item.version.id}`);
+              } else {
+                navigate(`/document-requests/${x.id}`);
+              }
+            };
+
             return (
               <button
-                key={x.version.id}
+                key={`${x.type}-${x.id}`}
                 type="button"
-                onClick={() =>
-                  navigate(
-                    `/documents/${x.document.id}?version_id=${x.version.id}`,
-                  )
-                }
+                onClick={handleClick}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-surface-400"
               >
                 {/* Icon */}
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-slate-100 dark:bg-surface-400">
-                  <FileText className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded ${isRequest ? 'bg-amber-50 dark:bg-amber-950/30' : 'bg-slate-100 dark:bg-surface-400'}`}>
+                  <Icon className={`h-3.5 w-3.5 ${isRequest ? 'text-amber-500' : 'text-slate-500 dark:text-slate-400'}`} />
                 </div>
 
                 {/* Title + code */}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-                    {x.document.title}
+                    {x.title}
                   </p>
                   <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                    {x.document.code ?? "—"}
+                    {x.code ?? "—"}
                   </p>
                 </div>
 
@@ -112,7 +125,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
                 <span
                   className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-tight ${colorClass}`}
                 >
-                  {x.version.status}
+                  {x.status}
                 </span>
               </button>
             );

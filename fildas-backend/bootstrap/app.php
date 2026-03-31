@@ -11,6 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__ . '/../routes/web.php',
         api: __DIR__ . '/../routes/api.php',
         commands: __DIR__ . '/../routes/console.php',
+        channels: __DIR__ . '/../routes/channels.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -18,8 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\Admin::class,
         ]);
 
-        // Token-based API: keep API stateless (no session/CSRF expectations)
-        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
+        // Trust proxies for Render/Vercel (required for correct protocol/IP detection)
         $middleware->trustProxies(at: '*');
     })
 

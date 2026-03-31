@@ -573,6 +573,10 @@ class DocumentController extends Controller
             ], $doc->id, $version->id);
         }
 
+        try {
+            broadcast(new \App\Events\WorkspaceChanged('document'));
+        } catch (\Throwable) {}
+
         return (new DocumentResource($doc->load(['ownerOffice', 'latestVersion'])))
             ->response()
             ->setStatusCode(201);
@@ -607,6 +611,10 @@ class DocumentController extends Controller
                 'changes' => $changes,
             ], $document->id);
         }
+
+        try {
+            broadcast(new \App\Events\WorkspaceChanged('document'));
+        } catch (\Throwable) {}
 
         return new DocumentResource($document->load(['ownerOffice', 'latestVersion']));
     }
@@ -747,6 +755,10 @@ class DocumentController extends Controller
             'based_on_version_number' => $latestOfficial->version_number,
             'based_on_status'         => $latestOfficial->status,
         ], $document->id, $revision->id, $assignedOfficeId);
+
+        try {
+            broadcast(new \App\Events\WorkspaceChanged('document'));
+        } catch (\Throwable) {}
 
         return response()->json($revision, 201);
     }
@@ -1155,6 +1167,10 @@ class DocumentController extends Controller
                 ]);
             }
 
+            try {
+                broadcast(new \App\Events\WorkspaceChanged('document'));
+            } catch (\Throwable) {}
+
             return response()->json([
                 'message' => 'Version cancelled.',
                 'rolled_back_to_version_id' => $prevOfficial?->id,
@@ -1184,6 +1200,10 @@ class DocumentController extends Controller
         if ($document && (int)$version->version_number === 0) {
             $document->delete();
         }
+
+        try {
+            broadcast(new \App\Events\WorkspaceChanged('document'));
+        } catch (\Throwable) {}
 
         return response()->json(['message' => 'Draft deleted.'], 200);
     }

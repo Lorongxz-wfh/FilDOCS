@@ -20,6 +20,7 @@ import {
   Activity,
 } from "lucide-react";
 import RefreshButton from "../components/ui/RefreshButton";
+import { useRealtimeUpdates } from "../hooks/useRealtimeUpdates";
 import {
   roleLower,
   StatusBadge,
@@ -104,6 +105,34 @@ export default function DocumentRequestBatchPage() {
   const [editErr, setEditErr] = React.useState<string | null>(null);
 
   const isMultiDoc = req?.mode === "multi_doc";
+
+  // ── Realtime: instant message updates via Pusher ───────────────────────
+  useRealtimeUpdates({
+    requestId,
+    onRequestMessage: React.useCallback(
+      (msg: any) => {
+        const msgRecipientId = msg.recipient_id ? Number(msg.recipient_id) : null;
+        const msgItemId = msg.item_id ? Number(msg.item_id) : null;
+
+        // On the batch page, we are interested in either the shared thread or a specific recipient
+        const isForActiveThread = activeRecipientId === msgRecipientId && msgItemId === null;
+
+        if (isForActiveThread) {
+          setMessages((prev) => {
+            if (prev.find((m) => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
+        }
+        
+        // Always pulse/count if not the current thread
+        if (!isForActiveThread && isQa) {
+          // You could implement per-recipient unread badges here if desired,
+          // for now we'll just let the next poll catch it or implement a simple badge logic.
+        }
+      },
+      [activeRecipientId, isQa],
+    ),
+  });
 
   // ── Load ───────────────────────────────────────────────────────────────────
   const load = React.useCallback(async () => {
@@ -816,6 +845,8 @@ export default function DocumentRequestBatchPage() {
                   onPost={postComment}
                   newMessageCount={newMsgCount}
                   onClearNewMessages={() => setNewMsgCount(0)}
+                  readOnly={!isQa}
+                  readOnlyLabel="This broadcast thread is for QA announcements only."
                 />
               </div>
             ) : (

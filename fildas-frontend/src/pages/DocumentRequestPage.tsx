@@ -25,6 +25,7 @@ import {
 } from "../services/documentRequests";
 import { MessageSquare, Activity, Pencil, Megaphone } from "lucide-react";
 import RefreshButton from "../components/ui/RefreshButton";
+import { useRealtimeUpdates } from "../hooks/useRealtimeUpdates";
 import { roleLower, TabBar } from "../components/documentRequests/shared";
 import RequestHeaderCard from "../components/documentRequests/RequestHeaderCard";
 import RequestCommentsPanel from "../components/documentRequests/RequestCommentsPanel";
@@ -138,6 +139,44 @@ export default function DocumentRequestPage() {
   React.useEffect(() => {
     msgCountRef.current = messages.length;
   }, [messages.length]);
+
+  // ── Realtime: instant message updates via Pusher ───────────────────────
+  useRealtimeUpdates({
+    requestId,
+    onRequestMessage: React.useCallback(
+      (msg: any) => {
+        const msgRecipientId = msg.recipient_id ? Number(msg.recipient_id) : null;
+        const msgItemId = msg.item_id ? Number(msg.item_id) : null;
+
+        let isForCurrentThread = false;
+
+        if (isItemView) {
+          isForCurrentThread = msgItemId === itemId;
+        } else {
+          if (commentThread === "broadcast") {
+            isForCurrentThread = msgRecipientId === null;
+          } else {
+            isForCurrentThread = msgRecipientId === recipientId;
+          }
+        }
+
+        if (isForCurrentThread) {
+          setMessages((prev) => {
+            if (prev.find((m) => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
+        } else if (!isQa) {
+          // Update unread counts for inactive thread (Office only)
+          if (msgRecipientId === null) {
+            setBroadcastUnread((u) => u + 1);
+          } else if (msgRecipientId === recipientId) {
+            setPrivateUnread((u) => u + 1);
+          }
+        }
+      },
+      [isItemView, itemId, recipientId, commentThread, isQa],
+    ),
+  });
 
   const handleRefresh = async (): Promise<string | false> => {
     setRefreshing(true);

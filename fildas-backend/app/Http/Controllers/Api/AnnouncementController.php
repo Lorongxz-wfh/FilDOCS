@@ -129,7 +129,7 @@ class AnnouncementController extends Controller
             }
         }
 
-        return response()->json([
+        $payload = [
             'id'          => $announcement->id,
             'title'       => $announcement->title,
             'body'        => $announcement->body,
@@ -140,7 +140,14 @@ class AnnouncementController extends Controller
             'archived_at' => null,
             'created_at'  => $announcement->created_at->toISOString(),
             'created_by'  => $announcement->creator->full_name ?? 'QA',
-        ], 201);
+        ];
+
+        try {
+            broadcast(new \App\Events\AnnouncementBroadcast($payload));
+        } catch (\Throwable) {
+        }
+
+        return response()->json($payload, 201);
     }
 
     // QA + Admin only

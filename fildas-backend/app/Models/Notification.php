@@ -22,6 +22,30 @@ class Notification extends Model
         'read_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::created(function (Notification $notification) {
+            try {
+                broadcast(new \App\Events\NotificationCreated(
+                    userId: (int) $notification->user_id,
+                    notification: [
+                        'id'          => $notification->id,
+                        'event'       => $notification->event,
+                        'title'       => $notification->title,
+                        'body'        => $notification->body,
+                        'meta'        => $notification->meta,
+                        'read_at'     => $notification->read_at,
+                        'created_at'  => $notification->created_at?->toISOString(),
+                        'document_id' => $notification->document_id,
+                        'document_version_id' => $notification->document_version_id,
+                    ],
+                ));
+            } catch (\Throwable) {
+                // Never let a broadcast failure break the main request
+            }
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

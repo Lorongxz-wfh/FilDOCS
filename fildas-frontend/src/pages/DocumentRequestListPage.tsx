@@ -92,51 +92,66 @@ function ModeBadge({ mode }: { mode: string }) {
   );
 }
 
-// ── Batch request row (card style) ─────────────────────────────────────────
 const RequestRow: React.FC<{
   row: any;
   isQaAdmin: boolean;
   onClick: () => void;
-}> = ({ row, isQaAdmin, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="group w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition border-b border-slate-100 dark:border-surface-400 last:border-0"
-  >
-    <div className="flex-1 min-w-0 flex flex-col gap-1">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-          {row.title}
-        </span>
-        {isQaAdmin && <ModeBadge mode={row.mode} />}
-        <StatusBadge status={row.status} />
-      </div>
-      {row.progress && <ProgressBar progress={row.progress} />}
-    </div>
+}> = ({ row, isQaAdmin, onClick }) => {
+  const displayProgress = React.useMemo(() => {
+    if (isQaAdmin || row.mode === "multi_doc") return row.progress;
 
-    {isQaAdmin && (
-      <div className="shrink-0 hidden sm:block text-xs text-slate-400 dark:text-slate-500 text-right">
-        {row.office_name ?? "—"}
-        {row.office_code && (
-          <span className="ml-1 text-slate-300 dark:text-slate-600">
-            ({row.office_code})
+    // Personal progress for multi_office: 0/1 or 1/1
+    const s = row.recipient_status;
+    const isSub = s === "submitted" || s === "accepted";
+    const isAcc = s === "accepted";
+    return {
+      total: 1,
+      submitted: isSub ? 1 : 0,
+      accepted: isAcc ? 1 : 0,
+    } as DocumentRequestProgress;
+  }, [row, isQaAdmin]);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition border-b border-slate-100 dark:border-surface-400 last:border-0"
+    >
+      <div className="flex-1 min-w-0 flex flex-col gap-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+            {row.title}
+          </span>
+          {isQaAdmin && <ModeBadge mode={row.mode} />}
+          <StatusBadge status={row.status} />
+        </div>
+        {displayProgress && <ProgressBar progress={displayProgress} />}
+      </div>
+
+      {isQaAdmin && (
+        <div className="shrink-0 hidden sm:block text-xs text-slate-400 dark:text-slate-500 text-right">
+          {row.office_name ?? "—"}
+          {row.office_code && (
+            <span className="ml-1 text-slate-300 dark:text-slate-600">
+              ({row.office_code})
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="shrink-0 hidden md:flex flex-col items-end gap-0.5">
+        {row.due_at && (
+          <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+            Due {formatDate(row.due_at)}
           </span>
         )}
-      </div>
-    )}
-
-    <div className="shrink-0 hidden md:flex flex-col items-end gap-0.5">
-      {row.due_at && (
-        <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-          Due {formatDate(row.due_at)}
+        <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          {formatDate(row.created_at)}
         </span>
-      )}
-      <span className="text-[11px] text-slate-400 dark:text-slate-500">
-        {formatDate(row.created_at)}
-      </span>
-    </div>
-  </button>
-);
+      </div>
+    </button>
+  );
+};
 
 // ── Main page ──────────────────────────────────────────────────────────────
 export default function DocumentRequestListPage() {

@@ -8,6 +8,7 @@ export interface SearchResultItem {
     | "page"
     | "template"
     | "request"
+    | "announcement"
     | "notification";
   id: number | string;
   title: string;
@@ -22,6 +23,7 @@ export interface SearchResults {
   offices: SearchResultItem[];
   templates: SearchResultItem[];
   requests: SearchResultItem[];
+  announcements: SearchResultItem[];
   notifications: SearchResultItem[];
 }
 
@@ -33,6 +35,7 @@ export async function globalSearch(q: string): Promise<SearchResults> {
     offices: data.offices ?? [],
     templates: data.templates ?? [],
     requests: data.requests ?? [],
+    announcements: data.announcements ?? [],
     notifications: data.notifications ?? [],
   };
 }

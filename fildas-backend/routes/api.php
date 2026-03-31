@@ -23,6 +23,11 @@ use App\Http\Controllers\Api\AnnouncementController;
 
 // ── Public ─────────────────────────────────────────────────────────────────
 Route::get('/ping', fn() => response()->json(['status' => 'ok']));
+
+// ── Pusher channel authentication ──────────────────────────────────────────
+Route::post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
+    return \Illuminate\Support\Facades\Broadcast::auth($request);
+})->middleware('auth:sanctum');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [\App\Http\Controllers\Api\PasswordResetController::class, 'forgot']);
 Route::post('/reset-password', [\App\Http\Controllers\Api\PasswordResetController::class, 'reset']);
@@ -132,8 +137,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::patch('/announcements/{announcement}/unarchive', [AnnouncementController::class, 'unarchive']);
     Route::delete('/announcements/{announcement}',          [AnnouncementController::class, 'destroy']);
 
-// ── Notifications ──────────────────────────────────────────────────────
-Route::get('/notifications',                          [NotificationController::class, 'index']);
+    // ── Notifications ──────────────────────────────────────────────────────
+    Route::get('/notifications',                          [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count',             [NotificationController::class, 'unreadCount']);
     Route::post('/notifications/read-all',                [NotificationController::class, 'markAllRead']);
     Route::delete('/notifications',                       [NotificationController::class, 'destroyAll']);
