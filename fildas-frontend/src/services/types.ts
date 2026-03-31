@@ -280,6 +280,34 @@ export type RequestsReport = {
   office_acceptance: { office: string; sent: number; accepted: number; rejected: number; rate: number }[];
 };
 
+export type ActivityTrendDatum = {
+  date: string;
+  Workflows: number;
+  Access: number;
+  System: number;
+  Others: number;
+  total: number;
+};
+
+export type ActivityDistributionDatum = {
+  label: string;
+  count: number;
+};
+
+export type TopActor = {
+  user_id: number;
+  full_name: string;
+  office: string;
+  count: number;
+};
+
+export type ActivityReportResponse = {
+  daily_trend: ActivityTrendDatum[];
+  distribution: ActivityDistributionDatum[];
+  total_actions: number;
+  top_actors: TopActor[];
+};
+
 export interface DocumentMessageSender {
   id: number;
   full_name: string;
@@ -410,7 +438,7 @@ export type AdminDashboardStats = {
     in_progress: number;
     by_phase?: Record<string, number>;
   };
-  activity_series: { label: string; count: number }[];
+  activity: ActivityReportResponse;
 };
 
 export type FinishedDocumentRow = {

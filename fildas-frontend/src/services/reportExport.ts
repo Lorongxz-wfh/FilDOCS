@@ -7,6 +7,7 @@ import type {
   ComplianceOfficeDatum,
   ComplianceStageDelayDatum,
   RequestsReportKpis,
+  TopActor,
 } from "./types";
 import type { ComplianceClusterDatum } from "../components/charts/ComplianceClusterBarChart";
 
@@ -739,4 +740,83 @@ export async function exportAttemptsPdf(
     columnStyles: { 1: { halign: "right" }, 2: { halign: "right" } },
   });
   await savePdf(doc, "fildas_submission_attempts.pdf");
+}
+// ── System Activity Distribution ──────────────────────────────────────────────
+
+export function exportActivityDistributionCsv(data: { label: string; count: number }[]) {
+  const total = data.reduce((s, r) => s + r.count, 0) || 1;
+  downloadCsv(
+    "fildas_activity_distribution.csv",
+    ["Category", "Action Count", "Percentage"],
+    data.map((r) => [r.label, r.count, `${pct(r.count, total)}%`]),
+  );
+}
+
+export async function exportActivityDistributionPdf(data: { label: string; count: number }[]) {
+  const doc = makePdf("System Activity Distribution");
+  const total = data.reduce((s, r) => s + r.count, 0) || 1;
+  autoTable(doc, {
+    startY: 28,
+    head: [["Category", "Action Count", "Percentage"]],
+    body: data.map((r) => [r.label, r.count, `${pct(r.count, total)}%`]),
+    styles: tableStyles,
+    headStyles,
+    alternateRowStyles: altRowStyles,
+    columnStyles: { 1: { halign: "right" }, 2: { halign: "right" } },
+  });
+  await savePdf(doc, "fildas_activity_distribution.pdf");
+}
+
+// ── System Activity Daily Trend ────────────────────────────────────────────────
+
+export function exportActivityTrendCsv(data: any[]) {
+  downloadCsv(
+    "fildas_activity_trend.csv",
+    ["Date", "Workflows", "Access", "System", "Others", "Total"],
+    data.map((r) => [r.date, r.Workflows, r.Access, r.System, r.Others, r.total]),
+  );
+}
+
+export async function exportActivityTrendPdf(data: any[]) {
+  const doc = makePdf("Daily System Activity Trend");
+  autoTable(doc, {
+    startY: 28,
+    head: [["Date", "Workflows", "Access", "System", "Others", "Total"]],
+    body: data.map((r) => [r.date, r.Workflows, r.Access, r.System, r.Others, r.total]),
+    styles: tableStyles,
+    headStyles,
+    alternateRowStyles: altRowStyles,
+    columnStyles: {
+      1: { halign: "right" },
+      2: { halign: "right" },
+      3: { halign: "right" },
+      4: { halign: "right" },
+      5: { halign: "right" },
+    },
+  });
+  await savePdf(doc, "fildas_activity_trend.pdf");
+}
+
+// ── Top System Actors ──────────────────────────────────────────────────────────
+
+export function exportTopActorsCsv(data: TopActor[]) {
+  downloadCsv(
+    "fildas_top_actors.csv",
+    ["User", "Office", "Actions Count"],
+    data.map((u) => [u.full_name, u.office, u.count]),
+  );
+}
+
+export async function exportTopActorsPdf(data: TopActor[]) {
+  const doc = makePdf("Top System Actors");
+  autoTable(doc, {
+    startY: 28,
+    head: [["User", "Office", "Actions Count"]],
+    body: data.map((u) => [u.full_name, u.office, u.count]),
+    styles: tableStyles,
+    headStyles,
+    alternateRowStyles: altRowStyles,
+    columnStyles: { 2: { halign: "right" } },
+  });
+  await savePdf(doc, "fildas_top_actors.pdf");
 }

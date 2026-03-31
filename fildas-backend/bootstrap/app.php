@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         channels: __DIR__ . '/../routes/channels.php',
         health: '/up',
     )
+    ->withBroadcasting(
+        '/api/broadcasting/auth',
+        ['middleware' => ['auth:sanctum']],
+    )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => \App\Http\Middleware\Admin::class,

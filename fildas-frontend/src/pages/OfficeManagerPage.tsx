@@ -10,6 +10,7 @@ import Alert from "../components/ui/Alert";
 import { inputCls, selectCls } from "../utils/formStyles";
 import { X } from "lucide-react";
 import { StatusBadge } from "../components/ui/Badge";
+import RefreshButton from "../components/ui/RefreshButton";
 
 const OFFICE_TYPES = ["office", "vp", "president", "committee", "unit"];
 
@@ -22,6 +23,7 @@ export function OfficeManagerPage() {
   const [typeFilter, setTypeFilter] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "code" | "type">("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [reloadTick, setReloadTick] = useState(0);
 
   const _oc = pageCache.get<AdminOffice>("offices", '{"q":"","status":"active","type":""}', 10 * 60_000);
   const [items, setItems] = useState<AdminOffice[]>(_oc?.rows ?? []);
@@ -76,7 +78,7 @@ export function OfficeManagerPage() {
         setInitialLoading(false);
       }
     },
-    [qDebounced, statusFilter, typeFilter, sortBy, sortDir],
+    [qDebounced, statusFilter, typeFilter, sortBy, sortDir, reloadTick],
   );
 
   // Reset on filter change
@@ -165,9 +167,16 @@ export function OfficeManagerPage() {
       title="Office Manager"
       contentClassName="flex flex-col min-h-0 gap-4 h-full overflow-hidden"
       right={
-        <Button type="button" variant="primary" size="sm" onClick={openCreate}>
-          New office
-        </Button>
+        <div className="flex items-center gap-2">
+          <RefreshButton
+            onClick={() => setReloadTick((t) => t + 1)}
+            loading={loading || initialLoading}
+            title="Refresh offices"
+          />
+          <Button type="button" variant="primary" size="sm" onClick={openCreate}>
+            New office
+          </Button>
+        </div>
       }
     >
       {/* Filter bar */}

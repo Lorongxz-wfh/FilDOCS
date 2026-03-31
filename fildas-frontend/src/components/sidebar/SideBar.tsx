@@ -2,13 +2,19 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { getUserRole, isSysAdmin } from "../../lib/roleFilters";
 import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
-import { navGroups, settingsNavItem, newActions } from "./navConfig";
+import { navGroups, newActions } from "./navConfig";
 import {
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
+  History,
+  Archive,
+  Megaphone,
   Settings,
   Plus,
+  ChevronsUpDown,
+  AlertCircle,
+  HelpCircle,
 } from "lucide-react";
 import { useSidebarCollapsed } from "../../hooks/useSidebarCollapsed";
 import { useAuthUser } from "../../hooks/useAuthUser";
@@ -39,14 +45,18 @@ const Sidebar: React.FC<SidebarProps> = ({
     .join("");
 
   const navigate = useNavigate();
-  const [confirmLogout, setConfirmLogout] = React.useState(false);
   const [newOpen, setNewOpen] = React.useState(false);
+  const [profileOpen, setProfileOpen] = React.useState(false);
   const newRef = React.useRef<HTMLDivElement>(null);
+  const profileRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (newRef.current && !newRef.current.contains(e.target as Node)) {
         setNewOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -67,11 +77,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   });
 
   const handleLogout = () => {
-    if (!confirmLogout) {
-      setConfirmLogout(true);
-      setTimeout(() => setConfirmLogout(false), 3000);
-      return;
-    }
     onLogout?.();
   };
 
@@ -117,25 +122,25 @@ const Sidebar: React.FC<SidebarProps> = ({
           collapsed ? "w-14" : "w-64 md:w-56",
         ].join(" ")}
       >
-        {/* Logo header — unchanged sizing */}
-        <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-2 h-13.5">
+        {/* Logo header — Restored height for Navbar uniformity */}
+        <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-3 h-13.5">
           <div
             className="flex items-center gap-2 min-w-0 overflow-hidden cursor-pointer"
             onClick={collapsed ? toggle : () => navigate("/dashboard")}
             title={collapsed ? "Expand sidebar" : "Go to dashboard"}
           >
-            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md">
-              <img
-                src="/favicon.png"
-                alt="FilDAS"
-                className="h-full w-full object-contain"
-              />
-            </div>
-            {!collapsed && (
-              <span className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100 truncate">
-                FilDAS
-              </span>
-            )}
+              <div className="h-7 w-7 shrink-0 overflow-hidden rounded bg-slate-100 dark:bg-surface-400/50 p-1 flex items-center justify-center">
+                <img
+                  src="/favicon.png"
+                  alt="FilDAS"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              {!collapsed && (
+                <span className="text-[17px] font-bold tracking-tight text-slate-900 dark:text-slate-100 truncate">
+                  FilDAS
+                </span>
+              )}
           </div>
 
           {!collapsed && (
@@ -220,8 +225,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {/* Nav — same sizing, active style updated to ERPNext flat fill */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 space-y-5">
+        {/* Nav — Compressed spacing to avoid scrollbars */}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-1 space-y-4">
           {navGroups.map((group) => {
             const visibleItems = group.items.filter(
               (item) => !item.roles || item.roles.includes(role),
@@ -231,7 +236,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             return (
               <div key={group.label}>
                 {!collapsed && (
-                  <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  <p className="mb-1 px-2 text-[10px] font-bold uppercase tracking-widest text-slate-400/80 dark:text-slate-500/80">
                     {group.label}
                   </p>
                 )}
@@ -289,103 +294,129 @@ const Sidebar: React.FC<SidebarProps> = ({
           })}
         </nav>
 
-        {/* Bottom strip — unchanged sizing */}
-        <div className="shrink-0 border-t border-slate-200 dark:border-surface-400">
-          <div className="px-2 pt-2">
-            <NavLink
-              to={settingsNavItem.to}
-              title={collapsed ? settingsNavItem.label : undefined}
-              className={({ isActive }) =>
-                [
-                  "group relative flex w-full items-center rounded-md text-sm font-medium transition-colors duration-150 cursor-pointer",
-                  collapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-2",
-                  isActive
-                    ? "bg-slate-100 dark:bg-surface-400 text-slate-800 dark:text-slate-100"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-surface-400 dark:hover:text-slate-200",
-                ].join(" ")
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Settings
-                    className={[
-                      "h-4 w-4 shrink-0 transition-colors",
-                      isActive
-                        ? "text-brand-400 dark:text-brand-300"
-                        : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300",
-                    ].join(" ")}
-                  />
-                  {!collapsed && (
-                    <span className="truncate">{settingsNavItem.label}</span>
-                  )}
-                </>
-              )}
-            </NavLink>
-          </div>
-
-          <div
-            className={["px-2 pb-3 pt-1", collapsed ? "" : "px-3"].join(" ")}
-          >
-            {collapsed ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                title={
-                  confirmLogout
-                    ? "Click again to confirm"
-                    : `Logout ${user?.full_name ?? ""}`
-                }
+        {/* Bottom strip — Refined with Profile Dropdown and subtle sectioning */}
+        <div 
+          className="shrink-0 border-t border-slate-200 dark:border-surface-400 bg-slate-50/40 dark:bg-black/10" 
+          ref={profileRef}
+        >
+          <div className="relative px-2 py-2.5">
+            {/* Upward Dropdown — Solid & Professional */}
+            {profileOpen && (
+              <div 
                 className={[
-                  "cursor-pointer flex w-full items-center justify-center rounded-md py-2 transition-colors",
-                  confirmLogout
-                    ? "text-rose-500 bg-rose-50 dark:bg-rose-950/40"
-                    : "text-slate-400 hover:bg-slate-50 hover:text-rose-500 dark:hover:bg-surface-400 dark:hover:text-rose-400",
+                  "absolute bottom-full z-50 mb-2 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-xl py-1 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200",
+                  collapsed ? "left-1 w-52" : "left-2 right-2"
                 ].join(" ")}
               >
-                <LogOut className="h-4 w-4" />
-              </button>
-            ) : (
-              <div className="flex items-center gap-2.5 px-1 pt-1">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded overflow-hidden bg-slate-200 dark:bg-surface-400 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                  {(user as any)?.profile_photo_url ? (
-                    <img
-                      src={(user as any).profile_photo_url}
-                      alt={user?.full_name ?? ""}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    initials || "?"
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
-                    {confirmLogout
-                      ? "Click to confirm"
-                      : (user?.full_name ?? "User")}
-                  </p>
-                  <p className="truncate text-[10px] text-slate-400 dark:text-slate-500">
-                    {confirmLogout
-                      ? "Logging out…"
-                      : ((user as any)?.email ?? "")}
+                <div className="px-3.5 py-2 border-b border-slate-100 dark:border-surface-400">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    Account
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  title={
-                    confirmLogout ? "Click again to confirm logout" : "Logout"
-                  }
-                  className={[
-                    "cursor-pointer shrink-0 rounded-md p-1.5 transition-colors",
-                    confirmLogout
-                      ? "bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400"
-                      : "text-slate-400 hover:bg-slate-100 hover:text-rose-500 dark:hover:bg-surface-400 dark:hover:text-rose-400",
-                  ].join(" ")}
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                </button>
+                
+                <div className="py-1">
+                  {[
+                    { label: "Settings", icon: Settings, to: "/settings" },
+                    { label: "My Activity", icon: History, to: "/my-activity" },
+                    { label: "Archive", icon: Archive, to: "/archive" },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        navigate(item.to);
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors"
+                    >
+                      <item.icon className="h-4 w-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-surface-400 pt-1">
+                  <div className="px-3.5 py-1.5 font-bold text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    Support
+                  </div>
+                  {[
+                    { label: "What's New", icon: Megaphone, to: "/whats-new" },
+                    { label: "Report Issue", icon: AlertCircle, to: "/report-issue" },
+                    { label: "Help & Support", icon: HelpCircle, to: "/help" },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        navigate(item.to);
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors"
+                    >
+                      <item.icon className="h-4 w-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-1 border-t border-slate-100 dark:border-surface-400 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileOpen(false);
+                      handleLogout();
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4 shrink-0" />
+                    Sign Out
+                  </button>
+                </div>
               </div>
             )}
+
+            {/* Profile Trigger */}
+            <button
+              type="button"
+              onClick={() => setProfileOpen((o) => !o)}
+              className={[
+                "flex w-full items-center gap-2.5 rounded-lg p-1.5 transition-all duration-200 border border-transparent shadow-sm",
+                profileOpen 
+                  ? "bg-white dark:bg-surface-400 shadow-md ring-1 ring-slate-200 dark:ring-surface-300 border-slate-200 dark:border-surface-300" 
+                  : "bg-white/50 dark:bg-white/[0.03] hover:bg-white dark:hover:bg-surface-400 hover:shadow-md hover:border-slate-200 dark:hover:border-surface-300",
+                collapsed ? "justify-center" : "px-2",
+              ].join(" ")}
+              title={collapsed ? "Account Settings" : undefined}
+            >
+              <div className={[
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-200 dark:bg-surface-300 text-[11px] font-bold text-slate-600 dark:text-slate-700 shadow-sm border border-white/50 overflow-hidden transition-transform active:scale-95",
+                profileOpen ? "scale-105 ring-2 ring-brand-400/20" : ""
+              ].join(" ")}>
+                {(user as any)?.profile_photo_url ? (
+                  <img
+                    src={(user as any).profile_photo_url}
+                    alt={user?.full_name ?? ""}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initials || "?"
+                )}
+              </div>
+              
+              {!collapsed && (
+                <>
+                  <div className="flex-1 min-w-0 text-left pl-0.5">
+                    <p className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">
+                      {user?.full_name ?? "User"}
+                    </p>
+                    <p className="truncate text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                      {(user as any)?.email ?? ""}
+                    </p>
+                  </div>
+                  <ChevronsUpDown className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 shrink-0 opacity-80" />
+                </>
+              )}
+            </button>
           </div>
         </div>
       </aside>

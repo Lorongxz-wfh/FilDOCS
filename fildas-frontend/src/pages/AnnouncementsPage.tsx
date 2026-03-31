@@ -8,6 +8,7 @@ import {
   Archive,
   ArchiveX,
 } from "lucide-react";
+import RefreshButton from "../components/ui/RefreshButton";
 import Skeleton from "../components/ui/loader/Skeleton";
 import {
   listAllAnnouncements,
@@ -587,16 +588,23 @@ const AnnouncementsPage: React.FC = () => {
             </div>
           </div>
 
-          {canManage && (
-            <button
-              type="button"
-              onClick={() => setShowModal(true)}
-              className="flex items-center gap-1.5 rounded-md bg-brand-500 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-400 transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              New announcement
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            <RefreshButton
+              onClick={() => loadAll()}
+              loading={loading}
+              title="Refresh announcements"
+            />
+            {canManage && (
+              <button
+                type="button"
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-1.5 rounded-md bg-brand-500 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-400 transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                New announcement
+              </button>
+            )}
+          </div>
         </div>
 
         {/* ── Toolbar: tabs + date filters in one row ── */}

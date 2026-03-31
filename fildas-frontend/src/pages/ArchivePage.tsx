@@ -3,6 +3,7 @@ import { listDocumentsPage, type Document } from "../services/documents";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
 import { Search, X } from "lucide-react";
+import RefreshButton from "../components/ui/RefreshButton";
 import { inputCls } from "../utils/formStyles";
 import DateRangeInput from "../components/ui/DateRangeInput";
 import Table from "../components/ui/Table";
@@ -37,6 +38,7 @@ export default function ArchivePage() {
   
   const [sortBy, setSortBy] = useState<"updated_at" | "created_at" | "title">("updated_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [reloadTick, setReloadTick] = useState(0);
 
   const archiveColumns = useMemo(() => buildArchiveColumns(), []);
   
@@ -81,7 +83,7 @@ export default function ArchivePage() {
     setInitialLoading(true);
     fetchPage(1, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qDebounced, dateFrom, dateTo, sortBy, sortDir]);
+  }, [qDebounced, dateFrom, dateTo, sortBy, sortDir, reloadTick]);
 
   // Load next page
   useEffect(() => {
@@ -106,6 +108,13 @@ export default function ArchivePage() {
       title="Archive"
       onBack={() => navigate("/documents")}
       contentClassName="flex flex-col h-full overflow-hidden"
+      right={
+        <RefreshButton
+          onClick={() => setReloadTick((t) => t + 1)}
+          loading={loading || initialLoading}
+          title="Refresh archive"
+        />
+      }
     >
       <div className="shrink-0 border-b border-slate-200 bg-slate-50 dark:border-surface-400 dark:bg-surface-600 px-5 py-3.5 flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-48">
@@ -149,6 +158,7 @@ export default function ArchivePage() {
             Clear
           </button>
         )}
+
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col pt-0 sm:pt-4">

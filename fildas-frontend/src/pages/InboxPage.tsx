@@ -4,6 +4,7 @@ import { getAuthUser } from "../lib/auth";
 import PageFrame from "../components/layout/PageFrame";
 import Button from "../components/ui/Button";
 import { Search, X, Trash2, BellOff } from "lucide-react";
+import RefreshButton from "../components/ui/RefreshButton";
 import {
   listNotifications,
   markAllNotificationsRead,
@@ -111,6 +112,7 @@ const InboxPage: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
   const [loadingMore, setLoadingMore] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [reloadTick, setReloadTick] = React.useState(0);
   const [markingAll, setMarkingAll] = React.useState(false);
   const [deletingAll, setDeletingAll] = React.useState(false);
   const [confirmClearAll, setConfirmClearAll] = React.useState(false);
@@ -151,7 +153,7 @@ const InboxPage: React.FC = () => {
     return () => {
       alive = false;
     };
-  }, [page]);
+  }, [page, reloadTick]);
 
   // ── Client-side filter ────────────────────────────────────────────────────
   const filtered = React.useMemo(() => {
@@ -248,6 +250,11 @@ const InboxPage: React.FC = () => {
       }
       right={
         <div className="flex items-center gap-2">
+          <RefreshButton
+            onClick={() => { setItems([]); setPage(1); setReloadTick((t) => t + 1); }}
+            loading={loading}
+            title="Refresh inbox"
+          />
           <Button
             type="button"
             variant="outline"

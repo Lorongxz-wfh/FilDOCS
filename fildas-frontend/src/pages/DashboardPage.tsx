@@ -16,9 +16,9 @@ import DashboardRecentActivity from "../components/dashboard/DashboardRecentActi
 
 // Admin-only components
 import AdminStatGrid from "../components/dashboard/AdminStatGrid";
-import AdminUsersByRoleChart from "../components/dashboard/AdminUsersByRoleChart";
-import AdminActivityBarChart from "../components/dashboard/AdminActivityBarChart";
 import AdminDocumentPhaseChart from "../components/dashboard/AdminDocumentPhaseChart";
+import ActivityDistributionChart from "../components/charts/ActivityDistributionChart";
+import DailyActivityStackedBarChart from "../components/charts/DailyActivityStackedBarChart";
 
 import { useDashboardData } from "../hooks/useDashboardData";
 import { useAnnouncements } from "../hooks/useAnnouncements";
@@ -421,38 +421,38 @@ const AdminDashboard: React.FC<
       >
         <AdminDocumentPhaseChart
           byPhase={adminStats?.documents.by_phase}
-          height={176}
+          height={200}
           loading={loading}
         />
       </Card>
 
       <Card
-        title="Users by role"
-        sub="Role distribution."
+        title="Action Breakdown"
+        sub="System activity distribution."
         action={{
-          label: "Manage users",
-          onClick: () => navigate("/user-manager"),
+          label: "View reports",
+          onClick: () => navigate("/reports"),
         }}
       >
-        <AdminUsersByRoleChart
-          active={adminStats?.users.active ?? 0}
-          inactive={adminStats?.users.inactive ?? 0}
+        <ActivityDistributionChart
+          data={adminStats?.activity.distribution ?? []}
+          height={200}
           loading={loading}
         />
       </Card>
     </div>
 
     <Card
-      title="System activity"
-      sub="Total actions logged per month."
+      title="System Activity Trend"
+      sub="Categorized system actions last 14 days."
       action={{
-        label: "View all activity",
-        onClick: () => navigate("/activity-logs"),
+        label: "View full report",
+        onClick: () => navigate("/reports"),
       }}
     >
-      <AdminActivityBarChart
-        data={adminStats?.activity_series ?? []}
-        height={176}
+      <DailyActivityStackedBarChart
+        data={adminStats?.activity.daily_trend ?? []}
+        height={200}
         loading={loading}
       />
     </Card>

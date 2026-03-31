@@ -423,7 +423,9 @@ const SettingsPage: React.FC = () => {
                   {user?.full_name ?? ""}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 capitalize">
-                  {(user as any)?.role ?? ""}
+                  {typeof (user as any)?.role === "string" 
+                    ? (user as any).role 
+                    : (user as any)?.role?.name ?? ""}
                 </p>
                 {!isAuditorUser && (
                   <div className="mt-2 flex items-center gap-2">

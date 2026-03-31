@@ -76,6 +76,8 @@ class AuthController extends Controller
                 'last_name' => $user->last_name,
                 'suffix' => $user->suffix,
                 'profile_photo_path' => $user->profile_photo_path,
+                'profile_photo_url'  => $user->profile_photo_url,
+                'signature_url'      => $user->signature_url,
                 'email'  => $user->email,
                 'role'   => $roleName,
                 'office' => $user->office ? [  // ← ADD

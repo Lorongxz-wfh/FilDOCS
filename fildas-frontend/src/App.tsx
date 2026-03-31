@@ -70,6 +70,10 @@ const MyWorkQueueListPage = React.lazy(
 );
 const AnnouncementsPage = React.lazy(() => import("./pages/AnnouncementsPage"));
 const BackupPage = React.lazy(() => import("./pages/BackupPage"));
+const HelpPage = React.lazy(() => import("./pages/HelpPage"));
+const HelpTopicPage = React.lazy(() => import("./pages/HelpTopicPage"));
+const WhatsNewPage = React.lazy(() => import("./pages/WhatsNewPage"));
+const ReportIssuePage = React.lazy(() => import("./pages/ReportIssuePage"));
 
 import ProtectedLayout from "./lib/guards/ProtectedLayout";
 import RequireRole from "./lib/guards/RequireRole";
@@ -242,6 +246,10 @@ export default function App() {
             <Route path="/archive" element={<ArchivePage />} />
             <Route path="/announcements" element={<AnnouncementsPage />} />
             <Route path="/my-activity" element={<MyActivityPage />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/help/:topic" element={<HelpTopicPage />} />
+            <Route path="/whats-new" element={<WhatsNewPage />} />
+            <Route path="/report-issue" element={<ReportIssuePage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -14,7 +14,7 @@ import {
   Megaphone,
 } from "lucide-react";
 import { globalSearch, type SearchResultItem } from "../../services/search";
-import { navGroups, settingsNavItem, inboxNavItem } from "../sidebar/navConfig";
+import { navGroups, inboxNavItem } from "../sidebar/navConfig";
 import { getUserRole } from "../../lib/roleFilters";
 import SkeletonList from "../ui/loader/SkeletonList";
 
@@ -38,7 +38,8 @@ function getPageResults(q: string, role: string): SearchResultItem[] {
       }
     }
   }
-  for (const item of [settingsNavItem, inboxNavItem]) {
+  // Check static items (Inbox, etc)
+  for (const item of [inboxNavItem]) {
     if (item.label.toLowerCase().includes(lower)) {
       results.push({
         type: "page",
@@ -49,6 +50,18 @@ function getPageResults(q: string, role: string): SearchResultItem[] {
       });
     }
   }
+
+  // Hardcoded check for Settings since it's now in the profile menu
+  if ("settings".includes(lower)) {
+    results.push({
+      type: "page",
+      id: "/settings",
+      title: "Settings",
+      description: "Account",
+      url: "/settings",
+    });
+  }
+
   return results.slice(0, 5);
 }
 

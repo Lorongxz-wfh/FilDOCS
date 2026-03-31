@@ -13,6 +13,7 @@ import {
   Loader2,
   Calendar,
 } from "lucide-react";
+import RefreshButton from "../components/ui/RefreshButton";
 import {
   getBackupSummary,
   downloadBackup,
@@ -158,6 +159,13 @@ export default function BackupPage() {
       title="Backup & Export"
       onBack={() => navigate(-1)}
       contentClassName="flex flex-col overflow-hidden"
+      right={
+        <RefreshButton
+          onClick={() => fetchSummary()}
+          loading={loading}
+          title="Refresh summary"
+        />
+      }
     >
       {/* ── Header ── */}
       <div className="shrink-0 border-b border-slate-200 bg-slate-50 dark:border-surface-400 dark:bg-surface-600 px-5 py-3.5">
@@ -189,6 +197,7 @@ export default function BackupPage() {
               onToChange={setDateTo}
             />
           )}
+
         </div>
       </div>
 

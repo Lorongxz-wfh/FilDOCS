@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { pageCache } from "../lib/pageCache";
 import { getAuthUser } from "../lib/auth";
+import { getUserRole } from "../lib/roleFilters";
 import PageFrame from "../components/layout/PageFrame";
 import Table, { type TableColumn } from "../components/ui/Table";
 import Button from "../components/ui/Button";
@@ -16,10 +17,11 @@ import Alert from "../components/ui/Alert";
 import { inputCls, selectCls } from "../utils/formStyles";
 import { X } from "lucide-react";
 import { StatusBadge, TypePill } from "../components/ui/Badge";
+import RefreshButton from "../components/ui/RefreshButton";
 
 const UserManagerPage: React.FC = () => {
-  const me = getAuthUser();
-  const isAdmin = me?.role === "admin" || me?.role === "sysadmin";
+  const role = getUserRole();
+  const isAdmin = role === "ADMIN" || role === "SYSADMIN";
 
   const _uc = pageCache.get<AdminUser>("users", '{"q":"","status":"","role":""}', 5 * 60_000);
   const [rows, setRows] = useState<AdminUser[]>(_uc?.rows ?? []);
@@ -197,9 +199,16 @@ const UserManagerPage: React.FC = () => {
       title="User Manager"
       contentClassName="flex flex-col min-h-0 gap-4 h-full overflow-hidden"
       right={
-        <Button type="button" variant="primary" size="sm" onClick={openCreate}>
-          New user
-        </Button>
+        <div className="flex items-center gap-2">
+          <RefreshButton
+            onClick={() => setReloadTick((t) => t + 1)}
+            loading={loading || initialLoading}
+            title="Refresh users"
+          />
+          <Button type="button" variant="primary" size="sm" onClick={openCreate}>
+            New user
+          </Button>
+        </div>
       }
     >
       {/* Filter bar */}

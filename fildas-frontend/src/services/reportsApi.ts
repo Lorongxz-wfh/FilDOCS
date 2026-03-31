@@ -13,6 +13,7 @@ import type {
   DocumentStats,
   AdminDashboardStats,
   FinishedDocumentRow,
+  ActivityReportResponse,
 } from "./types";
 
 export async function getComplianceReport(
@@ -152,5 +153,17 @@ export async function listFinishedDocuments(params?: {
 }): Promise<{ data: FinishedDocumentRow[]; meta: any }> {
   const api = await getApi();
   const res = await api.get("/documents/finished", { params });
+  return res.data;
+}
+
+export async function getActivityReport(params?: {
+  days?: number;
+  date_from?: string;
+  date_to?: string;
+  office_id?: number | null;
+  parent?: string;
+}): Promise<ActivityReportResponse> {
+  const api = await getApi();
+  const res = await api.get("/reports/activity", { params });
   return res.data;
 }

@@ -13,10 +13,6 @@ const DashboardGreeting: React.FC<Props> = ({ pendingCount, loading }) => {
   const firstName =
     user?.first_name?.trim() || user?.full_name?.split(" ")[0] || "there";
 
-  // const role =
-  typeof user?.role === "string"
-    ? user.role
-    : ((user?.role as any)?.name ?? "");
 
   const hour = new Date().getHours();
   const greeting =
@@ -35,13 +31,21 @@ const DashboardGreeting: React.FC<Props> = ({ pendingCount, loading }) => {
         {/* Left: greeting + status */}
         <div className="flex items-center gap-4">
           {/* Avatar */}
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-100 dark:bg-brand-900/40 text-sm font-bold text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
-            {(user?.full_name ?? "")
-              .split(" ")
-              .filter(Boolean)
-              .slice(0, 2)
-              .map((p) => p[0]?.toUpperCase())
-              .join("") || "?"}
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white dark:bg-surface-400 text-sm font-bold text-slate-600 dark:text-slate-300 shadow-sm border border-slate-100 dark:border-surface-300 overflow-hidden">
+            {(user as any)?.profile_photo_url ? (
+              <img
+                src={(user as any).profile_photo_url}
+                alt={user?.full_name ?? ""}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              (user?.full_name ?? "")
+                .split(" ")
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((p) => p[0]?.toUpperCase())
+                .join("") || "?"
+            )}
           </div>
 
           <div>

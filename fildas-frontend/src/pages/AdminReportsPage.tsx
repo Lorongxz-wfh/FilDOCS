@@ -7,13 +7,16 @@ import ReportChartCard from "../components/reports/ReportChartCard";
 import VolumeTrendChart from "../components/charts/VolumeTrendChart";
 import PhaseDistributionChart from "../components/charts/PhaseDistributionChart";
 import StageDelayChart from "../components/charts/StageDelayChart";
-import DocumentTypeChart from "../components/charts/DocumentTypeChart";
-import AdminUsersByRoleChart from "../components/dashboard/AdminUsersByRoleChart";
-import AdminActivityBarChart from "../components/dashboard/AdminActivityBarChart";
+import ActivityDistributionChart from "../components/charts/ActivityDistributionChart";
+import DailyActivityStackedBarChart from "../components/charts/DailyActivityStackedBarChart";
 import {
   getComplianceReport,
-  getAdminDashboardStats,
 } from "../services/documents";
+import {
+  getAdminDashboardStats,
+  getActivityReport,
+} from "../services/reportsApi";
+import type { ActivityReportResponse } from "../services/types";
 import type {
   ComplianceKpis,
   ComplianceVolumeSeriesDatum,
@@ -35,15 +38,18 @@ import {
   Wifi,
   Percent,
   RotateCcw,
+  AlertCircle,
+  History,
 } from "lucide-react";
 
-type Tab = "overview" | "offices" | "users";
+type Tab = "overview" | "offices" | "users" | "activity";
 type Bucket = "daily" | "weekly" | "monthly" | "yearly" | "total";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "Overview" },
   { key: "offices", label: "By Office" },
   { key: "users", label: "Users" },
+  { key: "activity", label: "Activity" },
 ];
 
 // ── Office table ─────────────────────────────────────────────────────────────
@@ -122,16 +128,16 @@ const AdminReportsPage: React.FC = () => {
   const [volumeSeries, setVolumeSeries] = useState<ComplianceVolumeSeriesDatum[]>([]);
   const [officeData, setOfficeData] = useState<ComplianceOfficeDatum[]>([]);
   const [adminStats, setAdminStats] = useState<AdminDashboardStats | null>(null);
+  const [activityReport, setActivityReport] = useState<ActivityReportResponse | null>(null);
   const [kpis, setKpis] = useState<ComplianceKpis>({ total_created: 0, total_approved_final: 0, first_pass_yield_pct: 0, pingpong_ratio: 0, cycle_time_avg_days: 0 });
   const [phaseDist, setPhaseDist] = useState<{ phase: string; count: number }[]>([]);
   const [stageDelays, setStageDelays] = useState<ComplianceStageDelayDatum[]>([]);
-  const [doctypeDist, setDoctypeDist] = useState<{ doctype: string; count: number }[]>([]);
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const [report, stats] = await Promise.all([
+      const [report, stats, activity] = await Promise.all([
         getComplianceReport({
           bucket,
           scope: "offices",
@@ -139,14 +145,18 @@ const AdminReportsPage: React.FC = () => {
           date_to: dateTo || undefined,
         }),
         getAdminDashboardStats(),
+        getActivityReport({
+          date_from: dateFrom || undefined,
+          date_to: dateTo || undefined,
+        })
       ]);
       setVolumeSeries(report.volume_series);
       setOfficeData(report.offices);
       setAdminStats(stats);
+      setActivityReport(activity);
       setKpis((prev) => report.kpis ?? prev);
       setPhaseDist(report.phase_distribution ?? []);
       setStageDelays(report.stage_delays_by_phase ?? []);
-      setDoctypeDist(report.doctype_distribution ?? []);
     } catch (e: any) {
       setError(e?.message ?? "Failed to load report data");
     } finally {
@@ -332,8 +342,19 @@ const AdminReportsPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Row 4 — Stage delays + Doc type */}
+                {/* Row 4 — Activity Distribution + Stage Delays */}
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                  <ReportChartCard
+                    title="Activity Distribution"
+                    subtitle="System actions by category in selected period."
+                    loading={loading}
+                  >
+                    <ActivityDistributionChart 
+                      data={activityReport?.distribution ?? []} 
+                      height={180} 
+                      loading={loading} 
+                    />
+                  </ReportChartCard>
                   <ReportChartCard
                     title="Stage delay by phase"
                     subtitle="Median task hold time per workflow phase."
@@ -341,14 +362,20 @@ const AdminReportsPage: React.FC = () => {
                   >
                     <StageDelayChart data={stageDelays} height={180} loading={loading} />
                   </ReportChartCard>
-                  <ReportChartCard
-                    title="Document type breakdown"
-                    subtitle="Distribution by document category."
-                    loading={loading}
-                  >
-                    <DocumentTypeChart data={doctypeDist} height={180} loading={loading} />
-                  </ReportChartCard>
                 </div>
+
+                {/* Row 5 — Daily Activity Trend */}
+                <ReportChartCard
+                  title="Daily Activity Trend"
+                  subtitle="System actions categorized over the selected period."
+                  loading={loading}
+                >
+                  <DailyActivityStackedBarChart 
+                    data={activityReport?.daily_trend ?? []} 
+                    height={220} 
+                    loading={loading} 
+                  />
+                </ReportChartCard>
               </>
             )}
 
@@ -386,69 +413,118 @@ const AdminReportsPage: React.FC = () => {
               </>
             )}
 
-            {/* ── Users tab ─────────────────────────────────────────────────── */}
-            {tab === "users" && (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <ReportStatCard
-                    label="Total users"
-                    value={loading ? <Skeleton className="h-8 w-12" /> : (adminStats?.users.total ?? 0)}
-                    sub={`${adminStats?.users.active ?? 0} accounts enabled`}
-                    color="default"
-                    icon={<Users size={16} />}
-                  />
-                  <ReportStatCard
-                    label="Online now"
-                    value={loading ? <Skeleton className="h-8 w-12" /> : (adminStats?.users.online ?? 0)}
-                    sub="Active in the last 30 minutes"
-                    color="emerald"
-                    icon={<Wifi size={16} />}
-                  />
-                  <ReportStatCard
-                    label="Disabled"
-                    value={loading ? <Skeleton className="h-8 w-12" /> : (adminStats?.users.inactive ?? 0)}
-                    sub="Accounts deactivated by admin"
-                    color="rose"
-                    icon={<Clock size={16} />}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                  <ReportChartCard
-                    title="Account status"
-                    subtitle="Enabled vs disabled accounts."
-                    loading={loading}
-                  >
-                    {loading ? (
-                      <div className="space-y-2">
-                        {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-10 w-full rounded" />)}
+            {/* ── Activity tab (DETAILED) ─────────────────────────────────── */}
+            {tab === "activity" && (
+              <div className="flex flex-col gap-6">
+                {/* Categorical Breakdown + Top Actors Row */}
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                  <div className="lg:col-span-1">
+                    <ReportChartCard
+                      title="Top System Actors"
+                      subtitle="Users with most actions recorded."
+                      loading={loading}
+                    >
+                      <div className="flex flex-col gap-0 max-h-[400px] overflow-y-auto pr-1">
+                        <div className="flex items-center gap-2 px-1 pb-1.5 border-b border-slate-100 dark:border-surface-400">
+                          <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">User</span>
+                          <span className="w-12 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Actions</span>
+                        </div>
+                        <div className="divide-y divide-slate-50 dark:divide-surface-500 mt-1">
+                          {activityReport?.top_actors.length === 0 ? (
+                            <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-6">No activity found</p>
+                          ) : (
+                            activityReport?.top_actors.map((u) => (
+                              <div key={u.user_id} className="flex items-center gap-2 px-1 py-1.5 hover:bg-slate-50 dark:hover:bg-surface-600/50 transition-colors">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{u.full_name}</p>
+                                  <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{u.office}</p>
+                                </div>
+                                <span className="w-12 shrink-0 text-right text-xs font-bold tabular-nums text-slate-600 dark:text-slate-300">{u.count}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <AdminUsersByRoleChart
-                        active={adminStats?.users.active ?? 0}
-                        inactive={adminStats?.users.inactive ?? 0}
-                      />
-                    )}
-                  </ReportChartCard>
+                    </ReportChartCard>
+                  </div>
 
-                  <ReportChartCard
-                    title="System activity"
-                    subtitle="Actions logged per month."
-                    loading={loading}
-                  >
-                    {loading ? (
-                      <Skeleton className="h-44 w-full rounded-xl" />
-                    ) : (
-                      <AdminActivityBarChart
-                        data={adminStats?.activity_series ?? []}
-                        height={180}
+                  <div className="lg:col-span-2">
+                    <ReportChartCard
+                      title="Activity distribution"
+                      subtitle="Percentage of system actions by operational category."
+                      loading={loading}
+                    >
+                      <ActivityDistributionChart 
+                        data={activityReport?.distribution ?? []} 
+                        height={350} 
+                        loading={loading} 
                       />
-                    )}
-                  </ReportChartCard>
+                    </ReportChartCard>
+                  </div>
                 </div>
-              </>
-            )}
 
+                {/* Full-width Stacked Trend */}
+                <ReportChartCard
+                  title="System activity trend"
+                  subtitle="Detailed daily breakdown of platform interactions."
+                  loading={loading}
+                >
+                  <DailyActivityStackedBarChart 
+                    data={activityReport?.daily_trend ?? []} 
+                    height={300} 
+                    loading={loading} 
+                  />
+                </ReportChartCard>
+
+                {/* Analysis Insights Summary */}
+                <div className="space-y-4 pt-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="rounded-xl bg-indigo-50/30 dark:bg-indigo-950/20 p-4 border border-indigo-100 dark:border-indigo-900/30 hover:shadow-sm transition-shadow">
+                      <div className="flex items-center gap-2 mb-2 text-indigo-700 dark:text-indigo-300 font-bold text-xs uppercase tracking-tight">
+                        <Activity size={15} /> Workflows
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                        Includes document creation, metadata updates, task completions, and routing. High volume indicates active document processing.
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-amber-50/30 dark:bg-amber-950/20 p-4 border border-amber-100 dark:border-amber-900/30 hover:shadow-sm transition-shadow">
+                      <div className="flex items-center gap-2 mb-2 text-amber-700 dark:text-amber-300 font-bold text-xs uppercase tracking-tight">
+                        <Clock size={15} /> Access
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                        Tracks login events, failed attempts, and password changes. Critical for auditing security patterns and peak usage.
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-emerald-50/30 dark:bg-emerald-950/20 p-4 border border-emerald-100 dark:border-emerald-900/30 hover:shadow-sm transition-shadow">
+                      <div className="flex items-center gap-2 mb-2 text-emerald-700 dark:text-emerald-300 font-bold text-xs uppercase tracking-tight">
+                        <CheckCircle2 size={15} /> System
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                        Administrative actions like user management, office hierarchy tweaks, announcements, and global system updates.
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-slate-50/30 dark:bg-surface-400/10 p-4 border border-slate-100 dark:border-surface-400/30 hover:shadow-sm transition-shadow">
+                      <div className="flex items-center gap-2 mb-2 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-tight">
+                        <History size={15} /> Others
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                        Miscellaneous events including profile photo removals, notification dismissals, and automated background cleanup.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-blue-100 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-900/10 p-4 flex gap-3 items-start shadow-sm mt-4">
+                    <AlertCircle size={16} className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-blue-900 dark:text-blue-200 mb-0.5">Audit Note</p>
+                      <p className="text-[11px] text-blue-800 dark:text-blue-300/80 leading-relaxed">
+                        System activity reporting synchronizes with the Admin Dashboard only for the 'Last 14 Days' view. For historical auditing, use the date range filters on this page to isolate specific periods of interest.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

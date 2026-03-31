@@ -7,11 +7,14 @@ use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\User;
 use App\Models\Office;
+use App\Services\Reports\ActivityReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
+    public function __construct(private ActivityReportService $activityReport) {}
+
     public function stats(Request $request)
     {
         // User counts
@@ -22,15 +25,7 @@ class AdminDashboardController extends Controller
             ->where('last_active_at', '>=', now()->subMinutes(30))
             ->count();
 
-        // Users by role
-        $usersByRole = User::query()
-            ->join('roles', 'users.role_id', '=', 'roles.id')
-            ->selectRaw('roles.name as role, COUNT(users.id) as count')
-            ->groupBy('roles.name')
-            ->orderByDesc('count')
-            ->get()
-            ->map(fn($r) => ['role' => $r->role, 'count' => (int) $r->count])
-            ->values();
+        // (Removed users by role as per request)
 
         // Office counts
         $totalOffices  = Office::count();
@@ -85,27 +80,8 @@ class AdminDashboardController extends Controller
             'created_at'  => $u->created_at,
             ]);
 
-        // Activity volume — last 6 months (monthly counts)
-        $driver = config('database.default');
-        $dateTrunc = $driver === 'pgsql'
-            ? "TO_CHAR(created_at, 'YYYY-MM')"
-            : "DATE_FORMAT(created_at, '%Y-%m')";
-
-        $activitySeries = ActivityLog::query()
-            ->selectRaw("{$dateTrunc} as label, COUNT(*) as count")
-            ->where('created_at', '>=', now()->subMonths(6)->startOfMonth())
-            ->groupByRaw("{$dateTrunc}")
-            ->orderBy('label')
-            ->get()
-            ->map(fn($r) => ['label' => $r->label, 'count' => (int) $r->count])
-            ->values();
-
-        // Fill all 6 months with zeros so the chart always shows 6 bars
-        $activityMap    = $activitySeries->pluck('count', 'label');
-        $activitySeries = collect(range(5, 0))
-            ->map(fn($i) => now()->subMonths($i)->format('Y-m'))
-            ->map(fn($m) => ['label' => $m, 'count' => $activityMap[$m] ?? 0])
-            ->values();
+        // Consolidated activity stats
+        $activityStats = $this->activityReport->getActivityStats(['days' => 14]);
 
         return response()->json([
             'users' => [
@@ -113,7 +89,6 @@ class AdminDashboardController extends Controller
                 'active'       => $activeUsers,
                 'inactive'     => $totalUsers - $activeUsers,
                 'online'       => $onlineUsers,
-                'by_role'      => $usersByRole,
                 'recent'       => $recentUsers,
             ],
             'offices' => [
@@ -126,7 +101,7 @@ class AdminDashboardController extends Controller
                 'in_progress' => $inProgressDocuments,
                 'by_phase'    => $docsByPhase,
             ],
-            'activity_series' => $activitySeries,
+            'activity' => $activityStats,
         ]);
     }
 }

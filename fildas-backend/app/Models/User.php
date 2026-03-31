@@ -54,13 +54,13 @@ class User extends Authenticatable
     public function getProfilePhotoUrlAttribute(): ?string
     {
         if (!$this->profile_photo_path) return null;
-        return asset('storage/' . $this->profile_photo_path);
+        return Storage::disk('public')->url($this->profile_photo_path);
     }
 
     public function getSignatureUrlAttribute(): ?string
     {
         if (!$this->signature_path) return null;
-        return asset('storage/' . $this->signature_path);
+        return Storage::disk('public')->url($this->signature_path);
     }
 
     /**

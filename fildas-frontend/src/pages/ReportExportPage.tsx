@@ -5,7 +5,7 @@ import PageFrame from "../components/layout/PageFrame";
 import Button from "../components/ui/Button";
 import Skeleton from "../components/ui/loader/Skeleton";
 import { getComplianceReport } from "../services/documents";
-import { getRequestsReport } from "../services/reportsApi";
+import { getRequestsReport, getActivityReport } from "../services/reportsApi";
 import { useAuthUser } from "../hooks/useAuthUser";
 import {
   exportKpiCsv,
@@ -34,6 +34,12 @@ import {
   exportOfficeAcceptancePdf,
   exportAttemptsCsv,
   exportAttemptsPdf,
+  exportActivityDistributionCsv,
+  exportActivityDistributionPdf,
+  exportActivityTrendCsv,
+  exportActivityTrendPdf,
+  exportTopActorsCsv,
+  exportTopActorsPdf,
 } from "../services/reportExport";
 
 import type {
@@ -43,13 +49,14 @@ import type {
   ComplianceOfficeDatum,
   ComplianceStageDelayDatum,
   RequestsReport,
+  ActivityReportResponse,
 } from "../services/types";
 import type { ComplianceClusterDatum } from "../components/charts/ComplianceClusterBarChart";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type Format = "pdf" | "csv";
-type Group = "overview" | "workflow" | "requests";
+type Group = "overview" | "workflow" | "requests" | "activity";
 
 type ExportSection = {
   key: string;
@@ -65,6 +72,7 @@ const GROUP_LABELS: Record<Group, string> = {
   overview: "Overview",
   workflow: "Workflow",
   requests: "Requests",
+  activity: "System Activity",
 };
 
 const pct = (n: number, d: number) => (d ? Math.round((n / d) * 100) : 0);
@@ -173,6 +181,8 @@ const ReportExportPage: React.FC = () => {
 
   // Requests data
   const [requestsReport, setRequestsReport] = React.useState<RequestsReport | null>(null);
+  // Activity data
+  const [activityReport, setActivityReport] = React.useState<ActivityReportResponse | null>(null);
 
   const [selected, setSelected] = React.useState<Record<string, boolean>>({
     kpi: true,
@@ -188,6 +198,9 @@ const ReportExportPage: React.FC = () => {
     requests_kpi: true,
     requests_attempts: true,
     requests_offices: true,
+    activity_dist: true,
+    activity_trend: true,
+    activity_top: false,
   });
   const [formats, setFormats] = React.useState<Record<string, Format>>({
     kpi: "pdf",
@@ -203,6 +216,9 @@ const ReportExportPage: React.FC = () => {
     requests_kpi: "pdf",
     requests_attempts: "csv",
     requests_offices: "csv",
+    activity_dist: "pdf",
+    activity_trend: "csv",
+    activity_top: "csv",
   });
   const [exporting, setExporting] = React.useState(false);
 
@@ -221,9 +237,10 @@ const ReportExportPage: React.FC = () => {
     (async () => {
       try {
         setLoading(true);
-        const [report, reqReport] = await Promise.all([
+        const [report, reqReport, actReport] = await Promise.all([
           getComplianceReport({}),
           getRequestsReport({}),
+          getActivityReport({}),
         ]);
         setKpis(report.kpis);
         setClusterData(report.clusters as ComplianceClusterDatum[]);
@@ -237,6 +254,7 @@ const ReportExportPage: React.FC = () => {
         setRoutingSplit(report.routing_split ?? { default_flow: 0, custom_flow: 0 });
         setRevisionStats(report.revision_stats ?? { docs_on_v2_plus: 0, avg_versions: 0 });
         setRequestsReport(reqReport);
+        setActivityReport(actReport);
       } catch (e: any) {
         setError(e?.message || "Failed to load report data");
       } finally {
@@ -460,9 +478,52 @@ const ReportExportPage: React.FC = () => {
         fmt === "pdf" ? exportOfficeAcceptancePdf(data) : exportOfficeAcceptanceCsv(data);
       },
     },
+    // ── System Activity ────────────────────────────────────────────────────────
+    {
+      key: "activity_dist",
+      group: "activity",
+      label: "Activity Distribution",
+      description: "Actions split by operational category (Workflows, Access, System).",
+      previewHeaders: ["Category", "Actions", "%"],
+      previewRows: () => {
+        const dist = activityReport?.distribution ?? [];
+        const total = dist.reduce((s, r) => s + r.count, 0) || 1;
+        return dist.map((r) => [r.label, r.count, `${pct(r.count, total)}%`]);
+      },
+      exportFn: (fmt) => {
+        const dist = activityReport?.distribution ?? [];
+        fmt === "pdf" ? exportActivityDistributionPdf(dist) : exportActivityDistributionCsv(dist);
+      },
+    },
+    {
+      key: "activity_trend",
+      group: "activity",
+      label: "Daily Activity Trend",
+      description: "Categorized system actions logged per day.",
+      previewHeaders: ["Date", "Workflows", "Access", "System", "Total"],
+      previewRows: () =>
+        (activityReport?.daily_trend ?? []).slice(0, 6).map((r) => [r.date, r.Workflows, r.Access, r.System, r.total]),
+      exportFn: (fmt) => {
+        const data = activityReport?.daily_trend ?? [];
+        fmt === "pdf" ? exportActivityTrendPdf(data) : exportActivityTrendCsv(data);
+      },
+    },
+    {
+      key: "activity_top",
+      group: "activity",
+      label: "Top System Actors",
+      description: "Users with the highest recorded activity counts.",
+      previewHeaders: ["User", "Office", "Actions"],
+      previewRows: () =>
+        (activityReport?.top_actors ?? []).slice(0, 6).map((r) => [r.full_name, r.office, r.count]),
+      exportFn: (fmt) => {
+        const data = activityReport?.top_actors ?? [];
+        fmt === "pdf" ? exportTopActorsPdf(data) : exportTopActorsCsv(data);
+      },
+    },
   ];
 
-  const GROUPS: Group[] = ["overview", "workflow", "requests"];
+  const GROUPS: Group[] = ["overview", "workflow", "requests", "activity"];
 
   const handleExportAll = async () => {
     setExporting(true);

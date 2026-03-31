@@ -22,3 +22,18 @@ Broadcast::channel('request.{requestId}', function ($user, $requestId) {
 Broadcast::channel('announcements', function ($user) {
     return ['id' => $user->id, 'name' => $user->full_name ?? ''];
 });
+
+// Private workspace channel — stats and volume changes
+Broadcast::channel('workspace', function ($user) {
+    return (bool) $user;
+});
+
+// Private document channel — specific document lifecycle updates
+Broadcast::channel('document.{documentVersionId}', function ($user, $documentVersionId) {
+    // Basic check: user must be authenticated
+    if (!$user) return false;
+
+    // Optional: Add logic here to check if the user/office has permission 
+    // for this specific document. For now, any authenticated user (staff/QA) can join.
+    return true;
+});

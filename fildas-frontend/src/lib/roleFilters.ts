@@ -15,7 +15,8 @@ export type UserRole =
 
 export const getUserRole = (): UserRole => {
   const user = getAuthUser();
-  const raw = String(user?.role ?? "").toUpperCase();
+  const roleVal = user?.role;
+  const raw = (typeof roleVal === "string" ? roleVal : (roleVal as any)?.name ?? "").toUpperCase();
 
   if (raw === "QA") return "QA";
   if (raw === "AUDITOR") return "AUDITOR";

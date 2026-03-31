@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AdminOfficeController;
 use App\Http\Controllers\Api\DocumentRequestMessageController;
 use App\Http\Controllers\Api\AnnouncementController;
+use App\Http\Controllers\Api\SupportController;
 
 
 // ── Public ─────────────────────────────────────────────────────────────────
@@ -46,16 +47,16 @@ Route::get('/document-requests/{request}/example/preview', [DocumentRequestFileC
     ->name('document-requests.example.preview')
     ->middleware('signed');
 
+Route::get('/document-requests/{request}/example/download', [DocumentRequestFileController::class, 'requestExampleDownloadSigned'])
+    ->name('document-requests.example.download')
+    ->middleware('signed');
+
 Route::get('/document-request-items/{item}/example/preview', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'examplePreviewSigned'])
     ->name('document-request-items.example.preview')
     ->middleware('signed');
 
 Route::get('/document-request-items/{item}/example/download', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'exampleDownloadSigned'])
     ->name('document-request-items.example.download')
-    ->middleware('signed');
-
-Route::get('/document-requests/{request}/example/download', [DocumentRequestFileController::class, 'requestExampleDownloadSigned'])
-    ->name('document-requests.example.download')
     ->middleware('signed');
 
 Route::get('/document-request-submission-files/{file}/preview', [DocumentRequestFileController::class, 'submissionFilePreviewSigned'])
@@ -177,6 +178,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::get('/reports/compliance',   [ReportsController::class, 'compliance']);
     Route::get('/reports/flow-health',  [ReportsController::class, 'flowHealth']);
     Route::get('/reports/requests',     [ReportsController::class, 'requests']);
+    Route::get('/reports/activity',     [ReportsController::class, 'activity']);
 
     // ── Document Requests ──────────────────────────────────────────────────
     Route::get('/document-requests/{request}/messages',  [DocumentRequestMessageController::class, 'index']);
@@ -251,4 +253,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         Route::delete('/offices/{office}',        [AdminOfficeController::class, 'destroy']);
         Route::patch('/offices/{office}/restore', [AdminOfficeController::class, 'restore']);
     });
+
+    // ── Support ────────────────────────────────────────────────────────────
+    Route::post('/support/send', [SupportController::class, 'send']);
 });

@@ -25,6 +25,7 @@ import { inputCls, labelCls } from "../../utils/formStyles";
 const apiMsg = (e: any, fallback: string) =>
   e?.response?.data?.message ?? e?.message ?? fallback;
 import { getInitials } from "../../utils/formatters";
+import { getAuthUser, AUTH_USER_KEY } from "../../lib/auth";
 
 type Props = {
   open: boolean;
@@ -190,6 +191,18 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
     return true;
   }, [mode, user, firstName, lastName, email]);
 
+  const syncIfSelf = (updated: AdminUser) => {
+    const current = getAuthUser();
+    if (current && current.id === updated.id) {
+      const stored = localStorage.getItem(AUTH_USER_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify({ ...parsed, ...updated }));
+        window.dispatchEvent(new Event("auth_user_updated"));
+      }
+    }
+  };
+
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -204,6 +217,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
       const res = await uploadAdminUserPhoto(user.id, file);
       // Use the returned URL directly so preview stays accurate
       setPhotoPreview(res.user.profile_photo_url ?? null);
+      syncIfSelf(res.user);
       onSaved?.(res.user);
     } catch (e: any) {
       setError(e?.message ?? "Failed to upload photo");
@@ -220,6 +234,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
       setError(null);
       const res = await removeAdminUserPhoto(user.id);
       setPhotoPreview(null);
+      syncIfSelf(res.user);
       onSaved?.(res.user);
     } catch (e: any) {
       setError(e?.message ?? "Failed to remove photo");
@@ -323,6 +338,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
         role_id: roleId,
         office_id: effectiveOfficeId,
       });
+      syncIfSelf(res.user);
       onSaved?.(res.user);
       onClose();
     } catch (e: any) {

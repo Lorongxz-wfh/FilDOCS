@@ -9,6 +9,7 @@ use App\Models\DocumentVersion;
 use App\Models\DocumentRequest;
 use App\Models\DocumentRequestRecipient;
 use App\Services\Reports\ClusterAnalysisService;
+use App\Services\Reports\ActivityReportService;
 use App\Services\WorkflowSteps;
 use App\Traits\RoleNameTrait;
 use Illuminate\Http\Request;
@@ -18,7 +19,10 @@ class ReportsController extends Controller
 {
     use RoleNameTrait;
 
-    public function __construct(private ClusterAnalysisService $clusterAnalysis) {}
+    public function __construct(
+        private ClusterAnalysisService $clusterAnalysis,
+        private ActivityReportService $activityReport
+    ) {}
 
     // Backward-compatible alias (old endpoint name)
     public function compliance(Request $request)
@@ -834,6 +838,49 @@ class ReportsController extends Controller
             'creation_by_office'   => $creationByOffice,
             'lifecycle_funnel'     => $lifecycleFunnel,
         ]);
+    }
+
+    // GET /api/reports/activity
+    public function activity(Request $request)
+    {
+        $user     = $request->user();
+        $roleName = $this->roleNameOf($user);
+        $qaOfficeId = (int) ($this->clusterAnalysis->officeIdByCode('QA') ?? 0);
+        $userOfficeId = (int) ($user?->office_id ?? 0);
+        $isQA = ($roleName === 'qa') || ($qaOfficeId && $userOfficeId === $qaOfficeId);
+        $isAdmin = in_array($roleName, ['admin', 'sysadmin'], true);
+
+        if (!$isQA && !$isAdmin) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $data = $request->validate([
+            'date_from'  => 'nullable|date',
+            'date_to'    => 'nullable|date',
+            'days'       => 'nullable|integer|min:7|max:30',
+            'office_id'  => 'nullable|integer|exists:offices,id',
+            'parent'     => 'nullable|in:ALL,PO,VAd,VA,VF,VR',
+        ]);
+
+        $officeId = null;
+        if (isset($data['office_id'])) {
+            $officeId = (int) $data['office_id'];
+        } elseif (isset($data['parent']) && $data['parent'] !== 'ALL') {
+            // For activity logs, we might want to filter by any office in a cluster. 
+            // However, the service currently takes a single office_id. 
+            // For 'all analytics', we'll support the specific office_id if provided.
+            // If parent is provided, we can either update the service to handle multiple IDs 
+            // or just pick the first one for now. Let's keep it simple for this phase.
+        }
+
+        $stats = $this->activityReport->getActivityStats([
+            'date_from' => $data['date_from'] ?? null,
+            'date_to'   => $data['date_to'] ?? null,
+            'days'      => $data['days'] ?? 14,
+            'office_id' => $officeId,
+        ]);
+
+        return response()->json($stats);
     }
 
     // GET /api/reports/flow-health
