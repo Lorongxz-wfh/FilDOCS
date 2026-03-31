@@ -21,7 +21,7 @@ import Button from "../components/ui/Button";
 import Table from "../components/ui/Table";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
 import ShareDocumentModal from "../components/documents/ShareDocumentModal";
-import { Search, X, Archive } from "lucide-react";
+import { Search, X, Archive, PlusCircle } from "lucide-react";
 import { inputCls, selectCls } from "../utils/formStyles";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
 import Alert from "../components/ui/Alert";
@@ -219,6 +219,8 @@ export default function DocumentLibraryPage() {
           q: qDebounced.trim() || undefined,
           per_page: 10,
           page: reqPage,
+          sort_by: sortBy,
+          sort_dir: sortDir,
         });
         if (!alive) return;
         const incoming = Array.isArray(res.data) ? res.data : [];
@@ -244,7 +246,7 @@ export default function DocumentLibraryPage() {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, reqPage, qDebounced, reloadKey]);
+  }, [tab, reqPage, qDebounced, reloadKey, sortBy, sortDir]);
 
   // ── Load: All tab (parallel fetch) ───────────────────────────────────────
   useEffect(() => {
@@ -458,6 +460,76 @@ export default function DocumentLibraryPage() {
     }
   };
 
+  // ── Mobile Card Renderers ────────────────────────────────────────────────
+  const renderDocCard = (doc: Document) => (
+    <div className="p-4 flex items-center justify-between gap-3 border-b border-slate-100 dark:border-surface-400">
+      <div className="min-w-0">
+        <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100 truncate leading-tight">
+          {doc.title}
+        </p>
+        <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 truncate">
+          <span className="font-semibold">{doc.code ?? "—"}</span> · v{doc.version_number}
+          {doc.ownerOffice?.code && ` · ${doc.ownerOffice.code}`}
+        </p>
+      </div>
+      <div className="shrink-0 flex flex-col items-end gap-1.5">
+        <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 uppercase tracking-tight">
+          Distributed
+        </span>
+        <span className="text-[9px] font-medium text-slate-400 tabular-nums">
+          {doc.effective_date ? new Date(doc.effective_date).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'2-digit'}) : ""}
+        </span>
+      </div>
+    </div>
+  );
+
+  const renderReqCard = (r: any) => (
+    <div className="p-4 flex items-center justify-between gap-3 border-b border-slate-100 dark:border-surface-400">
+      <div className="min-w-0">
+        <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100 truncate leading-tight">
+          {r.document_title || r.title || "Untitled Request"}
+        </p>
+        <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 truncate italic">
+          {r.source_office_code ?? "—"} · v{r.version_number ?? 1}
+        </p>
+      </div>
+      <div className="shrink-0 flex flex-col items-end gap-1.5 text-right">
+        <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 uppercase tracking-tight">
+          {r.status || "Accepted"}
+        </span>
+        <span className="text-[10px] font-medium text-slate-400">
+          {r.row_type === "item" ? "Submission" : "Recipient"}
+        </span>
+      </div>
+    </div>
+  );
+
+  const renderLibraryCard = (item: LibraryItem) => (
+    <div className="p-4 flex items-center justify-between gap-3 border-b border-slate-100 dark:border-surface-400">
+      <div className="min-w-0">
+        <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100 truncate leading-tight">
+          {item.title}
+        </p>
+        <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 truncate">
+          <span className="font-semibold">{item.code ?? "—"}</span> · v{item.version}
+          {item.office && ` · ${item.office}`}
+        </p>
+      </div>
+      <div className="shrink-0 flex flex-col items-end gap-1.5 text-right">
+        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight ${
+          item.source === "requested" 
+            ? "bg-violet-50 text-violet-700 dark:bg-violet-950/30 dark:text-violet-400"
+            : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+        }`}>
+          {item.status || (item.source === "requested" ? "Accepted" : "Distributed")}
+        </span>
+        <span className="text-[10px] font-medium text-slate-400 capitalize">
+          {item.source}
+        </span>
+      </div>
+    </div>
+  );
+
   // ── Grid templates ────────────────────────────────────────────────────────
   const createdGrid = "80px 1fr 60px 100px 110px";
   const sharedGrid = canShare
@@ -489,17 +561,19 @@ export default function DocumentLibraryPage() {
             type="button"
             variant="ghost"
             size="sm"
+            responsive
             onClick={() => navigate("/archive")}
             className="flex items-center gap-1.5 px-3"
           >
             <Archive className="h-4 w-4" />
-            Archive
+            <span>Archive</span>
           </Button>
           {canCreate && (
             <Button
               type="button"
               variant="primary"
               size="sm"
+              responsive
               onClick={() => {
                 markWorkQueueSession();
                 navigate("/documents/create", {
@@ -507,15 +581,16 @@ export default function DocumentLibraryPage() {
                 });
               }}
             >
-              + Create document
+              <PlusCircle size={14} className="sm:hidden" />
+              <span>+ Create document</span>
             </Button>
           )}
         </div>
       }
       contentClassName="flex flex-col min-h-0 gap-4 h-full"
     >
-      {/* Tabs */}
-      <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0">
+      {/* Tabs — Scrollable on mobile, no vertical scroll leakage */}
+      <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto overflow-y-hidden hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         {(isAuditor(role)
           ? (["all"] as LibTab[])
           : (["all", "created", "requested", "shared"] as LibTab[])
@@ -525,29 +600,29 @@ export default function DocumentLibraryPage() {
             type="button"
             onClick={() => setTab(t)}
             className={[
-              "flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors -mb-px",
+              "flex items-center gap-1.5 px-4 py-2.5 text-[11px] sm:text-xs font-bold border-b-2 transition-all shrink-0 -mb-px",
               tab === t
                 ? "border-sky-500 text-sky-600 dark:text-sky-400"
                 : "border-transparent text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300",
             ].join(" ")}
           >
-            {TAB_ICONS[t]}
+            <span className="scale-90 sm:scale-100">{TAB_ICONS[t]}</span>
             {TAB_LABELS[t]}
           </button>
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2 shrink-0">
+      {/* Filters — Stacking on mobile */}
+      <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2 shrink-0">
         <div className="relative w-full sm:w-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={
-              tab === "requested" ? "Search requests…" : "Search title, code…"
+              tab === "requested" ? "Search requests…" : "Search documents…"
             }
-            className={`${inputCls} pl-9 pr-8`}
+            className={`${inputCls} pl-9 pr-8 text-sm`}
           />
           {q && (
             <button
@@ -561,40 +636,44 @@ export default function DocumentLibraryPage() {
           )}
         </div>
 
-        {tab !== "requested" && (
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className={selectCls}
-          >
-            <option value="ALL">All types</option>
-            <option value="internal">Internal</option>
-            <option value="external">External</option>
-            <option value="forms">Forms</option>
-          </select>
-        )}
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto">
+          {tab !== "requested" && (
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className={`${selectCls} text-sm w-full sm:w-auto`}
+            >
+              <option value="ALL">All types</option>
+              <option value="internal">Internal</option>
+              <option value="external">External</option>
+              <option value="forms">Forms</option>
+            </select>
+          )}
 
-        {tab === "all" && !isAuditor(role) && (
-          <select
-            value={sourceFilter}
-            onChange={(e) =>
-              setSourceFilter(e.target.value as "all" | "doc" | "req")
-            }
-            className={selectCls}
-          >
-            <option value="all">All sources</option>
-            <option value="doc">Documents only</option>
-            <option value="req">Requests only</option>
-          </select>
-        )}
+          {tab === "all" && !isAuditor(role) && (
+            <select
+              value={sourceFilter}
+              onChange={(e) =>
+                setSourceFilter(e.target.value as "all" | "doc" | "req")
+              }
+              className={`${selectCls} text-sm w-full sm:w-auto`}
+            >
+              <option value="all">All sources</option>
+              <option value="doc">Docs only</option>
+              <option value="req">Reqs only</option>
+            </select>
+          )}
+        </div>
 
         {tab !== "requested" && (
-          <DateRangeInput
-            from={dateFrom}
-            to={dateTo}
-            onFromChange={setDateFrom}
-            onToChange={setDateTo}
-          />
+          <div className="w-full sm:w-auto overflow-x-auto hide-scrollbar">
+            <DateRangeInput
+              from={dateFrom}
+              to={dateTo}
+              onFromChange={setDateFrom}
+              onToChange={setDateTo}
+            />
+          </div>
         )}
 
         {(q ||
@@ -611,16 +690,15 @@ export default function DocumentLibraryPage() {
               setDateTo("");
               setSourceFilter("all");
             }}
-            className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+            className="w-full sm:w-auto rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
           >
-            Clear
+            Clear filters
           </button>
         )}
 
-        {error && <Alert variant="danger">{error}</Alert>}
+        {error && <div className="w-full"><Alert variant="danger">{error}</Alert></div>}
       </div>
 
-      {/* Created tab */}
       {tab === "created" && (
         <Table<Document>
           columns={baseDocColumns}
@@ -642,10 +720,10 @@ export default function DocumentLibraryPage() {
             setSortBy(key as typeof sortBy);
             setSortDir(dir);
           }}
+          mobileRender={renderDocCard}
         />
       )}
 
-      {/* Shared tab */}
       {tab === "shared" && (
         <Table<Document>
           columns={sharedColumns}
@@ -667,10 +745,10 @@ export default function DocumentLibraryPage() {
             setSortBy(key as typeof sortBy);
             setSortDir(dir);
           }}
+          mobileRender={renderDocCard}
         />
       )}
 
-      {/* Requested tab */}
       {tab === "requested" && (
         <Table<any>
           columns={requestedColumns}
@@ -684,10 +762,16 @@ export default function DocumentLibraryPage() {
           onLoadMore={() => setReqPage((p) => p + 1)}
           gridTemplateColumns={requestedGrid}
           className="flex-1 min-h-0"
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSortChange={(key, dir) => {
+            setSortBy(key as typeof sortBy);
+            setSortDir(dir);
+          }}
+          mobileRender={renderReqCard}
         />
       )}
 
-      {/* All tab */}
       {tab === "all" && (
         <Table<LibraryItem>
           columns={allColumns}
@@ -712,6 +796,7 @@ export default function DocumentLibraryPage() {
             setSortBy(key as typeof sortBy);
             setSortDir(dir);
           }}
+          mobileRender={renderLibraryCard}
         />
       )}
 

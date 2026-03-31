@@ -62,16 +62,16 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
       <div className="divide-y divide-slate-100 dark:divide-surface-400">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 px-4 py-3">
-              <Skeleton className="h-7 w-7 rounded" />
-              <div className="flex-1 space-y-1.5">
+            <div key={i} className="flex items-center gap-2.5 sm:gap-3 p-3.5 sm:px-4 sm:py-3 cursor-wait">
+              <Skeleton className="h-7 w-7 rounded shrink-0" />
+              <div className="flex-1 space-y-1.5 min-w-0">
                 <Skeleton className="h-3.5 w-3/4" />
-                <Skeleton className="h-3 w-1/3" />
+                <Skeleton className="h-2.5 w-1/3" />
               </div>
             </div>
           ))
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center">
+          <div className="flex flex-col items-center justify-center py-10 text-center px-4">
             <div className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/40">
               <CheckCircle className="h-4.5 w-4.5 text-emerald-500" />
             </div>
@@ -104,7 +104,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
                 key={`${x.type}-${x.id}`}
                 type="button"
                 onClick={handleClick}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-surface-400"
+                className="flex w-full items-center gap-2.5 sm:gap-3 p-3.5 sm:px-4 sm:py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-surface-400 min-w-0"
               >
                 {/* Icon */}
                 <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded ${isRequest ? 'bg-amber-50 dark:bg-amber-950/30' : 'bg-slate-100 dark:bg-surface-400'}`}>
@@ -113,17 +113,17 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading }) => {
 
                 {/* Title + code */}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                  <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100 leading-tight">
                     {x.title}
                   </p>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                  <p className="mt-0.5 truncate text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500">
                     {x.code ?? "—"}
                   </p>
                 </div>
 
                 {/* Status badge */}
                 <span
-                  className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-tight ${colorClass}`}
+                  className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold leading-tight max-w-[80px] sm:max-w-none truncate sm:whitespace-nowrap ${colorClass}`}
                 >
                   {x.status}
                 </span>

@@ -34,26 +34,32 @@ const AdminStatGrid: React.FC<Props> = ({ data, loading }) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-surface-400 dark:bg-surface-500"
+          className="rounded-md border border-slate-200 bg-white p-2.5 sm:px-4 sm:py-3.5 dark:border-surface-400 dark:bg-surface-500 flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between gap-1">
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider leading-tight truncate">
               {item.label}
             </p>
-            <span className="text-slate-400 dark:text-slate-500">{item.icon}</span>
+            <span className="text-slate-400 dark:text-slate-500 sm:scale-100 scale-75 shrink-0">
+              {item.icon}
+            </span>
           </div>
-          {loading ? (
-            <Skeleton className="mt-3 h-7 w-14" />
-          ) : (
-            <p className="mt-2 text-2xl font-bold leading-none text-slate-900 dark:text-slate-100">
-              {item.value}
-            </p>
-          )}
-          <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+          
+          <div className="mt-1 sm:mt-2.5">
+            {loading ? (
+              <Skeleton className="h-5 sm:h-7 w-12 sm:w-14" />
+            ) : (
+              <p className="text-lg sm:text-2xl font-black leading-none text-slate-900 dark:text-slate-100 tabular-nums">
+                {item.value}
+              </p>
+            )}
+          </div>
+
+          <p className="hidden sm:block mt-1.5 text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 truncate leading-tight italic">
             {item.sub}
           </p>
         </div>

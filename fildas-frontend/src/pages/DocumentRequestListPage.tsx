@@ -25,8 +25,6 @@ import { inputCls, selectCls } from "../utils/formStyles";
 import { formatDate } from "../utils/formatters";
 import { StatusBadge, TypePill } from "../components/ui/Badge";
 import Alert from "../components/ui/Alert";
-import EmptyState from "../components/ui/EmptyState";
-import LoadMoreButton from "../components/ui/LoadMoreButton";
 import RefreshButton from "../components/ui/RefreshButton";
 
 type ViewTab = "batches" | "all";
@@ -92,66 +90,6 @@ function ModeBadge({ mode }: { mode: string }) {
   );
 }
 
-const RequestRow: React.FC<{
-  row: any;
-  isQaAdmin: boolean;
-  onClick: () => void;
-}> = ({ row, isQaAdmin, onClick }) => {
-  const displayProgress = React.useMemo(() => {
-    if (isQaAdmin || row.mode === "multi_doc") return row.progress;
-
-    // Personal progress for multi_office: 0/1 or 1/1
-    const s = row.recipient_status;
-    const isSub = s === "submitted" || s === "accepted";
-    const isAcc = s === "accepted";
-    return {
-      total: 1,
-      submitted: isSub ? 1 : 0,
-      accepted: isAcc ? 1 : 0,
-    } as DocumentRequestProgress;
-  }, [row, isQaAdmin]);
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition border-b border-slate-100 dark:border-surface-400 last:border-0"
-    >
-      <div className="flex-1 min-w-0 flex flex-col gap-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-            {row.title}
-          </span>
-          {isQaAdmin && <ModeBadge mode={row.mode} />}
-          <StatusBadge status={row.status} />
-        </div>
-        {displayProgress && <ProgressBar progress={displayProgress} />}
-      </div>
-
-      {isQaAdmin && (
-        <div className="shrink-0 hidden sm:block text-xs text-slate-400 dark:text-slate-500 text-right">
-          {row.office_name ?? "—"}
-          {row.office_code && (
-            <span className="ml-1 text-slate-300 dark:text-slate-600">
-              ({row.office_code})
-            </span>
-          )}
-        </div>
-      )}
-
-      <div className="shrink-0 hidden md:flex flex-col items-end gap-0.5">
-        {row.due_at && (
-          <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-            Due {formatDate(row.due_at)}
-          </span>
-        )}
-        <span className="text-[11px] text-slate-400 dark:text-slate-500">
-          {formatDate(row.created_at)}
-        </span>
-      </div>
-    </button>
-  );
-};
 
 // ── Main page ──────────────────────────────────────────────────────────────
 export default function DocumentRequestListPage() {
@@ -173,6 +111,8 @@ export default function DocumentRequestListPage() {
   const [createOpen, setCreateOpen] = React.useState(
     () => (location.state as any)?.openModal === true,
   );
+  const [sortBy, setSortBy] = React.useState<string>("created_at");
+  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("desc");
 
   const [rows, setRows] = React.useState<any[]>([]);
   const [page, setPage] = React.useState(1);
@@ -203,14 +143,14 @@ export default function DocumentRequestListPage() {
     return () => window.clearInterval(id);
   }, [reloadRequests]);
 
-  // Reset on filter/tab change
+  // Reset on filter/tab/sort change
   React.useEffect(() => {
     setRows([]);
     setPage(1);
     hasMoreRef.current = true;
     setHasMore(true);
     setInitialLoading(true);
-  }, [tab, qDebounced, status, recipientStatus, isQaAdmin]);
+  }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir]);
 
   React.useEffect(() => {
     let alive = true;
@@ -223,6 +163,8 @@ export default function DocumentRequestListPage() {
           q: qDebounced.trim() || undefined,
           per_page: 10,
           page,
+          sort_by: sortBy,
+          sort_dir: sortDir,
         };
         let data: any;
 
@@ -265,7 +207,7 @@ export default function DocumentRequestListPage() {
     };
     // hasMore intentionally omitted — tracked via hasMoreRef to avoid re-trigger
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, page, qDebounced, status, recipientStatus, isQaAdmin]);
+  }, [tab, page, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir]);
 
   function handleBatchRowClick(row: any) {
     // Batches tab: row.id = batch id, row.recipient_id from inbox
@@ -290,12 +232,98 @@ export default function DocumentRequestListPage() {
     return <StatusBadge status={status} />;
   }
 
+  // ── Table columns for "Batches" tab ───────────────────────────────────────
+  const batchColumns: TableColumn<any>[] = React.useMemo(() => {
+    const cols: TableColumn<any>[] = [
+      {
+        key: "title",
+        header: "Request",
+        sortKey: "title",
+        render: (row) => {
+          const displayProgress =
+            isQaAdmin || row.mode === "multi_doc"
+              ? row.progress
+              : {
+                  total: 1,
+                  submitted:
+                    row.recipient_status === "submitted" ||
+                    row.recipient_status === "accepted"
+                      ? 1
+                      : 0,
+                  accepted: row.recipient_status === "accepted" ? 1 : 0,
+                };
+
+          return (
+            <div className="flex-1 min-w-0 flex flex-col gap-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                  {row.title}
+                </span>
+                {isQaAdmin && <ModeBadge mode={row.mode} />}
+              </div>
+              {displayProgress && <ProgressBar progress={displayProgress} />}
+            </div>
+          );
+        },
+      },
+    ];
+
+    if (isQaAdmin) {
+      cols.push({
+        key: "office",
+        header: "Office",
+        render: (row) => (
+          <div className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
+            {row.office_name ?? "—"}
+            {row.office_code && (
+              <span className="ml-1 text-slate-300 dark:text-slate-600">
+                ({row.office_code})
+              </span>
+            )}
+          </div>
+        ),
+      });
+    }
+
+    cols.push(
+      {
+        key: "status",
+        header: "Status",
+        render: (row) => <StatusBadge status={row.status} />,
+      },
+      {
+        key: "dates",
+        header: "Timeline",
+        sortKey: "created_at",
+        render: (row) => (
+          <div className="shrink-0 flex flex-col items-end gap-0.5">
+            {row.due_at && (
+              <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium whitespace-nowrap">
+                Due {formatDate(row.due_at)}
+              </span>
+            )}
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 whitespace-nowrap">
+              {formatDate(row.created_at)}
+            </span>
+          </div>
+        ),
+      },
+    );
+
+    return cols;
+  }, [isQaAdmin]);
+
+  const batchGrid = isQaAdmin
+    ? "2fr 10rem 7rem 8rem"
+    : "2fr 7rem 8rem";
+
   // ── Table columns for "All Requests" tab (individual items/recipients) ────
   const allColumns: TableColumn<any>[] = React.useMemo(() => {
     const cols: TableColumn<any>[] = [
       {
         key: "title",
         header: "Request",
+        sortKey: "title",
         render: (r) => {
           const primary = r.item_title ?? r.batch_title;
           const sub = r.item_title ? r.batch_title : r.office_name;
@@ -345,6 +373,7 @@ export default function DocumentRequestListPage() {
       {
         key: "created",
         header: "Created",
+        sortKey: "created_at",
         render: (r) => (
           <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
             {formatDate(r.created_at)}
@@ -396,17 +425,19 @@ export default function DocumentRequestListPage() {
               type="button"
               variant="primary"
               size="sm"
+              responsive
               onClick={() => setCreateOpen(true)}
             >
-              Create request
+              <FileStack size={14} className="sm:hidden" />
+              <span>Create request</span>
             </Button>
           )}
         </div>
       }
       contentClassName="flex flex-col min-h-0 gap-0 h-full overflow-hidden"
     >
-      {/* Tabs */}
-      <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0">
+      {/* Tabs — scrollable on mobile */}
+      <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
         <button
           type="button"
           onClick={() => {
@@ -510,40 +541,27 @@ export default function DocumentRequestListPage() {
       <div className="flex-1 min-h-0 mt-4 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
         {/* ── Batches tab ── */}
         {tab === "batches" && (
-          <div className="h-full overflow-y-auto">
-            {initialLoading ? (
-              <div className="divide-y divide-slate-100 dark:divide-surface-400">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="px-4 py-3 flex items-center gap-4">
-                    <div className="flex-1 flex flex-col gap-2">
-                      <div className="h-4 w-2/3 rounded-md bg-slate-100 dark:bg-surface-400 animate-pulse" />
-                      <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-surface-400 animate-pulse" />
-                    </div>
-                    <div className="h-3 w-20 rounded-md bg-slate-100 dark:bg-surface-400 animate-pulse" />
-                  </div>
-                ))}
-              </div>
-            ) : rows.length === 0 ? (
-              <EmptyState label="No requests found." />
-            ) : (
-              <div className="divide-y divide-slate-100 dark:divide-surface-400">
-                {rows.map((row) => (
-                  <RequestRow
-                    key={row.id}
-                    row={row}
-                    isQaAdmin={isQaAdmin}
-                    onClick={() => handleBatchRowClick(row)}
-                  />
-                ))}
-                {hasMore && (
-                  <LoadMoreButton
-                    loading={loading}
-                    onClick={() => setPage((p) => p + 1)}
-                  />
-                )}
-              </div>
-            )}
-          </div>
+          <Table
+            bare
+            className="h-full"
+            columns={batchColumns}
+            rows={rows}
+            rowKey={(r) => r.id}
+            onRowClick={handleBatchRowClick}
+            loading={loading}
+            initialLoading={initialLoading}
+            error={error}
+            emptyMessage="No requests found."
+            hasMore={hasMore}
+            onLoadMore={() => setPage((p) => p + 1)}
+            gridTemplateColumns={batchGrid}
+            sortBy={sortBy}
+            sortDir={sortDir as any}
+            onSortChange={(key, dir) => {
+              setSortBy(key);
+              setSortDir(dir);
+            }}
+          />
         )}
 
         {/* ── All Requests tab ── */}
@@ -562,6 +580,12 @@ export default function DocumentRequestListPage() {
             hasMore={hasMore}
             onLoadMore={() => setPage((p) => p + 1)}
             gridTemplateColumns={gridCols}
+            sortBy={sortBy}
+            sortDir={sortDir as any}
+            onSortChange={(key, dir) => {
+              setSortBy(key);
+              setSortDir(dir);
+            }}
           />
         )}
       </div>

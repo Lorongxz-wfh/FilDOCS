@@ -21,7 +21,7 @@ import Button from "../components/ui/Button";
 import RefreshButton from "../components/ui/RefreshButton";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
-import { CheckCircle2, Search, X } from "lucide-react";
+import { CheckCircle2, Search, X, FileText, PlusCircle, ChevronDown, ChevronUp } from "lucide-react";
 import StatCard from "../components/workQueue/StatCard";
 import QueueCard from "../components/workQueue/QueueCard";
 import FinishedCard from "../components/workQueue/FinishedCard";
@@ -73,6 +73,7 @@ const MyWorkQueuePage: React.FC = () => {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
 
   const [search, setSearch] = useState("");
 
@@ -273,15 +274,18 @@ const MyWorkQueuePage: React.FC = () => {
             type="button"
             variant="outline"
             size="sm"
+            responsive
             onClick={() => navigate("/documents/all")}
           >
-            All workflows
+            <FileText size={14} className="sm:hidden" />
+            <span>All workflows</span>
           </Button>
           {canCreate && (
             <Button
               type="button"
               variant="primary"
               size="sm"
+              responsive
               onClick={() => {
                 markWorkQueueSession();
                 navigate("/documents/create", {
@@ -289,7 +293,8 @@ const MyWorkQueuePage: React.FC = () => {
                 });
               }}
             >
-              + Create document
+              <PlusCircle size={14} className="sm:hidden" />
+              <span>+ Create document</span>
             </Button>
           )}
         </div>
@@ -303,12 +308,14 @@ const MyWorkQueuePage: React.FC = () => {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-3 shrink-0">
-        <StatCard
-          label="Pending"
-          value={stats?.pending ?? null}
-          loading={loading}
-        />
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 shrink-0 px-0.5">
+        <div className="col-span-2 sm:col-span-1">
+          <StatCard
+            label="Pending"
+            value={stats?.pending ?? null}
+            loading={loading}
+          />
+        </div>
         <StatCard
           label="Total documents"
           value={stats?.total ?? null}
@@ -322,20 +329,20 @@ const MyWorkQueuePage: React.FC = () => {
       </div>
 
       {/* Main 2-col layout */}
-      <div className="flex gap-4 flex-col lg:flex-row flex-1 min-h-0">
+      <div className="flex gap-4 flex-col lg:flex-row flex-1 min-h-0 overflow-visible lg:overflow-hidden">
         {/* Queue panel */}
-        <div className="flex flex-col flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
+        <div className="flex flex-col flex-[2] rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 min-h-[450px] lg:min-h-0 overflow-hidden">
           {/* Panel header + tabs */}
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3">
+          <div className="flex shrink-0 flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 p-3 sm:px-4 sm:py-3">
             <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <p className="text-[13px] sm:text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">
                 {tab === "done"
                   ? "Completed flows"
                   : tab === "active"
                     ? "Needs action"
                     : "All documents"}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
                 {tab === "done"
                   ? "Distributed documents you were involved in"
                   : tab === "active"
@@ -344,23 +351,23 @@ const MyWorkQueuePage: React.FC = () => {
               </p>
             </div>
 
-            {/* Tab switcher — ERPNext style: plain underline tabs */}
-            <div className="flex items-center gap-0.5">
+            {/* Tab switcher — horizontal scroll on mobile */}
+            <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar -mx-1 px-1 sm:mx-0 sm:px-0">
               {tabs.map((t) => (
                 <button
                   key={t.value}
                   type="button"
                   onClick={() => setTab(t.value)}
                   className={[
-                    "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors",
+                    "flex items-center gap-1.5 shrink-0 px-2.5 py-1.5 text-[11px] sm:text-xs font-semibold rounded-md transition-all whitespace-nowrap",
                     tab === t.value
-                      ? "bg-slate-100 dark:bg-surface-400 text-slate-900 dark:text-slate-100"
+                      ? "bg-slate-100 dark:bg-surface-400 text-slate-900 dark:text-slate-100 shadow-sm"
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400",
                   ].join(" ")}
                 >
                   {t.label}
                   {t.count != null && (
-                    <span className="inline-flex items-center justify-center rounded bg-slate-200 dark:bg-surface-300 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
+                    <span className="inline-flex items-center justify-center rounded bg-slate-200 dark:bg-surface-300 px-1.5 py-0.5 text-[9px] font-bold text-slate-600 dark:text-slate-300">
                       {t.count}
                     </span>
                   )}
@@ -371,14 +378,14 @@ const MyWorkQueuePage: React.FC = () => {
 
           {/* Search bar (All / Active tabs only) */}
           {tab !== "done" && (
-            <div className="shrink-0 px-4 pt-3 pb-0">
+            <div className="shrink-0 px-3 sm:px-4 pt-3 pb-0">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by title or code…"
-                  className="w-full rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 pl-9 pr-8 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-brand-400 transition"
+                  placeholder="Search docs…"
+                  className="w-full rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 pl-8 pr-8 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-brand-400 transition"
                 />
                 {search && (
                   <button
@@ -485,31 +492,59 @@ const MyWorkQueuePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Recent activity panel */}
-        <div className="flex flex-col lg:w-72 shrink-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden max-h-96 lg:max-h-none">
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3">
+        {/* Recent activity panel — collapsible on mobile, fixed on desktop */}
+        <div className={[
+          "flex flex-col lg:w-72 shrink-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden transition-all duration-300",
+          isActivityOpen ? "max-h-[500px]" : "max-h-12 lg:max-h-none"
+        ].join(" ")}>
+          <div
+            role="button"
+            tabIndex={window.innerWidth < 1024 ? 0 : -1}
+            onClick={() => {
+              if (window.innerWidth < 1024) {
+                setIsActivityOpen(!isActivityOpen);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (window.innerWidth < 1024 && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                setIsActivityOpen(!isActivityOpen);
+              }
+            }}
+            className="flex w-full shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 cursor-pointer lg:cursor-default"
+          >
             <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 text-left">
                 Recent activity
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400 text-left">
                 Workflow actions
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() =>
-                navigate("/my-activity", {
-                  state: { category: "workflow" },
-                })
-              }
-              className="text-xs font-medium text-brand-500 hover:text-brand-400 dark:text-brand-400 transition-colors"
-            >
-              View all →
-            </button>
+            
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/my-activity", {
+                    state: { category: "workflow" },
+                  });
+                }}
+                className="hidden sm:block text-xs font-medium text-brand-500 hover:text-brand-400 dark:text-brand-400 transition-colors"
+              >
+                View all →
+              </button>
+              <div className="lg:hidden">
+                {isActivityOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </div>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-3 py-3">
+          <div className={[
+            "flex-1 overflow-y-auto px-3 py-3 lg:block",
+            isActivityOpen ? "block" : "hidden"
+          ].join(" ")}>
             {loadingActivity ? (
               <div className="space-y-1.5 animate-pulse">
                 {Array.from({ length: 5 }).map((_, i) => (

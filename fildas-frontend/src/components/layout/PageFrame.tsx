@@ -65,9 +65,11 @@ export default function PageFrame({
               </div>
             </div>
 
-            {/* Right: action buttons */}
+            {/* Right: action buttons — flex-wrap for mobile */}
             {right && (
-              <div className="flex shrink-0 items-center gap-2">{right}</div>
+              <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2 flex-wrap">
+                {right}
+              </div>
             )}
           </div>
         </div>

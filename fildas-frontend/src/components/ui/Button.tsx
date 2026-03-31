@@ -11,6 +11,8 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   loading?: boolean;
   tooltip?: string;
   tooltipSide?: Side;
+  /** If true, and the button has multiple words or is specifically marked, it hides the text on mobile */
+  responsive?: boolean;
 };
 
 const base =
@@ -42,6 +44,7 @@ export default function Button({
   loading = false,
   tooltip,
   tooltipSide = "top",
+  responsive = false,
   disabled,
   className = "",
   children,
@@ -51,7 +54,13 @@ export default function Button({
     <button
       {...props}
       disabled={disabled || loading}
-      className={[base, variants[variant], sizes[size], className].join(" ")}
+      className={[
+        base,
+        variants[variant],
+        sizes[size],
+        responsive ? "[&>span]:hidden [&>span]:sm:inline" : "",
+        className,
+      ].join(" ")}
     >
       {loading ? "Loading..." : children}
     </button>

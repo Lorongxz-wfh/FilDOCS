@@ -36,7 +36,7 @@ export default function Modal({
         onClick={onClose}
         className="absolute inset-0 bg-slate-900/50 dark:bg-black/60"
       />
-      <div className="relative mx-auto mt-20 w-[92vw]">
+      <div className="relative mx-auto mt-10 sm:mt-20 w-[92vw]">
         <div
           className={[
             "mx-auto rounded-xl border border-slate-200 bg-white shadow-lg flex flex-col",
@@ -68,7 +68,7 @@ export default function Modal({
           </div>
 
           {/* Body */}
-          <div className="px-4 py-4 max-h-[65vh] overflow-y-auto">
+          <div className="p-3 sm:px-4 sm:py-4 max-h-[80vh] overflow-y-auto min-h-0 flex-1 sm:flex-none">
             {children}
           </div>
         </div>

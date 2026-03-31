@@ -65,27 +65,29 @@ const KpiCard: React.FC<{
   iconBg: string;
   loading?: boolean;
 }> = ({ label, value, sub, icon, iconBg, loading }) => (
-  <div className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3.5 flex items-center gap-4">
-    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${iconBg}`}>
+  <div className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-3 py-2.5 sm:px-4 sm:py-3.5 flex items-center gap-3 sm:gap-4 shadow-sm">
+    <div className={`flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-md ${iconBg} scale-90 sm:scale-100`}>
       {icon}
     </div>
     <div className="min-w-0 flex-1">
       {loading ? (
-        <>
-          <Skeleton className="h-5 w-16 mb-1" />
-          <Skeleton className="h-3 w-24" />
-        </>
+        <div className="space-y-1">
+          <Skeleton className="h-4 w-12 sm:h-5 sm:w-16" />
+          <Skeleton className="h-2 w-20 sm:h-3 sm:w-24" />
+        </div>
       ) : (
-        <>
-          <p className="text-xl font-bold tabular-nums leading-none text-slate-900 dark:text-slate-100">
+        <div className="flex flex-col sm:block">
+          <p className="text-base sm:text-xl font-bold tabular-nums leading-none text-slate-900 dark:text-slate-100">
             {value}
           </p>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 truncate">{sub}</p>
-        </>
+          <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate font-medium">
+            {label}
+          </p>
+        </div>
       )}
     </div>
-    <p className="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400 text-right leading-tight max-w-[5rem]">
-      {label}
+    <p className="hidden sm:block shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400 text-right leading-tight max-w-[5rem]">
+      {sub}
     </p>
   </div>
 );
@@ -315,21 +317,23 @@ const ReportsPage: React.FC = () => {
             type="button"
             variant="primary"
             size="sm"
+            responsive
             onClick={() => navigate("/reports/export")}
           >
-            Export reports
+            <TrendingUp size={14} className="sm:hidden" />
+            <span>Export reports</span>
           </Button>
         </div>
       }
     >
-      {/* Tab nav */}
-      <div className="shrink-0 flex items-center border-b border-slate-200 dark:border-surface-400">
+      {/* Tab nav — scrollable on mobile */}
+      <div className="shrink-0 flex items-center border-b border-slate-200 dark:border-surface-400 overflow-x-auto hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         {TABS.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setActiveTab(t.key)}
-            className={tabCls(activeTab === t.key)}
+            className={tabCls(activeTab === t.key) + " whitespace-nowrap"}
           >
             {t.label}
           </button>
@@ -338,12 +342,12 @@ const ReportsPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setFiltersOpen((v) => !v)}
-            className="flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-500 transition-colors"
+            className="flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-500 transition-colors shadow-sm"
           >
             <SlidersHorizontal size={12} />
-            Filters
+            <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
-              <span className="ml-0.5 rounded-full bg-brand-400 px-1.5 py-0.5 text-[10px] font-semibold text-white leading-none">
+              <span className="ml-0.5 rounded-full bg-brand-400 px-1.2 py-0.5 text-[9px] font-bold text-white leading-none">
                 {activeFilterCount}
               </span>
             )}
@@ -401,9 +405,15 @@ const ReportsPage: React.FC = () => {
                   />
                 </div>
 
-                {/* Volume trend + Phase donut side by side */}
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
+                {/* Volume trend + Phase donut side by side — snap indicators on mobile */}
+                <div className="relative group/snap">
+                  <div className="sm:hidden absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none animate-pulse-slow">
+                    <div className="bg-white/80 dark:bg-surface-600/80 backdrop-blur-sm p-1.5 rounded-full shadow-md border border-slate-200 dark:border-surface-400">
+                      <TrendingUp size={12} className="text-sky-500 rotate-90" />
+                    </div>
+                  </div>
+                  <div className="flex lg:grid lg:grid-cols-3 gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
+                  <div className="min-w-[85vw] lg:min-w-0 lg:col-span-2 snap-center">
                     <ReportChartCard
                       title={`Document volume · ${bucket}`}
                       subtitle="Created vs distributed per period"
@@ -416,7 +426,7 @@ const ReportsPage: React.FC = () => {
                       />
                     </ReportChartCard>
                   </div>
-                  <div className="lg:col-span-1">
+                  <div className="min-w-[85vw] lg:min-w-0 lg:col-span-1 snap-center">
                     <ReportChartCard
                       title="Documents by phase"
                       subtitle="Current status of documents in selected period"
@@ -429,6 +439,7 @@ const ReportsPage: React.FC = () => {
                       />
                     </ReportChartCard>
                   </div>
+                </div>
                 </div>
 
                 {/* Secondary KPI row */}
@@ -489,30 +500,41 @@ const ReportsPage: React.FC = () => {
 
                 {/* Activity Summary (Dashboard Matching) */}
                 {(qaMode || role === "ADMIN" || role === "SYSADMIN") && (
-                  <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                    <ReportChartCard
-                      title="System Activity Breakdown"
-                      subtitle="Distribution by category in selected period"
-                      loading={activityLoading}
-                    >
-                      <ActivityDistributionChart
-                        data={activityReport?.distribution ?? []}
-                        height={180}
-                        loading={activityLoading}
-                      />
-                    </ReportChartCard>
-                    <ReportChartCard
-                      title="Activity Trend"
-                      subtitle="Daily volume across categories"
-                      loading={activityLoading}
-                    >
-                      <DailyActivityStackedBarChart
-                        data={activityReport?.daily_trend ?? []}
-                        height={180}
-                        loading={activityLoading}
-                      />
-                    </ReportChartCard>
-                  </div>
+                    <div className="relative group/snap">
+                      <div className="sm:hidden absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none animate-pulse-slow">
+                        <div className="bg-white/80 dark:bg-surface-600/80 backdrop-blur-sm p-1.5 rounded-full shadow-md border border-slate-200 dark:border-surface-400">
+                          <History size={12} className="text-amber-500 rotate-90" />
+                        </div>
+                      </div>
+                      <div className="flex lg:grid lg:grid-cols-2 gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
+                      <div className="min-w-[85vw] lg:min-w-0 snap-center">
+                        <ReportChartCard
+                          title="System Activity Breakdown"
+                          subtitle="Distribution by category in selected period"
+                          loading={activityLoading}
+                        >
+                          <ActivityDistributionChart
+                            data={activityReport?.distribution ?? []}
+                            height={180}
+                            loading={activityLoading}
+                          />
+                        </ReportChartCard>
+                      </div>
+                      <div className="min-w-[85vw] lg:min-w-0 snap-center">
+                        <ReportChartCard
+                          title="Activity Trend"
+                          subtitle="Daily volume across categories"
+                          loading={activityLoading}
+                        >
+                          <DailyActivityStackedBarChart
+                            data={activityReport?.daily_trend ?? []}
+                            height={180}
+                            loading={activityLoading}
+                          />
+                        </ReportChartCard>
+                      </div>
+                    </div>
+                    </div>
                 )}
               </>
             )}
@@ -577,8 +599,14 @@ const ReportsPage: React.FC = () => {
                 </div>
 
                 {/* Volume trend + Document type donut */}
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
+                <div className="relative group/snap">
+                  <div className="sm:hidden absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none animate-pulse-slow">
+                    <div className="bg-white/80 dark:bg-surface-600/80 backdrop-blur-sm p-1.5 rounded-full shadow-md border border-slate-200 dark:border-surface-400">
+                      <TrendingUp size={12} className="text-sky-500 rotate-90" />
+                    </div>
+                  </div>
+                  <div className="flex lg:grid lg:grid-cols-3 gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
+                  <div className="min-w-[85vw] lg:min-w-0 lg:col-span-2 snap-center">
                     <ReportChartCard
                       title={`Document volume · ${bucket}`}
                       subtitle="Documents created vs distributed per period"
@@ -591,7 +619,7 @@ const ReportsPage: React.FC = () => {
                       />
                     </ReportChartCard>
                   </div>
-                  <div className="lg:col-span-1">
+                  <div className="min-w-[85vw] lg:min-w-0 lg:col-span-1 snap-center">
                     <ReportChartCard
                       title="By document type"
                       subtitle="Internal · External · Forms split"
@@ -605,22 +633,32 @@ const ReportsPage: React.FC = () => {
                     </ReportChartCard>
                   </div>
                 </div>
+                </div>
 
                 {/* Office creation + companion visual */}
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                  <ReportChartCard
-                    title="Documents created by office"
-                    subtitle="Ranked by creation volume"
-                    loading={loading}
-                  >
-                    <OfficeCreationChart
-                      data={creationByOffice}
+                <div className="relative group/snap">
+                  <div className="sm:hidden absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none animate-pulse-slow">
+                    <div className="bg-white/80 dark:bg-surface-600/80 backdrop-blur-sm p-1.5 rounded-full shadow-md border border-slate-200 dark:border-surface-400">
+                      <TrendingUp size={12} className="text-sky-500 rotate-90" />
+                    </div>
+                  </div>
+                  <div className="flex lg:grid lg:grid-cols-2 gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
+                  <div className="min-w-[85vw] lg:min-w-0 snap-center">
+                    <ReportChartCard
+                      title="Documents created by office"
+                      subtitle="Ranked by creation volume"
                       loading={loading}
-                    />
-                  </ReportChartCard>
-                  <div className="flex items-center justify-center rounded-lg border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/20 text-slate-400 dark:text-slate-500 text-xs">
+                    >
+                      <OfficeCreationChart
+                        data={creationByOffice}
+                        loading={loading}
+                      />
+                    </ReportChartCard>
+                  </div>
+                  <div className="min-w-[85vw] lg:min-w-0 snap-center flex items-center justify-center rounded-lg border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/20 text-slate-400 dark:text-slate-500 text-xs p-10">
                     companion chart TBD
                   </div>
+                </div>
                 </div>
 
                 {/* Lifecycle funnel */}
@@ -828,8 +866,8 @@ const ReportsPage: React.FC = () => {
                 </div>
 
                 {/* Volume trend + Status donut */}
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
+                <div className="flex lg:grid lg:grid-cols-3 gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                  <div className="min-w-[85vw] lg:min-w-0 lg:col-span-2 snap-center">
                     <ReportChartCard
                       title={`Request volume · ${bucket}`}
                       subtitle="Requests created vs accepted per period"
@@ -848,7 +886,7 @@ const ReportsPage: React.FC = () => {
                       />
                     </ReportChartCard>
                   </div>
-                  <div className="lg:col-span-1">
+                  <div className="min-w-[85vw] lg:min-w-0 lg:col-span-1 snap-center">
                     <ReportChartCard
                       title="Request status"
                       subtitle="Open · Closed · Cancelled breakdown"
@@ -879,127 +917,131 @@ const ReportsPage: React.FC = () => {
                 </ReportChartCard>
 
                 {/* Attempt distribution + Office acceptance */}
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                  <ReportChartCard
-                    title="Submission attempts"
-                    subtitle="How many requests passed on 1st, 2nd, 3rd+ attempt"
-                    loading={requestsLoading}
-                  >
-                    <div className="flex flex-col gap-2.5">
-                      {(requestsReport?.attempt_distribution ?? []).map(
-                        (d, i) => {
-                          const total =
-                            (requestsReport?.attempt_distribution ?? []).reduce(
-                              (s, x) => s + x.count,
-                              0,
-                            ) || 1;
-                          const pct = Math.round((d.count / total) * 100);
-                          const colors = ["#38bdf8", "#a78bfa", "#f43f5e"];
-                          return (
-                            <div
-                              key={d.attempt}
-                              className="flex items-center gap-3"
-                            >
-                              <span className="w-24 shrink-0 text-xs text-slate-600 dark:text-slate-300 font-medium truncate">
-                                {d.attempt}
-                              </span>
-                              <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-surface-400 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full transition-all duration-500"
-                                  style={{
-                                    width: `${pct}%`,
-                                    backgroundColor: colors[i] ?? "#94a3b8",
-                                  }}
-                                />
-                              </div>
-                              <span className="w-14 shrink-0 text-right text-xs tabular-nums text-slate-700 dark:text-slate-200">
-                                {d.count}{" "}
-                                <span className="text-slate-400 dark:text-slate-500">
-                                  ({pct}%)
-                                </span>
-                              </span>
-                            </div>
-                          );
-                        },
-                      )}
-                      {!requestsLoading &&
-                        !requestsReport?.attempt_distribution?.length && (
-                          <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-4">
-                            No data available
-                          </p>
-                        )}
-                    </div>
-                  </ReportChartCard>
-
-                  <ReportChartCard
-                    title="Office acceptance rates"
-                    subtitle="Requests received vs accepted per office"
-                    loading={requestsLoading}
-                  >
-                    <div className="flex flex-col gap-0">
-                      <div className="flex items-center gap-2 px-1 pb-1.5 border-b border-slate-100 dark:border-surface-400">
-                        <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                          Office
-                        </span>
-                        <span className="w-10 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                          Sent
-                        </span>
-                        <span className="w-10 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                          Acc.
-                        </span>
-                        <span className="w-12 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                          Rate
-                        </span>
-                      </div>
-                      <div
-                        className="overflow-y-auto divide-y divide-slate-50 dark:divide-surface-500"
-                        style={{ maxHeight: "13.5rem" }}
-                      >
-                        {requestsLoading ? (
-                          [1, 2, 3, 4].map((i) => (
-                            <div
-                              key={i}
-                              className="flex items-center gap-2 px-1 py-2"
-                            >
-                              <Skeleton className="flex-1 h-2.5" />
-                              <Skeleton className="w-8 h-2.5 shrink-0" />
-                              <Skeleton className="w-8 h-2.5 shrink-0" />
-                              <Skeleton className="w-10 h-2.5 shrink-0" />
-                            </div>
-                          ))
-                        ) : (requestsReport?.office_acceptance ?? []).length ===
-                          0 ? (
-                          <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-6">
-                            No data available
-                          </p>
-                        ) : (
-                          (requestsReport?.office_acceptance ?? [])
-                            .sort((a, b) => b.rate - a.rate)
-                            .map((o) => (
+                <div className="flex lg:grid lg:grid-cols-2 gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                  <div className="min-w-[85vw] lg:min-w-0 snap-center">
+                    <ReportChartCard
+                      title="Submission attempts"
+                      subtitle="How many requests passed on 1st, 2nd, 3rd+ attempt"
+                      loading={requestsLoading}
+                    >
+                      <div className="flex flex-col gap-2.5">
+                        {(requestsReport?.attempt_distribution ?? []).map(
+                          (d, i) => {
+                            const total =
+                              (requestsReport?.attempt_distribution ?? []).reduce(
+                                (s, x) => s + x.count,
+                                0,
+                              ) || 1;
+                            const pct = Math.round((d.count / total) * 100);
+                            const colors = ["#38bdf8", "#a78bfa", "#f43f5e"];
+                            return (
                               <div
-                                key={o.office}
-                                className="flex items-center gap-2 px-1 py-2 hover:bg-slate-50 dark:hover:bg-surface-600/50 transition-colors"
+                                key={d.attempt}
+                                className="flex items-center gap-3"
                               >
-                                <span className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-200 truncate">
-                                  {o.office}
+                                <span className="w-24 shrink-0 text-xs text-slate-600 dark:text-slate-300 font-medium truncate">
+                                  {d.attempt}
                                 </span>
-                                <span className="w-10 shrink-0 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">
-                                  {o.sent}
+                                <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-surface-400 overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-500"
+                                    style={{
+                                      width: `${pct}%`,
+                                      backgroundColor: colors[i] ?? "#94a3b8",
+                                    }}
+                                  />
+                                </div>
+                                <span className="w-14 shrink-0 text-right text-xs tabular-nums text-slate-700 dark:text-slate-200">
+                                  {d.count}{" "}
+                                  <span className="text-slate-400 dark:text-slate-500">
+                                    ({pct}%)
+                                  </span>
                                 </span>
-                                <span className="w-10 shrink-0 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">
-                                  {o.accepted}
-                                </span>
-                                <span
-                                  className={`w-12 shrink-0 text-right text-xs font-bold tabular-nums ${o.rate >= 75 ? "text-emerald-500 dark:text-emerald-400" : o.rate >= 50 ? "text-amber-500 dark:text-amber-400" : "text-rose-500 dark:text-rose-400"}`}
-                                >
-                                  {o.rate}%
-                                </span>
+                              </div>
+                            );
+                          },
+                        )}
+                        {!requestsLoading &&
+                          !requestsReport?.attempt_distribution?.length && (
+                            <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-4">
+                              No data available
+                            </p>
+                          )}
+                      </div>
+                    </ReportChartCard>
+                  </div>
+
+                  <div className="min-w-[85vw] lg:min-w-0 snap-center">
+                    <ReportChartCard
+                      title="Office acceptance rates"
+                      subtitle="Requests received vs accepted per office"
+                      loading={requestsLoading}
+                    >
+                      <div className="flex flex-col gap-0">
+                        <div className="flex items-center gap-2 px-1 pb-1.5 border-b border-slate-100 dark:border-surface-400">
+                          <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            Office
+                          </span>
+                          <span className="w-10 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            Sent
+                          </span>
+                          <span className="w-10 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            Acc.
+                          </span>
+                          <span className="w-12 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            Rate
+                          </span>
+                        </div>
+                        <div
+                          className="overflow-y-auto divide-y divide-slate-50 dark:divide-surface-500"
+                          style={{ maxHeight: "13.5rem" }}
+                        >
+                          {requestsLoading ? (
+                            [1, 2, 3, 4].map((i) => (
+                              <div
+                                key={i}
+                                className="flex items-center gap-2 px-1 py-2"
+                              >
+                                <Skeleton className="flex-1 h-2.5" />
+                                <Skeleton className="w-8 h-2.5 shrink-0" />
+                                <Skeleton className="w-8 h-2.5 shrink-0" />
+                                <Skeleton className="w-10 h-2.5 shrink-0" />
                               </div>
                             ))
-                        )}
+                          ) : (requestsReport?.office_acceptance ?? []).length ===
+                            0 ? (
+                            <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-6">
+                              No data available
+                            </p>
+                          ) : (
+                            (requestsReport?.office_acceptance ?? [])
+                              .sort((a, b) => b.rate - a.rate)
+                              .map((o) => (
+                                <div
+                                  key={o.office}
+                                  className="flex items-center gap-2 px-1 py-2 hover:bg-slate-50 dark:hover:bg-surface-600/50 transition-colors"
+                                >
+                                  <span className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-200 truncate">
+                                    {o.office}
+                                  </span>
+                                  <span className="w-10 shrink-0 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                                    {o.sent}
+                                  </span>
+                                  <span className="w-10 shrink-0 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                                    {o.accepted}
+                                  </span>
+                                  <span
+                                    className={`w-12 shrink-0 text-right text-xs font-bold tabular-nums ${o.rate >= 75 ? "text-emerald-500 dark:text-emerald-400" : o.rate >= 50 ? "text-amber-500 dark:text-amber-400" : "text-rose-500 dark:text-rose-400"}`}
+                                  >
+                                    {o.rate}%
+                                  </span>
+                                </div>
+                              ))
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </ReportChartCard>
+                    </ReportChartCard>
+                  </div>
                 </div>
               </>
             )}
@@ -1198,10 +1240,19 @@ const ReportsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Collapsible filter panel */}
-        {filtersOpen && (
-          <aside className="w-56 shrink-0 border-l border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-y-auto flex flex-col">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-surface-400">
+        {/* Sliding filter panel — fixed overlay on mobile */}
+        <div 
+          className={`fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm sm:hidden transition-opacity duration-300 ${filtersOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+          onClick={() => setFiltersOpen(false)}
+        />
+        <aside 
+          className={[
+            "fixed inset-y-0 right-0 z-50 w-72 sm:static sm:w-56 shrink-0 border-l border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-y-auto flex flex-col shadow-2xl sm:shadow-none transition-transform duration-300 ease-in-out",
+            filtersOpen ? "translate-x-0" : "translate-x-full sm:translate-x-0",
+            !filtersOpen && "sm:flex hidden", // Keep flex on desktop, hidden on mobile if closed
+          ].filter(Boolean).join(" ")}
+        >
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-surface-400">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-200">
                   Filters
@@ -1404,9 +1455,8 @@ const ReportsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          </aside>
-        )}
+          </div>
+        </aside>
       </div>
     </PageFrame>
   );

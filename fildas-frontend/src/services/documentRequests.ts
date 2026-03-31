@@ -100,6 +100,8 @@ export async function listDocumentRequests(params?: {
   q?: string;
   per_page?: number;
   page?: number;
+  sort_by?: string;
+  sort_dir?: "asc" | "desc";
 }) {
   const res = await api.get("/document-requests", { params });
   return res.data;
@@ -109,6 +111,8 @@ export async function listDocumentRequestInbox(params?: {
   q?: string;
   per_page?: number;
   page?: number;
+  sort_by?: string;
+  sort_dir?: "asc" | "desc";
 }) {
   const res = await api.get("/document-requests/inbox", { params });
   return res.data;
@@ -120,6 +124,8 @@ export async function listDocumentRequestRecipients(params?: {
   request_status?: string;
   per_page?: number;
   page?: number;
+  sort_by?: string;
+  sort_dir?: "asc" | "desc";
 }) {
   const res = await api.get("/document-requests/recipients", { params });
   return res.data;
@@ -131,6 +137,8 @@ export async function listDocumentRequestIndividual(params?: {
   request_status?: string;
   per_page?: number;
   page?: number;
+  sort_by?: string;
+  sort_dir?: "asc" | "desc";
 }) {
   const res = await api.get("/document-requests/individual", { params });
   return res.data;

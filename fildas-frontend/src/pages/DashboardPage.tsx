@@ -28,8 +28,6 @@ import { getUserRole, isQA, isAuditor } from "../lib/roleFilters";
 import { getAuthUser } from "../lib/auth";
 import {
   FolderOpen,
-  ClipboardList,
-  Inbox,
   Percent,
   Timer,
   AlertCircle,
@@ -49,13 +47,13 @@ const Card: React.FC<{
   <div
     className={`rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 ${className}`}
   >
-    <div className="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-surface-400 px-4 py-3">
+    <div className={`flex items-start justify-between gap-3 border-b border-slate-100 dark:border-surface-400 p-3 sm:px-4 sm:py-3`}>
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
+        <p className="text-[13px] sm:text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
           {title}
         </p>
         {sub && (
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
             {sub}
           </p>
         )}
@@ -70,7 +68,7 @@ const Card: React.FC<{
         </button>
       )}
     </div>
-    <div className="px-4 py-4">{children}</div>
+    <div className="p-3 sm:p-4">{children}</div>
   </div>
 );
 
@@ -135,70 +133,108 @@ const QADashboard: React.FC<
         pendingCount={pending.length}
         pendingRequestsCount={pendingRequestsCount}
         loading={loading}
+        onStatClick={(label) => {
+          if (label === "Action needed" || label === "In progress") navigate("/work-queue");
+          if (label === "Total documents" || label === "Distributed") navigate("/documents");
+          if (label === "Pending requests") navigate("/document-requests");
+        }}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {kpiCards.map((k) => (
           <div
             key={k.label}
-            className="min-w-0 rounded-md border border-slate-200 bg-white px-4 py-3.5 dark:border-surface-400 dark:bg-surface-500"
+            className="min-w-0 rounded-md border border-slate-200 bg-white p-2 sm:px-4 sm:py-3.5 dark:border-surface-400 dark:bg-surface-500 flex flex-col justify-between"
           >
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight">
+            <div className="flex items-center justify-between gap-1 text-slate-500 dark:text-slate-400">
+              <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider leading-tight truncate">
                 {k.label}
               </p>
-              <span className={`shrink-0 ${k.iconCls}`}>{k.icon}</span>
+              <span className={`shrink-0 ${k.iconCls} sm:scale-100 scale-75`}>{k.icon}</span>
             </div>
-            {loading ? (
-              <Skeleton className="mt-3 h-7 w-14" />
-            ) : (
-              <p
-                className={`mt-2.5 text-2xl font-bold tabular-nums leading-none ${k.valueCls}`}
-              >
-                {k.value}
-              </p>
-            )}
-            <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+            
+            <div className="mt-1.5 sm:mt-2.5">
+              {loading ? (
+                <Skeleton className="h-5 sm:h-7 w-10 sm:w-14" />
+              ) : (
+                <p
+                  className={`text-sm sm:text-2xl font-black tabular-nums leading-none ${k.valueCls}`}
+                >
+                  {k.value}
+                </p>
+              )}
+            </div>
+
+            <p className="hidden sm:block mt-1.5 text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 italic truncate">
               {k.sub}
             </p>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card
-          title="Document volume"
-          sub="Created vs distributed per month"
-          action={{
-            label: "View reports",
-            onClick: () => navigate("/reports"),
-          }}
-          className="lg:col-span-2"
-        >
-          <VolumeTrendChart
-            data={report.volume_series}
-            height={200}
-            loading={loading}
-          />
-        </Card>
-        <Card
-          title="Pipeline state"
-          sub="Docs by current phase"
-          action={{
-            label: "View library",
-            onClick: () => navigate("/documents"),
-          }}
-        >
-          <PhaseDistributionChart
-            data={report.phase_distribution ?? []}
-            variant="donut"
-            height={200}
-            loading={loading}
-          />
-        </Card>
+      {/* Charts Carousel/Grid */}
+      <div className="relative group">
+        <div className="flex sm:grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0">
+          <Card
+            title="Document volume"
+            sub="Created vs distributed per month"
+            action={{
+              label: "View reports",
+              onClick: () => navigate("/reports"),
+            }}
+            className="min-w-[88vw] sm:min-w-0 snap-center lg:col-span-2"
+          >
+            <VolumeTrendChart
+              data={report.volume_series}
+              height={window.innerWidth < 640 ? 150 : 200}
+              loading={loading}
+            />
+          </Card>
+          
+          <Card
+            title="Pipeline state"
+            sub="Docs by current phase"
+            action={{
+              label: "View library",
+              onClick: () => navigate("/documents"),
+            }}
+            className="min-w-[88vw] sm:min-w-0 snap-center"
+          >
+            <PhaseDistributionChart
+              data={report.phase_distribution ?? []}
+              variant="donut"
+              height={window.innerWidth < 640 ? 150 : 200}
+              loading={loading}
+            />
+          </Card>
+
+          <Card
+            title="Stage delay"
+            sub="Median hold time per workflow phase"
+            action={{
+              label: "View reports",
+              onClick: () => navigate("/reports"),
+            }}
+            className="min-w-[88vw] sm:min-w-0 snap-center lg:hidden"
+          >
+            <StageDelayChart
+              data={report.stage_delays_by_phase ?? []}
+              height={150}
+              loading={loading}
+            />
+          </Card>
+        </div>
+        
+        {/* Pagination Dots (Mobile Only) */}
+        <div className="flex sm:hidden justify-center items-center gap-1 mt-1.5 mb-0.5">
+          <div className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-surface-400" />
+          <div className="h-1 w-1 rounded-full bg-slate-200 dark:bg-surface-300/40" />
+          <div className="h-1 w-1 rounded-full bg-slate-200 dark:bg-surface-300/40" />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {/* Desktop-only Stage Delay if not in carousel-span above */}
+      <div className="hidden lg:grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DashboardPendingList items={pendingActions} loading={loading} />
         <Card
           title="Stage delay"
@@ -214,6 +250,11 @@ const QADashboard: React.FC<
             loading={loading}
           />
         </Card>
+      </div>
+
+      {/* Mobile-only Pending list */}
+      <div className="lg:hidden mt-1">
+        <DashboardPendingList items={pendingActions} loading={loading} />
       </div>
 
       <Card
@@ -249,43 +290,7 @@ const OfficeDashboard: React.FC<
   pending,
 }) => {
   const inboxCount = pendingRequestsInboxCount ?? 0;
-  const totalPendingActions = pendingActions.length;
 
-  const kpiCards = [
-    {
-      label: "Pending actions",
-      value: totalPendingActions,
-      sub: "tasks + requests combined",
-      icon: <ClipboardList className="h-4 w-4" />,
-      iconCls: "text-brand-400 dark:text-brand-400",
-      valueCls:
-        totalPendingActions > 0
-          ? "text-brand-600 dark:text-brand-400"
-          : "text-slate-900 dark:text-slate-100",
-      onClick: () => navigate("/work-queue"),
-    },
-    {
-      label: "Doc requests",
-      value: inboxCount,
-      sub: "pending in your inbox",
-      icon: <Inbox className="h-4 w-4" />,
-      iconCls: "text-violet-400 dark:text-violet-400",
-      valueCls:
-        inboxCount > 0
-          ? "text-violet-600 dark:text-violet-400"
-          : "text-slate-900 dark:text-slate-100",
-      onClick: () => navigate("/document-requests"),
-    },
-    {
-      label: "My documents",
-      value: stats?.total ?? 0,
-      sub: "created by your office",
-      icon: <FolderOpen className="h-4 w-4" />,
-      iconCls: "text-sky-400 dark:text-sky-400",
-      valueCls: "text-slate-900 dark:text-slate-100",
-      onClick: () => navigate("/documents"),
-    },
-  ];
 
   const donutSegments = [
     { label: "Distributed", value: stats?.distributed ?? 0, color: "#10b981" },
@@ -314,38 +319,11 @@ const OfficeDashboard: React.FC<
         pendingCount={pending.length}
         pendingRequestsCount={inboxCount}
         loading={loading}
+        onStatClick={(label) => {
+          if (label === "Action needed" || label === "In progress") navigate("/work-queue");
+          if (label === "My documents" || label === "Distributed") navigate("/documents");
+        }}
       />
-
-      {/* KPI cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {kpiCards.map((k) => (
-          <button
-            key={k.label}
-            type="button"
-            onClick={k.onClick}
-            className="min-w-0 rounded-md border border-slate-200 bg-white px-4 py-3.5 text-left transition-colors hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:hover:bg-surface-400"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight">
-                {k.label}
-              </p>
-              <span className={`shrink-0 ${k.iconCls}`}>{k.icon}</span>
-            </div>
-            {loading ? (
-              <Skeleton className="mt-3 h-7 w-14" />
-            ) : (
-              <p
-                className={`mt-2.5 text-2xl font-bold tabular-nums leading-none ${k.valueCls}`}
-              >
-                {k.value}
-              </p>
-            )}
-            <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-              {k.sub}
-            </p>
-          </button>
-        ))}
-      </div>
 
       {/* Document summary + pending work queue */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -409,7 +387,8 @@ const AdminDashboard: React.FC<
 
     <AdminStatGrid data={adminStats} loading={loading} />
 
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+    {/* Charts Carousel/Grid */}
+    <div className="flex sm:grid grid-cols-1 gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0">
       <Card
         title="Documents by phase"
         sub="Current workflow stage of all documents."
@@ -417,11 +396,11 @@ const AdminDashboard: React.FC<
           label: "Open library",
           onClick: () => navigate("/documents"),
         }}
-        className="lg:col-span-2"
+        className="min-w-[85vw] sm:min-w-0 snap-center lg:col-span-2"
       >
         <AdminDocumentPhaseChart
           byPhase={adminStats?.documents.by_phase}
-          height={200}
+          height={window.innerWidth < 640 ? 160 : 200}
           loading={loading}
         />
       </Card>
@@ -433,10 +412,11 @@ const AdminDashboard: React.FC<
           label: "View reports",
           onClick: () => navigate("/reports"),
         }}
+        className="min-w-[85vw] sm:min-w-0 snap-center"
       >
         <ActivityDistributionChart
           data={adminStats?.activity.distribution ?? []}
-          height={200}
+          height={window.innerWidth < 640 ? 160 : 200}
           loading={loading}
         />
       </Card>
@@ -599,10 +579,10 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="min-h-0 flex flex-1 flex-col overflow-hidden">
       {/* ── Page header ── */}
-      <div className="shrink-0 border-b border-slate-200 bg-slate-50 dark:border-surface-400 dark:bg-surface-600 px-5 py-3.5">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md overflow-hidden bg-slate-100 dark:bg-surface-400 text-sm font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-surface-300">
+      <div className="shrink-0 border-b border-slate-200 bg-slate-50 dark:border-surface-400 dark:bg-surface-600 px-4 sm:px-5 py-3 sm:py-3.5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-md overflow-hidden bg-white dark:bg-surface-400 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-surface-300 shadow-sm">
               {(user as any)?.profile_photo_url ? (
                 <img
                   src={(user as any).profile_photo_url}
@@ -614,10 +594,10 @@ const DashboardPage: React.FC = () => {
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-widest text-slate-400 dark:text-slate-500">
-                Dashboard &middot; {today}
+              <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 leading-none">
+                {today}
               </p>
-              <h1 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
+              <h1 className="mt-1 text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 leading-tight truncate">
                 {greeting}, {firstName}
               </h1>
             </div>
@@ -654,8 +634,8 @@ const DashboardPage: React.FC = () => {
       </div>
 
       {/* ── Scrollable body ── */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-5 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-surface-600/50">
+        <div className="px-3.5 sm:px-5 py-4 space-y-3.5 sm:space-y-4">
           {isAdmin ? (
             <AdminDashboard
               {...dashData}

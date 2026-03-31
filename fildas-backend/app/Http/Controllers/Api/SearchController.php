@@ -6,6 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\User;
 use App\Models\Office;
+use App\Models\ActivityLog;
+use App\Models\DocumentRequest;
+use App\Models\DocumentTemplate;
+use App\Models\Announcement;
+use App\Models\Notification;
 use App\Traits\RoleNameTrait;
 use Illuminate\Http\Request;
 
@@ -29,41 +34,66 @@ class SearchController extends Controller
         }
 
         $like = "%{$q}%";
-        $op = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+        $op   = config('database.default') === 'pgsql' ? 'ilike' : 'like';
 
         $actor    = $request->user();
+        if (!$actor) {
+            return response()->json([
+                'documents'     => [],
+                'users'         => [],
+                'offices'       => [],
+                'templates'     => [],
+                'requests'      => [],
+                'announcements' => [],
+                'notifications' => [],
+                'activity'      => [],
+            ]);
+        }
+
         $roleName = $this->roleNameOf($actor);
         $isAdmin  = in_array($roleName, ['admin', 'sysadmin'], true);
+        $isQA     = $roleName === 'qa';
+        $canSeeSensitive = $isAdmin || $isQA;
 
-        // Documents — title / description match
+        // Documents — title / code / description match
         $documentQuery = Document::query()
             ->where(function ($query) use ($like, $op) {
-                $query->where('title', $op, $like);
+                $query->where('documents.title', $op, $like)
+                    ->orWhere('documents.code', $op, $like)
+                    ->orWhereHas('latestVersion', function ($v) use ($like, $op) {
+                        $v->where('description', $op, $like);
+                    });
             });
 
         $documentQuery = app(\App\Services\DocumentIndexService::class)->applyVisibility($documentQuery, $actor);
 
         $documents = $documentQuery
-            ->with(['latestVersion' => function ($q) {
-                $q->select([
+            ->with(['latestVersion' => function ($v) {
+                $v->select([
                     'document_versions.id',
                     'document_versions.document_id',
                     'document_versions.status',
-                    'document_versions.version_number',
+                    'document_versions.effective_date',
                 ]);
             }])
-            ->limit(6)
-            ->get(['id', 'title', 'description'])
-            ->map(fn($d) => [
-                'type'        => 'document',
-                'id'          => $d->id,
-                'title'       => $d->title,
-                'description' => $d->description,
-                'meta'        => $d->latestVersion?->status ?? null,
-                'url'         => $d->latestVersion?->status === 'Distributed'
-                    ? "/documents/{$d->id}/view"
-                    : "/documents/{$d->id}",
-            ]);
+            ->limit(10)
+            ->get(['documents.id', 'documents.title', 'documents.code', 'documents.doctype'])
+            ->map(function ($d) {
+                $status = $d->latestVersion?->status ?? 'Draft';
+                $isArchived = in_array($status, ['Superseded', 'Cancelled'], true);
+                
+                return [
+                    'type'        => $isArchived ? 'archive' : 'document',
+                    'id'          => $d->id,
+                    'title'       => $d->title,
+                    'description' => $d->code ?: $d->doctype,
+                    'meta'        => $status,
+                    'status'      => $status, // redundant but useful for frontend logic
+                    'url'         => ($status === 'Distributed' || $isArchived)
+                        ? "/library/{$d->id}"
+                        : "/documents/{$d->id}",
+                ];
+            });
 
         // Users — admin only
         $users = collect();
@@ -103,8 +133,7 @@ class SearchController extends Controller
                 'url'         => "/office-manager",
             ]);
 
-        // Templates
-        $templateQuery = \App\Models\DocumentTemplate::query()
+        $templateQuery = DocumentTemplate::query()
             ->where(function ($query) use ($like, $op) {
                 $query->where('name', $op, $like)
                     ->orWhere('description', $op, $like);
@@ -128,11 +157,14 @@ class SearchController extends Controller
                 'url'         => '/templates',
             ]);
 
-        // Document Requests
-        $requestQuery = \App\Models\DocumentRequest::query()
+        // Document Requests - search by title, description, or items
+        $requestQuery = DocumentRequest::query()
             ->where(function ($query) use ($like, $op) {
                 $query->where('title', $op, $like)
-                    ->orWhere('description', $op, $like);
+                    ->orWhere('description', $op, $like)
+                    ->orWhereHas('items', function ($iq) use ($like, $op) {
+                        $iq->where('title', $op, $like)->orWhere('description', $op, $like);
+                    });
             });
 
         // Non-admins only see requests assigned to their office
@@ -150,22 +182,20 @@ class SearchController extends Controller
                 'type'        => 'request',
                 'id'          => $r->id,
                 'title'       => $r->title,
-                'description' => $r->description,
+                'description' => $r->description ?: 'No description provided.',
                 'meta'        => $r->status,
-                'url'         => "/document-requests/{$r->id}",
+                'status'      => $r->status,
+                'url'         => "/requests/{$r->id}", // standardized route
             ]);
 
         // Announcements
-        $announcementQuery = \App\Models\Announcement::query()
+        $announcementQuery = Announcement::query()
             ->where(function ($query) use ($like, $op) {
                 $query->where('title', $op, $like)
                     ->orWhere('body', $op, $like);
             })
-            ->where(function ($query) use ($actor) {
-                $query->whereNull('office_id')
-                    ->orWhere('office_id', $actor?->office_id);
-            })
-            ->where('is_archived', false);
+            ->active() // uses the scope from Announcement model
+            ->ordered();
 
         $announcements = $announcementQuery
             ->limit(4)
@@ -180,7 +210,7 @@ class SearchController extends Controller
             ]);
 
         // Notifications — only current user's own
-        $notifications = \App\Models\Notification::query()
+        $notifications = Notification::query()
             ->where('user_id', $actor?->id)
             ->where(function ($query) use ($like, $op) {
                 $query->where('title', $op, $like)
@@ -200,6 +230,29 @@ class SearchController extends Controller
                 'url'         => '/inbox',
             ]);
 
+        // NEW: Activity Logs (QA/Admin only)
+        $logs = collect();
+        if ($canSeeSensitive) {
+            $logs = ActivityLog::query()
+                ->where(function ($query) use ($like, $op) {
+                    $query->where('label', $op, $like)
+                        ->orWhere('event', $op, $like);
+                })
+                ->with(['actorUser:id,first_name,last_name', 'document:id,title'])
+                ->orderByDesc('created_at')
+                ->limit(5)
+                ->get()
+                ->map(fn($log) => [
+                    'type'        => 'activity',
+                    'id'          => $log->id,
+                    'title'       => $log->label ?: $log->event,
+                    'description' => "By " . ($log->actorUser ? trim("{$log->actorUser->first_name} {$log->actorUser->last_name}") : 'System') . 
+                                     ($log->document ? " on {$log->document->title}" : ""),
+                    'meta'        => $log->created_at->diffForHumans(),
+                    'url'         => $log->document_id ? "/documents/{$log->document_id}" : "/activity",
+                ]);
+        }
+
         return response()->json([
             'documents'     => $documents->values(),
             'users'         => $users->values(),
@@ -208,6 +261,7 @@ class SearchController extends Controller
             'requests'      => $requests->values(),
             'announcements' => $announcements->values(),
             'notifications' => $notifications->values(),
+            'activity'      => $logs->values(),
         ]);
     }
 }

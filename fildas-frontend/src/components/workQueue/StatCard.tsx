@@ -8,11 +8,11 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ label, value, loading }) => (
-  <div className="flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3.5">
-    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+  <div className="flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 p-3 sm:px-4 sm:py-3.5">
+    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
       {label}
     </p>
-    <div className="mt-2 text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
+    <div className="mt-1.5 sm:mt-2 text-xl sm:text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100 leading-none">
       {loading ? <InlineSpinner className="h-5 w-5 border-2" /> : (value ?? 0)}
     </div>
   </div>

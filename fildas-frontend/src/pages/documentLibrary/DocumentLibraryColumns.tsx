@@ -159,6 +159,7 @@ export function buildRequestedColumns(isQaAdmin: boolean): TableColumn<any>[] {
       key: "request",
       header: "Request",
       skeletonShape: "double",
+      sortKey: "title",
       render: (r) => (
         <div className="min-w-0">
           <div className="font-medium text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
@@ -204,6 +205,7 @@ export function buildRequestedColumns(isQaAdmin: boolean): TableColumn<any>[] {
       key: "date",
       header: "Date",
       skeletonShape: "narrow",
+      sortKey: "created_at",
       render: (r) => (
         <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
           {formatDate(r.created_at)}

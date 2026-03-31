@@ -44,6 +44,8 @@ export type TableProps<T> = {
   sortBy?: string;
   sortDir?: SortDir;
   onSortChange?: (key: string, dir: SortDir) => void;
+  /** Optional custom renderer for mobile card view. If provided, table hides on mobile and shows these cards instead. */
+  mobileRender?: (row: T) => React.ReactNode;
 };
 
 const alignClass = (align: Align | undefined) => {
@@ -52,9 +54,12 @@ const alignClass = (align: Align | undefined) => {
   return "text-left";
 };
 
-const SortIcon: React.FC<{ active: boolean; dir: SortDir }> = ({
+const SortIcon = ({
   active,
   dir,
+}: {
+  active: boolean;
+  dir: SortDir;
 }) => (
   <span className="inline-flex flex-col justify-center ml-1 gap-[2px]">
     <svg
@@ -98,9 +103,10 @@ export default function Table<T>({
   onLoadMore,
   bare = false,
   gridTemplateColumns,
-  sortBy,
-  sortDir = "desc",
   onSortChange,
+  sortBy = "",
+  sortDir = "desc" as SortDir,
+  mobileRender,
 }: TableProps<T>) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -127,9 +133,9 @@ export default function Table<T>({
 
   const inner = (
     <>
-      {/* Sticky header */}
+      {/* Sticky header — hidden if mobileRender is active on small screen */}
       <div
-        className="shrink-0 grid gap-3 px-4 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600"
+        className={`shrink-0 grid gap-3 px-4 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 ${mobileRender ? "hidden sm:grid" : "grid"}`}
         style={{ gridTemplateColumns: colTemplate }}
       >
         {columns.map((c) => {
@@ -179,10 +185,10 @@ export default function Table<T>({
             {Array.from({ length: 10 }).map((_, r) => (
               <div
                 key={r}
-                className="grid gap-3 items-center px-4 py-2"
-                style={{ gridTemplateColumns: colTemplate }}
+                className={`grid gap-3 items-center px-4 py-3 sm:py-2 ${mobileRender ? "flex flex-col items-start sm:grid" : "grid"}`}
+                style={mobileRender ? undefined : { gridTemplateColumns: colTemplate }}
               >
-                {columns.map((col, c) => {
+                {columns.slice(0, mobileRender ? 3 : columns.length).map((col, c) => {
                   const shape = col.skeletonShape ?? "text";
                   const base =
                     "animate-pulse rounded bg-slate-100 dark:bg-surface-400";
@@ -199,7 +205,7 @@ export default function Table<T>({
                   }
                   if (shape === "double") {
                     return (
-                      <div key={c} className="flex flex-col gap-1.5">
+                      <div key={c} className="flex flex-col gap-1.5 w-full">
                         <div
                           className={`${base} h-3`}
                           style={{ width: textWidths[r % textWidths.length] }}
@@ -245,9 +251,42 @@ export default function Table<T>({
           <div className="divide-y divide-slate-200 dark:divide-surface-400">
             {rows.map((row) => {
               const clickable = !!onRowClick;
+              const key = rowKey(row);
+              
+              // Mobile Card view
+              if (mobileRender) {
+                return (
+                  <div key={key}>
+                    <div className="block sm:hidden">
+                      {mobileRender(row)}
+                    </div>
+                    <div
+                      onClick={clickable ? () => onRowClick?.(row) : undefined}
+                      className={[
+                        "hidden sm:grid gap-3 items-center px-4 py-2 rounded-none text-sm transition-colors group",
+                        clickable
+                          ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-surface-400/60"
+                          : "",
+                      ].join(" ")}
+                      style={{ gridTemplateColumns: colTemplate }}
+                    >
+                      {columns.map((c) => (
+                        <div
+                          key={c.key}
+                          className={[alignClass(c.align), c.className ?? ""].join(" ")}
+                        >
+                          {c.render(row)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
+              // Standard Table view
               return (
                 <div
-                  key={rowKey(row)}
+                  key={key}
                   onClick={clickable ? () => onRowClick?.(row) : undefined}
                   className={[
                     "grid gap-3 items-center px-4 py-2 rounded-none text-sm transition-colors group",

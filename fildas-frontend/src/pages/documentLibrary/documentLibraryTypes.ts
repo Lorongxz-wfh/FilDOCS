@@ -31,6 +31,8 @@ export type LibraryItem = {
   doctype?: string;
   mode?: string;
   office?: string;
+  code?: string;
+  status?: string;
   version?: number;
   date: string;
   docId?: number;
@@ -50,6 +52,8 @@ export function docToLibraryItem(
     subtitle: doc.code ?? undefined,
     doctype: doc.doctype,
     office: (doc as any).ownerOffice?.name ?? undefined,
+    code: doc.code ?? undefined,
+    status: doc.status,
     version: doc.version_number,
     date: doc.created_at,
     docId: doc.id,
@@ -64,6 +68,8 @@ export function reqToLibraryItem(row: any): LibraryItem {
     subtitle: row.item_title ? row.batch_title : undefined,
     mode: row.batch_mode,
     office: row.office_name,
+    code: row.document_code ?? row.code ?? undefined,
+    status: row.status ?? undefined,
     date: row.created_at,
     reqId: row.request_id,
     recipId: row.recipient_id,

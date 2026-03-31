@@ -9,7 +9,9 @@ export interface SearchResultItem {
     | "template"
     | "request"
     | "announcement"
-    | "notification";
+    | "notification"
+    | "archive"
+    | "activity";
   id: number | string;
   title: string;
   description?: string;
@@ -25,6 +27,7 @@ export interface SearchResults {
   requests: SearchResultItem[];
   announcements: SearchResultItem[];
   notifications: SearchResultItem[];
+  activity: SearchResultItem[];
 }
 
 export async function globalSearch(q: string): Promise<SearchResults> {
@@ -37,5 +40,6 @@ export async function globalSearch(q: string): Promise<SearchResults> {
     requests: data.requests ?? [],
     announcements: data.announcements ?? [],
     notifications: data.notifications ?? [],
+    activity: data.activity ?? [],
   };
 }

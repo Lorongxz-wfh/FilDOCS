@@ -12,6 +12,13 @@ import {
   ArrowRight,
   Hash,
   Megaphone,
+  AlertCircle,
+  HelpCircle,
+  Archive,
+  PlusCircle,
+  Activity,
+  FileSearch,
+  BarChart3,
 } from "lucide-react";
 import { globalSearch, type SearchResultItem } from "../../services/search";
 import { navGroups, inboxNavItem } from "../sidebar/navConfig";
@@ -51,41 +58,89 @@ function getPageResults(q: string, role: string): SearchResultItem[] {
     }
   }
 
-  // Hardcoded check for Settings since it's now in the profile menu
-  if ("settings".includes(lower)) {
-    results.push({
-      type: "page",
-      id: "/settings",
-      title: "Settings",
-      description: "Account",
-      url: "/settings",
-    });
+  // Check static / auxiliary items
+  const extraPages = [
+    { to: "/library/archive", label: "Archive", desc: "Library", roles: ["admin", "sysadmin", "qa"] },
+    { to: "/documents/queue", label: "Work Queue", desc: "Documents" },
+    { to: "/documents", label: "Documents List", desc: "Documents" },
+    { to: "/activity-logs", label: "Activity Logs", desc: "Reports", roles: ["admin", "sysadmin", "qa"] },
+    { to: "/documents/create/office", label: "Create Office-start Doc", desc: "Actions", roles: ["office_staff", "office_head"] },
+    { to: "/documents/create/qa", label: "Create QA-start Doc", desc: "Actions", roles: ["qa", "admin"] },
+    { to: "/document-requests/create", label: "New Document Request", desc: "Actions" },
+    { to: "/settings", label: "Settings", desc: "Account" },
+    { to: "/my-activity", label: "My Activity", desc: "Account" },
+    { to: "/archive", label: "Archive", desc: "Account" },
+    { to: "/whats-new", label: "What's New", desc: "Support" },
+    { to: "/report-issue", label: "Report Issue", desc: "Support" },
+    { to: "/help", label: "Help & Support", desc: "Support" },
+  ];
+
+  for (const p of extraPages) {
+    if (!p.roles || p.roles.includes(role)) {
+      if (p.label.toLowerCase().includes(lower)) {
+        results.push({
+          type: "page",
+          id: p.to,
+          title: p.label,
+          description: p.desc,
+          url: p.to,
+        });
+      }
+    }
   }
 
-  return results.slice(0, 5);
+  // Deduplicate by URL to prevent React key conflicts
+  const seen = new Set<string>();
+  return results.filter((r) => {
+    if (seen.has(r.url)) return false;
+    seen.add(r.url);
+    return true;
+  }).slice(0, 10);
 }
 
 // ── Icons ──────────────────────────────────────────────────────────────────
-const ResultIcon: React.FC<{ type: SearchResultItem["type"] }> = ({ type }) => {
+const ResultIcon: React.FC<{ item: SearchResultItem }> = ({ item }) => {
   const cls = "h-3.5 w-3.5 shrink-0";
+  const { type, url, title } = item;
+  
   if (type === "document") return <FileText className={cls} />;
+  if (type === "archive") return <Archive className={cls} />;
   if (type === "user") return <Users className={cls} />;
   if (type === "office") return <Building2 className={cls} />;
   if (type === "template") return <LayoutTemplate className={cls} />;
   if (type === "request") return <ClipboardList className={cls} />;
   if (type === "announcement") return <Megaphone className={cls} />;
-  if (type === "page") return <Hash className={cls} />;
+  if (type === "activity") return <Activity className={cls} />;
+  
+  // Specific page icons
+  if (type === "page") {
+    const t = title.toLowerCase();
+    const u = url.toLowerCase();
+    if (u.includes("help") || t.includes("help")) return <HelpCircle className={cls} />;
+    if (u.includes("new") || t.includes("new")) return <Megaphone className={cls} />;
+    if (u.includes("activity") || t.includes("activity")) return <Activity className={cls} />;
+    if (u.includes("issue") || t.includes("issue")) return <AlertCircle className={cls} />;
+    if (u.includes("dashboard") || t.includes("dashboard")) return <LayoutDashboard className={cls} />;
+    if (u.includes("archive") || t.includes("archive")) return <Archive className={cls} />;
+    if (u.includes("create") || t.includes("new")) return <PlusCircle className={cls} />;
+    if (u.includes("queue") || t.includes("queue")) return <FileSearch className={cls} />;
+    if (u.includes("/reports") || t === "reports") return <BarChart3 className={cls} />;
+    return <Hash className={cls} />;
+  }
+
   return <LayoutDashboard className={cls} />;
 };
 
 const TYPE_ICON_BG: Record<string, string> = {
   document: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400",
+  archive: "bg-slate-50 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400",
   user: "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400",
   office: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400",
   template:
     "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400",
   request: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400",
   announcement: "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400",
+  activity: "bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400",
   page: "bg-slate-100 dark:bg-surface-400 text-slate-500 dark:text-slate-400",
 };
 
@@ -98,6 +153,7 @@ const emptyResults = {
   templates: [] as SearchResultItem[],
   users: [] as SearchResultItem[],
   offices: [] as SearchResultItem[],
+  activity: [] as SearchResultItem[],
 };
 
 // ── Command Menu ───────────────────────────────────────────────────────────
@@ -111,9 +167,20 @@ const SearchBar: React.FC = () => {
   const [results, setResults] = React.useState(emptyResults);
   const [activeIndex, setActiveIndex] = React.useState(0);
 
+  const searchRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const debounceRef = React.useRef<number | null>(null);
   const listRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   // Flat list of all results for keyboard nav
   const flatResults = React.useMemo(() => {
@@ -121,6 +188,7 @@ const SearchBar: React.FC = () => {
       ...results.pages,
       ...results.documents,
       ...results.requests,
+      ...results.activity,
       ...results.announcements,
       ...results.templates,
       ...results.users,
@@ -135,10 +203,6 @@ const SearchBar: React.FC = () => {
     setActiveIndex(0);
   }, [totalResults]);
 
-  const openMenu = () => {
-    setOpen(true);
-    setTimeout(() => inputRef.current?.focus(), 10);
-  };
 
   const closeMenu = () => {
     setOpen(false);
@@ -159,6 +223,9 @@ const SearchBar: React.FC = () => {
       return;
     }
 
+    // Ensure open if typing
+    if (!open) setOpen(true);
+
     const pages = getPageResults(q, role ?? "");
     setResults((prev) => ({ ...prev, pages }));
 
@@ -176,6 +243,7 @@ const SearchBar: React.FC = () => {
           templates: data.templates,
           requests: data.requests,
           announcements: data.announcements || [],
+          activity: data.activity || [],
         });
       } catch {
         // silent
@@ -199,12 +267,13 @@ const SearchBar: React.FC = () => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
-        open ? closeMenu() : openMenu();
+        inputRef.current?.focus();
+        setOpen(true);
       }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [open]);
+  }, []);
 
   // Keyboard navigation inside menu
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -239,55 +308,57 @@ const SearchBar: React.FC = () => {
   }> = ({ label, items, startIndex }) => {
     if (!items.length) return null;
     return (
-      <div>
-        <p className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+      <div className="border-t first:border-t-0 border-slate-100 dark:border-surface-400">
+        <p className="px-3.5 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
           {label}
         </p>
-        {items.map((item, i) => {
-          const idx = startIndex + i;
-          const isActive = idx === activeIndex;
-          return (
-            <button
-              key={`${item.type}-${item.id}`}
-              type="button"
-              data-index={idx}
-              onMouseEnter={() => setActiveIndex(idx)}
-              onMouseDown={() => navigate_to(item)}
-              className={[
-                "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors",
-                isActive
-                  ? "bg-slate-50 dark:bg-surface-400"
-                  : "hover:bg-slate-50 dark:hover:bg-surface-400",
-              ].join(" ")}
-            >
-              <span
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${TYPE_ICON_BG[item.type] ?? TYPE_ICON_BG.page}`}
+        <div className="px-1.5 pb-1.5">
+          {items.map((item, i) => {
+            const idx = startIndex + i;
+            const isActive = idx === activeIndex;
+            return (
+              <button
+                key={`${item.type}-${item.id}`}
+                type="button"
+                data-index={idx}
+                onMouseEnter={() => setActiveIndex(idx)}
+                onMouseDown={() => navigate_to(item)}
+                className={[
+                  "flex w-full items-center gap-3 px-2.5 py-2 rounded-md text-left transition-all duration-150",
+                  isActive
+                    ? "bg-slate-100 dark:bg-surface-400 shadow-sm"
+                    : "hover:bg-slate-50 dark:hover:bg-surface-400/50",
+                ].join(" ")}
               >
-                <ResultIcon type={item.type} />
-              </span>
-              <span className="flex-1 min-w-0">
-                <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-                  {item.title}
+                <span
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${TYPE_ICON_BG[item.type] ?? TYPE_ICON_BG.page} shadow-sm border border-white/20 dark:border-black/10`}
+                >
+                  <ResultIcon item={item} />
                 </span>
-                {item.description && (
-                  <span className="block truncate text-xs text-slate-400 dark:text-slate-500">
-                    {item.description}
+                <span className="flex-1 min-w-0">
+                  <span className="block truncate text-xs font-bold text-slate-800 dark:text-slate-100">
+                    {item.title}
                   </span>
-                )}
-              </span>
-              <div className="shrink-0 flex items-center gap-2">
-                {item.meta && (
-                  <span className="rounded bg-slate-100 dark:bg-surface-300 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400 capitalize">
-                    {item.meta}
-                  </span>
-                )}
-                {isActive && (
-                  <ArrowRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-                )}
-              </div>
-            </button>
-          );
-        })}
+                  {item.description && (
+                    <span className="block truncate text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                      {item.description}
+                    </span>
+                  )}
+                </span>
+                <div className="shrink-0 flex items-center gap-2">
+                  {item.meta && (
+                    <span className="rounded bg-slate-50 dark:bg-surface-600 border border-slate-200 dark:border-surface-300 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+                      {item.meta}
+                    </span>
+                  )}
+                  {isActive && (
+                    <ArrowRight className="h-3 w-3 text-brand-500 dark:text-brand-400 animate-in slide-in-from-left-1 duration-200" />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -296,95 +367,88 @@ const SearchBar: React.FC = () => {
   const pageStart = 0;
   const docStart = results.pages.length;
   const reqStart = docStart + results.documents.length;
-  const annStart = reqStart + results.requests.length;
+  const actStart = reqStart + results.requests.length;
+  const annStart = actStart + results.activity.length;
   const tplStart = annStart + results.announcements.length;
   const usrStart = tplStart + results.templates.length;
   const offStart = usrStart + results.users.length;
 
   return (
-    <>
-      {/* Trigger button in navbar */}
-      <button
-        type="button"
-        onClick={openMenu}
-        className="flex items-center gap-2 w-full max-w-md rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-3 py-1.5 text-sm text-slate-400 dark:text-slate-500 hover:border-slate-300 dark:hover:border-surface-300 transition"
-      >
-        <Search className="h-3.5 w-3.5 shrink-0" />
-        <span className="flex-1 text-left text-sm">Search…</span>
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 dark:text-slate-500">
-          Ctrl K
-        </kbd>
-      </button>
-
-      {/* Backdrop */}
-      {open && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm"
-          onMouseDown={closeMenu}
+    <div className="relative w-full max-w-md flex flex-col" ref={searchRef}>
+      {/* Navbar Input Field */}
+      <div className={[
+        "relative flex items-center gap-2 rounded-md border transition-all duration-200",
+        open 
+          ? "border-brand-400/50 ring-2 ring-brand-400/10 bg-white dark:bg-surface-400 shadow-sm" 
+          : "border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 hover:border-slate-300 dark:hover:border-surface-300"
+      ].join(" ")}>
+        <Search className={[
+          "absolute left-3 h-3.5 w-3.5 shrink-0 transition-colors",
+          open ? "text-brand-500" : "text-slate-400 dark:text-slate-500"
+        ].join(" ")} />
+        
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onFocus={() => setOpen(true)}
+          onChange={handleQueryChange}
+          onKeyDown={handleKeyDown}
+          placeholder="Search documents, requests..."
+          className="w-full bg-transparent pl-9 pr-12 py-1.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
         />
-      )}
 
-      {/* Command menu modal */}
-      {open && (
-        <div className="fixed left-1/2 top-[15vh] z-50 w-full max-w-xl -translate-x-1/2 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-2xl overflow-hidden">
-          {/* Search input */}
-          <div className="flex items-center gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3">
-            <Search className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={handleQueryChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Search documents, requests, templates, users…"
-              className="flex-1 bg-transparent text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
-            />
-            {query && (
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  setQuery("");
-                  setResults(emptyResults);
-                }}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-            <kbd
-              className="shrink-0 rounded border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 dark:text-slate-500 cursor-pointer"
-              onMouseDown={closeMenu}
+        <div className="absolute right-2 flex items-center gap-1.5">
+          {query && (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                setResults(emptyResults);
+                inputRef.current?.focus();
+              }}
+              className="rounded-full p-0.5 text-slate-400 hover:bg-slate-200 dark:hover:bg-surface-300 transition"
             >
-              Esc
+              <X className="h-3 w-3" />
+            </button>
+          )}
+          {!query && (
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-1.5 py-0.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 shadow-xs tabular-nums">
+              <span className="text-[9px] opacity-70">Ctrl</span> K
             </kbd>
-          </div>
+          )}
+        </div>
+      </div>
 
-          {/* Results */}
-          <div ref={listRef} className="max-h-[60vh] overflow-y-auto">
+      {/* Results Dropdown */}
+      {open && (
+        <div className="absolute top-full left-0 right-0 z-60 mt-1.5 max-h-[65vh] flex flex-col rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+          <div ref={listRef} className="flex-1 overflow-y-auto">
             {!query.trim() ? (
-              <div className="px-4 py-8 text-center text-sm text-slate-400 dark:text-slate-500">
-                Start typing to search across documents, requests, templates and
-                more.
+              <div className="px-4 py-8 text-center bg-slate-50/30 dark:bg-black/5">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-surface-400 mb-3">
+                  <Search size={18} className="text-slate-400 dark:text-slate-500" />
+                </div>
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Quick search</p>
+                <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500 max-w-45 mx-auto leading-relaxed">
+                  Type to search across documents, templates and users.
+                </p>
               </div>
             ) : loading && totalResults === 0 ? (
               <div className="px-4 py-4">
-                <SkeletonList rows={4} rowClassName="h-10 rounded-md" />
+                <SkeletonList rows={3} rowClassName="h-9 rounded-md" />
               </div>
             ) : totalResults === 0 && !loading ? (
-              <div className="px-4 py-8 text-center">
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  No results for{" "}
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">
-                    "{query}"
-                  </span>
+              <div className="px-4 py-10 text-center">
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                  No results for "{query}"
                 </p>
-                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                  Try a different search term.
+                <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                  Try a different search term...
                 </p>
               </div>
             ) : (
-              <div className="pb-2">
+              <div className="flex flex-col">
                 <ResultGroup
                   label="Pages"
                   items={results.pages}
@@ -399,6 +463,11 @@ const SearchBar: React.FC = () => {
                   label="Requests"
                   items={results.requests}
                   startIndex={reqStart}
+                />
+                <ResultGroup
+                  label="Activity Logs"
+                  items={results.activity}
+                  startIndex={actStart}
                 />
                 <ResultGroup
                   label="Announcements"
@@ -424,34 +493,32 @@ const SearchBar: React.FC = () => {
             )}
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between border-t border-slate-100 dark:border-surface-400 px-4 py-2">
-            <div className="flex items-center gap-3 text-[11px] text-slate-400 dark:text-slate-500">
-              <span className="flex items-center gap-1">
-                <kbd className="rounded border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-1 py-0.5 text-[10px]">
-                  ↑
-                </kbd>
-                <kbd className="rounded border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-1 py-0.5 text-[10px]">
-                  ↓
-                </kbd>
-                navigate
-              </span>
-              <span className="flex items-center gap-1">
-                <kbd className="rounded border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-1 py-0.5 text-[10px]">
-                  ↵
-                </kbd>
-                select
-              </span>
+          {/* Footer Shortcuts */}
+          {totalResults > 0 && (
+            <div className="shrink-0 flex items-center justify-between border-t border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-black/5 px-4 py-2">
+              <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight">
+                <span className="flex items-center gap-1.5">
+                  <span className="flex gap-1">
+                    <kbd className="rounded bg-white dark:bg-surface-400 shadow-xs px-1 py-0.5 border border-slate-200 dark:border-surface-300">↑</kbd>
+                    <kbd className="rounded bg-white dark:bg-surface-400 shadow-xs px-1 py-0.5 border border-slate-200 dark:border-surface-300">↓</kbd>
+                  </span>
+                  Navigate
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <kbd className="rounded bg-white dark:bg-surface-400 shadow-xs px-1 py-0.5 border border-slate-200 dark:border-surface-300">↵</kbd>
+                  Select
+                </span>
+              </div>
+              {loading && (
+                <span className="text-[10px] font-bold text-brand-500 dark:text-brand-400 animate-pulse uppercase tracking-wider">
+                  Updating...
+                </span>
+              )}
             </div>
-            {loading && totalResults > 0 && (
-              <span className="text-[11px] text-slate-400 dark:text-slate-500 animate-pulse">
-                Searching…
-              </span>
-            )}
-          </div>
+          )}
         </div>
       )}
-    </>
+    </div>
   );
 };
 

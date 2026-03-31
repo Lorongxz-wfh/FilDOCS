@@ -33,7 +33,13 @@ const STATUS_MAP: Record<string, string> = {
     "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400",
 };
 
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ 
+  status, 
+  className = "" 
+}: { 
+  status: string; 
+  className?: string;
+}) {
   const s = String(status).toLowerCase();
   const cls =
     STATUS_MAP[s] ??
@@ -41,7 +47,7 @@ export function StatusBadge({ status }: { status: string }) {
   const label = s.charAt(0).toUpperCase() + s.slice(1);
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${cls}`}
+      className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${cls} ${className}`}
     >
       {label}
     </span>
@@ -54,12 +60,14 @@ export function StatusBadge({ status }: { status: string }) {
 export function TypePill({
   label,
   icon,
+  className = "",
 }: {
   label: string;
   icon?: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-surface-400 dark:text-slate-400">
+    <span className={`inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-surface-400 dark:text-slate-400 ${className}`}>
       {icon}
       {label}
     </span>

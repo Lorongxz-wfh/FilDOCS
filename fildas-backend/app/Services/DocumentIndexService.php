@@ -77,12 +77,9 @@ class DocumentIndexService
                 // Shared directly to this office
                 $q->orWhereHas('sharedOffices', fn($s) => $s->where('offices.id', $userOfficeId));
 
-                // Was a workflow participant (had a task at any point) and doc is now Distributed or Superseded
-                $q->orWhere(function ($inner) use ($userOfficeId) {
-                    $inner->whereHas('versions', fn($v) => $v->whereIn('status', ['Distributed', 'Superseded']))
-                        ->whereHas('versions', function ($v) use ($userOfficeId) {
-                            $v->whereHas('tasks', fn($t) => $t->where('assigned_office_id', $userOfficeId));
-                        });
+                // Was a workflow participant (had a task at any point)
+                $q->orWhereHas('versions', function ($v) use ($userOfficeId) {
+                    $v->whereHas('tasks', fn($t) => $t->where('assigned_office_id', $userOfficeId));
                 });
             });
         }
