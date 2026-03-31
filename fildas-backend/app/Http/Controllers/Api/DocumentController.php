@@ -948,9 +948,15 @@ class DocumentController extends Controller
             return null;
         }
 
-        $ext      = strtolower(pathinfo($filePath, PATHINFO_EXTENSION)) ?: 'pdf';
-        $tmpDir   = sys_get_temp_dir() . '/fildas/' . $version->id;
-        $tmpFile  = $tmpDir . '/original.' . $ext;
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION)) ?: 'pdf';
+
+        // Skip conversion if already a PDF
+        if ($ext === 'pdf') {
+            return $filePath;
+        }
+
+        $tmpDir  = sys_get_temp_dir() . '/fildas/' . $version->id;
+        $tmpFile = $tmpDir . '/original.' . $ext;
 
         if (!is_dir($tmpDir)) {
             mkdir($tmpDir, 0775, true);
@@ -972,8 +978,8 @@ class DocumentController extends Controller
             $year           = now()->year;
             $r2PreviewPath  = $year . '/' . $version->id . '/' . $previewFileName;
 
-            // Delete old preview if it exists
-            if ($version->preview_path && Storage::disk()->exists($version->preview_path)) {
+            // Delete old preview if it exists AND it's not the same as the current file
+            if ($version->preview_path && $version->preview_path !== $version->file_path && Storage::disk()->exists($version->preview_path)) {
                 Storage::disk()->delete($version->preview_path);
             }
 

@@ -28,36 +28,40 @@ class DocumentVersionFileService
         $version->original_filename = $file->getClientOriginalName();
         $version->file_path = $r2Path;
 
-        // Preview generation: store file locally, convert, upload to R2, cleanup
-        $tmpDir = sys_get_temp_dir() . '/fildas/' . $version->id;
-        if (!is_dir($tmpDir)) {
-            mkdir($tmpDir, 0775, true);
-        }
-
-        $tmpFilePath = $tmpDir . '/' . $storedName;
-        copy($file->getRealPath(), $tmpFilePath);
-
-        $previewFileName = DocumentPreviewService::generatePreview($tmpDir, $tmpFilePath);
-
-        if ($previewFileName) {
-            $previewTmpPath = $tmpDir . '/' . $previewFileName;
-            $r2PreviewPath = $year . '/' . $version->id . '/' . $previewFileName;
-
-            Storage::disk()->putFileAs(
-                $year . '/' . $version->id,
-                new \Illuminate\Http\File($previewTmpPath),
-                $previewFileName
-            );
-
-            $version->preview_path = $r2PreviewPath;
-
-            @unlink($previewTmpPath);
+        // Preview generation: skip conversion if it's already a PDF
+        if ($extension === 'pdf') {
+            $version->preview_path = $r2Path;
         } else {
-            $version->preview_path = null;
-        }
+            // Convert to PDF for preview
+            $tmpDir = sys_get_temp_dir() . '/fildas/' . $version->id;
+            if (!is_dir($tmpDir)) {
+                mkdir($tmpDir, 0775, true);
+            }
 
-        @unlink($tmpFilePath);
-        @rmdir($tmpDir);
+            $tmpFilePath = $tmpDir . '/' . $storedName;
+            copy($file->getRealPath(), $tmpFilePath);
+
+            $previewFileName = DocumentPreviewService::generatePreview($tmpDir, $tmpFilePath);
+
+            if ($previewFileName) {
+                $previewTmpPath = $tmpDir . '/' . $previewFileName;
+                $r2PreviewPath  = $year . '/' . $version->id . '/' . $previewFileName;
+
+                Storage::disk()->putFileAs(
+                    $year . '/' . $version->id,
+                    new \Illuminate\Http\File($previewTmpPath),
+                    $previewFileName
+                );
+
+                $version->preview_path = $r2PreviewPath;
+                @unlink($previewTmpPath);
+            } else {
+                $version->preview_path = null;
+            }
+
+            @unlink($tmpFilePath);
+            @rmdir($tmpDir);
+        }
 
         $version->save();
     }

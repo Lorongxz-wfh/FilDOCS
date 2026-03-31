@@ -66,6 +66,7 @@ const SignDocumentModal: React.FC<SignDocumentModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [sigAspect, setSigAspect] = useState(4);
+  const [pageInput, setPageInput] = useState("1");
 
   /** The display URL for the signature preview — prefers local upload over saved profile sig */
   const activeSigUrl = localSigPreviewUrl ?? signatureUrl ?? null;
@@ -99,14 +100,21 @@ const SignDocumentModal: React.FC<SignDocumentModalProps> = ({
         } else {
           const { url } = await getDocumentPreviewLink(documentVersionId);
           setIframeUrl(url);
-          // Pre-fetch bytes for pdf-lib so Apply doesn't need a second fetch
+          // 1. Pre-fetch bytes ONCE for both pdf-lib and pdf.js
           try {
-            const bytes = await fetch(url).then((r) => r.arrayBuffer());
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error("Failed to fetch PDF data.");
+            const bytes = await resp.arrayBuffer();
             pdfBytesRef.current = bytes;
             setPdfBytesKey((k) => k + 1);
+            
+            // 2. Determine page count immediately using pdf-lib (fastest)
             const pdfDoc = await PDFDocument.load(bytes);
-            setPageCount(pdfDoc.getPageCount());
-          } catch { /* non-fatal — will re-fetch on Apply */ }
+            const count = pdfDoc.getPageCount();
+            setPageCount(count);
+          } catch (err) {
+             console.error("PDF pre-fetch/parse error:", err);
+          }
         }
       } catch (e: any) {
         setError(e?.message ?? "Failed to load document.");
@@ -136,6 +144,7 @@ const SignDocumentModal: React.FC<SignDocumentModalProps> = ({
       setError(null);
       setPageDataUrl(null);
       setLocalSigFile(null);
+      setPageInput("1");
       if (localSigPreviewUrl) {
         URL.revokeObjectURL(localSigPreviewUrl);
         setLocalSigPreviewUrl(null);
@@ -195,6 +204,8 @@ const SignDocumentModal: React.FC<SignDocumentModalProps> = ({
   useEffect(() => {
     if (!pdfjsDocRef.current) return;
     renderPageRef.current?.(pdfjsDocRef.current, selectedPage);
+    // Sync text input whenever index changes
+    setPageInput((selectedPage + 1).toString());
   }, [selectedPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLocalSigChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -450,13 +461,27 @@ const SignDocumentModal: React.FC<SignDocumentModalProps> = ({
                 Page
               </label>
               <input
-                type="number"
-                min={1}
-                max={Math.max(1, pageCount)}
-                value={selectedPage + 1}
-                onChange={(e) =>
-                  setSelectedPage(Math.max(0, Number(e.target.value) - 1))
-                }
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={pageInput}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  // Only allow digits or empty string
+                  if (/^\d*$/.test(val)) {
+                    setPageInput(val);
+                    const num = parseInt(val, 10);
+                    if (!isNaN(num) && num >= 1 && num <= pageCount) {
+                      setSelectedPage(num - 1);
+                    }
+                  }
+                }}
+                onBlur={() => {
+                  // Revert to current page if left blank or invalid
+                  if (pageInput === "" || parseInt(pageInput, 10) < 1 || parseInt(pageInput, 10) > pageCount) {
+                    setPageInput((selectedPage + 1).toString());
+                  }
+                }}
                 className="w-full rounded-md border border-slate-300 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-1.5 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-brand-400 dark:focus:border-brand-300 transition"
               />
               {pageCount > 1 && (
