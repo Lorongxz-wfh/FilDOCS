@@ -891,12 +891,9 @@ class WorkflowService
         $doc       = $this->doc($version);
         $actorName = trim($actor->first_name . ' ' . $actor->last_name) ?: 'Someone';
         $office    = $officeId ? Office::find($officeId) : null;
+        $step      = $this->openTask($version)?->step ?? '';
 
-        $title = $isReject ? 'Document returned for editing' : 'Document requires your action';
-        $body  = ($doc->title ?? 'A document')
-            . ' is now ' . $toStatus
-            . ($office ? ' • Assigned to ' . $office->code : '')
-            . ' • By ' . $actorName;
+        [$title, $body] = $this->resolveEmailContent($step, $toStatus, $isReject, $doc->title ?? 'A document', $actorName);
 
         $users = User::where('office_id', $officeId)
             ->select(['id', 'first_name', 'last_name', 'email', 'office_id', 'email_doc_updates', 'email_approvals'])
@@ -1044,6 +1041,89 @@ class WorkflowService
             WorkflowSteps::STEP_DISTRIBUTED => ['workflow.distributed', 'Document distributed'],
 
             default => ['workflow.action', "Advanced to {$toStatus}"],
+        };
+    }
+
+    private function resolveEmailContent(string $step, string $toStatus, bool $isReject, string $docTitle, string $actorName): array
+    {
+        if ($isReject) {
+            return [
+                'Revision Required: ' . $docTitle,
+                "<strong>{$actorName}</strong> has returned <strong>\"{$docTitle}\"</strong> to your office for editing. Please review the feedback and resubmit when ready."
+            ];
+        }
+
+        return match ($step) {
+            // QA flow
+            WorkflowSteps::STEP_QA_OFFICE_REVIEW => [
+                'Review Required: ' . $docTitle,
+                "QA has forwarded <strong>\"{$docTitle}\"</strong> to your office for content review. Please verify the details and forward it to the VP."
+            ],
+            WorkflowSteps::STEP_QA_VP_REVIEW => [
+                'VP Review Required: ' . $docTitle,
+                "<strong>\"{$docTitle}\"</strong> has been forwarded to your office for VP-level review. Please check the document contents before approval starts."
+            ],
+            WorkflowSteps::STEP_QA_OFFICE_APPROVAL => [
+                'Approval Required: ' . $docTitle,
+                "<strong>\"{$docTitle}\"</strong> is now in the formal approval phase. Your office head's signature and approval are required to proceed."
+            ],
+            WorkflowSteps::STEP_QA_VP_APPROVAL => [
+                'VP Approval Required: ' . $docTitle,
+                "<strong>\"{$docTitle}\"</strong> has been forwarded to your office for formal VP-level approval."
+            ],
+            WorkflowSteps::STEP_QA_PRES_APPROVAL => [
+                'Presidential Approval Required: ' . $docTitle,
+                "<strong>\"{$docTitle}\"</strong> is awaiting your final presidential approval and signature."
+            ],
+
+            // Office flow
+            WorkflowSteps::STEP_OFFICE_HEAD_REVIEW => [
+                'Review Required: ' . $docTitle,
+                "A draft of <strong>\"{$docTitle}\"</strong> has been submitted to your office head for internal review."
+            ],
+            WorkflowSteps::STEP_OFFICE_VP_REVIEW => [
+                'VP Review Required: ' . $docTitle,
+                "<strong>\"{$docTitle}\"</strong> from your cluster has been submitted for VP-level review."
+            ],
+            WorkflowSteps::STEP_OFFICE_HEAD_APPROVAL => [
+                'Approval Required: ' . $docTitle,
+                "<strong>\"{$docTitle}\"</strong> is ready for your office head's formal approval."
+            ],
+            WorkflowSteps::STEP_OFFICE_VP_APPROVAL => [
+                'VP Approval Required: ' . $docTitle,
+                "<strong>\"{$docTitle}\"</strong> from your cluster is awaiting VP-level approval."
+            ],
+            WorkflowSteps::STEP_OFFICE_PRES_APPROVAL => [
+                'Presidential Approval Required: ' . $docTitle,
+                "<strong>\"{$docTitle}\"</strong> is awaiting your final presidential signature."
+            ],
+
+            // Final Checks & Returns
+            WorkflowSteps::STEP_QA_REVIEW_FINAL_CHECK,
+            WorkflowSteps::STEP_OFFICE_REVIEW_FINAL_CHECK,
+            WorkflowSteps::STEP_CUSTOM_REVIEW_BACK_TO_OWNER => [
+                'Action Required: Final Review Check',
+                "The review process for <strong>\"{$docTitle}\"</strong> is complete. Please perform a final check of the feedback before starting the approval phase."
+            ],
+            WorkflowSteps::STEP_QA_APPROVAL_FINAL_CHECK,
+            WorkflowSteps::STEP_OFFICE_APPROVAL_FINAL_CHECK,
+            WorkflowSteps::STEP_CUSTOM_APPROVAL_BACK_TO_OWNER => [
+                'Action Required: Final Approval Check',
+                "<strong>\"{$docTitle}\"</strong> has received final approval. Please perform a final check before the document is registered and distributed."
+            ],
+
+            // Finalization
+            WorkflowSteps::STEP_QA_REGISTRATION,
+            WorkflowSteps::STEP_OFFICE_REGISTRATION,
+            WorkflowSteps::STEP_CUSTOM_REGISTRATION => [
+                'Document Ready for Registration',
+                "<strong>\"{$docTitle}\"</strong> has been cleared for finalization. Please proceed with registration and distribution."
+            ],
+
+            default => [
+                'Document action required: ' . $docTitle,
+                "<strong>\"{$docTitle}\"</strong> has advanced to <strong>{$toStatus}</strong> and requires your action."
+            ]
         };
     }
 }

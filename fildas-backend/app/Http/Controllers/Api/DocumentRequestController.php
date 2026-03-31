@@ -613,8 +613,8 @@ class DocumentRequestController extends Controller
                     'document_id'         => null,
                     'document_version_id' => null,
                     'event'               => 'document_request.created',
-                    'title'               => 'New document request',
-                    'body'                => $data['title'],
+                    'title'               => 'Action Required: New Evidence Request from QA',
+                    'body'                => 'A new document request has been issued: ' . $data['title'],
                     'meta'                => [
                         'document_request_id' => $requestId,
                         'office_id'           => (int) $u->office_id,
@@ -626,8 +626,8 @@ class DocumentRequestController extends Controller
                     try {
                         Mail::to($u->email)->queue(new WorkflowNotificationMail(
                             recipientName:   trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')) ?: $u->email,
-                            notifTitle:      'New document request',
-                            notifBody:       $data['title'],
+                            notifTitle:      'Action Required: New Evidence Request from QA',
+                            notifBody:       "A new evidence request <strong>\"{$data['title']}\"</strong> has been issued by QA. Please provide the required documents by the deadline.",
                             documentTitle:   $data['title'],
                             documentStatus:  'Open',
                             isReject:        false,
@@ -793,9 +793,9 @@ class DocumentRequestController extends Controller
                     try {
                         Mail::to($u->email)->queue(new WorkflowNotificationMail(
                             recipientName:   trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')) ?: $u->email,
-                            notifTitle:      'Document request submission received',
-                            notifBody:       $submitterName . ' submitted evidence for a document request.',
-                            documentTitle:   'Document Request #' . $requestId,
+                            notifTitle:      'Evidence Submission Received: ' . ($req->title ?? 'Request'),
+                            notifBody:       "<strong>{$submitterName}</strong> has submitted evidence for the request <strong>\"" . ($req->title ?? 'Request') . "\"</strong>. It is now awaiting your review.",
+                            documentTitle:   $req->title ?? 'Document Request',
                             documentStatus:  'Submitted',
                             isReject:        false,
                             actorName:       $submitterName,
@@ -948,7 +948,7 @@ class DocumentRequestController extends Controller
                     Mail::to($u->email)->queue(new WorkflowNotificationMail(
                         recipientName:   trim($u->first_name . ' ' . $u->last_name) ?: $u->email,
                         notifTitle:      $notifTitle,
-                        notifBody:       $notifBody,
+                        notifBody:       "The evidence for <strong>\"{$reqTitle}\"</strong> has been <strong>" . ($isAccepted ? 'Accepted' : 'Returned for Revision') . "</strong> by QA." . ($data['note'] ? "<br><br><strong>Note from QA:</strong> " . $data['note'] : ""),
                         documentTitle:   $reqTitle,
                         documentStatus:  $isAccepted ? 'Accepted' : 'Rejected',
                         isReject:        !$isAccepted,

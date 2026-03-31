@@ -75,12 +75,17 @@
       @if($isReject)
         <div class="banner banner-reject">
           <span class="banner-dot dot-reject"></span>
-          Document returned for editing
+          Revision Required
+        </div>
+      @elseif(str_contains(strtolower($notifTitle), 'approval'))
+        <div class="banner" style="background: #ecfdf5; color: #047857; border-bottom: 1px solid #d1fae5;">
+          <span class="banner-dot" style="background: #10b981;"></span>
+          Approval Required
         </div>
       @else
         <div class="banner banner-action">
           <span class="banner-dot dot-action"></span>
-          Action required on your end
+          Review Required
         </div>
       @endif
 
@@ -88,11 +93,7 @@
       <div class="body">
         <p class="greeting">Hello, {{ $recipientName }}</p>
         <p class="message">
-          @if($isReject)
-            <strong>{{ $actorName }}</strong> has <strong>returned this document for editing</strong>. Please review the feedback and make the necessary changes before resubmitting.
-          @else
-            <strong>{{ $actorName }}</strong> has assigned a task to your office that <strong>requires your action</strong>. Please review it at your earliest convenience.
-          @endif
+          {!! $notifBody !!}
         </p>
 
         {{-- Document/Request card --}}
