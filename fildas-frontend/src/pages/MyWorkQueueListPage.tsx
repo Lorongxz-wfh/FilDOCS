@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
 import { useNavigate } from "react-router-dom";
-import { listDocumentsPage, type Document, type Office } from "../services/documents";
+import { listDocumentsPage, type Document } from "../services/documents";
 import { getUserRole, isQA, isSysAdmin } from "../lib/roleFilters";
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import PageFrame from "../components/layout/PageFrame";

@@ -78,7 +78,7 @@ export default function RefreshButton({
   const isDisabled = disabled || loading || internalLoading || onCooldown;
 
   return (
-    <Tooltip text={onCooldown ? "Just refreshed" : title} side={tooltipSide}>
+    <Tooltip content={onCooldown ? "Just refreshed" : title} side={tooltipSide}>
       <button
         type="button"
         onClick={handleClick}

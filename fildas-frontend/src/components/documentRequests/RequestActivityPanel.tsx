@@ -1,4 +1,3 @@
-import React from "react";
 import { Activity } from "lucide-react";
 import { formatDateTime } from "./shared";
 import { EVENT_DOT, EVENT_LABEL, FIELD_LABEL } from "../../lib/activityConstants";

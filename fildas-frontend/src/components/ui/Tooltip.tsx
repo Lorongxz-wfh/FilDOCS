@@ -23,7 +23,7 @@ const SIDE_CLS: Record<Side, string> = {
  * Wraps children in a `group/tt` container and shows text on hover.
  *
  * @example
- * <Tooltip text="Refresh">
+ * <Tooltip content="Refresh">
  *   <button>...</button>
  * </Tooltip>
  */

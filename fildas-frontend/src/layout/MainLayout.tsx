@@ -47,10 +47,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           </main>
         </div>
 
-        <BottomNav 
-          onMenuClick={() => setMobileOpen((prev) => !prev)} 
-          isMenuOpen={mobileOpen}
-        />
+        <BottomNav />
 
         <MobileActionFab />
       </div>

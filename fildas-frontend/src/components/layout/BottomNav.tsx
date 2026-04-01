@@ -4,16 +4,10 @@ import {
   LayoutDashboard, 
   ClipboardList, 
   Inbox, 
-  FolderOpen, 
-  Menu 
+  FolderOpen
 } from "lucide-react";
 
-interface BottomNavProps {
-  onMenuClick: () => void;
-  isMenuOpen: boolean;
-}
-
-const BottomNav: React.FC<BottomNavProps> = ({ onMenuClick, isMenuOpen }) => {
+const BottomNav: React.FC = () => {
   const navItems = [
     { to: "/dashboard", icon: LayoutDashboard, label: "Home" },
     { to: "/work-queue", icon: ClipboardList, label: "Work" },

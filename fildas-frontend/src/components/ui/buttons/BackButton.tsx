@@ -12,7 +12,7 @@ export default function BackButton({
   label = "Back",
 }: Props) {
   return (
-    <Tooltip text={label}>
+    <Tooltip content={label}>
       <button
         type="button"
         onClick={onClick}

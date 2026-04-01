@@ -67,7 +67,7 @@ export default function Button({
   );
 
   if (tooltip) {
-    return <Tooltip text={tooltip} side={tooltipSide}>{btn}</Tooltip>;
+    return <Tooltip content={tooltip} side={tooltipSide}>{btn}</Tooltip>;
   }
   return btn;
 }

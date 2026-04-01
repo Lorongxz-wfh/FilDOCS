@@ -1,7 +1,6 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { getUserRole, isSysAdmin } from "../../lib/roleFilters";
-import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
+import { getUserRole } from "../../lib/roleFilters";
 import { navGroups } from "./navConfig";
 import {
   Menu,
@@ -41,8 +40,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const location = useLocation();
   const role = getUserRole();
-  const isAdminUser = role === "ADMIN" || isSysAdmin(role);
-  const adminDebugMode = useAdminDebugMode();
   const { collapsed, toggle } = useSidebarCollapsed();
   const user = useAuthUser();
   const [imgError, setImgError] = React.useState(false);
