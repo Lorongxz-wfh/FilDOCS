@@ -30,6 +30,7 @@ class DocumentVersion extends Model
     protected $casts = [
         'workflow_type' => 'string',
         'routing_mode'  => 'string',
+        'effective_date' => 'date',
         'distributed_at' => 'datetime',
         'superseded_at'  => 'datetime',
         'cancelled_at'   => 'datetime',

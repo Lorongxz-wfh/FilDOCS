@@ -23,7 +23,11 @@ const UserManagerPage: React.FC = () => {
   const role = getUserRole();
   const isAdmin = role === "ADMIN" || role === "SYSADMIN";
 
-  const _uc = pageCache.get<AdminUser>("users", '{"q":"","status":"","role":""}', 5 * 60_000);
+  const _uc = pageCache.get<AdminUser>(
+    "users",
+    '{"q":"","status":"","role":""}',
+    5 * 60_000,
+  );
   const [rows, setRows] = useState<AdminUser[]>(_uc?.rows ?? []);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(_uc?.hasMore ?? true);
@@ -55,7 +59,9 @@ const UserManagerPage: React.FC = () => {
 
   // Load roles once
   useEffect(() => {
-    getAdminRoles().then(setRoles).catch(() => {});
+    getAdminRoles()
+      .then(setRoles)
+      .catch(() => {});
   }, []);
 
   // Debounce search
@@ -74,7 +80,11 @@ const UserManagerPage: React.FC = () => {
 
   useEffect(() => {
     let alive = true;
-    const filterKey = JSON.stringify({ q: searchDebounced, status: statusFilter, role: String(roleFilter) });
+    const filterKey = JSON.stringify({
+      q: searchDebounced,
+      status: statusFilter,
+      role: String(roleFilter),
+    });
     const load = async () => {
       if (!hasMore && page > 1) return;
       setLoading(true);
@@ -109,8 +119,10 @@ const UserManagerPage: React.FC = () => {
       }
     };
     load();
-    return () => { alive = false; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, searchDebounced, statusFilter, roleFilter, reloadTick]);
 
   const openEdit = (u: AdminUser) => {
@@ -171,14 +183,17 @@ const UserManagerPage: React.FC = () => {
         header: "Role",
         render: (u) => {
           const role = u.role?.name ?? "none";
-          const label = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+          const label =
+            role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
           return <TypePill label={label} />;
         },
       },
       {
         key: "status",
         header: "Status",
-        render: (u) => <StatusBadge status={u.disabled_at ? "Disabled" : "Active"} />,
+        render: (u) => (
+          <StatusBadge status={u.disabled_at ? "Disabled" : "Active"} />
+        ),
       },
     ],
     [],
@@ -205,7 +220,12 @@ const UserManagerPage: React.FC = () => {
             loading={loading || initialLoading}
             title="Refresh users"
           />
-          <Button type="button" variant="primary" size="sm" onClick={openCreate}>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={openCreate}
+          >
             New user
           </Button>
         </div>

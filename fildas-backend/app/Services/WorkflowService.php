@@ -1001,7 +1001,7 @@ class WorkflowService
 
     private function resolveEventAndLabel(string $step, string $toStatus, bool $isReject): array
     {
-        if ($isReject) return ['workflow.rejected', 'Rejected — returned to draft'];
+        if ($isReject) return ['workflow.rejected', 'Rejected - returned to draft'];
 
         return match ($step) {
             // QA flow
@@ -1012,9 +1012,9 @@ class WorkflowService
             WorkflowSteps::STEP_QA_OFFICE_APPROVAL      => ['workflow.sent_to_approval',       'Sent to office for approval'],
             WorkflowSteps::STEP_QA_VP_APPROVAL          => ['workflow.forwarded_to_vp',        'Forwarded to VP for approval'],
             WorkflowSteps::STEP_QA_PRES_APPROVAL        => ['workflow.forwarded_to_president', 'Forwarded to President for approval'],
-            WorkflowSteps::STEP_QA_APPROVAL_FINAL_CHECK => ['workflow.returned_for_check',     'President approved — QA approval check'],
-            WorkflowSteps::STEP_QA_REGISTRATION         => ['workflow.sent_to_registration',   'QA started finalization — registration'],
-            WorkflowSteps::STEP_QA_DISTRIBUTION         => ['workflow.registered',             'Document registered — ready to distribute'],
+            WorkflowSteps::STEP_QA_APPROVAL_FINAL_CHECK => ['workflow.returned_for_check',     'President approved - QA approval check'],
+            WorkflowSteps::STEP_QA_REGISTRATION         => ['workflow.sent_to_registration',   'QA started finalization - registration'],
+            WorkflowSteps::STEP_QA_DISTRIBUTION         => ['workflow.registered',             'Document registered - ready to distribute'],
 
             // Office flow
             WorkflowSteps::STEP_OFFICE_DRAFT                => ['workflow.returned_to_draft',     'Returned to office draft'],
@@ -1024,18 +1024,18 @@ class WorkflowService
             WorkflowSteps::STEP_OFFICE_HEAD_APPROVAL        => ['workflow.sent_to_approval',       'Sent to office head for approval'],
             WorkflowSteps::STEP_OFFICE_VP_APPROVAL          => ['workflow.forwarded_to_vp',        'Forwarded to VP for approval'],
             WorkflowSteps::STEP_OFFICE_PRES_APPROVAL        => ['workflow.forwarded_to_president', 'Forwarded to President for approval'],
-            WorkflowSteps::STEP_OFFICE_APPROVAL_FINAL_CHECK => ['workflow.returned_for_check',     'President approved — creator approval check'],
-            WorkflowSteps::STEP_OFFICE_REGISTRATION         => ['workflow.sent_to_registration',   'Staff started finalization — registration'],
-            WorkflowSteps::STEP_OFFICE_DISTRIBUTION         => ['workflow.registered',             'Document registered — ready to distribute'],
+            WorkflowSteps::STEP_OFFICE_APPROVAL_FINAL_CHECK => ['workflow.returned_for_check',     'President approved - creator approval check'],
+            WorkflowSteps::STEP_OFFICE_REGISTRATION         => ['workflow.sent_to_registration',   'Staff started finalization - registration'],
+            WorkflowSteps::STEP_OFFICE_DISTRIBUTION         => ['workflow.registered',             'Document registered - ready to distribute'],
 
             // Custom flow
             WorkflowSteps::STEP_CUSTOM_DRAFT                    => ['workflow.returned_to_draft',  'Returned to owner draft'],
             WorkflowSteps::STEP_CUSTOM_OFFICE_REVIEW            => ['workflow.sent_to_review',      'Forwarded for review'],
-            WorkflowSteps::STEP_CUSTOM_REVIEW_BACK_TO_OWNER     => ['workflow.returned_for_check',  'Review complete — returned to owner for check'],
+            WorkflowSteps::STEP_CUSTOM_REVIEW_BACK_TO_OWNER     => ['workflow.returned_for_check',  'Review complete - returned to owner for check'],
             WorkflowSteps::STEP_CUSTOM_OFFICE_APPROVAL          => ['workflow.sent_to_approval',    'Forwarded for approval'],
-            WorkflowSteps::STEP_CUSTOM_APPROVAL_BACK_TO_OWNER   => ['workflow.returned_for_check',  'Approval complete — returned to owner for check'],
-            WorkflowSteps::STEP_CUSTOM_REGISTRATION             => ['workflow.sent_to_registration', 'Owner started finalization — registration'],
-            WorkflowSteps::STEP_CUSTOM_DISTRIBUTION             => ['workflow.registered',           'Document registered — ready to distribute'],
+            WorkflowSteps::STEP_CUSTOM_APPROVAL_BACK_TO_OWNER   => ['workflow.returned_for_check',  'Approval complete - returned to owner for check'],
+            WorkflowSteps::STEP_CUSTOM_REGISTRATION             => ['workflow.sent_to_registration', 'Owner started finalization - registration'],
+            WorkflowSteps::STEP_CUSTOM_DISTRIBUTION             => ['workflow.registered',           'Document registered - ready to distribute'],
 
             // Terminal
             WorkflowSteps::STEP_DISTRIBUTED => ['workflow.distributed', 'Document distributed'],

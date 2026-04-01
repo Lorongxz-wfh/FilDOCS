@@ -54,7 +54,7 @@ function downloadCsv(
       r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","),
     ),
   ];
-  const blob = new Blob([lines.join("\n")], {
+  const blob = new Blob(["\uFEFF", lines.join("\n")], {
     type: "text/csv;charset=utf-8;",
   });
   saveBlob(blob, filename, "text/csv");
@@ -341,7 +341,7 @@ export function exportOfficeCsv(data: ComplianceOfficeDatum[]) {
     ],
     data.map((r) => [
       r.office_code ?? `Office #${r.office_id}`,
-      r.cluster ?? "—",
+      r.cluster ?? "-",
       r.in_review,
       r.approved,
       `${pct(r.approved, r.in_review)}%`,
@@ -368,7 +368,7 @@ export async function exportOfficePdf(data: ComplianceOfficeDatum[]) {
     ],
     body: data.map((r) => [
       r.office_code ?? `Office #${r.office_id}`,
-      r.cluster ?? "—",
+      r.cluster ?? "-",
       r.in_review,
       r.approved,
       `${pct(r.approved, r.in_review)}%`,

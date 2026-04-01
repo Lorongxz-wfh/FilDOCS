@@ -90,6 +90,7 @@ class BackupController extends Controller
 
         return response()->streamDownload(function () use ($query) {
             $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
 
             fputcsv($out, [
                 'ID', 'Code', 'Title', 'Doc Type', 'Owner Office',
@@ -103,16 +104,16 @@ class BackupController extends Controller
                         $v = $doc->latestVersion;
                         fputcsv($out, [
                             $doc->id,
-                            $doc->code ?? '—',
+                            $doc->code ?? '-',
                             $doc->title,
                             $doc->doctype,
-                            $doc->ownerOffice->code ?? '—',
-                            $doc->reviewOffice->code ?? '—',
-                            $v->status ?? '—',
+                            $doc->ownerOffice->code ?? '-',
+                            $doc->reviewOffice->code ?? '-',
+                            $v->status ?? '-',
                             $v->version_number ?? 0,
                             $doc->created_at?->format('Y-m-d H:i'),
-                            $v->effective_date ?? '—',
-                            $v->distributed_at ?? '—',
+                            $v->effective_date ?? '-',
+                            $v->distributed_at ?? '-',
                         ]);
                     }
                 });
@@ -147,9 +148,15 @@ class BackupController extends Controller
             mkdir(dirname($tempPath), 0755, true);
         }
 
+        if (!class_exists('ZipArchive')) {
+            abort(500, 'PHP Zip extension is not installed. Please contact administrator.');
+        }
+
+        set_time_limit(0); // Prevent timeout for large backups
+
         $zip = new ZipArchive();
         if ($zip->open($tempPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            abort(500, 'Could not create ZIP file.');
+            abort(500, "Could not create temporary ZIP file at {$tempPath}.");
         }
 
         // 1. Regular Documents
@@ -202,9 +209,15 @@ class BackupController extends Controller
                     $fileName = "{$safeReqTitle} - {$safeItemTitle}.{$ext}";
 
                     $entryName = "{$officeCode}/Document Requests/{$date}/{$fileName}";
-                    $zip->addFile($disk->path($f->file_path), $entryName);
+                    if (file_exists($disk->path($f->file_path))) {
+                        $zip->addFile($disk->path($f->file_path), $entryName);
+                    }
                 }
             });
+
+        if ($zip->numFiles === 0) {
+            $zip->addFromString('readme.txt', 'No document files found in the specified range.');
+        }
 
         $zip->close();
 
@@ -238,6 +251,7 @@ class BackupController extends Controller
 
         return response()->streamDownload(function () use ($query) {
             $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
 
             fputcsv($out, [
                 'ID', 'Event', 'Label', 'Actor', 'Office',
@@ -247,15 +261,15 @@ class BackupController extends Controller
             $query->orderBy('activity_logs.created_at', 'desc')
                 ->chunk(500, function ($logs) use ($out) {
                     foreach ($logs as $log) {
-                        $actorName = trim(($log->actorUser?->first_name ?? '') . ' ' . ($log->actorUser?->last_name ?? '')) ?: '—';
+                        $actorName = trim(($log->actorUser?->first_name ?? '') . ' ' . ($log->actorUser?->last_name ?? '')) ?: '-';
                         fputcsv($out, [
                             $log->id,
                             $log->event,
-                            $log->label ?? '—',
+                            $log->label ?? '-',
                             $actorName,
-                            $log->actorOffice?->code ?? '—',
-                            $log->document?->title ?? '—',
-                            $log->document?->code ?? '—',
+                            $log->actorOffice?->code ?? '-',
+                            $log->document?->title ?? '-',
+                            $log->document?->code ?? '-',
                             $log->created_at?->format('Y-m-d H:i:s'),
                         ]);
                     }
@@ -282,6 +296,7 @@ class BackupController extends Controller
 
         return response()->streamDownload(function () use ($query) {
             $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
 
             fputcsv($out, [
                 'ID', 'First Name', 'Last Name', 'Email', 'Role',
@@ -295,10 +310,10 @@ class BackupController extends Controller
                         $user->first_name,
                         $user->last_name,
                         $user->email,
-                        $user->role?->name ?? '—',
-                        $user->office?->code ?? '—',
+                        $user->role?->name ?? '-',
+                        $user->office?->code ?? '-',
                         $user->disabled_at ? 'Disabled' : 'Active',
-                        $user->last_active_at?->format('Y-m-d H:i') ?? '—',
+                        $user->last_active_at?->format('Y-m-d H:i') ?? '-',
                         $user->created_at?->format('Y-m-d'),
                     ]);
                 }

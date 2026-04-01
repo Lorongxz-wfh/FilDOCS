@@ -318,7 +318,7 @@ const ReportExportPage: React.FC = () => {
       previewRows: () =>
         officeData.slice(0, 6).map((r) => [
           r.office_code ?? `#${r.office_id}`,
-          r.cluster ?? "—",
+          r.cluster ?? "-",
           r.approved,
           `${pct(r.approved, r.in_review)}%`,
           r.returned,
