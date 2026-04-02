@@ -123,21 +123,23 @@ export default function RequestCommentsPanel({
               </p>
             </div>
           ) : (
-            messages.map((m) => (
-              <CommentBubble
-                key={m.id}
-                senderName={m.sender?.name ?? "Unknown"}
-                roleName={
-                  typeof m.sender?.role === "string" ? m.sender.role : null
-                }
-                when={formatDateTime(m.created_at ?? "")}
-                message={m.message}
-                type={m.type ?? "comment"}
-                isNew={newMessageIds.has(m.id)}
-                isMine={m.sender_user_id === myUserId}
-                avatarLetter={(m.sender?.name ?? "?").charAt(0).toUpperCase()}
-              />
-            ))
+            messages
+              .filter((m, i, self) => self.findIndex(t => t.id === m.id) === i)
+              .map((m) => (
+                <CommentBubble
+                  key={m.id}
+                  senderName={m.sender?.name ?? "Unknown"}
+                  roleName={
+                    typeof m.sender?.role === "string" ? m.sender.role : null
+                  }
+                  when={formatDateTime(m.created_at ?? "")}
+                  message={m.message}
+                  type={m.type ?? "comment"}
+                  isNew={newMessageIds.has(m.id)}
+                  isMine={m.sender_user_id === myUserId}
+                  avatarLetter={(m.sender?.name ?? "?").charAt(0).toUpperCase()}
+                />
+              ))
           )}
           <div ref={messagesEndRef} />
         </div>

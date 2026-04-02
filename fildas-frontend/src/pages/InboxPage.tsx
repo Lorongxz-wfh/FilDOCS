@@ -68,7 +68,7 @@ const NotifCard: React.FC<{
           {n.title}
         </p>
         {n.body && (
-          <p 
+          <p
             className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-2 whitespace-pre-wrap"
             dangerouslySetInnerHTML={{ __html: n.body }}
           />

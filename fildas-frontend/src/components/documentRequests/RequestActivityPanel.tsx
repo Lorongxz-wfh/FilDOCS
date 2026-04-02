@@ -34,7 +34,7 @@ type Props = {
 
 export default function RequestActivityPanel({ logs, loading }: Props) {
   return (
-    <div className="flex-1 overflow-y-auto px-5 py-4 bg-slate-50/30 dark:bg-surface-600/30">
+    <div className="flex-1 overflow-y-auto px-5 py-4 bg-slate-50/30 dark:bg-surface-600/30 min-h-0 min-w-0">
       {loading ? (
         <div className="flex items-center justify-center py-10">
           <div className="h-5 w-5 rounded-full border-2 border-sky-400 border-t-transparent animate-spin" />

@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "../components/ui/loader/Skeleton";
 import RefreshButton from "../components/ui/RefreshButton";
+import Button from "../components/ui/Button";
 
 // Shared charts
 import StatusDonutChart from "../components/charts/StatusDonutChart";
@@ -59,13 +60,15 @@ const Card: React.FC<{
         )}
       </div>
       {action && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="xs"
           onClick={action.onClick}
-          className="shrink-0 text-xs font-medium text-brand-500 hover:text-brand-400 dark:text-brand-400 transition-colors"
+          className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
         >
           {action.label} →
-        </button>
+        </Button>
       )}
     </div>
     <div className="p-3 sm:p-4">{children}</div>
@@ -89,125 +92,153 @@ const QADashboard: React.FC<
   navigate,
   announcements,
 }) => {
-  const kpiCards = [
-    {
-      label: "Waiting on QA",
-      value: report.waiting_on_qa ?? 0,
-      sub: "docs on QA's desk now",
-      icon: <AlertCircle className="h-4 w-4" />,
-      iconCls: "text-rose-400 dark:text-rose-400",
-      valueCls:
-        (report.waiting_on_qa ?? 0) > 0
-          ? "text-rose-600 dark:text-rose-400"
-          : "text-slate-900 dark:text-slate-100",
-    },
-    {
-      label: "First-pass yield",
-      value: `${report.kpis.first_pass_yield_pct}%`,
-      sub: "no returns, clean flow",
-      icon: <Percent className="h-4 w-4" />,
-      iconCls: "text-emerald-400 dark:text-emerald-400",
-      valueCls: "text-slate-900 dark:text-slate-100",
-    },
-    {
-      label: "Avg cycle time",
-      value: `${report.kpis.cycle_time_avg_days}d`,
-      sub: "draft to distributed",
-      icon: <Timer className="h-4 w-4" />,
-      iconCls: "text-sky-400 dark:text-sky-400",
-      valueCls: "text-slate-900 dark:text-slate-100",
-    },
-  ];
+    const kpiCards = [
+      {
+        label: "Waiting on QA",
+        value: report.waiting_on_qa ?? 0,
+        sub: "docs on QA's desk now",
+        icon: <AlertCircle className="h-4 w-4" />,
+        iconCls: "text-rose-400 dark:text-rose-400",
+        valueCls:
+          (report.waiting_on_qa ?? 0) > 0
+            ? "text-rose-600 dark:text-rose-400"
+            : "text-slate-900 dark:text-slate-100",
+      },
+      {
+        label: "First-pass yield",
+        value: `${report.kpis.first_pass_yield_pct}%`,
+        sub: "no returns, clean flow",
+        icon: <Percent className="h-4 w-4" />,
+        iconCls: "text-emerald-400 dark:text-emerald-400",
+        valueCls: "text-slate-900 dark:text-slate-100",
+      },
+      {
+        label: "Avg cycle time",
+        value: `${report.kpis.cycle_time_avg_days}d`,
+        sub: "draft to distributed",
+        icon: <Timer className="h-4 w-4" />,
+        iconCls: "text-sky-400 dark:text-sky-400",
+        valueCls: "text-slate-900 dark:text-slate-100",
+      },
+    ];
 
-  return (
-    <div className="space-y-4">
-      <AnnouncementsBanner
-        announcements={announcements.announcements}
-        loading={announcements.loading}
-        onDeleted={() => announcements.reload()}
-      />
+    return (
+      <div className="space-y-4">
+        <AnnouncementsBanner
+          announcements={announcements.announcements}
+          loading={announcements.loading}
+          onDeleted={() => announcements.reload()}
+        />
 
-      <DashboardStatRow
-        role="QA"
-        stats={stats}
-        pendingCount={pending.length}
-        pendingRequestsCount={pendingRequestsCount}
-        loading={loading}
-        onStatClick={(label) => {
-          if (label === "Action needed" || label === "In progress") navigate("/work-queue");
-          if (label === "Total documents" || label === "Distributed") navigate("/documents");
-          if (label === "Pending requests") navigate("/document-requests");
-        }}
-      />
+        <DashboardStatRow
+          role="QA"
+          stats={stats}
+          pendingCount={pending.length}
+          pendingRequestsCount={pendingRequestsCount}
+          loading={loading}
+          onStatClick={(label) => {
+            if (label === "Action needed" || label === "In progress") navigate("/work-queue");
+            if (label === "Total documents" || label === "Distributed") navigate("/documents");
+            if (label === "Pending requests") navigate("/document-requests");
+          }}
+        />
 
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        {kpiCards.map((k) => (
-          <div
-            key={k.label}
-            className="min-w-0 rounded-md border border-slate-200 bg-white p-2 sm:px-4 sm:py-3.5 dark:border-surface-400 dark:bg-surface-500 flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between gap-1 text-slate-500 dark:text-slate-400">
-              <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider leading-tight truncate">
-                {k.label}
-              </p>
-              <span className={`shrink-0 ${k.iconCls} sm:scale-100 scale-75`}>{k.icon}</span>
-            </div>
-            
-            <div className="mt-1.5 sm:mt-2.5">
-              {loading ? (
-                <Skeleton className="h-5 sm:h-7 w-10 sm:w-14" />
-              ) : (
-                <p
-                  className={`text-sm sm:text-2xl font-black tabular-nums leading-none ${k.valueCls}`}
-                >
-                  {k.value}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {kpiCards.map((k) => (
+            <div
+              key={k.label}
+              className="min-w-0 rounded-md border border-slate-200 bg-white p-2 sm:px-4 sm:py-3.5 dark:border-surface-400 dark:bg-surface-500 flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between gap-1 text-slate-500 dark:text-slate-400">
+                <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider leading-tight truncate">
+                  {k.label}
                 </p>
-              )}
+                <span className={`shrink-0 ${k.iconCls} sm:scale-100 scale-75`}>{k.icon}</span>
+              </div>
+
+              <div className="mt-1.5 sm:mt-2.5">
+                {loading ? (
+                  <Skeleton className="h-5 sm:h-7 w-10 sm:w-14" />
+                ) : (
+                  <p
+                    className={`text-sm sm:text-2xl font-black tabular-nums leading-none ${k.valueCls}`}
+                  >
+                    {k.value}
+                  </p>
+                )}
+              </div>
+
+              <p className="hidden sm:block mt-1.5 text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 italic truncate">
+                {k.sub}
+              </p>
             </div>
+          ))}
+        </div>
 
-            <p className="hidden sm:block mt-1.5 text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 italic truncate">
-              {k.sub}
-            </p>
+        {/* Charts Carousel/Grid */}
+        <div className="relative group">
+          <div className="flex sm:grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0">
+            <Card
+              title="Document volume"
+              sub="Created vs distributed per month"
+              action={{
+                label: "View reports",
+                onClick: () => navigate("/reports"),
+              }}
+              className="min-w-[88vw] sm:min-w-0 snap-center lg:col-span-2"
+            >
+              <VolumeTrendChart
+                data={report.volume_series}
+                height={window.innerWidth < 640 ? 150 : 200}
+                loading={loading}
+              />
+            </Card>
+
+            <Card
+              title="Pipeline state"
+              sub="Docs by current phase"
+              action={{
+                label: "View library",
+                onClick: () => navigate("/documents"),
+              }}
+              className="min-w-[88vw] sm:min-w-0 snap-center"
+            >
+              <PhaseDistributionChart
+                data={report.phase_distribution ?? []}
+                variant="donut"
+                height={window.innerWidth < 640 ? 150 : 200}
+                loading={loading}
+              />
+            </Card>
+
+            <Card
+              title="Stage delay"
+              sub="Median hold time per workflow phase"
+              action={{
+                label: "View reports",
+                onClick: () => navigate("/reports"),
+              }}
+              className="min-w-[88vw] sm:min-w-0 snap-center lg:hidden"
+            >
+              <StageDelayChart
+                data={report.stage_delays_by_phase ?? []}
+                height={150}
+                loading={loading}
+              />
+            </Card>
           </div>
-        ))}
-      </div>
 
-      {/* Charts Carousel/Grid */}
-      <div className="relative group">
-        <div className="flex sm:grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0">
-          <Card
-            title="Document volume"
-            sub="Created vs distributed per month"
-            action={{
-              label: "View reports",
-              onClick: () => navigate("/reports"),
-            }}
-            className="min-w-[88vw] sm:min-w-0 snap-center lg:col-span-2"
-          >
-            <VolumeTrendChart
-              data={report.volume_series}
-              height={window.innerWidth < 640 ? 150 : 200}
-              loading={loading}
-            />
-          </Card>
-          
-          <Card
-            title="Pipeline state"
-            sub="Docs by current phase"
-            action={{
-              label: "View library",
-              onClick: () => navigate("/documents"),
-            }}
-            className="min-w-[88vw] sm:min-w-0 snap-center"
-          >
-            <PhaseDistributionChart
-              data={report.phase_distribution ?? []}
-              variant="donut"
-              height={window.innerWidth < 640 ? 150 : 200}
-              loading={loading}
-            />
-          </Card>
+          {/* Pagination Dots (Mobile Only) */}
+          <div className="flex sm:hidden justify-center items-center gap-1 mt-1.5 mb-0.5">
+            <div className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-surface-400" />
+            <div className="h-1 w-1 rounded-full bg-slate-200 dark:bg-surface-300/40" />
+            <div className="h-1 w-1 rounded-full bg-slate-200 dark:bg-surface-300/40" />
+          </div>
+        </div>
 
+        {/* Desktop-only Stage Delay if not in carousel-span above */}
+        <div className="hidden lg:grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <DashboardPendingList items={pendingActions} loading={loading} />
           <Card
             title="Stage delay"
             sub="Median hold time per workflow phase"
@@ -215,61 +246,33 @@ const QADashboard: React.FC<
               label: "View reports",
               onClick: () => navigate("/reports"),
             }}
-            className="min-w-[88vw] sm:min-w-0 snap-center lg:hidden"
           >
             <StageDelayChart
               data={report.stage_delays_by_phase ?? []}
-              height={150}
+              height={200}
               loading={loading}
             />
           </Card>
         </div>
-        
-        {/* Pagination Dots (Mobile Only) */}
-        <div className="flex sm:hidden justify-center items-center gap-1 mt-1.5 mb-0.5">
-          <div className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-surface-400" />
-          <div className="h-1 w-1 rounded-full bg-slate-200 dark:bg-surface-300/40" />
-          <div className="h-1 w-1 rounded-full bg-slate-200 dark:bg-surface-300/40" />
-        </div>
-      </div>
 
-      {/* Desktop-only Stage Delay if not in carousel-span above */}
-      <div className="hidden lg:grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <DashboardPendingList items={pendingActions} loading={loading} />
+        {/* Mobile-only Pending list */}
+        <div className="lg:hidden mt-1">
+          <DashboardPendingList items={pendingActions} loading={loading} />
+        </div>
+
         <Card
-          title="Stage delay"
-          sub="Median hold time per workflow phase"
+          title="Recent activity"
+          sub="Latest actions in the system."
           action={{
-            label: "View reports",
-            onClick: () => navigate("/reports"),
+            label: "View all",
+            onClick: () => navigate("/activity-logs"),
           }}
         >
-          <StageDelayChart
-            data={report.stage_delays_by_phase ?? []}
-            height={200}
-            loading={loading}
-          />
+          <DashboardRecentActivity logs={recentActivity} loading={loading} />
         </Card>
       </div>
-
-      {/* Mobile-only Pending list */}
-      <div className="lg:hidden mt-1">
-        <DashboardPendingList items={pendingActions} loading={loading} />
-      </div>
-
-      <Card
-        title="Recent activity"
-        sub="Latest actions in the system."
-        action={{
-          label: "View all",
-          onClick: () => navigate("/activity-logs"),
-        }}
-      >
-        <DashboardRecentActivity logs={recentActivity} loading={loading} />
-      </Card>
-    </div>
-  );
-};
+    );
+  };
 
 // ─── Office Dashboard ──────────────────────────────────────────────────────
 const OfficeDashboard: React.FC<
@@ -289,87 +292,87 @@ const OfficeDashboard: React.FC<
   pendingRequestsInboxCount,
   pending,
 }) => {
-  const inboxCount = pendingRequestsInboxCount ?? 0;
+    const inboxCount = pendingRequestsInboxCount ?? 0;
 
 
-  const donutSegments = [
-    { label: "Distributed", value: stats?.distributed ?? 0, color: "#10b981" },
-    { label: "In progress", value: stats?.pending ?? 0, color: "#f59e0b" },
-    {
-      label: "Draft / other",
-      value: Math.max(
-        0,
-        (stats?.total ?? 0) - (stats?.distributed ?? 0) - (stats?.pending ?? 0),
-      ),
-      color: "#94a3b8",
-    },
-  ];
+    const donutSegments = [
+      { label: "Distributed", value: stats?.distributed ?? 0, color: "#10b981" },
+      { label: "In progress", value: stats?.pending ?? 0, color: "#f59e0b" },
+      {
+        label: "Draft / other",
+        value: Math.max(
+          0,
+          (stats?.total ?? 0) - (stats?.distributed ?? 0) - (stats?.pending ?? 0),
+        ),
+        color: "#94a3b8",
+      },
+    ];
 
-  return (
-    <div className="space-y-4">
-      <AnnouncementsBanner
-        announcements={announcements.announcements}
-        loading={announcements.loading}
-        onDeleted={() => announcements.reload()}
-      />
+    return (
+      <div className="space-y-4">
+        <AnnouncementsBanner
+          announcements={announcements.announcements}
+          loading={announcements.loading}
+          onDeleted={() => announcements.reload()}
+        />
 
-      <DashboardStatRow
-        role={role}
-        stats={stats}
-        pendingCount={pending.length}
-        pendingRequestsCount={inboxCount}
-        loading={loading}
-        onStatClick={(label) => {
-          if (label === "Action needed" || label === "In progress") navigate("/work-queue");
-          if (label === "My documents" || label === "Distributed") navigate("/documents");
-        }}
-      />
+        <DashboardStatRow
+          role={role}
+          stats={stats}
+          pendingCount={pending.length}
+          pendingRequestsCount={inboxCount}
+          loading={loading}
+          onStatClick={(label) => {
+            if (label === "Action needed" || label === "In progress") navigate("/work-queue");
+            if (label === "My documents" || label === "Distributed") navigate("/documents");
+          }}
+        />
 
-      {/* Document summary + pending work queue */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Document summary + pending work queue */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Card
+            title="My document summary"
+            sub="Status of documents created by your office."
+            action={{
+              label: "Open library",
+              onClick: () => navigate("/documents"),
+            }}
+          >
+            {loading ? (
+              <div className="flex items-center gap-6">
+                <Skeleton className="h-40 w-40 rounded-full" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </div>
+            ) : (
+              <StatusDonutChart
+                segments={donutSegments}
+                centerValue={stats?.total ?? 0}
+                centerLabel="total"
+                size={160}
+              />
+            )}
+          </Card>
+
+          <DashboardPendingList items={pendingActions} loading={loading} />
+        </div>
+
+        {/* Recent activity */}
         <Card
-          title="My document summary"
-          sub="Status of documents created by your office."
+          title="Recent activity"
+          sub="Latest actions on your office's documents."
           action={{
-            label: "Open library",
-            onClick: () => navigate("/documents"),
+            label: "View all",
+            onClick: () => navigate("/activity-logs"),
           }}
         >
-          {loading ? (
-            <div className="flex items-center gap-6">
-              <Skeleton className="h-40 w-40 rounded-full" />
-              <div className="flex-1 space-y-3">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-              </div>
-            </div>
-          ) : (
-            <StatusDonutChart
-              segments={donutSegments}
-              centerValue={stats?.total ?? 0}
-              centerLabel="total"
-              size={160}
-            />
-          )}
+          <DashboardRecentActivity logs={recentActivity} loading={loading} />
         </Card>
-
-        <DashboardPendingList items={pendingActions} loading={loading} />
       </div>
-
-      {/* Recent activity */}
-      <Card
-        title="Recent activity"
-        sub="Latest actions on your office's documents."
-        action={{
-          label: "View all",
-          onClick: () => navigate("/activity-logs"),
-        }}
-      >
-        <DashboardRecentActivity logs={recentActivity} loading={loading} />
-      </Card>
-    </div>
-  );
-};
+    );
+  };
 
 // ─── Admin Dashboard ───────────────────────────────────────────────────────
 const AdminDashboard: React.FC<

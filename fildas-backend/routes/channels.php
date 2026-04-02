@@ -7,15 +7,33 @@ Broadcast::channel('user.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
 });
 
-// Private document request channel — user must be a participant
+// Private document request channel — user must be a participant or creator or with elevated roles
 Broadcast::channel('request.{requestId}', function ($user, $requestId) {
-    $officeId = (int) ($user->office_id ?? 0);
-    if (!$officeId) return false;
+    if (!$user) return false;
 
-    return \Illuminate\Support\Facades\DB::table('document_request_recipients')
-        ->where('request_id', $requestId)
-        ->where('office_id', $officeId)
+    // 1. Roles that always have access (QA, Admin, Sysadmin)
+    $roleName = $user->role?->name;
+    if (in_array($roleName, ['QA', 'ADMIN', 'SYSADMIN'])) {
+        return true;
+    }
+
+    // 2. Is the user the creator?
+    $isCreator = \Illuminate\Support\Facades\DB::table('document_requests')
+        ->where('id', (int) $requestId)
+        ->where('created_by_user_id', $user->id)
         ->exists();
+    if ($isCreator) return true;
+
+    // 3. User office check (must be a participant)
+    $officeId = (int) ($user->office_id ?? 0);
+    if ($officeId) {
+        return \Illuminate\Support\Facades\DB::table('document_request_recipients')
+            ->where('request_id', (int) $requestId)
+            ->where('office_id', $officeId)
+            ->exists();
+    }
+
+    return false;
 });
 
 // Presence announcements channel — any authenticated user can join

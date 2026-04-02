@@ -1,5 +1,6 @@
 import React from "react";
 import Tooltip from "./Tooltip";
+import { Loader2 } from "lucide-react";
 
 type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger";
 type Size = "xs" | "sm" | "md" | "lg";
@@ -16,19 +17,19 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const base =
-  "cursor-pointer inline-flex items-center justify-center font-medium rounded-md transition disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
+  "cursor-pointer inline-flex items-center justify-center font-medium rounded-md transition disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap active:scale-95";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-brand-400 text-white hover:bg-brand-500 dark:bg-brand-300 dark:hover:bg-brand-400",
+    "bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400 shadow-sm",
   secondary:
-    "bg-surface-500 text-white hover:bg-surface-400 dark:bg-surface-400 dark:hover:bg-surface-300",
+    "bg-slate-600 text-white hover:bg-slate-700 dark:bg-surface-400 dark:hover:bg-surface-300 shadow-sm",
   outline:
-    "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-200 dark:hover:bg-surface-400",
+    "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-600 dark:text-slate-200 dark:hover:bg-surface-500 shadow-sm",
   ghost:
     "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-surface-500",
   danger:
-    "border border-rose-300 bg-white text-rose-700 hover:bg-rose-50 hover:border-rose-400 dark:border-rose-900 dark:bg-transparent dark:text-rose-300 dark:hover:bg-rose-950/15 dark:hover:border-rose-800",
+    "bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500/90 dark:hover:bg-rose-500 shadow-sm",
 };
 
 const sizes: Record<Size, string> = {
@@ -62,7 +63,14 @@ export default function Button({
         className,
       ].join(" ")}
     >
-      {loading ? "Loading..." : children}
+      {loading ? (
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          {size !== "xs" && <span>Loading…</span>}
+        </div>
+      ) : (
+        children
+      )}
     </button>
   );
 

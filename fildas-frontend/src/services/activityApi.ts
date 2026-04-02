@@ -33,7 +33,7 @@ export async function listActivityLogs(params: {
         scope: params.scope ?? "office",
         document_id: params.document_id,
         document_version_id: params.document_version_id,
-        per_page: params.per_page ?? 25,
+        per_page: Math.min(params.per_page ?? 25, 50),
         page: params.page ?? 1,
 
         q: params.q,

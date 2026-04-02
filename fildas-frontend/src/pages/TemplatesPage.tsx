@@ -245,12 +245,10 @@ const TemplatesPage: React.FC = () => {
                 variant="primary"
                 size="sm"
                 onClick={() => setModalOpen(true)}
-                className="h-9 px-3 sm:px-4 rounded-xl sm:rounded-lg transition-all active:scale-95"
+                title="Upload template"
               >
-                <div className="flex items-center gap-1.5">
-                  <Upload size={15} />
-                  <span className="hidden sm:inline">Upload template</span>
-                </div>
+                <Upload size={15} />
+                <span className="hidden sm:inline font-bold">Upload template</span>
               </Button>
             )}
           </div>
@@ -306,11 +304,10 @@ const TemplatesPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-              className={`sm:hidden flex items-center gap-2 px-3 h-9 rounded-lg border transition-all ${
-                isFiltersOpen || activeFiltersCount > 0
+              className={`sm:hidden flex items-center gap-2 px-3 h-9 rounded-lg border transition-all ${isFiltersOpen || activeFiltersCount > 0
                   ? "bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400 shadow-xs"
                   : "bg-white border-slate-200 text-slate-600 dark:bg-surface-500 dark:border-surface-400 dark:text-slate-400"
-              }`}
+                }`}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
               <span className="text-xs font-semibold">Filters</span>
@@ -414,47 +411,47 @@ const TemplatesPage: React.FC = () => {
           {/* Mobile secondary filters collapsible */}
           {isFiltersOpen && (
             <div className="sm:hidden flex flex-col gap-3 p-4 bg-slate-50 dark:bg-surface-600 rounded-xl border border-slate-200 dark:border-surface-400 animate-in fade-in slide-in-from-top-1 duration-200">
-               <div className="grid grid-cols-2 gap-2">
-                 <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Scope</label>
-                    <select
-                      value={scope}
-                      onChange={(e) => setScope(e.target.value as typeof scope)}
-                      className={selectCls}
-                    >
-                      <option value="all">All Scope</option>
-                      <option value="global">Global</option>
-                      <option value="mine">Mine</option>
-                    </select>
-                 </div>
-                 <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Tag</label>
-                    <select
-                      value={activeTag || ""}
-                      onChange={(e) => setActiveTag(e.target.value || null)}
-                      className={selectCls}
-                    >
-                      <option value="">All Tags</option>
-                      {allTags.map(tag => (
-                        <option key={tag} value={tag}>{tag}</option>
-                      ))}
-                    </select>
-                 </div>
-               </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Scope</label>
+                  <select
+                    value={scope}
+                    onChange={(e) => setScope(e.target.value as typeof scope)}
+                    className={selectCls}
+                  >
+                    <option value="all">All Scope</option>
+                    <option value="global">Global</option>
+                    <option value="mine">Mine</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Tag</label>
+                  <select
+                    value={activeTag || ""}
+                    onChange={(e) => setActiveTag(e.target.value || null)}
+                    className={selectCls}
+                  >
+                    <option value="">All Tags</option>
+                    {allTags.map(tag => (
+                      <option key={tag} value={tag}>{tag}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-               {hasActiveFilters && (
-                 <button
-                    type="button"
-                    onClick={() => {
-                        setQ("");
-                        setScope("all");
-                        setActiveTag(null);
-                    }}
-                    className="w-full py-2.5 text-xs font-bold text-brand-600 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/10 rounded-lg transition"
-                 >
-                   Clear all filters
-                 </button>
-               )}
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQ("");
+                    setScope("all");
+                    setActiveTag(null);
+                  }}
+                  className="w-full py-2.5 text-xs font-bold text-brand-600 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/10 rounded-lg transition"
+                >
+                  Clear all filters
+                </button>
+              )}
             </div>
           )}
         </div>

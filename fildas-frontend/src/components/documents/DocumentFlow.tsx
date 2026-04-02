@@ -1,6 +1,7 @@
 import React from "react";
 import { XCircle, AlertTriangle, Upload, CheckCircle2, Loader2 } from "lucide-react";
 import Alert from "../ui/Alert";
+import Button from "../ui/Button";
 import WorkflowProgressCard from "./documentFlow/WorkflowProgressCard";
 import DocumentRightPanel from "./documentFlow/DocumentRightPanel";
 import DocumentPreviewWrapper from "./documentFlow/DocumentPreviewWrapper";
@@ -341,7 +342,7 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
   React.useEffect(() => {
     if (!workflow.taskChanged) return;
     workflow.clearTaskChanged();
-    if (onChanged) void Promise.resolve(onChanged()).catch(() => {});
+    if (onChanged) void Promise.resolve(onChanged()).catch(() => { });
   }, [workflow.taskChanged]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Workflow update indicator (handled in WorkflowTaskPanel) ──────────
@@ -370,8 +371,8 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
     }
     setCurrentTask(
       workflow.tasks.find((t) => t.status === "open") ??
-        workflow.tasks[0] ??
-        null,
+      workflow.tasks[0] ??
+      null,
     );
   }, [workflow.tasks]);
 
@@ -416,10 +417,10 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
     () =>
       routeSteps.length > 0 && offices.length > 0
         ? buildCustomFlowSteps({
-            offices,
-            ownerOfficeId: ownerOfficeIdForFlow,
-            routeSteps,
-          })
+          offices,
+          ownerOfficeId: ownerOfficeIdForFlow,
+          routeSteps,
+        })
         : null,
     [routeSteps, offices, ownerOfficeIdForFlow],
   );
@@ -587,44 +588,44 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
 
     const replaceAction: HeaderActionButton | null = showReplaceAction
       ? {
-          key: "REPLACE_FILE",
-          label: "Replace file",
-          variant: "outline",
-          disabled: workflow.isChangingStatus,
-          onClick: async () => fileUpload.triggerFilePicker(),
-        }
+        key: "REPLACE_FILE",
+        label: "Replace file",
+        variant: "outline",
+        disabled: workflow.isChangingStatus,
+        onClick: async () => fileUpload.triggerFilePicker(),
+      }
       : null;
 
     // Cancel button config (always built separately so it shows even during approval sequence)
     const cancelBtn =
       workflow.availableActions.includes("CANCEL_DOCUMENT") && showCancel
         ? [
-            {
-              key: "CANCEL_DOCUMENT",
-              label: ACTION_LABELS["CANCEL_DOCUMENT"] ?? "Cancel document",
-              variant: "danger" as const,
-              disabled: workflow.isChangingStatus,
-              onClick: async () => {
-                try {
-                  const res = await workflow.submitAction("CANCEL_DOCUMENT");
-                  if (res) {
-                    handleActionResult(res);
-                    push({
-                      type: "success",
-                      title: "Workflow updated",
-                      message: res.message || "Action completed.",
-                    });
-                  }
-                } catch (e: any) {
+          {
+            key: "CANCEL_DOCUMENT",
+            label: ACTION_LABELS["CANCEL_DOCUMENT"] ?? "Cancel document",
+            variant: "danger" as const,
+            disabled: workflow.isChangingStatus,
+            onClick: async () => {
+              try {
+                const res = await workflow.submitAction("CANCEL_DOCUMENT");
+                if (res) {
+                  handleActionResult(res);
                   push({
-                    type: "error",
-                    title: "Action failed",
-                    message: e?.message ?? "Action failed.",
+                    type: "success",
+                    title: "Workflow updated",
+                    message: res.message || "Action completed.",
                   });
                 }
-              },
+              } catch (e: any) {
+                push({
+                  type: "error",
+                  title: "Action failed",
+                  message: e?.message ?? "Action failed.",
+                });
+              }
             },
-          ]
+          },
+        ]
         : [];
 
     let workflowButtons: HeaderActionButton[];
@@ -987,8 +988,10 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
             action={
               !approverHasDownloaded ? (
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="primary"
+                    size="xs"
                     onClick={async () => {
                       try {
                         await downloadDocument(localVersion!);
@@ -998,29 +1001,33 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
                       }
                     }}
                     disabled={workflow.isChangingStatus || signingInBackground}
-                    className="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50 transition"
+                    className="!bg-amber-600 hover:!bg-amber-700 font-medium"
                   >
                     Download
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="xs"
                     onClick={() => setSigningOpen(true)}
                     disabled={workflow.isChangingStatus || signingInBackground}
-                    className="rounded-md border border-amber-400 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-400/10 dark:hover:bg-amber-400/15 disabled:opacity-50 transition flex items-center gap-1.5"
+                    className="!border-amber-400 !text-amber-700 dark:!text-amber-400 hover:!bg-amber-400/10"
                   >
-                    {signingInBackground && <Loader2 size={12} className="animate-spin" />}
+                    {signingInBackground && <Loader2 size={12} className="animate-spin mr-1" />}
                     {signingInBackground ? "Signing…" : "Sign in-app"}
-                  </button>
+                  </Button>
                 </div>
               ) : (
-                <button
+                <Button
                   type="button"
+                  variant="primary"
+                  size="xs"
                   onClick={fileUpload.triggerFilePicker}
+                  className="!bg-amber-600 hover:!bg-amber-700"
                   disabled={fileUpload.isUploading || workflow.isChangingStatus}
-                  className="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50 transition"
                 >
                   {fileUpload.isUploading ? "Uploading…" : "Upload signed"}
-                </button>
+                </Button>
               )
             }
           >
@@ -1038,23 +1045,25 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
             title="Upload signed document to start approval"
             action={
               <div className="flex items-center gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="primary"
+                  size="xs"
                   onClick={fileUpload.triggerFilePicker}
                   disabled={fileUpload.isUploading || workflow.isChangingStatus}
-                  className="rounded-md bg-brand-400 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-500 disabled:opacity-50 transition"
                 >
                   {fileUpload.isUploading ? "Uploading…" : "Upload signed"}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
+                  size="xs"
                   onClick={() => setSigningOpen(true)}
                   disabled={fileUpload.isUploading || workflow.isChangingStatus || signingInBackground}
-                  className="rounded-md border border-brand-400 px-3 py-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:bg-brand-400/10 dark:hover:bg-brand-400/15 disabled:opacity-50 transition flex items-center gap-1.5"
                 >
-                  {signingInBackground && <Loader2 size={12} className="animate-spin" />}
+                  {signingInBackground && <Loader2 size={12} className="animate-spin mr-1" />}
                   {signingInBackground ? "Signing…" : "Sign in-app"}
-                </button>
+                </Button>
               </div>
             }
           >
@@ -1072,17 +1081,21 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
               hasPreSignBackup ? (
                 <div className="flex items-center gap-2">
                   {currentUserSignatureUrl && (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="xs"
                       onClick={() => { setSigningEditMode(true); setSigningOpen(true); }}
                       disabled={workflow.isChangingStatus || removingSignature}
-                      className="rounded-md border border-emerald-400 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 disabled:opacity-50 transition"
+                      className="!border-emerald-400 !text-emerald-700"
                     >
                       Edit signature
-                    </button>
+                    </Button>
                   )}
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="xs"
                     disabled={workflow.isChangingStatus || removingSignature}
                     onClick={async () => {
                       setRemovingSignature(true);
@@ -1095,10 +1108,10 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
                         setRemovingSignature(false);
                       }
                     }}
-                    className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 disabled:opacity-50 transition"
+                    className="!border-rose-300 !text-rose-600"
                   >
                     {removingSignature ? "Removing…" : "Remove signature"}
-                  </button>
+                  </Button>
                 </div>
               ) : undefined
             }

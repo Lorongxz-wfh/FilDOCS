@@ -80,7 +80,7 @@ export default function DocumentLibraryPage() {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-  
+
   // Tab-specific paging states (for All tab dual-loading)
   const [allDocPage, setAllDocPage] = useState(1);
   const [allReqPage, setAllReqPage] = useState(1);
@@ -99,8 +99,8 @@ export default function DocumentLibraryPage() {
   const loadData = useCallback(async (isNextPage = false) => {
     const targetPage = isNextPage ? page + 1 : 1;
     if (!isNextPage) {
-        setInitialLoading(true);
-        setRows([]);
+      setInitialLoading(true);
+      setRows([]);
     }
 
     setLoading(true);
@@ -141,63 +141,63 @@ export default function DocumentLibraryPage() {
         setHasMore(more);
         setPage(targetPage);
       } else if (tab === "all") {
-          // Parallel load for All tab
-          const [docRes, reqRes] = await Promise.all([
-             (!isNextPage || allDocHasMore) ? listDocumentsPage({
-                page: isNextPage ? allDocPage + 1 : 1,
-                perPage: 8,
-                q: qDebounced.trim() || undefined,
-                status: "Distributed",
-                doctype: typeFilter !== "ALL" ? typeFilter : undefined,
-                scope: "all",
-                date_from: dateFrom || undefined,
-                date_to: dateTo || undefined,
-                sort_by: sortBy,
-                sort_dir: sortDir,
-              }) : Promise.resolve(null),
-              (!isNextPage || allReqHasMore) && !isAuditor(role) ? listDocumentRequestIndividual({
-                status: "accepted",
-                q: qDebounced.trim() || undefined,
-                per_page: 8,
-                page: isNextPage ? allReqPage + 1 : 1,
-                sort_by: sortBy,
-                sort_dir: sortDir,
-              }) : Promise.resolve(null)
-          ]);
+        // Parallel load for All tab
+        const [docRes, reqRes] = await Promise.all([
+          (!isNextPage || allDocHasMore) ? listDocumentsPage({
+            page: isNextPage ? allDocPage + 1 : 1,
+            perPage: 8,
+            q: qDebounced.trim() || undefined,
+            status: "Distributed",
+            doctype: typeFilter !== "ALL" ? typeFilter : undefined,
+            scope: "all",
+            date_from: dateFrom || undefined,
+            date_to: dateTo || undefined,
+            sort_by: sortBy,
+            sort_dir: sortDir,
+          }) : Promise.resolve(null),
+          (!isNextPage || allReqHasMore) && !isAuditor(role) ? listDocumentRequestIndividual({
+            status: "accepted",
+            q: qDebounced.trim() || undefined,
+            per_page: 8,
+            page: isNextPage ? allReqPage + 1 : 1,
+            sort_by: sortBy,
+            sort_dir: sortDir,
+          }) : Promise.resolve(null)
+        ]);
 
-          const docIn = docRes?.data ?? [];
-          const reqIn = Array.isArray(reqRes?.data) ? reqRes.data : [];
+        const docIn = docRes?.data ?? [];
+        const reqIn = Array.isArray(reqRes?.data) ? reqRes.data : [];
 
-          const docMore = docRes ? (docRes.meta?.current_page ?? 0) < (docRes.meta?.last_page ?? 0) : allDocHasMore;
-          const reqMore = reqRes ? (reqRes.current_page < reqRes.last_page) : allReqHasMore;
+        const docMore = docRes ? (docRes.meta?.current_page ?? 0) < (docRes.meta?.last_page ?? 0) : allDocHasMore;
+        const reqMore = reqRes ? (reqRes.current_page < reqRes.last_page) : allReqHasMore;
 
-          setAllDocHasMore(docMore);
-          setAllReqHasMore(reqMore);
-          
-          if (!isNextPage) {
-              const items = [
-                  ...docIn.map(d => docToLibraryItem(d, (isAdmin || !myOfficeId || (d as any).owner_office_id === myOfficeId) ? "created" : "shared")),
-                  ...reqIn.map(reqToLibraryItem)
-              ];
-              setRows(items);
-              setAllDocPage(1);
-              setAllReqPage(1);
-          } else {
-              const items = [
-                ...docIn.map(d => docToLibraryItem(d, (isAdmin || !myOfficeId || (d as any).owner_office_id === myOfficeId) ? "created" : "shared")),
-                ...reqIn.map(reqToLibraryItem)
-              ];
-              setRows(prev => [...prev, ...items]);
-              if (docRes) setAllDocPage(p => p + 1);
-              if (reqRes) setAllReqPage(p => p + 1);
-          }
-          setHasMore(docMore || reqMore);
+        setAllDocHasMore(docMore);
+        setAllReqHasMore(reqMore);
+
+        if (!isNextPage) {
+          const items = [
+            ...docIn.map(d => docToLibraryItem(d, (isAdmin || !myOfficeId || (d as any).owner_office_id === myOfficeId) ? "created" : "shared")),
+            ...reqIn.map(reqToLibraryItem)
+          ];
+          setRows(items);
+          setAllDocPage(1);
+          setAllReqPage(1);
+        } else {
+          const items = [
+            ...docIn.map(d => docToLibraryItem(d, (isAdmin || !myOfficeId || (d as any).owner_office_id === myOfficeId) ? "created" : "shared")),
+            ...reqIn.map(reqToLibraryItem)
+          ];
+          setRows(prev => [...prev, ...items]);
+          if (docRes) setAllDocPage(p => p + 1);
+          if (reqRes) setAllReqPage(p => p + 1);
+        }
+        setHasMore(docMore || reqMore);
       }
     } catch (e: any) {
-        setError(e?.message ?? "Failed to load library.");
+      setError(e?.message ?? "Failed to load library.");
     } finally {
-        setLoading(false);
-        setInitialLoading(false);
+      setLoading(false);
+      setInitialLoading(false);
     }
   }, [tab, qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, isAdmin, page, allDocPage, allReqPage, allDocHasMore, allReqHasMore, myOfficeId, role]);
 
@@ -221,22 +221,22 @@ export default function DocumentLibraryPage() {
 
   const handleRowClick = (row: any) => {
     if (tab === "created" || tab === "shared") {
-       navigate(`/documents/${row.id}/view`, { state: { from: "/documents", breadcrumbs: libCrumbs } });
+      navigate(`/documents/${row.id}/view`, { state: { from: "/documents", breadcrumbs: libCrumbs } });
     } else if (tab === "requested") {
-       if (row.row_type === "item") {
-         navigate(`/document-requests/${row.request_id}/items/${row.item_id}`);
-       } else {
-         navigate(`/document-requests/${row.request_id}/recipients/${row.recipient_id}`);
-       }
+      if (row.row_type === "item") {
+        navigate(`/document-requests/${row.request_id}/items/${row.item_id}`);
+      } else {
+        navigate(`/document-requests/${row.request_id}/recipients/${row.recipient_id}`);
+      }
     } else {
-        const item = row as LibraryItem;
-        if (item.docId) {
-            navigate(`/documents/${item.docId}/view`, { state: { from: "/documents", breadcrumbs: libCrumbs } });
-        } else if (item.itemId) {
-            navigate(`/document-requests/${item.reqId}/items/${item.itemId}`);
-        } else if (item.reqId && item.recipId) {
-            navigate(`/document-requests/${item.reqId}/recipients/${item.recipId}`);
-        }
+      const item = row as LibraryItem;
+      if (item.docId) {
+        navigate(`/documents/${item.docId}/view`, { state: { from: "/documents", breadcrumbs: libCrumbs } });
+      } else if (item.itemId) {
+        navigate(`/document-requests/${item.reqId}/items/${item.itemId}`);
+      } else if (item.reqId && item.recipId) {
+        navigate(`/document-requests/${item.reqId}/recipients/${item.recipId}`);
+      }
     }
   };
 
@@ -251,23 +251,22 @@ export default function DocumentLibraryPage() {
       title="Document Library"
       right={
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Refresh Icon Button (Mobile: square ghost) */}
+          {/* Refresh Icon Button */}
           <RefreshButton
             onRefresh={async () => { await loadData(false); }}
             loading={refreshing || loading}
             title="Refresh library"
-            className="h-9 w-9 p-0 rounded-xl sm:h-8 sm:w-8 sm:rounded-md transition-all active:scale-95"
           />
-          
+
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={() => navigate("/archive")}
-            className="flex h-9 w-9 items-center justify-center p-0 rounded-xl border border-slate-200 dark:border-white/5 active:scale-95 transition-all sm:w-auto sm:px-3 sm:py-2 sm:gap-2 sm:rounded-md"
+            className="flex items-center justify-center sm:gap-2"
             title="View Archive"
           >
             <Archive className="h-4 w-4" />
-            <span className="hidden sm:inline">Archive</span>
+            <span className="hidden sm:inline font-bold">Archive</span>
           </Button>
 
           {canCreate && (
@@ -279,12 +278,9 @@ export default function DocumentLibraryPage() {
                 markWorkQueueSession();
                 navigate("/documents/create", { state: { fromWorkQueue: true } });
               }}
-              className="h-9 px-3 rounded-xl transition-all active:scale-95 sm:px-4 sm:rounded-lg"
             >
-              <div className="flex items-center gap-1.5">
-                <PlusCircle size={15} />
-                <span className="hidden sm:inline text-[12px] sm:text-sm font-bold whitespace-nowrap">Create document</span>
-              </div>
+              <PlusCircle size={15} />
+              <span className="hidden sm:inline font-bold">Create document</span>
             </Button>
           )}
         </div>
@@ -339,11 +335,10 @@ export default function DocumentLibraryPage() {
           <button
             type="button"
             onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-            className={`sm:hidden flex items-center gap-2 px-3 h-9 rounded-lg border transition-all ${
-              isFiltersOpen || activeFiltersCount > 0
+            className={`sm:hidden flex items-center gap-2 px-3 h-9 rounded-lg border transition-all ${isFiltersOpen || activeFiltersCount > 0
                 ? "bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400 shadow-xs"
                 : "bg-white border-slate-200 text-slate-600 dark:bg-surface-500 dark:border-surface-400 dark:text-slate-400"
-            }`}
+              }`}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             <span className="text-xs font-semibold">Filters</span>
@@ -353,7 +348,7 @@ export default function DocumentLibraryPage() {
               </span>
             )}
           </button>
-          
+
           <div className="hidden sm:flex flex-wrap items-center gap-2 flex-1">
             <Select
               value={typeFilter}
@@ -482,9 +477,9 @@ export default function DocumentLibraryPage() {
           bare
           className="h-full"
           columns={
-             tab === "created" ? baseDocColumns : 
-             tab === "shared" ? sharedColumns : 
-             tab === "requested" ? requestedColumns : allColumns
+            tab === "created" ? baseDocColumns :
+              tab === "shared" ? sharedColumns :
+                tab === "requested" ? requestedColumns : allColumns
           }
           rows={rows}
           rowKey={(r: any, idx) => {
@@ -498,33 +493,33 @@ export default function DocumentLibraryPage() {
           hasMore={hasMore}
           onLoadMore={() => loadData(true)}
           gridTemplateColumns={
-              tab === "created" ? unifiedGrid : 
-              tab === "shared" ? sharedGrid : 
-              tab === "requested" ? requestedGrid : allGrid
+            tab === "created" ? unifiedGrid :
+              tab === "shared" ? sharedGrid :
+                tab === "requested" ? requestedGrid : allGrid
           }
           sortBy={sortBy}
           sortDir={sortDir}
           onSortChange={(key, dir) => {
-             setSortBy(key as any);
-             setSortDir(dir);
+            setSortBy(key as any);
+            setSortDir(dir);
           }}
           mobileRender={(r) => {
             const isAllTab = tab === "all";
             const isReqTab = tab === "requested";
-            
+
             // Extract common display fields
             const title = isAllTab ? r.title : (isReqTab ? (r.item_title ?? r.batch_title) : r.title);
             const code = isAllTab ? r.code : (!isReqTab ? r.code : null);
-            const office = isAllTab ? (typeof r.office === "object" ? r.office?.code : r.office) : 
-                          (isReqTab ? r.office_code : (r.office?.code || r.ownerOffice?.code));
-            const date = isAllTab ? (r.dateDistributed || r.date) : 
-                         (isReqTab ? r.created_at : (r.effective_date || r.created_at));
-            const type = isAllTab ? (r.doctype || r.mode) : 
-                         (isReqTab ? (r.batch_mode || "REQUEST") : r.doctype);
+            const office = isAllTab ? (typeof r.office === "object" ? r.office?.code : r.office) :
+              (isReqTab ? r.office_code : (r.office?.code || r.ownerOffice?.code));
+            const date = isAllTab ? (r.dateDistributed || r.date) :
+              (isReqTab ? r.created_at : (r.effective_date || r.created_at));
+            const type = isAllTab ? (r.doctype || r.mode) :
+              (isReqTab ? (r.batch_mode || "REQUEST") : r.doctype);
             const version = !isReqTab ? r.version_number : null;
 
             return (
-              <div className="px-4 py-3 bg-white dark:bg-surface-500 border-b border-slate-100 dark:border-surface-400">
+              <div className="px-4 py-3">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300">

@@ -614,7 +614,7 @@ export default function MyWorkQueueListPage() {
           loading={loading}
           gridTemplateColumns={gridTemplateColumns}
           mobileRender={(doc: any) => (
-            <div className="px-4 py-3 bg-white dark:bg-surface-500 border-b border-slate-100 dark:border-surface-400">
+            <div className="px-4 py-3">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300">

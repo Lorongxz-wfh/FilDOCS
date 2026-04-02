@@ -1,13 +1,30 @@
 import React from "react";
 import { Plus, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useVisibleNewActions } from "../../hooks/useVisibleNewActions";
 
 const MobileActionFab: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const visibleNewActions = useVisibleNewActions();
   const [open, setOpen] = React.useState(false);
   const fabRef = React.useRef<HTMLDivElement>(null);
+
+  // Top-level paths where FAB is allowed
+  const FAB_ALLOWED_PATHS = [
+    "/dashboard",
+    "/work-queue",
+    "/document-requests",
+    "/documents",
+    "/archive",
+    "/my-activity",
+    "/settings",
+    "/admin/users",
+    "/admin/offices",
+    "/templates",
+  ];
+
+  const isAllowedPath = FAB_ALLOWED_PATHS.includes(location.pathname);
 
   React.useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -19,7 +36,7 @@ const MobileActionFab: React.FC = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  if (visibleNewActions.length === 0) return null;
+  if (visibleNewActions.length === 0 || !isAllowedPath) return null;
 
   return (
     <div className="fixed bottom-20 right-4 z-50 md:hidden flex" ref={fabRef}>

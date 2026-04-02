@@ -6,6 +6,7 @@ import { Search, X, SlidersHorizontal } from "lucide-react";
 import RefreshButton from "../components/ui/RefreshButton";
 import { inputCls } from "../utils/formStyles";
 import DateRangeInput from "../components/ui/DateRangeInput";
+import Button from "../components/ui/Button";
 import Table from "../components/ui/Table";
 import Alert from "../components/ui/Alert";
 import { formatDate } from "../utils/formatters";
@@ -155,23 +156,21 @@ export default function ArchivePage() {
             )}
           </div>
 
-          <button
+          <Button
             type="button"
+            variant={isFiltersOpen || activeFiltersCount > 0 ? "primary" : "outline"}
+            size="sm"
             onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-            className={`sm:hidden flex items-center gap-2 px-3 h-9 rounded-lg border transition-all ${
-              isFiltersOpen || activeFiltersCount > 0
-                ? "bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400 shadow-xs"
-                : "bg-white border-slate-200 text-slate-600 dark:bg-surface-500 dark:border-surface-400 dark:text-slate-400"
-            }`}
+            className="sm:hidden"
           >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            <span className="text-xs font-semibold">Filters</span>
+            <SlidersHorizontal size={14} />
+            <span className="font-bold">Filters</span>
             {activeFiltersCount > 0 && (
-              <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold bg-brand-500 text-white rounded-full">
+              <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold bg-white text-brand-600 rounded-full">
                 {activeFiltersCount}
               </span>
             )}
-          </button>
+          </Button>
 
           <div className="hidden sm:flex items-center gap-2">
             <DateRangeInput
@@ -212,18 +211,20 @@ export default function ArchivePage() {
             </div>
 
             {(q || dateFrom || dateTo) && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="md"
                 onClick={() => {
                   setQ("");
                   setDateFrom("");
                   setDateTo("");
                   setPage(1);
                 }}
-                className="w-full py-2.5 text-xs font-bold text-brand-600 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/10 rounded-lg transition"
+                className="w-full font-bold text-rose-500 hover:text-rose-600 dark:text-rose-400"
               >
                 Clear all filters
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -249,7 +250,7 @@ export default function ArchivePage() {
           hasMore={hasMore}
           onLoadMore={() => setPage((p) => p + 1)}
           mobileRender={(doc: any) => (
-            <div className="px-4 py-3 bg-white dark:bg-surface-500 border-b border-slate-100 dark:border-surface-400">
+            <div className="px-4 py-3">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300">

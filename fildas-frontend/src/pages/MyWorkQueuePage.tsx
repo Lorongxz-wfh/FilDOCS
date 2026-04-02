@@ -274,27 +274,27 @@ const MyWorkQueuePage: React.FC = () => {
             type="button"
             variant="outline"
             size="sm"
-            responsive
             onClick={() => navigate("/documents/all")}
+            title="All Workflows"
           >
-            <FileText size={14} className="sm:hidden" />
-            <span>All workflows</span>
+            <FileText size={15} />
+            <span className="hidden sm:inline font-bold">All workflows</span>
           </Button>
           {canCreate && (
             <Button
               type="button"
               variant="primary"
               size="sm"
-              responsive
               onClick={() => {
                 markWorkQueueSession();
                 navigate("/documents/create", {
                   state: { fromWorkQueue: true },
                 });
               }}
+              title="Create Document"
             >
-              <PlusCircle size={14} className="sm:hidden" />
-              <span>+ Create document</span>
+              <PlusCircle size={15} />
+              <span className="hidden sm:inline font-bold">Create document</span>
             </Button>
           )}
         </div>

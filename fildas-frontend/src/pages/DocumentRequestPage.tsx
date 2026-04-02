@@ -6,6 +6,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
+import Button from "../components/ui/Button";
 import { getAuthUser } from "../lib/auth";
 import {
   getDocumentRequestRecipient,
@@ -388,7 +389,7 @@ export default function DocumentRequestPage() {
     try {
       const { default: api } = await import("../services/api");
       const res = await api.get("/activity", {
-        params: { scope: "request", document_id: requestId, per_page: 50 },
+        params: { scope: "request", request_id: requestId, per_page: 50 },
       });
       setActivityLogs(res.data?.data ?? []);
     } catch {
@@ -637,9 +638,9 @@ export default function DocumentRequestPage() {
         />
       }
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 h-full min-h-0 p-4 sm:p-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:h-full min-h-0 p-4 sm:p-5">
         {/* ── LEFT ── */}
-        <section className="lg:col-span-7 min-w-0 flex flex-col gap-5">
+        <section className="lg:col-span-7 min-w-0 flex flex-col gap-5 lg:h-full lg:overflow-hidden">
           {/* Header + edit panel */}
           <div className="flex flex-col gap-0 rounded-2xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
             <RequestHeaderCard
@@ -734,52 +735,58 @@ export default function DocumentRequestPage() {
                   </p>
                 )}
                 <div className="flex items-center justify-end gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="xs"
                     onClick={() => {
                       setEditOpen(false);
                       setEditErr(null);
                     }}
-                    className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="primary"
+                    size="xs"
                     onClick={saveEdit}
-                    disabled={editSaving}
-                    className="rounded-md bg-brand-500 hover:bg-brand-600 disabled:opacity-50 px-3 py-1.5 text-xs font-semibold text-white transition"
+                    loading={editSaving}
                   >
-                    {editSaving ? "Saving…" : "Save"}
-                  </button>
+                    Save
+                  </Button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Comments + Activity */}
-          <div className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-surface-400 dark:bg-surface-500 flex-1 min-h-0">
-            <TabBar
-              tabs={[
-                {
-                  value: "comments" as const,
-                  label: "Comments",
-                  icon: <MessageSquare size={12} />,
-                },
-                {
-                  value: "activity" as const,
-                  label: "Activity",
-                  icon: <Activity size={12} />,
-                },
-              ]}
-              active={leftTab}
-              onChange={setLeftTab}
-              badge={{
-                comments: messages.length > 0 ? messages.length : undefined,
-              }}
-            />
-            {leftTab === "comments" ? (
-              <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          {/* Comments + Activity - Mobile Accordion Style */}
+          <div className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-surface-400 dark:bg-surface-500 flex-1 lg:min-h-0 lg:h-[500px]">
+            <div className="shrink-0 flex items-center justify-between bg-slate-50/50 dark:bg-surface-600/50 pr-2">
+              <TabBar
+                tabs={[
+                  {
+                    value: "comments" as const,
+                    label: "Comments",
+                    icon: <MessageSquare size={12} />,
+                  },
+                  {
+                    value: "activity" as const,
+                    label: "Activity",
+                    icon: <Activity size={12} />,
+                  },
+                ]}
+                active={leftTab}
+                onChange={setLeftTab}
+                badge={{
+                  comments: messages.length > 0 ? messages.length : undefined,
+                }}
+              />
+              {/* Optional: Add a expand/collapse button for mobile if needed, but let's just ensure fixed height on mobile too or flexible with min-h */}
+            </div>
+            <div className="flex flex-col flex-1 min-h-[300px] lg:min-h-0 overflow-hidden">
+              {leftTab === "comments" ? (
+                <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
                 {/* Private / Broadcast thread switcher — recipient view only, non-QA */}
                 {!isItemView && recipientId && !isQa && (
                   <div className="shrink-0 border-b border-slate-100 dark:border-surface-400 px-3 py-2 flex flex-col gap-2">
@@ -870,12 +877,13 @@ export default function DocumentRequestPage() {
                 loading={activityLoading}
               />
             )}
+            </div>
           </div>
         </section>
 
         {/* ── RIGHT ── */}
-        <aside className="lg:col-span-5 flex flex-col min-h-0 overflow-hidden">
-          <div className="flex flex-1 flex-col min-h-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-surface-400 dark:bg-surface-500">
+        <aside className="lg:col-span-5 flex flex-col lg:min-h-0 lg:overflow-hidden">
+          <div className="flex flex-col lg:flex-1 lg:min-h-0 lg:overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-surface-400 dark:bg-surface-500">
             <TabBar
               tabs={[
                 { value: "example" as const, label: "Example" },

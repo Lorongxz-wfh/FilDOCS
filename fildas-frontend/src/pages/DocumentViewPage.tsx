@@ -187,9 +187,9 @@ export default function DocumentViewPage() {
     if (!docId) return;
     let alive = true;
     setTimelineLoading(true);
-    listActivityLogs({ scope: "document", document_id: docId, per_page: 100, category: "workflow" })
+    listActivityLogs({ scope: "document", document_id: docId, per_page: 50, category: "workflow" })
       .then((p) => { if (alive) setTimeline(p.data); })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => { if (alive) setTimelineLoading(false); });
     return () => { alive = false; };
   }, [docId]);
@@ -283,20 +283,20 @@ export default function DocumentViewPage() {
       breadcrumbs={parentCrumbs}
       right={
         <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => setFlowOpen(true)}>
-            <History className="h-3.5 w-3.5 mr-1.5" />
-            Flow History
+          <Button type="button" variant="outline" size="sm" responsive onClick={() => setFlowOpen(true)}>
+            <History className="h-3.5 w-3.5" />
+            <span>Flow History</span>
           </Button>
           {canShare && (
-            <Button type="button" variant="outline" size="sm" onClick={() => setShareOpen(true)}>
-              <Share2 className="h-3.5 w-3.5 mr-1.5" />
-              Share
+            <Button type="button" variant="outline" size="sm" responsive onClick={() => setShareOpen(true)}>
+              <Share2 className="h-3.5 w-3.5" />
+              <span>Share</span>
             </Button>
           )}
           {version && (
-            <Button type="button" variant="outline" size="sm" onClick={handleDownload}>
-              <Download className="h-3.5 w-3.5 mr-1.5" />
-              Download
+            <Button type="button" variant="outline" size="sm" responsive onClick={handleDownload}>
+              <Download className="h-3.5 w-3.5" />
+              <span>Download</span>
             </Button>
           )}
           {canOpenFlow && (
@@ -304,20 +304,21 @@ export default function DocumentViewPage() {
               type="button"
               variant="primary"
               size="sm"
+              responsive
               onClick={() => navigate(`/documents/${docId}${version?.id ? `?version_id=${version.id}` : ""}`, { state: { from: `/documents/${docId}/view`, breadcrumbs: [...parentCrumbs, { label: doc.title, to: `/documents/${docId}/view` }] } })}
             >
-              <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-              Open flow
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span>Open flow</span>
             </Button>
           )}
         </div>
       }
-      contentClassName="!p-0 overflow-hidden h-full"
+      contentClassName="!p-0 lg:overflow-hidden lg:h-full"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 h-full min-h-0 p-4 sm:p-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:h-full min-h-0 p-4 sm:p-5">
 
         {/* ── LEFT — info + comments ── */}
-        <section className="lg:col-span-4 flex flex-col gap-3 min-h-0 overflow-hidden">
+        <section className="lg:col-span-4 flex flex-col gap-3 lg:min-h-0 lg:overflow-hidden">
 
           {/* Document info card — collapsible */}
           <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shrink-0">
@@ -405,7 +406,7 @@ export default function DocumentViewPage() {
           </div>
 
           {/* Comments card */}
-          <div className="flex flex-col rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden flex-1 min-h-0">
+          <div className="flex flex-col rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden lg:flex-1 lg:min-h-0">
 
             {/* Header */}
             <div className="shrink-0 px-4 py-3 border-b border-slate-100 dark:border-surface-400 flex items-center justify-between gap-2">
@@ -435,14 +436,14 @@ export default function DocumentViewPage() {
             </div>
 
             {/* Message list */}
-            <div className="flex-1 relative min-h-0">
+            <div className="lg:flex-1 relative lg:min-h-0">
               <div
                 onScroll={(e) => {
                   const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
                   const isScrolledUp = scrollTop + clientHeight < scrollHeight - 150;
                   setShowScrollToBottom(isScrolledUp);
                 }}
-                className="absolute inset-0 overflow-y-auto px-3 py-3 space-y-2.5 scroll-smooth"
+                className="lg:absolute lg:inset-0 lg:overflow-y-auto px-3 py-3 space-y-2.5 scroll-smooth"
               >
                 {messagesLoading && messages.length === 0 ? (
                   <div className="flex h-full items-center justify-center">
@@ -522,8 +523,8 @@ export default function DocumentViewPage() {
         </section>
 
         {/* ── RIGHT — preview ── */}
-        <aside className="lg:col-span-8 flex flex-col min-h-0">
-          <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 flex flex-col h-full overflow-hidden">
+        <aside className="lg:col-span-8 flex flex-col lg:min-h-0">
+          <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 flex flex-col h-[600px] lg:h-full overflow-hidden">
 
             {/* Preview toolbar */}
             <div className="shrink-0 px-4 py-2.5 border-b border-slate-100 dark:border-surface-400 flex items-center justify-between gap-3">
@@ -537,23 +538,25 @@ export default function DocumentViewPage() {
               </div>
               {version?.preview_path && (
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="xs"
                     onClick={reloadPreview}
-                    title="Reload preview"
-                    className="flex items-center gap-1 rounded-md border border-slate-200 dark:border-surface-400 px-2 py-1 text-[11px] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+                    tooltip="Reload preview"
                   >
                     <RefreshCw className="h-3 w-3" />
-                  </button>
+                  </Button>
                   {previewUrl && (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="xs"
                       onClick={() => setFullscreen(true)}
-                      title="Fullscreen"
-                      className="flex items-center gap-1 rounded-md border border-slate-200 dark:border-surface-400 px-2 py-1 text-[11px] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+                      tooltip="Fullscreen"
                     >
                       <Maximize2 className="h-3 w-3" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -572,13 +575,15 @@ export default function DocumentViewPage() {
                     <X className="h-5 w-5 text-rose-400" />
                   </div>
                   <p className="text-xs text-rose-500 dark:text-rose-400">{previewError}</p>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="xs"
                     onClick={reloadPreview}
-                    className="text-[11px] font-medium text-brand-600 dark:text-brand-400 hover:underline"
+                    className="font-bold text-sky-600 dark:text-sky-400"
                   >
                     Try again
-                  </button>
+                  </Button>
                 </div>
               ) : previewUrl ? (
                 <iframe
@@ -638,7 +643,7 @@ export default function DocumentViewPage() {
         open={shareOpen}
         documentId={doc.id}
         onClose={() => setShareOpen(false)}
-        onSaved={() => {}}
+        onSaved={() => { }}
       />
     </PageFrame>
   );

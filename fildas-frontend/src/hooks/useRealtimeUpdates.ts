@@ -32,7 +32,7 @@ export function useRealtimeUpdates({
     if (!userId) return;
 
     const channel = echo.private(`user.${userId}`);
-    
+
     if (onNotification) {
       channel.listen(".notification.created", (data: any) => {
         onNotification(data);

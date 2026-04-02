@@ -17,7 +17,8 @@ const DocumentActivityPanel: React.FC<Props> = ({
   formatWhen,
 }) => {
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/60 dark:border-surface-400 dark:bg-surface-600/60">
+    <div className="flex-1 min-h-0 relative">
+      <div className="absolute inset-0 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/60 dark:border-surface-400 dark:bg-surface-600/60">
       {isLoading ? (
         <div className="space-y-2 p-2">
           <Skeleton className="h-12 w-full" />
@@ -71,7 +72,8 @@ const DocumentActivityPanel: React.FC<Props> = ({
         </div>
       )}
     </div>
-  );
+  </div>
+);
 };
 
 export default DocumentActivityPanel;

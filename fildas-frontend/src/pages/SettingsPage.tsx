@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
+import Button from "../components/ui/Button";
 import { useAuthUser } from "../hooks/useAuthUser";
 import {
   updateProfile,
@@ -61,14 +62,17 @@ const SectionCard: React.FC<{
 const SaveButton: React.FC<{
   loading: boolean;
   label?: string;
-}> = ({ loading, label = "Save changes" }) => (
-  <button
+  variant?: "primary" | "secondary";
+}> = ({ loading, label = "Save changes", variant = "primary" }) => (
+  <Button
     type="submit"
-    disabled={loading}
-    className="rounded-md bg-brand-500 hover:bg-brand-400 disabled:opacity-50 px-5 py-2 text-sm font-semibold text-white transition-colors"
+    loading={loading}
+    variant={variant}
+    size="md"
+    className="px-6 font-bold"
   >
-    {loading ? "Saving…" : label}
-  </button>
+    {label}
+  </Button>
 );
 
 const StatusMsg: React.FC<{
@@ -78,11 +82,10 @@ const StatusMsg: React.FC<{
   if (!success && !error) return null;
   return (
     <div
-      className={`rounded-md border px-4 py-2.5 text-xs font-medium ${
-        success
+      className={`rounded-md border px-4 py-2.5 text-xs font-medium ${success
           ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400"
           : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-400"
-      }`}
+        }`}
     >
       {success ?? error}
     </div>
@@ -112,14 +115,12 @@ const Toggle: React.FC<{
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
-        checked ? "bg-sky-500" : "bg-slate-200 dark:bg-surface-400"
-      }`}
+      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${checked ? "bg-sky-500" : "bg-slate-200 dark:bg-surface-400"
+        }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ${
-          checked ? "translate-x-4" : "translate-x-0"
-        }`}
+        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ${checked ? "translate-x-4" : "translate-x-0"
+          }`}
       />
     </button>
   </div>
@@ -346,9 +347,9 @@ const SettingsPage: React.FC = () => {
   useEffect(() => {
     if (!user?.id) return;
     const dbDocUpdates = (user as any).email_doc_updates;
-    const dbApprovals  = (user as any).email_approvals;
+    const dbApprovals = (user as any).email_approvals;
     setEmailDocUpdates(dbDocUpdates !== undefined ? Boolean(dbDocUpdates) : localStorage.getItem(prefKey("email_doc_updates")) !== "false");
-    setEmailApprovals(dbApprovals  !== undefined ? Boolean(dbApprovals)  : localStorage.getItem(prefKey("email_approvals")) !== "false");
+    setEmailApprovals(dbApprovals !== undefined ? Boolean(dbApprovals) : localStorage.getItem(prefKey("email_approvals")) !== "false");
     setSoundNotif(localStorage.getItem(prefKey("sound_notif")) !== "false");
   }, [user?.id]);
 
@@ -430,8 +431,8 @@ const SettingsPage: React.FC = () => {
                   {user?.full_name ?? ""}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 capitalize">
-                  {typeof (user as any)?.role === "string" 
-                    ? (user as any).role 
+                  {typeof (user as any)?.role === "string"
+                    ? (user as any).role
                     : (user as any)?.role?.name ?? ""}
                 </p>
                 {!isAuditorUser && (

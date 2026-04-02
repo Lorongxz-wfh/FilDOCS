@@ -13,6 +13,7 @@ import {
   type TempPreview,
 } from "../services/previews";
 import PageFrame from "../components/layout/PageFrame";
+import Button from "../components/ui/Button";
 import TemplatesBrowserPanel from "../components/templates/TemplatesBrowserPanel";
 import FlowSelectModal, {
   type FlowSelection,
@@ -285,13 +286,15 @@ export default function CreateDocumentPage() {
         breadcrumbs={[{ label: "Work Queue", to: "/work-queue" }]}
         contentClassName="flex flex-col gap-4 h-full"
         right={
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => setTemplatesPanelOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+            title="Browse Templates"
           >
-            Templates
-          </button>
+            <span className="font-bold">Templates</span>
+          </Button>
         }
       >
         {/* ── Flow summary bar ─────────────────────────────────────────────── */}
@@ -561,24 +564,27 @@ export default function CreateDocumentPage() {
                     )}
 
                     <div className="flex items-center justify-end gap-2 pt-1">
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="md"
                         onClick={() => {
                           cleanupTempPreview(tempPreview);
                           navigate(-1);
                         }}
                         disabled={loading}
-                        className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 disabled:opacity-50 transition"
                       >
                         Cancel
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="submit"
-                        disabled={loading}
-                        className="rounded-md bg-brand-400 hover:bg-brand-500 dark:bg-brand-300 dark:hover:bg-brand-400 disabled:opacity-50 px-5 py-2 text-sm font-semibold text-white transition"
+                        variant="primary"
+                        size="md"
+                        loading={loading}
+                        className="px-6 font-bold"
                       >
-                        {loading ? "Creating…" : "Save document"}
-                      </button>
+                        Save document
+                      </Button>
                     </div>
                   </div>
                 </div>

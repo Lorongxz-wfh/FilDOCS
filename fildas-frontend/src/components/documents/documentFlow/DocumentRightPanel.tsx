@@ -80,10 +80,14 @@ const DocumentRightPanel: React.FC<Props> = ({
   return (
     <div className="flex flex-col h-full">
       {/* ── Doc Info Accordion ── */}
-      <div className="shrink-0 border-b border-slate-200 dark:border-surface-400">
+      <div className={`flex flex-col min-h-0 border-b border-slate-200 dark:border-surface-400 transition-all ${infoExpanded && !commentsExpanded ? "flex-1" : "shrink-0"}`}>
         <button
           type="button"
-          onClick={() => setInfoExpanded((v) => !v)}
+          onClick={() => {
+            const isMobile = window.innerWidth < 768;
+            setInfoExpanded(!infoExpanded);
+            if (isMobile && !infoExpanded) setCommentsExpanded(false);
+          }}
           className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-surface-400/40 transition"
         >
           <ChevronRight
@@ -126,7 +130,7 @@ const DocumentRightPanel: React.FC<Props> = ({
         </button>
 
         {infoExpanded && (
-          <div className="px-2.5 pb-3">
+          <div className="flex-1 px-2.5 pb-3 overflow-y-auto">
             {!isDataReady ? (
               <div className="space-y-1.5">
                 {[148, 100, 130, 90, 120, 110].map((w, i) => (
@@ -159,11 +163,15 @@ const DocumentRightPanel: React.FC<Props> = ({
       </div>
 
       {/* ── Comments / Activity Accordion ── */}
-      <div className="flex flex-col flex-1 min-h-0">
+      <div className={`flex flex-col min-h-0 transition-all ${commentsExpanded ? "flex-1" : "shrink-0"}`}>
         <div
           role="button"
           tabIndex={0}
-          onClick={() => setCommentsExpanded((v) => !v)}
+          onClick={() => {
+            const isMobile = window.innerWidth < 768;
+            setCommentsExpanded(!commentsExpanded);
+            if (isMobile && !commentsExpanded) setInfoExpanded(false);
+          }}
           onKeyDown={(e) => e.key === "Enter" && setCommentsExpanded((v) => !v)}
           className="shrink-0 w-full flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-surface-400 hover:bg-slate-50 dark:hover:bg-surface-400/40 transition cursor-pointer"
         >
@@ -210,7 +218,7 @@ const DocumentRightPanel: React.FC<Props> = ({
         </div>
 
         {commentsExpanded && (
-          <div className="flex flex-1 min-h-0 px-2.5 py-2">
+          <div className="flex flex-1 min-h-[250px] md:min-h-0 px-2.5 py-2">
             {activeSideTab === "comments" ? (
               <DocumentCommentsPanel
                 isLoading={isLoadingMessages || !isDataReady}

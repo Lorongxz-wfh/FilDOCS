@@ -26,7 +26,7 @@ const LoginPage: React.FC = () => {
       localStorage.setItem("auth_token", data.token);
       setAuthUser(data.user);
       // Preload the dashboard chunk while the splash is animating
-      import("./DashboardPage").catch(() => {});
+      import("./DashboardPage").catch(() => { });
       window.dispatchEvent(new Event("show_splash"));
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
@@ -161,8 +161,8 @@ const LoginPage: React.FC = () => {
               icon={Mail}
               error={
                 emailTouched &&
-                email &&
-                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                  email &&
+                  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
                   ? "Please enter a valid email address."
                   : undefined
               }

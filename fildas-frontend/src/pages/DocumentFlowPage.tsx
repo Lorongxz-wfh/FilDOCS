@@ -29,7 +29,17 @@ import { replaceDocumentVersionFileWithProgress } from "../services/documents";
 import { useToast } from "../components/ui/toast/ToastContext";
 import { getUserRole } from "../lib/roleFilters";
 import { getAuthUser } from "../lib/auth";
-import { Library, Loader2, Copy, Check, FileX } from "lucide-react";
+import { Library, Loader2, Copy, Check, RefreshCcw,
+  ArrowRightToLine,
+  ArrowLeftCircle,
+  CheckCircle2,
+  XCircle,
+  Hash,
+  Terminal,
+  Layers,
+  Share2,
+  FileX,
+} from "lucide-react";
 import { StatusBadge } from "../components/ui/Badge";
 import { normalizeError } from "../lib/normalizeError";
 import VersionComparisonModal from "../components/documents/documentFlow/VersionComparisonModal";
@@ -418,13 +428,37 @@ const refreshAndSelectBest = React.useCallback(
         breadcrumbs={stateCrumbs}
         title={
           <div className="min-w-0">
-            <div className="flex flex-wrap items-start gap-2 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
               {loading ? (
                 <Skeleton className="h-4 w-48 mt-0.5" />
               ) : (
                 <span className="min-w-0 whitespace-normal wrap-break-word leading-snug">
                   {headerState?.title ?? document?.title}
                 </span>
+              )}
+              {!loading && (
+                <RefreshButton
+                  onRefresh={async () => {
+                    setIsRefreshing(true);
+                    const prevStatus = selectedVersion?.status;
+                    const prevVersionCount = allVersions.length;
+                    try {
+                      await refreshAndSelectBest({
+                        preferVersionId: selectedVersion?.id,
+                      });
+                      const statusChanged = selectedVersion?.status !== prevStatus;
+                      const newVersionAdded = allVersions.length > prevVersionCount;
+                      if (statusChanged || newVersionAdded)
+                        return "Document updated.";
+                      return "Already up to date.";
+                    } finally {
+                      setIsRefreshing(false);
+                    }
+                  }}
+                  loading={isRefreshing}
+                  title="Refresh document"
+                  className="!h-7 !w-7"
+                />
               )}
               <div className="flex shrink-0 items-center gap-2">
                 {loading ? (
@@ -493,36 +527,18 @@ const refreshAndSelectBest = React.useCallback(
         onCollapseToggle={() => setRightCollapsed((v) => !v)}
         actions={
           <div className="flex flex-wrap gap-2">
-            <RefreshButton
-              onRefresh={async () => {
-                setIsRefreshing(true);
-                const prevStatus = selectedVersion?.status;
-                const prevVersionCount = allVersions.length;
-                try {
-                  await refreshAndSelectBest({
-                    preferVersionId: selectedVersion?.id,
-                  });
-                  const statusChanged = selectedVersion?.status !== prevStatus;
-                  const newVersionAdded = allVersions.length > prevVersionCount;
-                  if (statusChanged || newVersionAdded)
-                    return "Document updated.";
-                  return "Already up to date.";
-                } finally {
-                  setIsRefreshing(false);
-                }
-              }}
-              loading={isRefreshing}
-              title="Refresh document"
-            />
             {current?.status === "Distributed" && isOwner && role !== "AUDITOR" && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
+                responsive
                 disabled={isLoadingSelectedVersion}
                 onClick={() => setShareOpen(true)}
+                tooltip="Share"
               >
-                Share
+                <Share2 className="h-3.5 w-3.5 sm:mr-1" />
+                <span>Share</span>
               </Button>
             )}
             {current?.status === "Distributed" && (
@@ -530,11 +546,13 @@ const refreshAndSelectBest = React.useCallback(
                 type="button"
                 variant="outline"
                 size="sm"
+                responsive
                 disabled={isLoadingSelectedVersion}
                 onClick={() => navigate(`/documents/${id}/view`)}
+                tooltip="View in Library"
               >
-                <Library className="h-3 w-3 mr-1" />
-                View in Library
+                <Library className="h-3.5 w-3.5 sm:mr-1" />
+                <span>View in Library</span>
               </Button>
             )}
             {isRevisable && (
@@ -542,12 +560,15 @@ const refreshAndSelectBest = React.useCallback(
                 type="button"
                 variant="outline"
                 size="sm"
+                responsive
                 disabled={isLoadingSelectedVersion}
                 onClick={() => {
                   setReviseModalOpen(true);
                 }}
+                tooltip="Revise"
               >
-                Revise
+                <RefreshCcw className="h-3.5 w-3.5 sm:mr-1" />
+                <span>Revise</span>
               </Button>
             )}
             {!headerState?.isTasksReady && current?.status !== "Distributed" ? (
@@ -559,23 +580,37 @@ const refreshAndSelectBest = React.useCallback(
                   !!processingKey ||
                   isLoadingSelectedVersion ||
                   pendingUploadPct !== null;
+                  
+                // Contextual Icons for Flow Actions
+                const Icon = 
+                  a.key === "REJECT" ? XCircle :
+                  a.key.includes("CANCEL") ? XCircle :
+                  a.key.includes("SEND") || a.key.includes("FORWARD") ? ArrowRightToLine :
+                  a.key.includes("BACK") ? ArrowLeftCircle :
+                  a.key.includes("APPROVAL") || a.key === "QA_PRESIDENT_APPROVE" || a.key === "OFFICE_PRESIDENT_APPROVE" ? CheckCircle2 :
+                  a.key.includes("REGISTER") ? Hash :
+                  a.key.includes("DISTRIBUTE") ? Share2 :
+                  a.key.includes("FINALIZATION") ? Terminal :
+                  a.key.includes("APPROVAL") ? Layers : 
+                  ArrowRightToLine;
+
                 return (
                   <Button
                     key={a.key}
                     type="button"
                     size="sm"
+                    responsive
                     variant={a.variant === "danger" ? "danger" : "primary"}
                     disabled={isBusy || a.disabled}
                     onClick={() => handleHeaderActionClick(a)}
+                    tooltip={a.label}
                   >
                     {isThis ? (
-                      <span className="flex items-center gap-1.5">
-                        <Loader2 className="animate-spin h-3 w-3" />
-                        Processing…
-                      </span>
+                      <Loader2 className="animate-spin h-3.5 w-3.5" />
                     ) : (
-                      a.label
+                      <Icon className="h-3.5 w-3.5 sm:mr-1" />
                     )}
+                    <span>{a.label}</span>
                   </Button>
                 );
               })
@@ -585,6 +620,7 @@ const refreshAndSelectBest = React.useCallback(
                 key={a.key}
                 type="button"
                 size="sm"
+                responsive
                 variant={
                   a.variant === "danger"
                     ? "danger"
@@ -598,8 +634,9 @@ const refreshAndSelectBest = React.useCallback(
                   isLoadingSelectedVersion ||
                   pendingUploadPct !== null
                 }
+                tooltip={a.label}
               >
-                {a.label}
+                <span>{a.label}</span>
               </Button>
             ))}
           </div>

@@ -59,13 +59,15 @@ export default function Alert({
   if (alertStyle === "accent") {
     const s = accentStyles[variant];
     return (
-      <div className={["flex items-start gap-3 rounded-md px-4 py-2.5", s.wrap, s.border, className].join(" ")}>
-        {icon && <span className={["shrink-0 mt-0.5", s.icon].join(" ")}>{icon}</span>}
-        <div className="flex-1 min-w-0">
-          {title && <p className={["text-xs font-semibold", titleStyles[variant]].join(" ")}>{title}</p>}
-          {children && <div className={["text-xs mt-0.5", bodyStyles[variant]].join(" ")}>{children}</div>}
+      <div className={["flex flex-col sm:flex-row sm:items-start gap-3 rounded-md px-4 py-2.5", s.wrap, s.border, className].join(" ")}>
+        <div className="flex flex-1 items-start gap-3 min-w-0">
+          {icon && <span className={["shrink-0 mt-0.5", s.icon].join(" ")}>{icon}</span>}
+          <div className="flex-1 min-w-0">
+            {title && <p className={["text-xs font-semibold", titleStyles[variant]].join(" ")}>{title}</p>}
+            {children && <div className={["text-xs mt-0.5 leading-relaxed", bodyStyles[variant]].join(" ")}>{children}</div>}
+          </div>
         </div>
-        {action && <div className="shrink-0">{action}</div>}
+        {action && <div className="shrink-0 flex items-center gap-2 mt-1 sm:mt-0">{action}</div>}
       </div>
     );
   }
@@ -73,13 +75,15 @@ export default function Alert({
   // Box style (default)
   return (
     <div className={["rounded-xl border px-4 py-3 text-sm", boxStyles[variant], className].join(" ")}>
-      <div className="flex items-start gap-3">
-        {icon && <span className="shrink-0 mt-0.5">{icon}</span>}
-        <div className="flex-1 min-w-0">
-          {title && <div className="mb-1 font-semibold">{title}</div>}
-          {children && <div>{children}</div>}
+      <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+        <div className="flex flex-1 items-start gap-3 min-w-0">
+          {icon && <span className="shrink-0 mt-0.5">{icon}</span>}
+          <div className="flex-1 min-w-0">
+            {title && <div className="mb-1 font-semibold">{title}</div>}
+            {children && <div className="leading-relaxed">{children}</div>}
+          </div>
         </div>
-        {action && <div className="shrink-0">{action}</div>}
+        {action && <div className="shrink-0 flex items-center gap-2 mt-2 sm:mt-0">{action}</div>}
       </div>
     </div>
   );

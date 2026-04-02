@@ -244,7 +244,7 @@ const ActivityLogsPage: React.FC = () => {
       skeletonShape: "text",
       sortKey: "event",
       render: (r) => (
-        <MiddleTruncate 
+        <MiddleTruncate
           text={friendlyEvent(r.event)}
           className="font-medium text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors"
         />
@@ -256,7 +256,7 @@ const ActivityLogsPage: React.FC = () => {
       skeletonShape: "text",
       sortKey: "label",
       render: (r) => (
-        <MiddleTruncate 
+        <MiddleTruncate
           text={r.label ?? "—"}
           className="text-xs text-slate-500 dark:text-slate-400"
         />
@@ -268,12 +268,12 @@ const ActivityLogsPage: React.FC = () => {
       skeletonShape: "double",
       render: (r) => (
         <div className="flex flex-col min-w-0 py-0.5">
-          <MiddleTruncate 
+          <MiddleTruncate
             text={r.actor_user?.full_name ?? r.actor_user?.name ?? "—"}
             className="text-xs font-medium text-slate-800 dark:text-slate-200"
           />
           {r.actor_office && (
-            <MiddleTruncate 
+            <MiddleTruncate
               text={r.actor_office.name}
               className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight"
             />
@@ -286,7 +286,7 @@ const ActivityLogsPage: React.FC = () => {
       header: "Doc",
       skeletonShape: "text",
       render: (r) => (
-        <MiddleTruncate 
+        <MiddleTruncate
           text={r.document?.title ?? (r.document_id ? `#${r.document_id}` : "—")}
           className="text-xs text-slate-500 dark:text-slate-400"
         />
@@ -301,7 +301,7 @@ const ActivityLogsPage: React.FC = () => {
     try {
       const { exportActivityLogs } = await import("../services/activityApi");
       const { exportActivityCsv, exportActivityPdf } = await import("../services/activityExport");
-      
+
       const payload = {
         scope,
         q: qDebounced.trim() || undefined,
@@ -311,9 +311,9 @@ const ActivityLogsPage: React.FC = () => {
         sort_by: sortBy,
         sort_dir: sortDir,
       };
-      
+
       const data = await exportActivityLogs(payload);
-      
+
       if (format === "csv") await exportActivityCsv(data);
       else await exportActivityPdf(data);
     } catch (e: any) {
@@ -396,7 +396,7 @@ const ActivityLogsPage: React.FC = () => {
       {/* Log tab — filters. Updated for mobile responsiveness */}
       {tab === "log" && (
         <div className="shrink-0 py-3 flex flex-col gap-3 sm:gap-2">
-           <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <div className="relative flex-1 sm:max-w-64">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
@@ -426,11 +426,10 @@ const ActivityLogsPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-              className={`sm:hidden flex items-center gap-2 px-3 h-9 rounded-lg border transition-all ${
-                isFiltersOpen || activeFiltersCount > 0
+              className={`sm:hidden flex items-center gap-2 px-3 h-9 rounded-lg border transition-all ${isFiltersOpen || activeFiltersCount > 0
                   ? "bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400 shadow-xs"
                   : "bg-white border-slate-200 text-slate-600 dark:bg-surface-500 dark:border-surface-400 dark:text-slate-400"
-              }`}
+                }`}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
               <span className="text-xs font-semibold">Filters</span>
@@ -508,69 +507,69 @@ const ActivityLogsPage: React.FC = () => {
                 </button>
               )}
             </div>
-           </div>
+          </div>
 
-           {/* Mobile secondary filters collapsible */}
-           {isFiltersOpen && (
-             <div className="sm:hidden flex flex-col gap-3 p-4 bg-slate-50 dark:bg-surface-600 rounded-xl border border-slate-200 dark:border-surface-400 animate-in fade-in slide-in-from-top-1 duration-200">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Scope</label>
-                    {isOfficeHead ? (
-                      <div className={inputCls + " text-center bg-slate-100 dark:bg-surface-500 opacity-60 flex items-center justify-center text-[11px] h-9"}>
-                         Office scoped
-                      </div>
-                    ) : (
-                      <select
-                        value={scope}
-                        onChange={(e) => {
-                          setScope(e.target.value as Scope);
-                          setPage(1);
-                        }}
-                        className={selectCls}
-                      >
-                        <option value="all">All</option>
-                        <option value="office">My office</option>
-                        <option value="mine">Mine</option>
-                      </select>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Category</label>
+          {/* Mobile secondary filters collapsible */}
+          {isFiltersOpen && (
+            <div className="sm:hidden flex flex-col gap-3 p-4 bg-slate-50 dark:bg-surface-600 rounded-xl border border-slate-200 dark:border-surface-400 animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Scope</label>
+                  {isOfficeHead ? (
+                    <div className={inputCls + " text-center bg-slate-100 dark:bg-surface-500 opacity-60 flex items-center justify-center text-[11px] h-9"}>
+                      Office scoped
+                    </div>
+                  ) : (
                     <select
-                      value={category}
+                      value={scope}
                       onChange={(e) => {
-                        setCategory(e.target.value as Category);
+                        setScope(e.target.value as Scope);
                         setPage(1);
                       }}
                       className={selectCls}
                     >
-                      <option value="">All categories</option>
-                      <option value="workflow">Workflow</option>
-                      <option value="request">Document Requests</option>
-                      <option value="document">Documents</option>
-                      <option value="user">User Management</option>
-                      <option value="template">Templates</option>
-                      <option value="profile">Profile & Auth</option>
+                      <option value="all">All</option>
+                      <option value="office">My office</option>
+                      <option value="mine">Mine</option>
                     </select>
-                  </div>
+                  )}
                 </div>
-
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Date Range</label>
-                  <DateRangeInput
-                    from={dateFrom}
-                    to={dateTo}
-                    onFromChange={(val) => {
-                      setDateFrom(val);
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Category</label>
+                  <select
+                    value={category}
+                    onChange={(e) => {
+                      setCategory(e.target.value as Category);
                       setPage(1);
                     }}
-                    onToChange={(val) => {
-                      setDateTo(val);
-                      setPage(1);
-                    }}
-                  />
+                    className={selectCls}
+                  >
+                    <option value="">All categories</option>
+                    <option value="workflow">Workflow</option>
+                    <option value="request">Document Requests</option>
+                    <option value="document">Documents</option>
+                    <option value="user">User Management</option>
+                    <option value="template">Templates</option>
+                    <option value="profile">Profile & Auth</option>
+                  </select>
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Date Range</label>
+                <DateRangeInput
+                  from={dateFrom}
+                  to={dateTo}
+                  onFromChange={(val) => {
+                    setDateFrom(val);
+                    setPage(1);
+                  }}
+                  onToChange={(val) => {
+                    setDateTo(val);
+                    setPage(1);
+                  }}
+                />
+              </div>
 
               {hasFilters && (
                 <button
@@ -588,14 +587,14 @@ const ActivityLogsPage: React.FC = () => {
                   Clear all filters
                 </button>
               )}
-             </div>
-           )}
+            </div>
+          )}
 
-           {error && (
-             <div className="pt-2">
-               <Alert variant="danger">{error}</Alert>
-             </div>
-           )}
+          {error && (
+            <div className="pt-2">
+              <Alert variant="danger">{error}</Alert>
+            </div>
+          )}
         </div>
       )}
 
@@ -616,7 +615,7 @@ const ActivityLogsPage: React.FC = () => {
             hasMore={hasMore}
             onLoadMore={() => setPage((p) => p + 1)}
             mobileRender={(r) => (
-              <div className="px-4 py-3 bg-white dark:bg-surface-500 border-b border-slate-100 dark:border-surface-400">
+              <div className="px-4 py-3">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wide">
                     {friendlyEvent(r.event)}

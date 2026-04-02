@@ -267,11 +267,33 @@ export default function Table<T>({
               if (mobileRender) {
                 return (
                   <div key={key}>
-                    <div className="block sm:hidden">
+                    <div 
+                      role={clickable ? "button" : undefined}
+                      tabIndex={clickable ? 0 : undefined}
+                      onClick={clickable ? () => onRowClick?.(row) : undefined}
+                      onKeyDown={clickable ? (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          onRowClick?.(row);
+                        }
+                      } : undefined}
+                      className={[
+                        "block sm:hidden transition-colors border-b border-slate-100 dark:border-surface-400/50 bg-white dark:bg-surface-500",
+                        clickable ? "cursor-pointer active:bg-slate-50 dark:active:bg-surface-400/60" : ""
+                      ].join(" ")}
+                    >
                       {mobileRender(row)}
                     </div>
                     <div
+                      role={clickable ? "button" : undefined}
+                      tabIndex={clickable ? 0 : undefined}
                       onClick={clickable ? () => onRowClick?.(row) : undefined}
+                      onKeyDown={clickable ? (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          onRowClick?.(row);
+                        }
+                      } : undefined}
                       className={[
                         "hidden sm:grid gap-3 items-center px-4 py-2 rounded-none text-sm transition-colors group",
                         clickable
@@ -297,7 +319,15 @@ export default function Table<T>({
               return (
                 <div
                   key={key}
+                  role={clickable ? "button" : undefined}
+                  tabIndex={clickable ? 0 : undefined}
                   onClick={clickable ? () => onRowClick?.(row) : undefined}
+                  onKeyDown={clickable ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onRowClick?.(row);
+                    }
+                  } : undefined}
                   className={[
                     "grid gap-3 items-center px-4 py-2 rounded-none text-sm transition-colors group",
                     clickable

@@ -468,7 +468,7 @@ const MyActivityPage: React.FC = () => {
           hasMore={hasMore}
           onLoadMore={() => setPage((p) => p + 1)}
           mobileRender={(r) => (
-            <div className="px-4 py-3 bg-white dark:bg-surface-500 border-b border-slate-100 dark:border-surface-400">
+            <div className="px-4 py-3">
               <div className="flex items-center justify-between mb-1">
                 <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${CATEGORY_BADGE[categoryFromEvent(r.event)]}`}>
                   {CATEGORY_LABEL[categoryFromEvent(r.event)]}

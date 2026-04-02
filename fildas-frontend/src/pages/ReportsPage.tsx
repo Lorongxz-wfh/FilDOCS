@@ -245,6 +245,14 @@ const ReportsPage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me, activeTab, dateFrom, dateTo, bucket, parent, officeId, scope, refreshKey, qaMode, role, isOfficeHead]);
 
+  React.useEffect(() => {
+    // Trigger window resize to help Recharts components expand/shrink when sidebar toggles
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+    }, 320); 
+    return () => clearTimeout(timer);
+  }, [filtersOpen]);
+
   // ── Derived ───────────────────────────────────────────────────────────────────
 
   const ongoingCount = phaseDist
@@ -317,11 +325,11 @@ const ReportsPage: React.FC = () => {
             type="button"
             variant="primary"
             size="sm"
-            responsive
             onClick={() => navigate("/reports/export")}
+            title="Export reports"
           >
-            <TrendingUp size={14} className="sm:hidden" />
-            <span>Export reports</span>
+            <TrendingUp size={15} />
+            <span className="hidden sm:inline font-bold">Export reports</span>
           </Button>
         </div>
       }
@@ -339,19 +347,21 @@ const ReportsPage: React.FC = () => {
           </button>
         ))}
         <div className="ml-auto flex items-center pr-3 -mb-px">
-          <button
+          <Button
             type="button"
+            variant={filtersOpen ? "primary" : "outline"}
+            size="xs"
             onClick={() => setFiltersOpen((v) => !v)}
-            className="flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-500 transition-colors shadow-sm"
+            className="flex items-center gap-1.5 transition-colors"
           >
             <SlidersHorizontal size={12} />
             <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
-              <span className="ml-0.5 rounded-full bg-brand-400 px-1.2 py-0.5 text-[9px] font-bold text-white leading-none">
+              <span className={`ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold leading-none ${filtersOpen ? "bg-white text-brand-600" : "bg-brand-500 text-white"}`}>
                 {activeFilterCount}
               </span>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -1247,9 +1257,10 @@ const ReportsPage: React.FC = () => {
         />
         <aside 
           className={[
-            "fixed inset-y-0 right-0 z-50 w-72 sm:static sm:w-56 shrink-0 border-l border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-y-auto flex flex-col shadow-2xl sm:shadow-none transition-transform duration-300 ease-in-out",
-            filtersOpen ? "translate-x-0" : "translate-x-full sm:translate-x-0",
-            !filtersOpen && "sm:flex hidden", // Keep flex on desktop, hidden on mobile if closed
+            "fixed inset-y-0 right-0 z-50 flex flex-col sm:static sm:inset-y-auto sm:right-auto bg-white dark:bg-surface-500 overflow-y-auto transition-all duration-300 ease-in-out",
+            filtersOpen 
+              ? "w-72 sm:w-64 opacity-100 border-l border-slate-200 dark:border-surface-400 shadow-2xl sm:shadow-none" 
+              : "w-0 opacity-0 overflow-hidden border-transparent pointer-events-none sm:pointer-events-auto",
           ].filter(Boolean).join(" ")}
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-surface-400">

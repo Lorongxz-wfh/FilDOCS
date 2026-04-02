@@ -18,6 +18,7 @@ import {
   X,
   Users,
   FileStack,
+  PlusCircle,
   LayoutList,
   TableProperties,
   SlidersHorizontal,
@@ -166,7 +167,7 @@ export default function DocumentRequestListPage() {
 
   React.useEffect(() => {
     const id = window.setInterval(() => {
-      reloadRequests().catch(() => {});
+      reloadRequests().catch(() => { });
     }, 30_000);
     return () => window.clearInterval(id);
   }, [reloadRequests]);
@@ -281,7 +282,7 @@ export default function DocumentRequestListPage() {
         skeletonShape: "text",
         render: (row) => (
           <div className="min-w-0 pr-4">
-            <MiddleTruncate 
+            <MiddleTruncate
               text={row.title}
               className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
             />
@@ -297,15 +298,15 @@ export default function DocumentRequestListPage() {
             isQaAdmin || row.mode === "multi_doc"
               ? row.progress
               : {
-                  total: 1,
-                  submitted:
-                    row.recipient_status === "submitted" ||
+                total: 1,
+                submitted:
+                  row.recipient_status === "submitted" ||
                     row.recipient_status === "accepted"
-                      ? 1
-                      : 0,
-                  accepted: row.recipient_status === "accepted" ? 1 : 0,
-                };
-            return <ProgressBar progress={displayProgress} />;
+                    ? 1
+                    : 0,
+                accepted: row.recipient_status === "accepted" ? 1 : 0,
+              };
+          return <ProgressBar progress={displayProgress} />;
         }
       },
       {
@@ -341,12 +342,12 @@ export default function DocumentRequestListPage() {
         skeletonShape: "text",
         render: (r) => (
           <div className="min-w-0 pr-4">
-            <MiddleTruncate 
+            <MiddleTruncate
               text={r.item_title ?? r.batch_title}
               className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
             />
             {r.item_title && r.batch_title && (
-              <MiddleTruncate 
+              <MiddleTruncate
                 text={r.batch_title}
                 className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5"
               />
@@ -428,8 +429,8 @@ export default function DocumentRequestListPage() {
               responsive
               onClick={() => setCreateOpen(true)}
             >
-              <FileStack size={14} className="sm:hidden" />
-              <span>Create request</span>
+              <PlusCircle size={15} />
+              <span className="hidden sm:inline font-bold">Create request</span>
             </Button>
           )}
         </div>
@@ -498,11 +499,10 @@ export default function DocumentRequestListPage() {
           <button
             type="button"
             onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-            className={`sm:hidden flex items-center gap-2 px-3 h-9 rounded-lg border transition-all ${
-              isFiltersOpen || activeFiltersCount > 0
+            className={`sm:hidden flex items-center gap-2 px-3 h-9 rounded-lg border transition-all ${isFiltersOpen || activeFiltersCount > 0
                 ? "bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400 shadow-xs"
                 : "bg-white border-slate-200 text-slate-600 dark:bg-surface-500 dark:border-surface-400 dark:text-slate-400"
-            }`}
+              }`}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             <span className="text-xs font-semibold">Filters</span>
@@ -527,7 +527,7 @@ export default function DocumentRequestListPage() {
                 <option value="cancelled">Cancelled</option>
               </select>
             )}
-            
+
             {/* All Requests tab filters */}
             {tab === "all" && (
               <>
@@ -665,7 +665,7 @@ export default function DocumentRequestListPage() {
             hasMore={hasMore}
             onLoadMore={() => setPage((p) => p + 1)}
             mobileRender={(r) => (
-              <div className="px-4 py-3 bg-white dark:bg-surface-500 border-b border-slate-100 dark:border-surface-400">
+              <div className="px-4 py-3">
                 <div className="flex items-center justify-between mb-1">
                   <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300">
                     {r.mode || r.batch_mode || "REQUEST"}

@@ -278,13 +278,13 @@ const DocumentCommentsPanel: React.FC<Props> = ({
       </div>
 
       {/* Composer */}
-      <div className="shrink-0 flex gap-2">
+      <div className="shrink-0 flex items-end gap-2 bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 rounded-xl p-1.5 shadow-sm focus-within:border-sky-400 transition-colors">
         <textarea
-          className="flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm resize-none outline-none focus:border-sky-400 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-200 dark:placeholder-slate-500 transition"
+          className="flex-1 bg-transparent px-2 py-1.5 text-sm text-slate-800 dark:text-slate-200 outline-none resize-none min-h-[38px] max-h-32"
           rows={1}
           value={draftMessage}
           onChange={(e) => setDraftMessage(e.target.value)}
-          placeholder="Ctrl+Enter to send"
+          placeholder="Write a comment..."
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
               e.preventDefault();
@@ -296,9 +296,13 @@ const DocumentCommentsPanel: React.FC<Props> = ({
           type="button"
           disabled={isSending || draftMessage.trim().length === 0}
           onClick={handleSend}
-          className="rounded-md px-3 py-2 text-xs font-semibold transition bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex h-9 px-4 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-[11px] font-bold uppercase tracking-wider text-white transition hover:bg-sky-700 disabled:opacity-40 shadow-sm"
         >
-          {isSending ? "…" : "Send"}
+          {isSending ? (
+            <Loader2 className="animate-spin h-3.5 w-3.5" />
+          ) : (
+            "Send"
+          )}
         </button>
       </div>
     </div>

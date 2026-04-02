@@ -45,23 +45,29 @@ export default function DocFrame({
       {/* Split top header */}
       <div className="shrink-0 flex border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600">
         {/* Left header — gets full width on mobile since right header is hidden */}
-        <div className="flex flex-1 min-w-0 items-center gap-3 px-4 py-2 sm:px-6 sm:py-3">
-          {onBack && <BackButton onClick={onBack} disabled={onBackDisabled} />}
-          <div className="flex min-w-0 flex-1 flex-col">
-            {breadcrumbs && breadcrumbs.length > 0 && (
-              <Breadcrumb items={breadcrumbs} />
-            )}
-            <div className="min-w-0 text-base font-semibold text-slate-900 dark:text-slate-100 leading-snug">
-              {title}
-            </div>
-            {subtitle && (
-              <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                {subtitle}
+        <div className="flex flex-col sm:flex-row flex-1 min-w-0 sm:items-center gap-3 px-4 py-2.5 sm:px-6 sm:py-3 leading-tight sm:leading-normal">
+          <div className="flex flex-1 min-w-0 items-start sm:items-center gap-3">
+            {onBack && (
+              <div className="mt-1 sm:mt-0">
+                <BackButton onClick={onBack} disabled={onBackDisabled} />
               </div>
             )}
+            <div className="flex min-w-0 flex-1 flex-col">
+              {breadcrumbs && breadcrumbs.length > 0 && (
+                <Breadcrumb items={breadcrumbs} />
+              )}
+              <div className="min-w-0 text-base font-semibold text-slate-900 dark:text-slate-100 leading-snug">
+                {title}
+              </div>
+              {subtitle && (
+                <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  {subtitle}
+                </div>
+              )}
+            </div>
           </div>
           {actions && (
-            <div className="shrink-0 flex items-center gap-2">{actions}</div>
+            <div className="shrink-0 flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">{actions}</div>
           )}
         </div>
 
