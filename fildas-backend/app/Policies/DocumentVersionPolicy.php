@@ -153,8 +153,11 @@ class DocumentVersionPolicy
         $base = $this->access($user, $version);
         if ($base->denied()) return $base;
 
-        if ($version->status !== 'Draft') {
-            return Response::deny('Draft fields can only be updated during Draft.');
+        $isDraft = in_array($version->status, ['Draft', 'Office Draft'], true);
+        $isRegistration = str_contains($version->status, 'Registration');
+
+        if (!$isDraft && !$isRegistration) {
+            return Response::deny('Draft fields can only be updated during Draft or Registration phase.');
         }
 
         // Optional: restrict to QA only, but you didn’t ask for that, so keep it open to anyone who has access.

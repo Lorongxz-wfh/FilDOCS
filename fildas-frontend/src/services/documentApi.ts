@@ -416,6 +416,21 @@ export async function getOriginalFileBlobUrl(versionId: number): Promise<string>
   }
 }
 
+export async function updateDocumentCode(
+  documentId: number,
+  code: string,
+): Promise<void> {
+  try {
+    const api = await getApi();
+    await api.patch(`/documents/${documentId}`, { code });
+  } catch (e: any) {
+    const status = e?.response?.status;
+    const msg =
+      e?.response?.data?.message || (status ? `Failed (${status})` : "Failed");
+    throw new Error(msg);
+  }
+}
+
 export async function updateDocumentTitle(
   documentId: number,
   title: string,

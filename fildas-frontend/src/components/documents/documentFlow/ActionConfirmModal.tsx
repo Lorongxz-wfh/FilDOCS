@@ -5,6 +5,7 @@ export interface ConfirmAction {
   key: string;
   label: string;
   variant: "primary" | "danger" | "outline";
+  skipConfirm?: boolean;
   confirmMessage?: string;
   onClick: (note?: string) => Promise<void> | void;
 }

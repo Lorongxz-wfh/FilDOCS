@@ -20,14 +20,22 @@ class DocumentShareService
      */
     public function setShares(Document $document, array $officeIds, int $actorUserId, int $actorOfficeId): array
     {
-        // MVP rule: allow sharing only if there is a Distributed version
+        // Allow sharing if there is a Distributed version OR if the current version is in finalization (Registration/Distribution)
         $hasDistributed = DocumentVersion::query()
             ->where('document_id', $document->id)
             ->where('status', 'Distributed')
             ->exists();
 
-        if (!$hasDistributed) {
-            abort(422, 'Can only share after the document is Distributed.');
+        $isFinalizing = false;
+        if (!$hasDistributed && $document->latestVersion) {
+            $status = $document->latestVersion->status;
+            if (str_contains($status, 'Registration') || str_contains($status, 'Distribution')) {
+                $isFinalizing = true;
+            }
+        }
+
+        if (!$hasDistributed && !$isFinalizing) {
+            abort(422, 'Can only share after the document reaches the Registration or Distribution phase.');
         }
 
         $officeIds = array_values(array_unique(array_map('intval', $officeIds)));

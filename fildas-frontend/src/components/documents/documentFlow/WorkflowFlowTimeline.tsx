@@ -237,10 +237,10 @@ const WorkflowFlowTimeline: React.FC<Props> = ({ logs, isLoading, versionNumber 
                 </div>
 
                 {/* Transition Flow */}
-                {fromStatus && toStatus && (
+                {(fromStatus || log.event === "document.created") && toStatus && (
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200/60 bg-slate-50/50 text-slate-500 dark:bg-surface-400/40 dark:text-slate-400 dark:border-surface-300/20">
-                      {fromStatus}
+                      {fromStatus || "New"}
                     </span>
                     <CornerDownRight className="h-3 w-3 text-slate-300 dark:text-surface-400" />
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded border ${

@@ -1025,8 +1025,11 @@ class DocumentController extends Controller
 
     public function updateVersion(Request $request, DocumentVersion $version)
     {
-        if (!in_array($version->status, ['Draft'])) {
-            return response()->json(['message' => 'Draft fields can only be updated during Draft.'], 422);
+        $isDraft = in_array($version->status, ['Draft', 'Office Draft'], true);
+        $isRegistration = str_contains($version->status, 'Registration');
+
+        if (!$isDraft && !$isRegistration) {
+            return response()->json(['message' => 'Draft fields can only be updated during Draft or Registration phase.'], 422);
         }
 
         $data = $request->validate([

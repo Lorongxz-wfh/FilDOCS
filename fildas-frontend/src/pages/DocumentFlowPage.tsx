@@ -9,7 +9,7 @@ import {
 } from "../services/documents";
 import DocumentFlow from "../components/documents/DocumentFlow";
 import ShareDocumentModal from "../components/documents/ShareDocumentModal";
-import ActionConfirmModal from "../components/documents/documentFlow/ActionConfirmModal";
+import ActionConfirmModal, { type ConfirmAction } from "../components/documents/documentFlow/ActionConfirmModal";
 import RevisionModal from "../components/documents/documentFlow/RevisionModal";
 import {
   useNavigate,
@@ -187,16 +187,19 @@ const DocumentFlowPage: React.FC = () => {
   }, [selectedVersion?.id]);
 
   // ── Header action confirm modal ──────────────────────────────
-  const [confirmAction, setConfirmAction] = useState<{
-    key: string;
-    label: string;
-    variant: "primary" | "danger" | "outline";
-    confirmMessage?: string;
-    onClick: (note?: string) => Promise<void> | void;
-  } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const [processingKey, setProcessingKey] = useState<string | null>(null);
 
-  const handleHeaderActionClick = (a: any) => {
+  const handleHeaderActionClick = async (a: any) => {
+    if (a.skipConfirm) {
+      setProcessingKey(a.key);
+      try {
+        await a.onClick();
+      } finally {
+        setProcessingKey(null);
+      }
+      return;
+    }
     setConfirmAction(a);
   };
 
@@ -519,12 +522,13 @@ const refreshAndSelectBest = React.useCallback(
               <div className="h-7 w-28 rounded-md bg-slate-200 dark:bg-surface-400 animate-pulse" />
             ) : (
               (headerState?.headerActions ?? []).map((a: any) => {
-                const isThis = processingKey === a.key;
+                const isThis = processingKey === a.key || a.loading;
                 const isBusy =
                   !!processingKey ||
+                  a.loading ||
                   isLoadingSelectedVersion ||
                   pendingUploadPct !== null;
-                  
+
                 // Contextual Icons for Flow Actions
                 const Icon = 
                   a.key === "REJECT" ? XCircle :

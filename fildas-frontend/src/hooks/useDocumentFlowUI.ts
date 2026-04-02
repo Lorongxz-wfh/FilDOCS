@@ -61,6 +61,9 @@ export function useDocumentFlowUI({
   // ── Delete/cancel confirmation state ─────────────────────────
   const [pendingDelete, setPendingDelete] = useState<"draft" | "revision" | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isDistributeModalOpen, setIsDistributeModalOpen] = useState(false);
+  const [activeWorkflowCode, setActiveWorkflowCode] = useState<string | null>(null);
 
   // ── Local version + field state ──────────────────────────────
   const [localVersion, setLocalVersion] = useState<DocumentVersion | null>(version ?? null);
@@ -159,7 +162,7 @@ export function useDocumentFlowUI({
     }
 
     setIsPreviewLoading(true);
-    if (contentChanged) setPreviewNonce((n) => n + 1);
+    if (contentChanged) setPreviewNonce((n) => n + n + 1);
 
     getDocumentPreviewLink(localVersion.id)
       .then((r) => {
@@ -229,7 +232,6 @@ export function useDocumentFlowUI({
   const fileUpload = useDocumentFileUpload({
     versionId: localVersion?.id ?? 0,
     onUploadComplete: useCallback(async () => {
-      // Logic forisActiveApprover handled via state observation
       previewUrlCacheRef.current = {};
       setSignedPreviewUrl("");
       setIsPreviewLoading(true);
@@ -370,6 +372,22 @@ export function useDocumentFlowUI({
   const isDraftStatus = localVersion?.status === "Draft" || localVersion?.status === "Office Draft";
   const needsFileReplacement = isDraftStatus && canAct && !!(localVersion as any)?.needs_file_replacement;
 
+  const participantOfficeIds = useMemo(() => {
+    const ids = new Set<number>();
+    const ownerId = (document as any)?.owner_office_id || (document as any)?.office_id;
+    if (ownerId) ids.add(Number(ownerId));
+    
+    workflow.tasks.forEach(t => {
+      if (t.assigned_office_id) ids.add(Number(t.assigned_office_id));
+    });
+    
+    routeSteps.forEach(rs => {
+      if (rs.office_id) ids.add(Number(rs.office_id));
+    });
+
+    return Array.from(ids);
+  }, [document, workflow.tasks, routeSteps]);
+
   const handleActionResult = useCallback(
     (res: { version: DocumentVersion; message?: string }) => {
       if (!res) return;
@@ -451,11 +469,15 @@ export function useDocumentFlowUI({
         }
       }
 
+      const isRegisterAction = ["QA_REGISTER", "OFFICE_REGISTER", "CUSTOM_REGISTER"].includes(code);
+      const isDistributeAction = ["QA_DISTRIBUTE", "OFFICE_DISTRIBUTE", "CUSTOM_DISTRIBUTE"].includes(code);
+
       return {
         key: code,
         label,
         confirmMessage,
-        variant: code === "REJECT" || code === "CANCEL_DOCUMENT" ? ("danger" as const) : ("primary" as const),
+        loading: (isRegisterAction && isRegisterModalOpen) || (isDistributeModalOpen && isDistributeModalOpen) || (workflow.isChangingStatus && code === activeWorkflowCode),
+        variant: (code === "REJECT" || code === "CANCEL_DOCUMENT") ? "danger" : "primary",
         disabled:
           workflow.isChangingStatus ||
           fileUpload.isUploading ||
@@ -463,7 +485,18 @@ export function useDocumentFlowUI({
           (needsFileReplacement && !["REJECT", "CANCEL_DOCUMENT"].includes(code)) ||
           (!adminDebugMode && isPreApprovalCreatorCheck && PRE_APPROVAL_START_ACTIONS.includes(code) && !hasSignedFile) ||
           (!adminDebugMode && approverNeedsSignedUpload && !["REJECT", "CANCEL_DOCUMENT"].includes(code)),
+        skipConfirm: isRegisterAction || isDistributeAction,
         onClick: async (note?: string) => {
+          if (isRegisterAction) {
+            setActiveWorkflowCode(code);
+            setIsRegisterModalOpen(true);
+            return;
+          }
+          if (isDistributeAction) {
+            setActiveWorkflowCode(code);
+            setIsDistributeModalOpen(true);
+            return;
+          }
           try {
             const res = await workflow.submitAction(code as any, note);
             if (res) {
@@ -578,6 +611,11 @@ export function useDocumentFlowUI({
     versionActions,
     offices,
     routeSteps,
+    isRegisterModalOpen,
+    isDistributeModalOpen,
+    isBusy: isRegisterModalOpen || isDistributeModalOpen || workflow.isChangingStatus,
+    activeWorkflowCode,
+    participantOfficeIds,
   }), [
     localVersion,
     localTitle,
@@ -611,9 +649,16 @@ export function useDocumentFlowUI({
     versionActions,
     offices,
     routeSteps,
+    isRegisterModalOpen,
+    isDistributeModalOpen,
+    workflow.isChangingStatus,
+    activeWorkflowCode,
+    participantOfficeIds,
   ]);
 
-  const actions = useMemo(() => ({
+  const hookActions = useMemo(() => ({
+    push,
+    setLocalVersion,
     setLocalTitle,
     setLocalDesc,
     setLocalEffectiveDate,
@@ -623,17 +668,41 @@ export function useDocumentFlowUI({
     setRemovingSignature,
     setPendingDelete,
     setIsDeleting,
+    setIsPreviewLoading,
+    setPreviewNonce,
     setActiveSideTab,
     setApproverHasDownloaded,
     setApproverHasUploaded,
-    handleActionResult,
-    fileUpload,
+    setIsRegisterModalOpen,
+    setIsDistributeModalOpen,
+    setActiveWorkflowCode,
     workflow,
+    fileUpload,
+    handleActionResult,
   }), [
-    handleActionResult,
-    fileUpload,
     workflow,
+    fileUpload,
+    handleActionResult,
+    push,
+    setLocalVersion,
+    setLocalTitle,
+    setLocalDesc,
+    setLocalEffectiveDate,
+    setSigningOpen,
+    setSigningInBackground,
+    setSigningEditMode,
+    setRemovingSignature,
+    setPendingDelete,
+    setIsDeleting,
+    setIsPreviewLoading,
+    setPreviewNonce,
+    setActiveSideTab,
+    setApproverHasDownloaded,
+    setApproverHasUploaded,
+    setIsRegisterModalOpen,
+    setIsDistributeModalOpen,
+    setActiveWorkflowCode,
   ]);
 
-  return { state, actions };
+  return { state, actions: hookActions };
 }

@@ -4,6 +4,7 @@ export type HeaderActionButton = {
   label: string;
   variant: "primary" | "danger" | "outline";
   disabled?: boolean;
+  loading?: boolean;
   skipConfirm?: boolean;
   confirmMessage?: string;
   onClick: (note?: string) => Promise<void> | void;

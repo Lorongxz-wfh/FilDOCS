@@ -5,6 +5,9 @@ import DocumentPreviewWrapper from "./documentFlow/DocumentPreviewWrapper";
 import DeleteDraftConfirmModal from "./documentFlow/DeleteDraftConfirmModal";
 import SignDocumentModal from "./SignDocumentModal";
 import WorkflowHeaderPanel from "./documentFlow/WorkflowHeaderPanel";
+import { RegisterDocumentModal } from "./documentFlow/RegisterDocumentModal";
+import { DistributeDocumentModal } from "./documentFlow/DistributeDocumentModal";
+import { setDocumentShares } from "../../services/documents";
 
 import {
   type Document,
@@ -17,7 +20,11 @@ import {
   type WorkflowActionCode,
 } from "../../services/documents";
 
-import { removeInAppSignature, regenerateDocumentPreview } from "../../services/documentApi";
+import {
+  removeInAppSignature,
+  regenerateDocumentPreview,
+  updateDocumentVersionEffectiveDate,
+} from "../../services/documentApi";
 import { useToast } from "../ui/toast/ToastContext";
 import { getAuthUser } from "../../lib/auth";
 import { useDocumentFlowUI } from "../../hooks/useDocumentFlowUI";
@@ -155,16 +162,18 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
   }, [
     document,
     state.localVersion,
-    state.offices,
-    state.routeSteps,
-    actions.workflow,
-    state.activeSideTab,
+    state.isRegisterModalOpen,
+    state.isDistributeModalOpen,
+    state.isBusy,
+    state.activeWorkflowCode,
+    state.participantOfficeIds,
     draftMessage,
     isSendingMessage,
     optimisticMessages,
     state.isQAOfficeUser,
     me,
-    onChanged
+    onChanged,
+    push
   ]);
 
   return (
@@ -225,6 +234,8 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
           activeFlowSteps={state.activeFlowSteps}
           tasks={actions.workflow.tasks}
         />
+
+        {/* Specialized Finalization Modals are handled via hook state */}
 
         <div style={{ height: "calc(100vh - 145px)" }}>
           {!state.localVersion ? (
@@ -331,6 +342,89 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
             // Preview refresh handled by hook's useEffect watching localVersion.updated_at
           }}
           onSignError={(msg) => push({ type: "error", title: "Signing failed", message: msg })}
+        />
+      )}
+
+      {state.isRegisterModalOpen && (
+        <RegisterDocumentModal
+          isOpen={state.isRegisterModalOpen}
+          onClose={() => actions.setIsRegisterModalOpen(false)}
+          documentTitle={document?.title ?? ""}
+          documentCode={(document as any)?.reserved_code || document?.code || "—"}
+          officeName={
+            state.offices.find((o) => o.id === document?.owner_office_id)?.name ||
+            document?.ownerOffice?.name ||
+            "System"
+          }
+          effectiveDate={state.localEffectiveDate}
+          onEffectiveDateChange={actions.setLocalEffectiveDate}
+          isProcessing={actions.workflow.isChangingStatus}
+          onConfirm={async () => {
+            if (!state.activeWorkflowCode || !state.localVersion) return;
+            
+            // Close immediately for instant feedback
+            actions.setIsRegisterModalOpen(false);
+
+            try {
+              // 1. Sync effective date if changed
+              await updateDocumentVersionEffectiveDate(
+                state.localVersion.id,
+                state.localEffectiveDate.trim() || null
+              );
+
+              // 2. Submit workflow action
+              const res = await actions.workflow.submitAction(
+                state.activeWorkflowCode as any
+              );
+              if (res) {
+                actions.handleActionResult(res);
+                push({
+                  type: "success",
+                  title: "Document Registered",
+                  message: res.message || "Registration complete.",
+                });
+                if (onChanged) await onChanged();
+              }
+            } catch (e: any) {
+              push({
+                type: "error",
+                title: "Registration failed",
+                message: e?.message ?? "Error.",
+              });
+            }
+          }}
+        />
+      )}
+
+      {state.isDistributeModalOpen && (
+        <DistributeDocumentModal
+          isOpen={state.isDistributeModalOpen}
+          onClose={() => actions.setIsDistributeModalOpen(false)}
+          offices={state.offices}
+          participantOfficeIds={state.participantOfficeIds}
+          ownerOfficeId={document?.owner_office_id ?? null}
+          isProcessing={actions.workflow.isChangingStatus}
+          onConfirm={async (selectedOfficeIds) => {
+            if (!state.activeWorkflowCode || !state.localVersion) return;
+            
+            // Close immediately for instant feedback
+            actions.setIsDistributeModalOpen(false);
+
+            try {
+              // 1. Save shares first
+              await setDocumentShares(document!.id, selectedOfficeIds);
+              
+              // 2. Submit workflow action
+              const res = await actions.workflow.submitAction(state.activeWorkflowCode as any);
+              if (res) {
+                actions.handleActionResult(res);
+                push({ type: "success", title: "Document Distributed", message: res.message || "Distribution complete." });
+                if (onChanged) await onChanged();
+              }
+            } catch (e: any) {
+              push({ type: "error", title: "Distribution failed", message: e?.message ?? "Error." });
+            }
+          }}
         />
       )}
     </>
