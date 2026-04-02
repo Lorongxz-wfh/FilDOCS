@@ -2,7 +2,7 @@ import React from "react";
 import { Loader2 } from "lucide-react";
 import Button from "../../ui/Button";
 import Modal from "../../ui/Modal";
-import type { HeaderActionButton } from "../DocumentFlow";
+import type { HeaderActionButton } from "./types";
 
 type Props = {
   actions: HeaderActionButton[];

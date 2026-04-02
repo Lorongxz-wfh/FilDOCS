@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVisibilityPolling } from "./useVisibilityPolling";
 import { getAuthUser } from "../lib/auth";
 import {
@@ -17,7 +17,6 @@ import { useRealtimeUpdates } from "./useRealtimeUpdates";
 type Options = {
   versionId: number;
   isTerminal?: boolean;
-  activeSideTab: "comments" | "logs";
   onChanged?: () => Promise<void> | void;
   onAfterActionClose?: () => void;
   myOfficeId: number | null;
@@ -34,7 +33,6 @@ const MSG_POLL_MS = 10_000; // 10s message poll
 export function useDocumentWorkflow({
   versionId,
   isTerminal = false,
-  activeSideTab,
   onChanged,
   onAfterActionClose,
   myOfficeId,
@@ -137,7 +135,7 @@ export function useDocumentWorkflow({
         setIsTasksReady(true);
       }
     },
-    [],
+    [adminDebugMode],
   );
 
   // ── Message polling helper ───────────────────────────────────────────────
@@ -255,7 +253,7 @@ export function useDocumentWorkflow({
     return () => {
       alive = false;
     };
-  }, [versionId, isTerminal]);
+  }, [versionId, isTerminal, adminDebugMode]);
 
   // ── Start idle + message polling on mount ────────────────────────────────
   useEffect(() => {
@@ -391,7 +389,7 @@ export function useDocumentWorkflow({
     },
     [
       versionId,
-      activeSideTab,
+      adminDebugMode,
       refreshTasksAndActions,
       startBurstPolling,
       onChanged,
@@ -410,7 +408,7 @@ export function useDocumentWorkflow({
   const clearNewMessageCount = useCallback(() => setNewMessageCount(0), []);
   const clearTaskChanged = useCallback(() => setTaskChanged(false), []);
 
-  return {
+  return useMemo(() => ({
     tasks,
     setTasks,
     availableActions,
@@ -430,5 +428,23 @@ export function useDocumentWorkflow({
     clearNewMessageCount,
     taskChanged,
     clearTaskChanged,
-  };
+  }), [
+     tasks,
+     availableActions,
+     isTasksReady,
+     isChangingStatus,
+     messages,
+     isLoadingMessages,
+     activityLogs,
+     isLoadingActivityLogs,
+     isBurstPolling,
+     stopBurstPolling,
+     submitAction,
+     refreshMessages,
+     refreshTasksAndActions,
+     newMessageCount,
+     clearNewMessageCount,
+     taskChanged,
+     clearTaskChanged,
+  ]);
 }

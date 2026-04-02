@@ -60,7 +60,7 @@ const DocumentPreviewWrapper: React.FC<Props> = ({
   return (
     <div
       className="flex flex-col gap-0 rounded-xl overflow-hidden border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500"
-      style={{ height: "calc(100vh - 220px)" }}
+      style={{ height: "100%" }}
     >
       {/* Preview — fills available space */}
       <div className="flex-1 min-h-0 overflow-hidden">

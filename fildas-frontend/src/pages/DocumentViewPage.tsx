@@ -635,6 +635,7 @@ export default function DocumentViewPage() {
           <WorkflowFlowTimeline
             isLoading={timelineLoading}
             logs={timeline}
+            versionNumber={version?.version_number}
           />
         </div>
       </Modal>

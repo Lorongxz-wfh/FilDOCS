@@ -11,7 +11,7 @@ import type {
 } from "../../../services/documents";
 import DocumentInfoPanel from "./DocumentInfoPanel";
 import DocumentCommentsPanel from "./DocumentCommentsPanel";
-import DocumentActivityPanel from "./DocumentActivityPanel";
+import WorkflowFlowTimeline from "./WorkflowFlowTimeline";
 
 type Props = {
   document: Document | null;
@@ -233,10 +233,10 @@ const DocumentRightPanel: React.FC<Props> = ({
                 setOptimisticMessages={setOptimisticMessages}
               />
             ) : (
-              <DocumentActivityPanel
+              <WorkflowFlowTimeline
                 isLoading={isLoadingActivityLogs || !isDataReady}
                 logs={activityLogs}
-                formatWhen={formatWhen}
+                versionNumber={version?.version_number}
               />
             )}
           </div>

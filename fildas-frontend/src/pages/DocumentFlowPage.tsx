@@ -29,7 +29,7 @@ import { replaceDocumentVersionFileWithProgress } from "../services/documents";
 import { useToast } from "../components/ui/toast/ToastContext";
 import { getUserRole } from "../lib/roleFilters";
 import { getAuthUser } from "../lib/auth";
-import { Library, Loader2, Copy, Check, RefreshCcw,
+import { Library, Loader2, RefreshCcw,
   ArrowRightToLine,
   ArrowLeftCircle,
   CheckCircle2,
@@ -40,7 +40,6 @@ import { Library, Loader2, Copy, Check, RefreshCcw,
   Share2,
   FileX,
 } from "lucide-react";
-import { StatusBadge } from "../components/ui/Badge";
 import { normalizeError } from "../lib/normalizeError";
 import VersionComparisonModal from "../components/documents/documentFlow/VersionComparisonModal";
 import { GitCompare } from "lucide-react";
@@ -147,7 +146,6 @@ const DocumentFlowPage: React.FC = () => {
     [],
   );
   const [rightCollapsed, setRightCollapsed] = useState(false);
-  const [codeCopied, setCodeCopied] = useState(false);
 
   // ── Pending file upload (from create page async redirect) ─────────────────
   const toast = useToast();
@@ -432,7 +430,7 @@ const refreshAndSelectBest = React.useCallback(
               {loading ? (
                 <Skeleton className="h-4 w-48 mt-0.5" />
               ) : (
-                <span className="min-w-0 whitespace-normal wrap-break-word leading-snug">
+                <span className="min-w-0 whitespace-normal wrap-break-word font-bold text-slate-800 dark:text-white leading-snug">
                   {headerState?.title ?? document?.title}
                 </span>
               )}
@@ -446,8 +444,10 @@ const refreshAndSelectBest = React.useCallback(
                       await refreshAndSelectBest({
                         preferVersionId: selectedVersion?.id,
                       });
-                      const statusChanged = selectedVersion?.status !== prevStatus;
-                      const newVersionAdded = allVersions.length > prevVersionCount;
+                      const statusChanged =
+                        selectedVersion?.status !== prevStatus;
+                      const newVersionAdded =
+                        allVersions.length > prevVersionCount;
                       if (statusChanged || newVersionAdded)
                         return "Document updated.";
                       return "Already up to date.";
@@ -460,66 +460,10 @@ const refreshAndSelectBest = React.useCallback(
                   className="!h-7 !w-7"
                 />
               )}
-              <div className="flex shrink-0 items-center gap-2">
-                {loading ? (
-                  <Skeleton className="h-5 w-7 rounded-full" />
-                ) : (
-                  <span className="rounded-full bg-slate-100 dark:bg-surface-400 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-400">
-                    v
-                    {headerState?.versionNumber ??
-                      current?.version_number ??
-                      "-"}
-                  </span>
-                )}
-                {loading ? (
-                  <Skeleton className="h-5 w-20 rounded-md" />
-                ) : (
-                  <StatusBadge
-                    status={headerState?.status ?? current?.status ?? "-"}
-                  />
-                )}
-              </div>
             </div>
           </div>
         }
-        subtitle={
-          loading ? (
-            <Skeleton className="h-3 w-36 mt-0.5" />
-          ) : (
-            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              {document?.code ? (
-                <>
-                  {document.code}
-                  <button
-                    type="button"
-                    title="Copy document code"
-                    onClick={() => {
-                      navigator.clipboard.writeText(document.code!);
-                      setCodeCopied(true);
-                      setTimeout(() => setCodeCopied(false), 1500);
-                    }}
-                    className="cursor-pointer flex items-center justify-center h-4 w-4 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors normal-case"
-                  >
-                    {codeCopied ? (
-                      <Check className="h-3 w-3 text-emerald-500" />
-                    ) : (
-                      <Copy className="h-3 w-3" />
-                    )}
-                  </button>
-                </>
-              ) : (document as any)?.reserved_code ? (
-                <>
-                  {(document as any).reserved_code}
-                  <span className="rounded border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/15 px-1.5 py-0.5 text-[9px] font-semibold text-amber-600 dark:text-amber-300 normal-case tracking-normal">
-                    pending
-                  </span>
-                </>
-              ) : (
-                "CODE-NOT-AVAILABLE"
-              )}
-            </span>
-          )
-        }
+        subtitle={null}
         onBack={handleBack}
         onBackDisabled={isLoadingSelectedVersion}
         rightWidthClass="w-[400px]"
@@ -679,24 +623,24 @@ const refreshAndSelectBest = React.useCallback(
               allVersions={allVersions}
               selectedVersion={selectedVersion}
               isLoadingSelectedVersion={isLoadingSelectedVersion}
-              onSelectVersion={(v) => {
+              onSelectVersion={React.useCallback((v: any) => {
                 setSearchParams((prev) => {
                   const p = new URLSearchParams(prev);
                   p.set("version_id", String(v.id));
                   return p;
                 });
                 logOpenedVersion(v.id, "versions_panel");
-              }}
-              onHeaderStateChange={(s) => {
+              }, [setSearchParams])}
+              onHeaderStateChange={React.useCallback((s: any) => {
                 const sig =
                   `${s.title}|${s.code}|${s.status}|${s.versionNumber}|${s.canAct}|${s.isTasksReady}|` +
-                  `${(s.headerActions ?? []).map((a) => `${a.key}:${a.disabled ? 1 : 0}:${a.variant}`).join(",")}|` +
-                  `${(s.versionActions ?? []).map((a) => `${a.key}:${a.disabled ? 1 : 0}:${a.variant}`).join(",")}`;
+                  `${(s.headerActions ?? []).map((a: any) => `${a.key}:${a.disabled ? 1 : 0}:${a.variant}`).join(",")}|` +
+                  `${(s.versionActions ?? []).map((a: any) => `${a.key}:${a.disabled ? 1 : 0}:${a.variant}`).join(",")}`;
                 if (sig === headerSigRef.current) return;
                 headerSigRef.current = sig;
                 setHeaderState(s);
-              }}
-              onAfterActionClose={async () => {
+              }, [])}
+              onAfterActionClose={React.useCallback(async () => {
                 try {
                   await refreshAndSelectBest({
                     preferVersionId: selectedVersion?.id ?? null,
@@ -707,8 +651,8 @@ const refreshAndSelectBest = React.useCallback(
                     navigate(fromPath);
                   }
                 }
-              }}
-              onChanged={async () => {
+              }, [refreshAndSelectBest, selectedVersion?.id, navigate, fromPath])}
+              onChanged={React.useCallback(async () => {
                 const preferId = selectedVersion?.id ?? null;
                 if (preferId) {
                   try {
@@ -725,7 +669,7 @@ const refreshAndSelectBest = React.useCallback(
                   }
                 }
                 await refreshAndSelectBest({ preferVersionId: preferId });
-              }}
+              }, [selectedVersion?.id, refreshAndSelectBest])}
               onRightPanelContent={setRightPanelContent}
             />
           </div>

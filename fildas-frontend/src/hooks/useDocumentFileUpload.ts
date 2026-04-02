@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import React, { useRef, useState, useMemo, useCallback } from "react";
 import { replaceDocumentVersionFileWithProgress } from "../services/documents";
 import { useToast } from "../components/ui/toast/ToastContext";
 
@@ -32,7 +32,7 @@ export function useDocumentFileUpload({
     (ALLOWED_MIME.has(file.type) || ALLOWED_EXTENSIONS.test(file.name)) &&
     file.size <= MAX_SIZE;
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = useCallback(async (file: File) => {
     if (!isValidFile(file)) {
       push({
         type: "error",
@@ -64,32 +64,36 @@ export function useDocumentFileUpload({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  };
+  }, [versionId, onUploadComplete, push]);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) await uploadFile(file);
-  };
+  }, [uploadFile]);
 
-  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     const file = Array.from(e.dataTransfer.files)[0];
     if (file) await uploadFile(file);
-  };
+  }, [uploadFile]);
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = "copy";
-  };
+  }, []);
 
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-  };
+  }, []);
 
-  return {
+  const triggerFilePicker = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  return useMemo(() => ({
     fileInputRef,
     isUploading,
     uploadProgress,
@@ -97,6 +101,15 @@ export function useDocumentFileUpload({
     handleDrop,
     handleDragOver,
     handleDragLeave,
-    triggerFilePicker: () => fileInputRef.current?.click(),
-  };
+    triggerFilePicker
+  }), [
+    fileInputRef,
+    isUploading,
+    uploadProgress,
+    handleFileSelect,
+    handleDrop,
+    handleDragOver,
+    handleDragLeave,
+    triggerFilePicker
+  ]);
 }
