@@ -25,6 +25,8 @@ import MiddleTruncate from "../components/ui/MiddleTruncate";
 import { StatusBadge, TypePill } from "../components/ui/Badge";
 import Alert from "../components/ui/Alert";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
+import SelectDropdown from "../components/ui/SelectDropdown";
+
 
 type ViewTab = "batches" | "all";
 
@@ -469,19 +471,20 @@ export default function DocumentRequestListPage() {
               {isQaAdmin && tab === "batches" && (
                 <div className="flex flex-col gap-1.5 col-span-2">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Status</label>
-                  <select
+                  <SelectDropdown
                     value={status}
-                    onChange={(e) => {
-                      setStatus(e.target.value as any);
+                    onChange={(val) => {
+                      setStatus(val as any);
                       setPage(1);
                     }}
-                    className={selectCls}
-                  >
-                    <option value="">All statuses</option>
-                    <option value="open">Open</option>
-                    <option value="closed">Closed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
+                    className="w-full"
+                    options={[
+                      { value: "", label: "All statuses" },
+                      { value: "open", label: "Open" },
+                      { value: "closed", label: "Closed" },
+                      { value: "cancelled", label: "Cancelled" },
+                    ]}
+                  />
                 </div>
               )}
 
@@ -490,37 +493,39 @@ export default function DocumentRequestListPage() {
                   {isQaAdmin && (
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Batch</label>
-                      <select
+                      <SelectDropdown
                         value={status}
-                        onChange={(e) => {
-                          setStatus(e.target.value as any);
+                        onChange={(val) => {
+                          setStatus(val as any);
                           setPage(1);
                         }}
-                        className={selectCls}
-                      >
-                        <option value="">All batches</option>
-                        <option value="open">Open</option>
-                        <option value="closed">Closed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                        className="w-full"
+                        options={[
+                          { value: "", label: "All batches" },
+                          { value: "open", label: "Open" },
+                          { value: "closed", label: "Closed" },
+                          { value: "cancelled", label: "Cancelled" },
+                        ]}
+                      />
                     </div>
                   )}
                   <div className={`flex flex-col gap-1.5 ${isQaAdmin ? "" : "col-span-2"}`}>
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Progress</label>
-                    <select
+                    <SelectDropdown
                       value={recipientStatus}
-                      onChange={(e) => {
-                        setRecipientStatus(e.target.value as any);
+                      onChange={(val) => {
+                        setRecipientStatus(val as any);
                         setPage(1);
                       }}
-                      className={selectCls}
-                    >
-                      <option value="">All progress</option>
-                      <option value="pending">Pending</option>
-                      <option value="submitted">Submitted</option>
-                      <option value="accepted">Accepted</option>
-                      <option value="rejected">Rejected</option>
-                    </select>
+                      className="w-full"
+                      options={[
+                        { value: "", label: "All progress" },
+                        { value: "pending", label: "Pending" },
+                        { value: "submitted", label: "Submitted" },
+                        { value: "accepted", label: "Accepted" },
+                        { value: "rejected", label: "Rejected" },
+                      ]}
+                    />
                   </div>
                 </>
               )}
@@ -529,52 +534,55 @@ export default function DocumentRequestListPage() {
         }
       >
         {isQaAdmin && tab === "batches" && (
-          <select
+          <SelectDropdown
             value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as any);
+            onChange={(val) => {
+              setStatus(val as any);
               setPage(1);
             }}
-            className={`${selectCls} text-xs h-8 w-32`}
-          >
-            <option value="">All statuses</option>
-            <option value="open">Open</option>
-            <option value="closed">Closed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+            className="w-32"
+            options={[
+              { value: "", label: "All statuses" },
+              { value: "open", label: "Open" },
+              { value: "closed", label: "Closed" },
+              { value: "cancelled", label: "Cancelled" },
+            ]}
+          />
         )}
 
         {tab === "all" && (
           <>
             {isQaAdmin && (
-              <select
+              <SelectDropdown
                 value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value as any);
+                onChange={(val) => {
+                  setStatus(val as any);
                   setPage(1);
                 }}
-                className={`${selectCls} text-xs h-8 w-32`}
-              >
-                <option value="">All batches</option>
-                <option value="open">Open</option>
-                <option value="closed">Closed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
+                className="w-32"
+                options={[
+                  { value: "", label: "All batches" },
+                  { value: "open", label: "Open" },
+                  { value: "closed", label: "Closed" },
+                  { value: "cancelled", label: "Cancelled" },
+                ]}
+              />
             )}
-            <select
+            <SelectDropdown
               value={recipientStatus}
-              onChange={(e) => {
-                setRecipientStatus(e.target.value as any);
+              onChange={(val) => {
+                setRecipientStatus(val as any);
                 setPage(1);
               }}
-              className={`${selectCls} text-xs h-8 w-32`}
-            >
-              <option value="">All progress</option>
-              <option value="pending">Pending</option>
-              <option value="submitted">Submitted</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
-            </select>
+              className="w-32"
+              options={[
+                { value: "", label: "All progress" },
+                { value: "pending", label: "Pending" },
+                { value: "submitted", label: "Submitted" },
+                { value: "accepted", label: "Accepted" },
+                { value: "rejected", label: "Rejected" },
+              ]}
+            />
           </>
         )}
       </SearchFilterBar>

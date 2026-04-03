@@ -6,7 +6,7 @@ import Table, { type TableColumn } from "../components/ui/Table";
 import { getAdminOffices, type AdminOffice } from "../services/admin";
 import OfficeEditModal from "../components/admin/OfficeEditModal";
 import Alert from "../components/ui/Alert";
-import { selectCls } from "../utils/formStyles";
+import SelectDropdown from "../components/ui/SelectDropdown";
 import MiddleTruncate from "../components/ui/MiddleTruncate";
 import { formatDate } from "../utils/formatters";
 import { StatusBadge } from "../components/ui/Badge";
@@ -223,56 +223,58 @@ export function OfficeManagerPage() {
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Status</label>
-              <select
+              <SelectDropdown
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className={selectCls}
-              >
-                <option value="active">Active</option>
-                <option value="disabled">Disabled</option>
-                <option value="all">All</option>
-              </select>
+                onChange={(val) => setStatusFilter((val as any) || "active")}
+                className="w-full"
+                options={[
+                  { value: "active", label: "Active" },
+                  { value: "disabled", label: "Disabled" },
+                  { value: "all", label: "All" },
+                ]}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
-              <select
+              <SelectDropdown
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className={selectCls}
-              >
-                <option value="">All types</option>
-                {OFFICE_TYPES.map((t) => (
-                  <option key={t} value={t} className="capitalize">
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setTypeFilter((val as string) || "")}
+                className="w-full"
+                options={[
+                  { value: "", label: "All types" },
+                  ...OFFICE_TYPES.map((t) => ({
+                    value: t,
+                    label: t.charAt(0).toUpperCase() + t.slice(1),
+                  })),
+                ]}
+              />
             </div>
           </div>
         }
       >
-        <select
+        <SelectDropdown
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as any)}
-          className={`${selectCls} text-xs h-8 w-28`}
-        >
-          <option value="active">Active</option>
-          <option value="disabled">Disabled</option>
-          <option value="all">All</option>
-        </select>
+          onChange={(val) => setStatusFilter((val as any) || "active")}
+          className="w-28"
+          options={[
+            { value: "active", label: "Active" },
+            { value: "disabled", label: "Disabled" },
+            { value: "all", label: "All" },
+          ]}
+        />
 
-        <select
+        <SelectDropdown
           value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className={`${selectCls} text-xs h-8 w-32`}
-        >
-          <option value="">All types</option>
-          {OFFICE_TYPES.map((t) => (
-            <option key={t} value={t} className="capitalize">
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </option>
-          ))}
-        </select>
+          onChange={(val) => setTypeFilter((val as string) || "")}
+          className="w-32"
+          options={[
+            { value: "", label: "All types" },
+            ...OFFICE_TYPES.map((t) => ({
+              value: t,
+              label: t.charAt(0).toUpperCase() + t.slice(1),
+            })),
+          ]}
+        />
       </SearchFilterBar>
 
       {error && <Alert variant="danger">{error}</Alert>}

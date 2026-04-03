@@ -1,5 +1,8 @@
 import React from "react";
 import { filterSelectCls } from "../../utils/formStyles";
+import SelectDropdown from "../ui/SelectDropdown";
+
+
 
 export type Bucket = "daily" | "weekly" | "monthly" | "yearly" | "total";
 export type Parent = "ALL" | "PO" | "VAd" | "VA" | "VF" | "VR";
@@ -125,18 +128,19 @@ const ReportFilters: React.FC<ReportFiltersProps> = ({
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Cluster
           </p>
-          <select
+          <SelectDropdown
             value={parent}
-            onChange={(e) => setParent(e.target.value as Parent)}
-            className={filterSelectCls}
-          >
-            <option value="ALL">All clusters</option>
-            <option value="PO">President (PO)</option>
-            <option value="VAd">VP-Admin (VAd)</option>
-            <option value="VA">VP-AA (VA)</option>
-            <option value="VF">VP-Finance (VF)</option>
-            <option value="VR">VP-REQA (VR)</option>
-          </select>
+            onChange={(val) => setParent(val as Parent)}
+            className="w-full"
+            options={[
+              { value: "ALL", label: "All clusters" },
+              { value: "PO", label: "President (PO)" },
+              { value: "VAd", label: "VP-Admin (VAd)" },
+              { value: "VA", label: "VP-AA (VA)" },
+              { value: "VF", label: "VP-Finance (VF)" },
+              { value: "VR", label: "VP-REQA (VR)" },
+            ]}
+          />
         </div>
       )}
 
@@ -146,20 +150,20 @@ const ReportFilters: React.FC<ReportFiltersProps> = ({
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Office
           </p>
-          <select
+          <SelectDropdown
             value={officeId ?? ""}
-            onChange={(e) => setOfficeId(e.target.value ? Number(e.target.value) : null)}
-            className={filterSelectCls}
-          >
-            <option value="">All offices</option>
-            {[...officesList]
-              .sort((a, b) => a.code.localeCompare(b.code))
-              .map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.code} — {o.name}
-                </option>
-              ))}
-          </select>
+            onChange={(val) => setOfficeId(val ? Number(val) : null)}
+            className="w-full"
+            options={[
+              { value: "", label: "All offices" },
+              ...[...officesList]
+                .sort((a, b) => a.code.localeCompare(b.code))
+                .map((o) => ({
+                  value: String(o.id),
+                  label: `${o.code} — ${o.name}`,
+                })),
+            ]}
+          />
         </div>
       )}
 
@@ -168,17 +172,18 @@ const ReportFilters: React.FC<ReportFiltersProps> = ({
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
           Group by
         </p>
-        <select
+        <SelectDropdown
           value={bucket}
-          onChange={(e) => setBucket(e.target.value as Bucket)}
-          className={filterSelectCls}
-        >
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="yearly">Yearly</option>
-          <option value="total">Total</option>
-        </select>
+          onChange={(val) => setBucket(val as Bucket)}
+          className="w-full"
+          options={[
+            { value: "daily", label: "Daily" },
+            { value: "weekly", label: "Weekly" },
+            { value: "monthly", label: "Monthly" },
+            { value: "yearly", label: "Yearly" },
+            { value: "total", label: "Total" },
+          ]}
+        />
       </div>
 
       {/* Date field */}

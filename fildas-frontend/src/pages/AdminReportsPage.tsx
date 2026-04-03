@@ -25,6 +25,8 @@ import type {
   AdminDashboardStats,
 } from "../services/documents";
 import Skeleton from "../components/ui/loader/Skeleton";
+import SelectDropdown from "../components/ui/SelectDropdown";
+
 import { filterSelectCls, tabCls } from "../utils/formStyles";
 import {
   FileText,
@@ -680,13 +682,18 @@ const AdminReportsPage: React.FC = () => {
               {/* Group by */}
               <div>
                 <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Group by</p>
-                <select value={bucket} onChange={(e) => setBucket(e.target.value as Bucket)} className={filterSelectCls}>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                  <option value="total">Total</option>
-                </select>
+                <SelectDropdown
+                  value={bucket}
+                  onChange={(val) => setBucket(val as Bucket)}
+                  className="w-full"
+                  options={[
+                    { value: "daily", label: "Daily" },
+                    { value: "weekly", label: "Weekly" },
+                    { value: "monthly", label: "Monthly" },
+                    { value: "yearly", label: "Yearly" },
+                    { value: "total", label: "Total" },
+                  ]}
+                />
               </div>
 
               {/* Date range */}

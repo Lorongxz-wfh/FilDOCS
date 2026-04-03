@@ -77,7 +77,7 @@ const LoginPage: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col pt-2">
-                <h3 className="text-[15.6px] font-black uppercase tracking-tight leading-none text-white">
+                <h3 className="text-[15.6px] font-display font-black uppercase tracking-tight leading-none text-white">
                   Filamer Christian University, Inc.
                 </h3>
                 <p className="text-[11px] text-blue-100/80 leading-tight mt-2 font-medium">
@@ -90,10 +90,10 @@ const LoginPage: React.FC = () => {
 
             {/* Brand Section */}
             <div className="mb-6">
-              <h1 className="text-[4.5rem] font-bold tracking-tighter text-white leading-none">
+              <h1 className="text-[4.5rem] font-display font-bold tracking-tighter text-white leading-none">
                 FilDAS
               </h1>
-              <p className="text-xl font-bold text-blue-200 mt-2">
+              <p className="text-xl font-display font-bold text-blue-200 mt-2">
                 Filamer Digital Archiving System
               </p>
             </div>
@@ -139,7 +139,7 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          <h2 className="text-[1.6rem] font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h2 className="text-[1.6rem] font-display font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Sign In
           </h2>
           <p className="mt-1 text-sm text-slate-400 dark:text-slate-400">

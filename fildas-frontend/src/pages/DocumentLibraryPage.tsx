@@ -9,7 +9,7 @@ import {
 import { getAuthUser } from "../lib/auth";
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import Table from "../components/ui/Table";
-import Select from "../components/ui/Select";
+import SelectDropdown from "../components/ui/SelectDropdown";
 import Alert from "../components/ui/Alert";
 import DateRangeInput from "../components/ui/DateRangeInput";
 import { PageActions, CreateAction, RefreshAction, ArchiveAction } from "../components/ui/PageActions";
@@ -316,9 +316,9 @@ export default function DocumentLibraryPage() {
             <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
-                <Select
+                <SelectDropdown
                   value={typeFilter}
-                  onChange={(val) => setTypeFilter(val as string)}
+                  onChange={(val) => setTypeFilter((val as string) || "ALL")}
                   placeholder="All Types"
                   className="w-full"
                   options={[
@@ -333,9 +333,9 @@ export default function DocumentLibraryPage() {
               {tab === "all" && !isAuditor(role) && (
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Source</label>
-                  <Select
+                  <SelectDropdown
                     value={sourceFilter}
-                    onChange={(val) => setSourceFilter(val as "all" | "doc" | "req")}
+                    onChange={(val) => setSourceFilter((val as "all" | "doc" | "req") || "all")}
                     placeholder="All Sources"
                     className="w-full"
                     options={[
@@ -360,9 +360,9 @@ export default function DocumentLibraryPage() {
           </div>
         }
       >
-        <Select
+        <SelectDropdown
           value={typeFilter}
-          onChange={(val) => setTypeFilter(val as string)}
+          onChange={(val) => setTypeFilter((val as string) || "ALL")}
           placeholder="All Types"
           className="w-32"
           options={[
@@ -374,9 +374,9 @@ export default function DocumentLibraryPage() {
         />
 
         {tab === "all" && !isAuditor(role) && (
-          <Select
+          <SelectDropdown
             value={sourceFilter}
-            onChange={(val) => setSourceFilter(val as "all" | "doc" | "req")}
+            onChange={(val) => setSourceFilter((val as "all" | "doc" | "req") || "all")}
             placeholder="All Sources"
             className="w-36"
             options={[

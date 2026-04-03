@@ -12,7 +12,7 @@ import {
 } from "../services/admin";
 import UserEditModal from "../components/admin/UserEditModal";
 import Alert from "../components/ui/Alert";
-import { selectCls } from "../utils/formStyles";
+import SelectDropdown from "../components/ui/SelectDropdown";
 import MiddleTruncate from "../components/ui/MiddleTruncate";
 import { formatDate } from "../utils/formatters";
 import { StatusBadge } from "../components/ui/Badge";
@@ -258,60 +258,62 @@ const UserManagerPage: React.FC = () => {
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Status</label>
-              <select
+              <SelectDropdown
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className={selectCls}
-              >
-                <option value="">All statuses</option>
-                <option value="active">Active</option>
-                <option value="disabled">Disabled</option>
-              </select>
+                onChange={(val) => setStatusFilter((val as any) || "")}
+                className="w-full"
+                options={[
+                  { value: "", label: "All statuses" },
+                  { value: "active", label: "Active" },
+                  { value: "disabled", label: "Disabled" },
+                ]}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Role</label>
-              <select
+              <SelectDropdown
                 value={roleFilter}
-                onChange={(e) =>
-                  setRoleFilter(e.target.value === "" ? "" : Number(e.target.value))
+                onChange={(val) =>
+                  setRoleFilter(val === null || val === "" ? "" : Number(val))
                 }
-                className={selectCls}
-              >
-                <option value="">All roles</option>
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.label || r.name}
-                  </option>
-                ))}
-              </select>
+                className="w-full"
+                options={[
+                  { value: "", label: "All roles" },
+                  ...roles.map((r) => ({
+                    value: r.id,
+                    label: r.label || r.name,
+                  })),
+                ]}
+              />
             </div>
           </div>
         }
       >
-        <select
+        <SelectDropdown
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as any)}
-          className={`${selectCls} text-xs h-8 w-32`}
-        >
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="disabled">Disabled</option>
-        </select>
+          onChange={(val) => setStatusFilter((val as any) || "")}
+          className="w-32"
+          options={[
+            { value: "", label: "All statuses" },
+            { value: "active", label: "Active" },
+            { value: "disabled", label: "Disabled" },
+          ]}
+        />
 
-        <select
+        <SelectDropdown
           value={roleFilter}
-          onChange={(e) =>
-            setRoleFilter(e.target.value === "" ? "" : Number(e.target.value))
+          onChange={(val) =>
+            setRoleFilter(val === null || val === "" ? "" : Number(val))
           }
-          className={`${selectCls} text-xs h-8 w-40`}
-        >
-          <option value="">All roles</option>
-          {roles.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.label || r.name}
-            </option>
-          ))}
-        </select>
+          className="w-40"
+          options={[
+            { value: "", label: "All roles" },
+            ...roles.map((r) => ({
+              value: r.id,
+              label: r.label || r.name,
+            })),
+          ]}
+        />
       </SearchFilterBar>
 
       {error && <Alert variant="danger">{error}</Alert>}

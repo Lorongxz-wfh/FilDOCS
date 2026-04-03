@@ -11,6 +11,8 @@ import { getAuthUser } from "../lib/auth";
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import { PageActions, RefreshAction, UploadAction } from "../components/ui/PageActions";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
+import SelectDropdown from "../components/ui/SelectDropdown";
+
 
 import {
   listTemplates,
@@ -255,43 +257,47 @@ const TemplatesPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Scope</label>
-                  <select
+                  <SelectDropdown
                     value={scope}
-                    onChange={(e) => setScope(e.target.value as typeof scope)}
-                    className={selectCls}
-                  >
-                    <option value="all">All Scope</option>
-                    <option value="global">Global</option>
-                    <option value="mine">Mine</option>
-                  </select>
+                    onChange={(val) => setScope((val as typeof scope) || "all")}
+                    className="w-full"
+                    options={[
+                      { value: "all", label: "All Scope" },
+                      { value: "global", label: "Global" },
+                      { value: "mine", label: "Mine" },
+                    ]}
+                  />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Tag</label>
-                  <select
+                  <SelectDropdown
                     value={activeTag || ""}
-                    onChange={(e) => setActiveTag(e.target.value || null)}
-                    className={selectCls}
-                  >
-                    <option value="">All Tags</option>
-                    {allTags.map(tag => (
-                      <option key={tag} value={tag}>{tag}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => setActiveTag((val as string) || null)}
+                    className="w-full"
+                    options={[
+                      { value: "", label: "All Tags" },
+                      ...allTags.map(tag => ({
+                        value: tag,
+                        label: tag,
+                      })),
+                    ]}
+                  />
                 </div>
               </div>
             </div>
           }
         >
           {canChooseScope && (
-            <select
+            <SelectDropdown
               value={scope}
-              onChange={(e) => setScope(e.target.value as typeof scope)}
-              className={`${selectCls} text-xs w-28 h-8`}
-            >
-              <option value="all">All Scope</option>
-              <option value="global">Global</option>
-              <option value="mine">Mine</option>
-            </select>
+              onChange={(val) => setScope((val as typeof scope) || "all")}
+              className="w-28"
+              options={[
+                { value: "all", label: "All Scope" },
+                { value: "global", label: "Global" },
+                { value: "mine", label: "Mine" },
+              ]}
+            />
           )}
 
           <div ref={tagDropdownRef} className="relative">

@@ -53,7 +53,7 @@ const AdminStatGrid: React.FC<Props> = ({ data, loading }) => {
             {loading ? (
               <Skeleton className="h-5 sm:h-7 w-12 sm:w-14" />
             ) : (
-              <p className="text-lg sm:text-2xl font-black leading-none text-slate-900 dark:text-slate-100 tabular-nums">
+              <p className="text-lg sm:text-2xl font-display font-black leading-none text-slate-900 dark:text-slate-100 tabular-nums">
                 {item.value}
               </p>
             )}

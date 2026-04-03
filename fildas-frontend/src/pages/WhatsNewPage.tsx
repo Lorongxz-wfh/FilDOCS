@@ -11,6 +11,8 @@ import {
   ChevronDown,
   GripVertical,
 } from "lucide-react";
+import SelectDropdown from "../components/ui/SelectDropdown";
+
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Tag = "New" | "Improved" | "Fixed" | "Performance";
@@ -275,15 +277,15 @@ function CreateReleaseModal({
               {items.map((item, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <GripVertical className="mt-2.5 h-3.5 w-3.5 shrink-0 text-slate-300 dark:text-slate-600" />
-                  <select
+                  <SelectDropdown
                     value={item.tag}
-                    onChange={(e) => updateItem(i, "tag", e.target.value)}
-                    className="shrink-0 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-400 px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400 transition"
-                  >
-                    {ALL_TAGS.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => updateItem(i, "tag", val as string)}
+                    className="shrink-0 w-32"
+                    options={ALL_TAGS.map((t) => ({
+                      value: t,
+                      label: t,
+                    }))}
+                  />
                   <input
                     value={item.text}
                     onChange={(e) => updateItem(i, "text", e.target.value)}

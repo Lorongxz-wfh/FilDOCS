@@ -3,6 +3,8 @@ import Modal from "../../ui/Modal";
 import type { DocumentVersion } from "../../../services/types";
 import { getDocumentPreviewLink } from "../../../services/documentApi";
 import { Download, Check, ArrowRight } from "lucide-react";
+import SelectDropdown from "../../ui/SelectDropdown";
+
 
 type Props = {
   open: boolean;
@@ -131,18 +133,16 @@ export default function VersionComparisonModal({
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Base Version (Before)
             </label>
-            <select
-              className="w-full rounded-md border border-slate-300 dark:border-surface-400 dark:bg-surface-500 bg-white px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
-              value={leftId}
-              onChange={(e) => setLeftId(Number(e.target.value))}
-            >
-              <option value="" disabled>Select...</option>
-              {allVersions.map((v) => (
-                <option key={v.id} value={v.id}>
-                  v{v.version_number} — {new Date(v.created_at).toLocaleDateString()}
-                </option>
-              ))}
-            </select>
+            <SelectDropdown
+              value={String(leftId)}
+              onChange={(val) => setLeftId(Number(val))}
+              className="w-full"
+              options={allVersions.map((v) => ({
+                key: v.id,
+                value: String(v.id),
+                label: `v${v.version_number} — ${new Date(v.created_at).toLocaleDateString()}`,
+              }))}
+            />
           </div>
 
           <div className="flex items-center justify-center mt-6">
@@ -153,18 +153,16 @@ export default function VersionComparisonModal({
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Target Version (After)
             </label>
-            <select
-              className="w-full rounded-md border border-slate-300 dark:border-surface-400 dark:bg-surface-500 bg-white px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
-              value={rightId}
-              onChange={(e) => setRightId(Number(e.target.value))}
-            >
-              <option value="" disabled>Select...</option>
-              {allVersions.map((v) => (
-                <option key={v.id} value={v.id}>
-                  v{v.version_number} — {new Date(v.created_at).toLocaleDateString()}
-                </option>
-              ))}
-            </select>
+            <SelectDropdown
+              value={String(rightId)}
+              onChange={(val) => setRightId(Number(val))}
+              className="w-full"
+              options={allVersions.map((v) => ({
+                key: v.id,
+                value: String(v.id),
+                label: `v${v.version_number} — ${new Date(v.created_at).toLocaleDateString()}`,
+              }))}
+            />
           </div>
         </div>
 

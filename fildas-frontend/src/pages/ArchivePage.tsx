@@ -11,7 +11,7 @@ import { buildArchiveColumns } from "./documentLibrary/DocumentLibraryColumns";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
-import Select from "../components/ui/Select";
+import SelectDropdown from "../components/ui/SelectDropdown";
 import DateRangeInput from "../components/ui/DateRangeInput";
 
 export default function ArchivePage() {
@@ -133,9 +133,9 @@ export default function ArchivePage() {
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
-              <Select
+              <SelectDropdown
                 value={typeFilter}
-                onChange={(val) => setTypeFilter(val as string)}
+                onChange={(val) => setTypeFilter((val as string) || "ALL")}
                 placeholder="All Types"
                 className="w-full"
                 options={[
@@ -159,9 +159,9 @@ export default function ArchivePage() {
           </div>
         }
       >
-        <Select
+        <SelectDropdown
           value={typeFilter}
-          onChange={(val) => setTypeFilter(val as string)}
+          onChange={(val) => setTypeFilter((val as string) || "ALL")}
           placeholder="All Types"
           className="w-32"
           options={[

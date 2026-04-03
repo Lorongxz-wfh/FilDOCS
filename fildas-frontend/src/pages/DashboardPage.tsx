@@ -50,7 +50,7 @@ const Card: React.FC<{
   >
     <div className={`flex items-start justify-between gap-3 border-b border-slate-100 dark:border-surface-400 p-3 sm:px-4 sm:py-3`}>
       <div className="min-w-0">
-        <p className="text-[13px] sm:text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
+        <p className="text-[13px] sm:text-sm font-display font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
           {title}
         </p>
         {sub && (
@@ -150,7 +150,7 @@ const QADashboard: React.FC<
               className="min-w-0 rounded-md border border-slate-200 bg-white p-2 sm:px-4 sm:py-3.5 dark:border-surface-400 dark:bg-surface-500 flex flex-col justify-between"
             >
               <div className="flex items-center justify-between gap-1 text-slate-500 dark:text-slate-400">
-                <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider leading-tight truncate">
+                <p className="text-[9px] sm:text-xs font-display font-bold uppercase tracking-wider leading-tight truncate">
                   {k.label}
                 </p>
                 <span className={`shrink-0 ${k.iconCls} sm:scale-100 scale-75`}>{k.icon}</span>
@@ -161,7 +161,7 @@ const QADashboard: React.FC<
                   <Skeleton className="h-5 sm:h-7 w-10 sm:w-14" />
                 ) : (
                   <p
-                    className={`text-sm sm:text-2xl font-black tabular-nums leading-none ${k.valueCls}`}
+                    className={`text-sm sm:text-2xl font-display font-black tabular-nums leading-none ${k.valueCls}`}
                   >
                     {k.value}
                   </p>
@@ -475,7 +475,7 @@ const AuditorDashboard: React.FC<
           {loading ? (
             <Skeleton className="mt-3 h-7 w-14" />
           ) : (
-            <p className="mt-2.5 text-2xl font-bold tabular-nums leading-none text-slate-900 dark:text-slate-100">
+            <p className="mt-2.5 text-2xl font-display font-bold tabular-nums leading-none text-slate-900 dark:text-slate-100">
               {stats?.distributed ?? 0}
             </p>
           )}
@@ -573,7 +573,7 @@ const DashboardPage: React.FC = () => {
             <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 leading-none">
               {today}
             </p>
-            <h1 className="mt-1 text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 leading-tight truncate">
+            <h1 className="mt-1 text-sm sm:text-base font-display font-extrabold text-slate-900 dark:text-slate-100 leading-tight truncate">
               {greeting}, {firstName}
             </h1>
           </div>

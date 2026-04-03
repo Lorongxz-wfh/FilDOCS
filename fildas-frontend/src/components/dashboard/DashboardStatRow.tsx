@@ -178,7 +178,7 @@ const DashboardStatRow: React.FC<Props> = ({
                   {loading ? (
                     <Skeleton className="mt-1 h-6 w-10 sm:h-7 sm:w-14" />
                   ) : (
-                    <p className={`text-xl sm:text-2xl font-black tabular-nums leading-none sm:mt-1.5 ${item.valueColor}`}>
+                    <p className={`text-xl sm:text-2xl font-display font-black tabular-nums leading-none sm:mt-1.5 ${item.valueColor}`}>
                       {item.value}
                     </p>
                   )}
@@ -203,7 +203,7 @@ const DashboardStatRow: React.FC<Props> = ({
                   {loading ? (
                     <Skeleton className="mt-1 sm:mt-1.5 h-5 sm:h-7 w-10 sm:w-14" />
                   ) : (
-                    <p className={`text-lg sm:text-2xl font-bold tabular-nums leading-none sm:mt-1 ${item.valueColor}`}>
+                    <p className={`text-lg sm:text-2xl font-display font-bold tabular-nums leading-none sm:mt-1 ${item.valueColor}`}>
                       {item.value}
                     </p>
                   )}

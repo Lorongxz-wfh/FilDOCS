@@ -10,6 +10,8 @@ import DateRangeInput from "../components/ui/DateRangeInput";
 import { PageActions, RefreshAction, ExportSplitAction } from "../components/ui/PageActions";
 import ActivityDetailModal from "../components/activityLogs/ActivityDetailModal";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
+import SelectDropdown from "../components/ui/SelectDropdown";
+
 
 type ActivityLogRow = {
   id: number;
@@ -310,19 +312,20 @@ const MyActivityPage: React.FC = () => {
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Category</label>
-              <select
+              <SelectDropdown
                 value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value as Category);
+                onChange={(val) => {
+                  setCategory((val as Category) || "");
                   setPage(1);
                 }}
-                className={selectCls}
-              >
-                <option value="">All actions</option>
-                <option value="workflow">Workflow</option>
-                <option value="document">Documents &amp; Files</option>
-                <option value="request">Requests</option>
-              </select>
+                className="w-full"
+                options={[
+                  { value: "", label: "All actions" },
+                  { value: "workflow", label: "Workflow" },
+                  { value: "document", label: "Documents & Files" },
+                  { value: "request", label: "Requests" },
+                ]}
+              />
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -343,19 +346,20 @@ const MyActivityPage: React.FC = () => {
           </div>
         }
       >
-        <select
+        <SelectDropdown
           value={category}
-          onChange={(e) => {
-            setCategory(e.target.value as Category);
+          onChange={(val) => {
+            setCategory((val as Category) || "");
             setPage(1);
           }}
-          className={`${selectCls} text-xs h-8 w-40`}
-        >
-          <option value="">All actions</option>
-          <option value="workflow">Workflow</option>
-          <option value="document">Documents &amp; Files</option>
-          <option value="request">Requests</option>
-        </select>
+          className="w-40"
+          options={[
+            { value: "", label: "All actions" },
+            { value: "workflow", label: "Workflow" },
+            { value: "document", label: "Documents & Files" },
+            { value: "request", label: "Requests" },
+          ]}
+        />
 
         <DateRangeInput
           from={dateFrom}

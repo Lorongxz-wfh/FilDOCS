@@ -1,5 +1,6 @@
-import React from "react";
 import { selectCls } from "../../utils/formStyles";
+import SelectDropdown from "../ui/SelectDropdown";
+import React from "react";
 import DateRangeInput from "../ui/DateRangeInput";
 import type { ActivityLogsParams, Scope, Category } from "../../hooks/useActivityLogs";
 import SearchFilterBar from "../ui/SearchFilterBar";
@@ -45,32 +46,34 @@ const ActivityLogsFilters: React.FC<Props> = ({
                   Office scoped
                 </div>
               ) : (
-                <select
+                <SelectDropdown
                   value={params.scope}
-                  onChange={(e) => updateParams({ scope: e.target.value as Scope })}
-                  className={selectCls}
-                >
-                  <option value="all">All</option>
-                  <option value="office">My office</option>
-                  <option value="mine">Mine</option>
-                </select>
+                  onChange={(val) => updateParams({ scope: val as Scope })}
+                  className="w-full"
+                  options={[
+                    { value: "all", label: "All" },
+                    { value: "office", label: "My office" },
+                    { value: "mine", label: "Mine" },
+                  ]}
+                />
               )}
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Category</label>
-              <select
+              <SelectDropdown
                 value={params.category}
-                onChange={(e) => updateParams({ category: e.target.value as Category })}
-                className={selectCls}
-              >
-                <option value="">All categories</option>
-                <option value="workflow">Workflow</option>
-                <option value="request">Document Requests</option>
-                <option value="document">Documents</option>
-                <option value="user">User Management</option>
-                <option value="template">Templates</option>
-                <option value="profile">Profile & Auth</option>
-              </select>
+                onChange={(val) => updateParams({ category: val as Category })}
+                className="w-full"
+                options={[
+                  { value: "", label: "All categories" },
+                  { value: "workflow", label: "Workflow" },
+                  { value: "request", label: "Document Requests" },
+                  { value: "document", label: "Documents" },
+                  { value: "user", label: "User Management" },
+                  { value: "template", label: "Templates" },
+                  { value: "profile", label: "Profile & Auth" },
+                ]}
+              />
             </div>
           </div>
 
@@ -87,34 +90,36 @@ const ActivityLogsFilters: React.FC<Props> = ({
       }
     >
       {!isOfficeHead ? (
-        <select
+        <SelectDropdown
           value={params.scope}
-          onChange={(e) => updateParams({ scope: e.target.value as Scope })}
-          className={`${selectCls} text-xs h-8 w-24`}
-        >
-          <option value="all">All</option>
-          <option value="office">My office</option>
-          <option value="mine">Mine</option>
-        </select>
+          onChange={(val) => updateParams({ scope: val as Scope })}
+          className="w-24"
+          options={[
+            { value: "all", label: "All" },
+            { value: "office", label: "My office" },
+            { value: "mine", label: "Mine" },
+          ]}
+        />
       ) : (
         <span className="inline-flex items-center rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-3 h-8 text-[11px] font-medium text-slate-500 dark:text-slate-400">
           {officeName || "Your office"}
         </span>
       )}
 
-      <select
+      <SelectDropdown
         value={params.category}
-        onChange={(e) => updateParams({ category: e.target.value as Category })}
-        className={`${selectCls} text-xs h-8 w-36`}
-      >
-        <option value="">All categories</option>
-        <option value="workflow">Workflow</option>
-        <option value="request">Document Requests</option>
-        <option value="document">Documents</option>
-        <option value="user">User Management</option>
-        <option value="template">Templates</option>
-        <option value="profile">Profile & Auth</option>
-      </select>
+        onChange={(val) => updateParams({ category: val as Category })}
+        className="w-36"
+        options={[
+          { value: "", label: "All categories" },
+          { value: "workflow", label: "Workflow" },
+          { value: "request", label: "Document Requests" },
+          { value: "document", label: "Documents" },
+          { value: "user", label: "User Management" },
+          { value: "template", label: "Templates" },
+          { value: "profile", label: "Profile & Auth" },
+        ]}
+      />
 
       <DateRangeInput
         from={params.dateFrom}

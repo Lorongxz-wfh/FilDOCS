@@ -4,6 +4,8 @@ import Alert from "../ui/Alert";
 import Button from "../ui/Button";
 import InlineSpinner from "../ui/loader/InlineSpinner";
 import AdminOfficeDropdown from "./AdminOfficeDropdown";
+import SelectDropdown from "../ui/SelectDropdown";
+
 
 import {
   createAdminOffice,
@@ -240,16 +242,17 @@ export default function OfficeEditModal({
 
         <div>
           <label className={labelCls}>Cluster kind</label>
-          <select
-            className={inputCls}
+          <SelectDropdown
             value={clusterKind}
-            onChange={(e) => setClusterKind(e.target.value as any)}
+            onChange={(val) => setClusterKind(val as any)}
+            className="w-full"
             disabled={saving || !!acting || isDisabled}
-          >
-            <option value="">None</option>
-            <option value="vp">VP office</option>
-            <option value="president">President office (only 1 allowed)</option>
-          </select>
+            options={[
+              { value: "", label: "None" },
+              { value: "vp", label: "VP office" },
+              { value: "president", label: "President office (only 1 allowed)" },
+            ]}
+          />
         </div>
 
         <div>

@@ -20,6 +20,7 @@ import {
 } from "../services/documents";
 import { getUserRole } from "../lib/roleFilters";
 import { AnnouncementTypePill } from "../components/ui/Badge";
+import SelectDropdown from "../components/ui/SelectDropdown";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 type PageTab = "active" | "all";
@@ -194,17 +195,16 @@ const CreateModal: React.FC<{
                 <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">
                   Priority
                 </label>
-                <select
+                <SelectDropdown
                   value={type}
-                  onChange={(e) =>
-                    setType(e.target.value as "info" | "warning" | "urgent")
-                  }
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400 dark:border-surface-300 dark:bg-surface-600 dark:text-slate-100"
-                >
-                  <option value="info">Info</option>
-                  <option value="warning">Warning</option>
-                  <option value="urgent">Urgent</option>
-                </select>
+                  onChange={(val) => setType((val as any) || "info")}
+                  className="w-full"
+                  options={[
+                    { value: "info", label: "Info" },
+                    { value: "warning", label: "Warning" },
+                    { value: "urgent", label: "Urgent" },
+                  ]}
+                />
               </div>
               <div className="flex-1">
                 <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">
@@ -267,7 +267,7 @@ const CreateModal: React.FC<{
               disabled={submitting || !title.trim() || !body.trim()}
               className="rounded-md bg-brand-500 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {submitting ? "Posting…" : "Post announcement"}
+              {submitting ? "Posting..." : "Post announcement"}
             </button>
           </div>
         </form>
@@ -452,6 +452,7 @@ const AnnouncementsPage: React.FC = () => {
   const [dateFilter, setDateFilter] = React.useState<DateFilter>("all");
   const [customFrom, setCustomFrom] = React.useState("");
   const [customTo, setCustomTo] = React.useState("");
+  
   async function loadAll() {
     setLoading(true);
     setError(null);
@@ -800,7 +801,7 @@ const AnnouncementsPage: React.FC = () => {
                     <>
                       <div className="flex items-center gap-3 pt-2">
                         <Archive className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
-                        <p className="shrink-0 text-[11px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                        <p className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                           Archived
                         </p>
                         <div className="h-px flex-1 bg-slate-200 dark:bg-surface-400" />

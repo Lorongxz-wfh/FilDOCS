@@ -10,7 +10,7 @@ import Alert from "../components/ui/Alert";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
 import { formatDate } from "../utils/formatters";
-import Select from "../components/ui/Select";
+import SelectDropdown from "../components/ui/SelectDropdown";
 import DateRangeInput from "../components/ui/DateRangeInput";
 import { tabCls } from "../utils/formStyles";
 import { PageActions, CreateAction, RefreshAction } from "../components/ui/PageActions";
@@ -367,10 +367,10 @@ export default function MyWorkQueueListPage() {
             <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Phase</label>
-                <Select
+                <SelectDropdown
                   value={phaseFilter}
                   onChange={(val) => {
-                    setPhaseFilter(val as string);
+                    setPhaseFilter((val as string) || "");
                     setPage(1);
                   }}
                   className="w-full"
@@ -386,10 +386,10 @@ export default function MyWorkQueueListPage() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Office</label>
-                <Select
+                <SelectDropdown
                   value={officeFilter}
                   onChange={(val) => {
-                    setOfficeFilter(val as string);
+                    setOfficeFilter((val as string) || "");
                     setPage(1);
                   }}
                   className="w-full"
@@ -403,10 +403,10 @@ export default function MyWorkQueueListPage() {
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Version</label>
-              <Select
+              <SelectDropdown
                 value={versionFilter}
                 onChange={(val) => {
-                  setVersionFilter(val as string);
+                  setVersionFilter((val as string) || "");
                   setPage(1);
                 }}
                 className="w-full"
@@ -438,10 +438,10 @@ export default function MyWorkQueueListPage() {
           </div>
         }
       >
-        <Select
+        <SelectDropdown
           value={phaseFilter}
           onChange={(val) => {
-            setPhaseFilter(val as string);
+            setPhaseFilter((val as string) || "");
             setPage(1);
           }}
           placeholder="All Phases"
@@ -456,10 +456,10 @@ export default function MyWorkQueueListPage() {
           ]}
         />
 
-        <Select
+        <SelectDropdown
           value={officeFilter}
           onChange={(val) => {
-            setOfficeFilter(val as string);
+            setOfficeFilter((val as string) || "");
             setPage(1);
           }}
           placeholder="All Offices"
@@ -470,10 +470,10 @@ export default function MyWorkQueueListPage() {
           ]}
         />
 
-        <Select
+        <SelectDropdown
           value={versionFilter}
           onChange={(val) => {
-            setVersionFilter(val as string);
+            setVersionFilter((val as string) || "");
             setPage(1);
           }}
           placeholder="All Ver."
