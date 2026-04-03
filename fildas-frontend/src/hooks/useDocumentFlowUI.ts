@@ -195,8 +195,7 @@ export function useDocumentFlowUI({
     "QA_EDIT",
   ].includes(localVersion?.status ?? "");
   const canEditEffectiveDate = isQAOfficeUser && isQAStep;
-
-  const [activeSideTab, setActiveSideTab] = useState<"comments" | "logs">("comments");
+  const [activeSideTab, setActiveSideTab] = useState<"details" | "comments" | "participants" | "logs">("details");
 
   const terminalStatuses = new Set(["Distributed", "Cancelled", "Superseded"]);
   const effectiveStatus = localVersion?.status ?? version?.status ?? "";

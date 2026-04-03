@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronRight } from "lucide-react";
+import { FileText, MessageSquare, Users, Activity as ActivityIcon } from "lucide-react";
 import type {
   Document,
   DocumentVersion,
@@ -12,7 +12,6 @@ import type {
 import DocumentInfoPanel from "./DocumentInfoPanel";
 import DocumentCommentsPanel from "./DocumentCommentsPanel";
 import DocumentActivityPanel from "./DocumentActivityPanel";
-import { tabCls } from "../../../utils/formStyles";
 
 type Props = {
   document: Document | null;
@@ -22,8 +21,8 @@ type Props = {
   tasks?: WorkflowTask[];
   newMessageCount: number;
   clearNewMessageCount: () => void;
-  activeSideTab: "comments" | "logs";
-  setActiveSideTab: (v: "comments" | "logs") => void;
+  activeSideTab: "details" | "comments" | "participants" | "logs";
+  setActiveSideTab: (v: "details" | "comments" | "participants" | "logs") => void;
   isLoadingActivityLogs: boolean;
   activityLogs: ActivityLogItem[];
   isLoadingMessages: boolean;
@@ -74,74 +73,75 @@ const DocumentRightPanel: React.FC<Props> = ({
   onTitleSaved,
   onChanged,
 }) => {
-  const [infoExpanded, setInfoExpanded] = React.useState(true);
-  const [commentsExpanded, setCommentsExpanded] = React.useState(true);
   const isDataReady = !!document && !!version;
 
-  return (
-    <div className="flex flex-col h-full">
-      {/* ── Doc Info Accordion ── */}
-      <div className={`flex flex-col min-h-0 border-b border-slate-200 dark:border-surface-400 transition-all ${infoExpanded && !commentsExpanded ? "flex-1" : "shrink-0"}`}>
-        <button
-          type="button"
-          onClick={() => {
-            const isMobile = window.innerWidth < 768;
-            setInfoExpanded(!infoExpanded);
-            if (isMobile && !infoExpanded) setCommentsExpanded(false);
-          }}
-          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-surface-400/40 transition"
-        >
-          <ChevronRight
-            className={`h-3 w-3 shrink-0 text-slate-400 transition-transform duration-150 ${infoExpanded ? "rotate-90" : "rotate-0"}`}
-          />
-          <span className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">
-            Document Info
-          </span>
-          {isDataReady && document && (
-            <div
-              className="flex items-center gap-1 ml-1"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {document.doctype && (
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-semibold capitalize bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300 border border-slate-200 dark:border-surface-300/10`}
-                >
-                  {document.doctype}
-                </span>
-              )}
-              {(document as any).visibility_scope && (
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${
-                    (document as any).visibility_scope === "global"
-                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                      : "bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300"
-                  }`}
-                >
-                  {(document as any).visibility_scope}
-                </span>
-              )}
-            </div>
-          )}
-        </button>
+  const tabs: {
+    id: Props["activeSideTab"];
+    label: string;
+    icon: React.ElementType;
+    badge?: number;
+  }[] = [
+    { id: "details", label: "Details", icon: FileText },
+    { id: "comments", label: "Comments", icon: MessageSquare, badge: newMessageCount },
+    { id: "participants", label: "Participants", icon: Users },
+    { id: "logs", label: "Activity", icon: ActivityIcon },
+  ];
 
-        {infoExpanded && (
-          <div className="flex-1 px-2.5 pb-3 overflow-y-auto">
-            {!isDataReady ? (
-              <div className="space-y-1.5">
-                {[148, 100, 130, 90, 120, 110].map((w, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between rounded-md border border-slate-100 dark:border-surface-400 bg-slate-50 dark:bg-surface-600/50 px-3 py-2"
-                  >
-                    <div className="h-2.5 w-14 rounded-full bg-slate-200 dark:bg-surface-300 animate-pulse" />
-                    <div
-                      className="h-2.5 rounded-full bg-slate-200 dark:bg-surface-300 animate-pulse"
-                      style={{ width: w / 2 }}
-                    />
-                  </div>
-                ))}
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* ── Unified Tab Header ── */}
+      <div className="flex items-center px-1.5 border-b border-slate-200 dark:border-surface-400 bg-slate-50/30 dark:bg-surface-600/20 shrink-0">
+        <div className="flex items-center overflow-x-auto no-scrollbar">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeSideTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  setActiveSideTab(tab.id);
+                  if (tab.id === "comments") clearNewMessageCount();
+                }}
+                className={`flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold border-b-1 transition-colors whitespace-nowrap ${
+                  active
+                    ? "border-sky-600 text-slate-900 dark:text-slate-50"
+                    : "border-transparent text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300"
+                }`}
+              >
+                <Icon className="h-3 w-3 shrink-0 opacity-70" />
+                <span>{tab.label}</span>
+                {typeof tab.badge === "number" && tab.badge > 0 && (
+                  <span className="ml-0.5 inline-flex items-center justify-center rounded bg-sky-100 dark:bg-sky-950/40 px-1 py-0.5 text-[8px] font-bold text-sky-700 dark:text-sky-400">
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Tab Content ── */}
+      <div className="flex-1 min-h-0 flex flex-col p-2.5">
+        {!isDataReady ? (
+          <div className="space-y-1.5 overflow-y-auto">
+            {[148, 100, 130, 90, 120, 110].map((w, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between rounded-md border border-slate-100 dark:border-surface-400 bg-slate-50 dark:bg-surface-600/50 px-3 py-2"
+              >
+                <div className="h-2.5 w-14 rounded-full bg-slate-200 dark:bg-surface-300 animate-pulse" />
+                <div
+                  className="h-2.5 rounded-full bg-slate-200 dark:bg-surface-300 animate-pulse"
+                  style={{ width: w / 2 }}
+                />
               </div>
-            ) : (
+            ))}
+          </div>
+        ) : (
+          <>
+            {(activeSideTab === "details" || activeSideTab === "participants") && (
               <DocumentInfoPanel
                 document={document}
                 version={version}
@@ -151,77 +151,32 @@ const DocumentRightPanel: React.FC<Props> = ({
                 isEditable={isEditable}
                 onTitleSaved={onTitleSaved}
                 onChanged={onChanged}
+                activeTab={activeSideTab as "details" | "participants"}
               />
             )}
-          </div>
-        )}
-      </div>
 
-      {/* ── Comments / Activity Accordion ── */}
-      <div className={`flex flex-col min-h-0 transition-all ${commentsExpanded ? "flex-1" : "shrink-0"}`}>
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => {
-            const isMobile = window.innerWidth < 768;
-            setCommentsExpanded(!commentsExpanded);
-            if (isMobile && !commentsExpanded) setInfoExpanded(false);
-          }}
-          onKeyDown={(e) => e.key === "Enter" && setCommentsExpanded((v) => !v)}
-          className="shrink-0 w-full flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-surface-400 hover:bg-slate-50 dark:hover:bg-surface-400/40 transition cursor-pointer"
-        >
-          <ChevronRight
-            className={`h-3 w-3 shrink-0 text-slate-400 transition-transform duration-150 ${commentsExpanded ? "rotate-90" : "rotate-0"}`}
-          />
-          <div
-            className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {(["comments", "logs"] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveSideTab(tab);
-                  if (tab === "comments") clearNewMessageCount();
-                  if (!commentsExpanded) setCommentsExpanded(true);
-                }}
-                className={tabCls(activeSideTab === tab)}
-              >
-                {tab === "comments" ? "Comments" : "Activity"}
-                {tab === "comments" && newMessageCount > 0 && (
-                  <span className="ml-1.5 inline-flex items-center justify-center rounded bg-sky-100 dark:bg-sky-950/40 px-1.5 py-0.5 text-[10px] font-bold text-sky-700 dark:text-sky-400">
-                    {newMessageCount}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {commentsExpanded && (
-          <div className="flex flex-1 min-h-[250px] md:min-h-0 px-2.5 py-2">
-            {activeSideTab === "comments" ? (
+            {activeSideTab === "comments" && (
               <DocumentCommentsPanel
-                isLoading={isLoadingMessages || !isDataReady}
+                isLoading={isLoadingMessages}
                 messages={messages}
                 draftMessage={draftMessage}
                 setDraftMessage={setDraftMessage}
                 isSending={isSendingMessage}
                 onSend={onSendMessage}
                 formatWhen={formatWhen}
-                skeletonCount={infoExpanded ? 2 : 5}
+                skeletonCount={5}
                 optimisticMessages={optimisticMessages}
                 setOptimisticMessages={setOptimisticMessages}
               />
-            ) : (
+            )}
+
+            {activeSideTab === "logs" && (
               <DocumentActivityPanel
-                loading={isLoadingActivityLogs || !isDataReady}
+                loading={isLoadingActivityLogs}
                 logs={activityLogs}
               />
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

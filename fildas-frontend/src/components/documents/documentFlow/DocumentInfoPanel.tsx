@@ -14,7 +14,6 @@ import {
 
 import { InfoRow, fmt } from "./documentInfoHelpers";
 import DocumentInfoParticipantsTab from "./DocumentInfoParticipantsTab";
-import { tabCls } from "../../../utils/formStyles";
 import { StatusBadge } from "../../ui/Badge";
 
 type Props = {
@@ -26,6 +25,7 @@ type Props = {
   isEditable?: boolean;
   onTitleSaved?: (newTitle: string) => void;
   onChanged?: () => void;
+  activeTab: "details" | "participants";
 };
 
 const DocumentInfoPanel: React.FC<Props> = ({
@@ -37,14 +37,12 @@ const DocumentInfoPanel: React.FC<Props> = ({
   isEditable = false,
   onTitleSaved,
   onChanged,
+  activeTab,
 }) => {
   const isDraftStatus = ["Draft", "Office Draft"].includes(
     version?.status ?? "",
   );
 
-  const [activeTab, setActiveTab] = useState<"details" | "participants">(
-    "details",
-  );
   const [isEditing, setIsEditing] = useState(false);
   const [titleDraft, setTitleDraft] = useState(document?.title ?? "");
   const [tagsDraft, setTagsDraft] = useState<string[]>(
@@ -151,21 +149,7 @@ const DocumentInfoPanel: React.FC<Props> = ({
   const revisionReason = (version as any).revision_reason ?? null;
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 mb-4">
-        {(["details", "participants"] as const).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(tab)}
-            className={tabCls(activeTab === tab)}
-          >
-            {tab === "details" ? "Details" : "Participants"}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex-1 overflow-y-auto pr-0.5 space-y-4">
+    <div className="flex flex-col h-full overflow-y-auto pr-0.5 space-y-4">
         {activeTab === "details" && (
           <div className="space-y-3">
             {/* Header Actions for Editing */}
@@ -265,15 +249,39 @@ const DocumentInfoPanel: React.FC<Props> = ({
                 />
               )}
 
+              {null}
+            {/* Metadata Rows */}
+            <div className="grid grid-cols-1 gap-y-1.5 pt-1">
               <InfoRow
-                label="Effective date"
-                value={fmt((version as any).effective_date)}
+                icon={<Calendar className="h-3 w-3" />}
+                label="Created At"
+                value={fmt(document.created_at)}
               />
-              
-              <InfoRow 
-                label="Version Info" 
-                value={`v${version.version_number} · ${fmt(version.created_at)}`} 
+              <InfoRow
+                icon={<FileText className="h-3 w-3" />}
+                label="Type"
+                value={document.doctype}
+                valueClassName="capitalize"
               />
+              <InfoRow
+                icon={<Tag className="h-3 w-3" />}
+                label="Visibility"
+                value={(document as any).visibility_scope ?? "office"}
+                valueClassName="capitalize"
+              />
+              <InfoRow
+                icon={<CheckCircle2 className="h-3 w-3" />}
+                label="Version"
+                value={`v${version.version_number}`}
+              />
+              {version.effective_date && (
+                <InfoRow
+                  icon={<Calendar className="h-3 w-3" />}
+                  label="Effective"
+                  value={fmt(version.effective_date)}
+                />
+              )}
+            </div>
               
               {version.distributed_at && (
                 <InfoRow
@@ -385,7 +393,6 @@ const DocumentInfoPanel: React.FC<Props> = ({
             tasks={tasks}
           />
         )}
-      </div>
     </div>
   );
 };

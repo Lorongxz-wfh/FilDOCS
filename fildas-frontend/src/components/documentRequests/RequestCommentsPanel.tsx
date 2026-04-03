@@ -4,6 +4,7 @@ import CommentBubble from "../documents/documentFlow/CommentBubble";
 import CommentComposer from "../ui/CommentComposer";
 import type { DocumentRequestMessageRow } from "../../services/documentRequests";
 import { formatDateTime } from "./shared";
+import { getAvatarUrl } from "../../utils/formatters";
 import SkeletonList from "../ui/loader/SkeletonList";
 
 type Props = {
@@ -142,6 +143,9 @@ export default function RequestCommentsPanel({
                   isNew={newMessageIds.has(m.id)}
                   isMine={m.sender_user_id === myUserId}
                   avatarLetter={(m.sender?.name ?? "?").charAt(0).toUpperCase()}
+                  avatarUrl={getAvatarUrl(
+                    (m.sender as any)?.profile_photo_url || m.sender?.profile_photo_path,
+                  )}
                 />
               ))
           )}
@@ -178,7 +182,7 @@ export default function RequestCommentsPanel({
             onChange={onCommentChange}
             onSend={onPost}
             isSending={posting}
-            placeholder="Write a comment…"
+            placeholder="Ctrl + Enter to send message"
           />
         </div>
       )}

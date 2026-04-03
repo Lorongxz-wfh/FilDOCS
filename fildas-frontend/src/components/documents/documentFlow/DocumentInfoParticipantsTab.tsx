@@ -1,5 +1,4 @@
 import React from "react";
-import { ChevronDown } from "lucide-react";
 import type {
   Document,
   DocumentVersion,
@@ -48,9 +47,6 @@ const DocumentInfoParticipantsTab: React.FC<Props> = ({
   const [loadingOffices, setLoadingOffices] = React.useState<Set<number>>(
     new Set(),
   );
-  const [expandedOffices, setExpandedOffices] = React.useState<Set<number>>(
-    new Set(),
-  );
   const fetchedOfficeIds = React.useRef<Set<number>>(new Set());
 
   const fetchOfficeUsers = React.useCallback(async (officeId: number) => {
@@ -70,16 +66,6 @@ const DocumentInfoParticipantsTab: React.FC<Props> = ({
       });
     }
   }, []);
-
-  const toggleOffice = (officeId: number) => {
-    setExpandedOffices((prev) => {
-      const next = new Set(prev);
-      if (next.has(officeId)) next.delete(officeId);
-      else next.add(officeId);
-      return next;
-    });
-    fetchOfficeUsers(officeId);
-  };
 
   // Build participants list
   const ownerOffice = document.ownerOffice ?? (document as any).office ?? null;
@@ -165,7 +151,6 @@ const DocumentInfoParticipantsTab: React.FC<Props> = ({
       ) : (
         participantRows.map((p, i) => {
           const offId = p.officeId;
-          const isExpanded = offId != null && expandedOffices.has(offId);
           const isLoading = offId != null && loadingOffices.has(offId);
           const users: OfficeUser[] =
             offId != null ? (officeUsers[offId] ?? []) : [];
@@ -175,73 +160,62 @@ const DocumentInfoParticipantsTab: React.FC<Props> = ({
               key={i}
               className="rounded-md border border-slate-100 dark:border-surface-400 bg-slate-50 dark:bg-surface-600/50 overflow-hidden"
             >
-              <button
-                type="button"
-                onClick={() => offId != null && toggleOffice(offId)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-surface-500/50 transition"
-              >
+              <div className="w-full flex items-center gap-2.5 px-3 py-2 text-left border-b border-white/50 dark:border-surface-400/30">
                 <span
                   className={`h-2 w-2 shrink-0 rounded-full ${statusDot[p.status] ?? "bg-slate-300"}`}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                     {p.label}
                     {p.sublabel && (
-                      <span className="ml-1 text-xs font-normal text-slate-400 dark:text-slate-500">
+                      <span className="ml-1 text-[10px] font-normal text-slate-400 dark:text-slate-500 uppercase tracking-tight">
                         ({p.sublabel})
                       </span>
                     )}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-full bg-slate-200 dark:bg-surface-400 px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-slate-300">
+                <span className="shrink-0 rounded bg-slate-200 dark:bg-surface-400 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">
                   {p.role}
                 </span>
-                <ChevronDown
-                  className={`h-3 w-3 shrink-0 text-slate-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                />
-              </button>
+              </div>
 
-              {isExpanded && (
-                <div className="border-t border-slate-100 dark:border-surface-400 px-3 py-2 space-y-1.5">
-                  {isLoading ? (
-                    <>
-                      {[1, 2].map((n) => (
-                        <div
-                          key={n}
-                          className="flex items-center gap-2 animate-pulse"
-                        >
-                          <div className="h-5 w-5 rounded-full bg-slate-200 dark:bg-surface-400 shrink-0" />
-                          <div className="h-3 rounded bg-slate-200 dark:bg-surface-400 w-28" />
-                          <div className="ml-auto h-3 rounded bg-slate-200 dark:bg-surface-400 w-12" />
-                        </div>
-                      ))}
-                    </>
-                  ) : users.length === 0 ? (
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
-                      No active users in this office.
-                    </p>
-                  ) : (
-                    users.map((u) => (
-                      <div key={u.id} className="flex items-center gap-2">
-                        <div className="h-5 w-5 rounded-full bg-sky-100 dark:bg-sky-950/40 flex items-center justify-center shrink-0">
-                          <span className="text-[8px] font-bold text-sky-600 dark:text-sky-400 uppercase">
-                            {u.first_name?.[0]}
-                            {u.last_name?.[0]}
-                          </span>
-                        </div>
-                        <p className="flex-1 text-xs text-slate-700 dark:text-slate-300 truncate">
-                          {u.full_name}
-                        </p>
-                        {u.role?.label && (
-                          <span className="shrink-0 text-[9px] text-slate-400 dark:text-slate-500">
-                            {u.role.label}
-                          </span>
-                        )}
+              <div className="px-3 py-2 space-y-2">
+                {isLoading ? (
+                  <div className="space-y-1.5 animate-pulse">
+                    {[1, 2].map((n) => (
+                      <div key={n} className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded-full bg-slate-200 dark:bg-surface-400 shrink-0" />
+                        <div className="h-2 rounded bg-slate-200 dark:bg-surface-400 w-24" />
                       </div>
-                    ))
-                  )}
-                </div>
-              )}
+                    ))}
+                  </div>
+                ) : users.length === 0 ? (
+                  <p className="text-[10px] italic text-slate-400 dark:text-slate-500">
+                    No active users in this office.
+                  </p>
+                ) : (
+                  users.map((u) => {
+                    const lastActive = (u as any).last_active_at ? new Date((u as any).last_active_at).getTime() : 0;
+                    const isOnline = Date.now() - lastActive < 30 * 60 * 1000;
+                    
+                    return (
+                      <div key={u.id} className="flex items-center gap-2 py-0.5">
+                        <div className={`h-1.5 w-1.5 shrink-0 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_3px_rgba(16,185,129,0.4)]' : 'bg-slate-300 dark:bg-surface-400'}`} />
+                        <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                          <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">
+                            {u.full_name}
+                          </p>
+                          {u.role?.label && (
+                            <span className="shrink-0 text-[10px] text-slate-400 dark:text-slate-500">
+                              {u.role.label}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           );
         })

@@ -1,10 +1,11 @@
 import React from "react";
-import { Loader2, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import SkeletonList from "../../ui/loader/SkeletonList";
 import type { DocumentMessage } from "../../../services/documents";
 import CommentBubble from "./CommentBubble";
 import CommentComposer from "../../ui/CommentComposer";
 import { getAuthUser } from "../../../lib/auth";
+import { getAvatarUrl } from "../../../utils/formatters";
 
 type Props = {
   isLoading: boolean;
@@ -201,33 +202,38 @@ const DocumentCommentsPanel: React.FC<Props> = ({
                   avatarLetter={(m.sender?.full_name ?? "?")
                     .charAt(0)
                     .toUpperCase()}
+                  avatarUrl={getAvatarUrl(
+                    m.sender?.profile_photo_url || m.sender?.profile_photo_path,
+                  )}
                 />
               ))}
-              {optimisticMessages.map((m) => (
-                <div key={m.tempId} className="flex items-end justify-end gap-2">
-                  <div className="flex flex-col items-end gap-1 max-w-[75%]">
-                    <div
-                      className={`rounded-xl rounded-tr-none px-3 py-2 text-sm ${
-                        m.failed
-                          ? "bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300"
-                          : "bg-sky-500 text-white opacity-80"
-                      }`}
-                    >
-                      {m.text}
-                    </div>
-                    <span className="text-xs text-slate-400 flex items-center gap-1">
-                      {m.failed ? (
-                        <span className="text-rose-500">Failed to send</span>
-                      ) : (
-                        <>
-                          <Loader2 className="animate-spin h-2.5 w-2.5" />
-                          Sending…
-                        </>
-                      )}
-                    </span>
-                  </div>
-                </div>
-              ))}
+
+              {/* Optimistic Messages — Filter out ghosts that have already arrived in the real 'messages' array */}
+              {optimisticMessages
+                .filter(
+                  (opt) =>
+                    !messages.some(
+                      (real) =>
+                        Number(real.sender_user_id) === Number(myUserId) &&
+                        real.message === opt.text &&
+                        new Date(real.created_at).getTime() >
+                          Date.now() - 10000, // Matching message must be from last 10s
+                    ),
+                )
+                .map((m) => (
+                  <CommentBubble
+                    key={m.tempId}
+                    senderName={me?.full_name ?? "Me"}
+                    roleName={me?.role}
+                    message={m.text}
+                    when="Sending…"
+                    isMine={true}
+                    avatarLetter={me?.full_name?.charAt(0).toUpperCase()}
+                    avatarUrl={getAvatarUrl(
+                      me?.profile_photo_url || me?.profile_photo_path,
+                    )}
+                  />
+                ))}
             </div>
           )}
         </div>
@@ -250,7 +256,7 @@ const DocumentCommentsPanel: React.FC<Props> = ({
         onChange={setDraftMessage}
         onSend={handleSend}
         isSending={isSending}
-        placeholder="Write a comment..."
+        placeholder="Ctrl + Enter to send message"
       />
     </div>
   );

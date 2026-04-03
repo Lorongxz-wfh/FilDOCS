@@ -69,6 +69,21 @@ export type Paginated<T> = {
   links?: any;
 };
 
+/** 
+ * Resolves a profile photo path/url to a full URL.
+ * Handles both absolute URLs and relative storage paths.
+ */
+export function getAvatarUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (path.startsWith("http") || path.startsWith("data:")) return path;
+  
+  // Prepend backend storage URL if it's a relative path
+  const base = (import.meta.env.VITE_API_BASE_URL as string)?.replace("/api", "") 
+    ?? (import.meta.env.PROD ? "https://fildas-v2.onrender.com" : "http://127.0.0.1:8001");
+    
+  return `${base}/storage/${path.replace(/^storage\//, "")}`;
+}
+
 export interface NotificationItem {
   id: number;
   user_id: number;
@@ -314,6 +329,7 @@ export interface DocumentMessageSender {
   id: number;
   full_name: string;
   profile_photo_path?: string | null;
+  profile_photo_url?: string | null;
   role?: { id: number; name: string } | null;
 }
 

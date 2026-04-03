@@ -9,6 +9,7 @@ type Props = {
   isNew?: boolean;
   isMine?: boolean;
   avatarLetter?: string;
+  avatarUrl?: string | null;
 };
 
 const formatRole = (role: string | null | undefined) => {
@@ -25,8 +26,10 @@ const CommentBubble: React.FC<Props> = ({
   isNew = false,
   isMine = false,
   avatarLetter,
+  avatarUrl,
 }) => {
   const ref = React.useRef<HTMLDivElement>(null);
+  const [imgError, setImgError] = React.useState(false);
 
   React.useEffect(() => {
     if (isNew && ref.current) {
@@ -45,13 +48,22 @@ const CommentBubble: React.FC<Props> = ({
       {/* Avatar */}
       <div className="shrink-0 mt-0.5">
         <div
-          className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold ring-1 ring-slate-200 dark:ring-surface-400/50 ${
+          className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold ring-1 ring-slate-200 dark:ring-surface-400/50 overflow-hidden ${
             isMine
               ? "bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900"
               : "bg-slate-100 dark:bg-surface-400 text-slate-500 dark:text-slate-400"
           }`}
         >
-          {initial}
+          {avatarUrl && !imgError ? (
+            <img 
+              src={avatarUrl} 
+              alt={senderName} 
+              className="h-full w-full object-cover"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            initial
+          )}
         </div>
       </div>
 

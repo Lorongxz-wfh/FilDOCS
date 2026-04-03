@@ -79,3 +79,18 @@ export function truncateMiddle(str: string | null | undefined, max = 40): string
   return str.substring(0, startNum) + "..." + str.substring(str.length - endNum);
 }
 
+/** 
+ * Resolves a profile photo path/url to a full URL.
+ * Handles both absolute URLs and relative storage paths (Laravel).
+ */
+export function getAvatarUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (path.startsWith("http") || path.startsWith("data:")) return path;
+  
+  // Prepend backend storage URL if it's a relative path
+  const base = (import.meta.env.VITE_API_BASE_URL as string)?.replace("/api", "") 
+    ?? (import.meta.env.PROD ? "https://fildas-v2.onrender.com" : "http://127.0.0.1:8001");
+    
+  return `${base}/storage/${path.replace(/^storage\//, "")}`;
+}
+
