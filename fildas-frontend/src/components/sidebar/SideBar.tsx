@@ -42,7 +42,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     setProfileOpen,
     imgError,
     setImgError,
-    initials,
     newRef,
     profileRef,
   } = useSidebarUI();
@@ -101,7 +100,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             user={user}
             imgError={imgError}
             setImgError={setImgError}
-            initials={initials}
             onMobileClose={onMobileClose}
           />
         )}
@@ -155,7 +153,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             profileRef={profileRef}
             imgError={imgError}
             setImgError={setImgError}
-            initials={initials}
             onLogout={onLogout}
           />
         )}

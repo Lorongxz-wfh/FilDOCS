@@ -151,17 +151,17 @@ const DocumentInfoPanel: React.FC<Props> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Tab switcher */}
-      <div className="flex items-center gap-1 mb-4 p-1 rounded-xl bg-slate-50/80 dark:bg-surface-600/40 border border-slate-100/50 dark:border-surface-300/10">
+      <div className="flex items-center gap-1 mb-4 p-1 rounded-md bg-slate-100/50 dark:bg-surface-400/30 border border-slate-200/60 dark:border-surface-400/20 shadow-sm">
         {(["details", "participants"] as const).map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
             className={[
-              "flex-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-tight transition-all duration-200",
+              "flex-1 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-tight transition-all duration-200",
               activeTab === tab
-                ? "bg-white dark:bg-surface-400 text-brand-600 dark:text-brand-300 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/5"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/5",
+                ? "bg-white dark:bg-surface-300 text-slate-900 dark:text-slate-100 shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-surface-300/20",
             ].join(" ")}
           >
             {tab === "details" ? "Details" : "Participants"}
@@ -214,7 +214,7 @@ const DocumentInfoPanel: React.FC<Props> = ({
             <div className="space-y-1.5">
               {isEditing ? (
                 <div className="rounded-xl bg-white dark:bg-surface-500 border border-brand-200/50 dark:border-brand-500/20 px-3 py-2.5 shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-brand-500/80 mb-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1.5">
                     Document Title
                     {!isDraftStatus && (
                       <span className="ml-1 text-slate-400 font-normal lowercase tracking-normal">
@@ -246,7 +246,7 @@ const DocumentInfoPanel: React.FC<Props> = ({
                 highlight={justRegistered}
                 value={
                   document.code ? (
-                    <span className="font-mono text-brand-600 dark:text-brand-300">{document.code}</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-100">{document.code}</span>
                   ) : (document as any).reserved_code ? (
                     <span className="flex items-center justify-end gap-1.5">
                       <span className="font-mono text-slate-400 dark:text-slate-500">

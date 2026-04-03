@@ -102,7 +102,7 @@ export const DistributeDocumentModal: React.FC<DistributeDocumentModalProps> = (
         </div>
 
         {/* Office Selection List */}
-        <div className="h-[280px] border border-slate-200 dark:border-surface-400 rounded-xl overflow-hidden bg-white dark:bg-surface-500/30 shadow-sm">
+        <div className="h-[300px] border border-slate-200 dark:border-surface-400 rounded-xl overflow-hidden bg-white dark:bg-surface-500/30 shadow-sm">
           <OfficeCheckList
             offices={selectableOffices}
             loading={false}
@@ -112,20 +112,20 @@ export const DistributeDocumentModal: React.FC<DistributeDocumentModalProps> = (
         </div>
 
         {/* Action Note */}
-        <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30">
-          <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-          <div className="flex flex-col gap-1">
-            <p className="text-[11px] text-amber-900/90 dark:text-amber-200 font-semibold leading-relaxed">
-              Distribution generates Controlled Copy notifications for selected offices.
+        <div className="flex items-start gap-2.5 py-2 px-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30">
+          <Info className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <div className="flex flex-col gap-0.5">
+            <p className="text-[11px] text-amber-900/90 dark:text-amber-200 font-semibold leading-tight">
+              Selected offices will receive a Controlled Copy notice.
             </p>
-            <p className="text-[10px] text-amber-800/70 dark:text-amber-300/60 leading-relaxed italic">
-              Note: The originating office ({offices.find(o => o.id === ownerOfficeId)?.code || "Owner"}) is always included and cannot be unselected.
+            <p className="text-[10px] text-amber-800/70 dark:text-amber-300/60 leading-tight italic">
+              The originating office ({offices.find(o => o.id === ownerOfficeId)?.code || "Owner"}) is already included.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="mt-8 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-surface-400 pt-5">
+      <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-surface-400 pt-4">
         <Button
           variant="ghost"
           size="sm"

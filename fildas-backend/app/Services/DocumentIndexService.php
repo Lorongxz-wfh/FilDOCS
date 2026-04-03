@@ -58,9 +58,12 @@ class DocumentIndexService
         $canSeeAll = in_array($roleName, ['admin', 'sysadmin', 'president', 'qa'], true);
         $vpOfficeIds = $this->vpOfficeIdsForRole($roleName);
 
-        // Auditor: only docs whose latest version is Distributed or Superseded (Archive)
+        // Auditor: only docs whose current version is Distributed
         if ($roleName === 'auditor') {
-            $query->whereHas('versions', fn($v) => $v->whereIn('status', ['Distributed', 'Superseded']));
+            $query->where(function ($q) {
+                // Auditor: only docs whose current version is Distributed
+                $q->whereHas('latestVersion', fn($v) => $v->where('status', 'Distributed'));
+            });
         } else if (!$canSeeAll) {
             $query->where(function ($q) use ($vpOfficeIds, $userOfficeId) {
                 // Has an open task assigned to this office on the latest version
@@ -108,14 +111,42 @@ class DocumentIndexService
         }
 
         $scope = $data['scope'] ?? 'all';
+        $space = $data['space'] ?? 'all'; // workqueue, library, archive, all
 
         // Filters
         if (!empty($data['doctype'])) $query->where('doctype', $data['doctype']);
         if (!empty($data['visibility_scope'])) $query->where('visibility_scope', $data['visibility_scope']);
         if ($ownerOfficeFilter > 0) $query->where('owner_office_id', $ownerOfficeFilter);
 
+        // ── Space-based Filtering ───────────────────────────────────────────
+        if ($space === 'workqueue') {
+            // Ongoing documents: not distributed, not cancelled, not superseded
+            $query->whereHas('latestVersion', function ($v) {
+                $v->whereNotIn('status', ['Distributed', 'Cancelled', 'Superseded']);
+            });
+        } elseif ($space === 'library') {
+            // Active distributed documents: Distributed status and not manually archived
+            $query->where('documents.archived_at', null)
+                ->whereHas('latestVersion', function ($v) {
+                    $v->where('status', 'Distributed');
+                });
+        } elseif ($space === 'archive') {
+            // Terminated or manually archived documents
+            $query->where(function ($q) {
+                $q->whereNotNull('documents.archived_at')
+                    ->orWhereHas('latestVersion', function ($v) {
+                        $v->whereIn('status', ['Cancelled', 'Superseded']);
+                    });
+            });
+        } else {
+            // 'all' space (legacy/default): respect explicit status filter if provided, 
+            // otherwise just apply the status filters below. 
+            // Note: we removed the global 'whereNotIn(Cancelled, Superseded)' 
+            // to allow full visibility in Admin views if needed.
+        }
+
         if (!empty($data['status'])) {
-            $query->whereHas('versions', function ($v) use ($data) {
+            $query->whereHas('latestVersion', function ($v) use ($data) {
                 $statusArr = is_array($data['status']) 
                     ? $data['status'] 
                     : array_map('trim', explode(',', $data['status']));

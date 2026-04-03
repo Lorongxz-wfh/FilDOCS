@@ -7,6 +7,8 @@ import {
   getDocumentPreviewLink,
   invalidatePreviewCache,
   downloadDocument,
+  archiveDocument,
+  restoreDocument,
 } from "../services/documents";
 import { useDocumentWorkflow } from "./useDocumentWorkflow";
 import { useDocumentAutoSave } from "./useDocumentAutoSave";
@@ -526,7 +528,68 @@ export function useDocumentFlowUI({
           .concat(cancelBtn)
       : normalButtons;
 
-    return replaceAction ? [replaceAction, ...finalButtons] : finalButtons;
+
+
+    const archiveBtn =
+      localVersion?.status === "Distributed" && !document?.archived_at
+        ? [
+            {
+              key: "ARCHIVE_DOCUMENT",
+              label: "Archive",
+              variant: "outline" as const,
+              disabled: workflow.isChangingStatus,
+              onClick: async () => {
+                try {
+                  await archiveDocument(document!.id);
+                  if (onChanged) await onChanged();
+                  push({
+                    type: "success",
+                    title: "Document archived",
+                    message: "The document has been moved to the archive.",
+                  });
+                } catch (e: any) {
+                  push({
+                    type: "error",
+                    title: "Archival failed",
+                    message: e?.message ?? "Operation failed.",
+                  });
+                }
+              },
+            },
+          ]
+        : [];
+
+    const restoreBtn =
+      localVersion?.status === "Distributed" && document?.archived_at
+        ? [
+            {
+              key: "RESTORE_DOCUMENT",
+              label: "Restore to Library",
+              variant: "primary" as const,
+              disabled: workflow.isChangingStatus,
+              onClick: async () => {
+                try {
+                  await restoreDocument(document!.id);
+                  if (onChanged) await onChanged();
+                  push({
+                    type: "success",
+                    title: "Document restored",
+                    message: "The document has been moved back to the library.",
+                  });
+                } catch (e: any) {
+                  push({
+                    type: "error",
+                    title: "Restoration failed",
+                    message: e?.message ?? "Operation failed.",
+                  });
+                }
+              },
+            },
+          ]
+        : [];
+
+    const finalResult = replaceAction ? [replaceAction, ...finalButtons] : finalButtons;
+    return [...finalResult, ...archiveBtn, ...restoreBtn];
   }, [
     workflow.availableActions,
     workflow.isChangingStatus,
@@ -546,6 +609,11 @@ export function useDocumentFlowUI({
     approverNeedsSignedUpload,
     handleActionResult,
     fileUpload.isUploading,
+    document?.archived_at,
+    document?.owner_office_id,
+    isQAOfficeUser,
+    myOfficeId,
+    onChanged,
     fileUpload.triggerFilePicker,
     push,
   ]);

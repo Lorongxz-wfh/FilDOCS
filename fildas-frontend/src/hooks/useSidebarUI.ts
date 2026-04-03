@@ -7,12 +7,6 @@ export function useSidebarUI() {
   const [profileOpen, setProfileOpen] = React.useState(false);
   const [imgError, setImgError] = React.useState(false);
 
-  const initials = (user?.full_name ?? "")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p: string) => p[0]?.toUpperCase())
-    .join("");
 
   const newRef = React.useRef<HTMLDivElement>(null);
   const profileRef = React.useRef<HTMLDivElement>(null);
@@ -38,7 +32,6 @@ export function useSidebarUI() {
     setProfileOpen,
     imgError,
     setImgError,
-    initials,
     newRef,
     profileRef,
   };

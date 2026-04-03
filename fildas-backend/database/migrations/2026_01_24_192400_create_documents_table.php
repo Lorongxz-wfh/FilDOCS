@@ -35,6 +35,7 @@ return new class extends Migration
 
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
 
+            $table->timestamp('archived_at')->nullable();
             $table->softDeletes();
             $table->timestamps();
 

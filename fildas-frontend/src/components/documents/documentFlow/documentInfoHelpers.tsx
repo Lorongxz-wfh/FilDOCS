@@ -11,7 +11,7 @@ export const InfoRow: React.FC<{
 }) => (
   <div className={`flex items-baseline justify-between transition-all duration-700 rounded-lg px-3 py-2 ${
     highlight 
-      ? "bg-emerald-50/80 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 ring-2 ring-emerald-500/20" 
+      ? "bg-emerald-50/80 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30" 
       : "bg-slate-50/50 dark:bg-surface-600/30 border-slate-100/80 dark:border-surface-300/10"
     } border`}
   >

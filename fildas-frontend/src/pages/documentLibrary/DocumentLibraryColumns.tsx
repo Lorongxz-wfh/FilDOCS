@@ -328,14 +328,15 @@ export function buildAllColumns(): TableColumn<LibraryItem>[] {
 export function buildArchiveColumns(): TableColumn<Document>[] {
   return [
     {
-      key: "code",
-      header: "Code",
-      sortKey: "code",
+      key: "archived_on",
+      header: "Archived At",
       skeletonShape: "narrow",
+      sortKey: "archived_at",
+      align: "left",
       render: (doc) => (
-        <span className="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
-          {doc.code || "—"}
-        </span>
+        <NormalText secondary>
+          {doc.archived_at ? formatDate(doc.archived_at) : (doc.updated_at ? formatDate(doc.updated_at) : "—")}
+        </NormalText>
       ),
     },
     {
@@ -350,6 +351,17 @@ export function buildArchiveColumns(): TableColumn<Document>[] {
             className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
           />
         </div>
+      ),
+    },
+    {
+      key: "code",
+      header: "Code",
+      sortKey: "code",
+      skeletonShape: "narrow",
+      render: (doc) => (
+        <span className="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
+          {doc.code || "—"}
+        </span>
       ),
     },
     {
@@ -369,26 +381,37 @@ export function buildArchiveColumns(): TableColumn<Document>[] {
       ),
     },
     {
-      key: "status",
-      header: "Status",
+      key: "reason",
+      header: "Reason",
       skeletonShape: "text",
-      render: (doc: any) => (
-        <NormalText>
-          {doc.status || "—"}
-        </NormalText>
-      ),
-    },
-    {
-      key: "archived_on",
-      header: "Date",
-      skeletonShape: "narrow",
-      sortKey: "updated_at",
-      align: "right",
-      render: (doc) => (
-        <NormalText secondary>
-          {doc.updated_at ? formatDate(doc.updated_at) : "—"}
-        </NormalText>
-      ),
+      render: (doc: any) => {
+        const isArchived = !!doc.archived_at;
+        
+        // Priority 1: Server explicitly tells us the reason
+        // Priority 2: Use status for Superseded/Cancelled
+        // Priority 3: Fallback to "Manually Archived" if timestamp is there
+        let reason = doc.archive_reason;
+        
+        if (!reason) {
+          if (isArchived) reason = "Manually Archived";
+          else if (doc.status === "Superseded") reason = "Superseded (New Version)";
+          else if (doc.status === "Cancelled") reason = "Cancelled";
+          else reason = doc.status || "—";
+        }
+        
+        // Normalize "Superseded" label
+        if (reason === "Superseded") reason = "Superseded (New Version)";
+        
+        return (
+          <span className={`text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${
+            reason === 'Manually Archived' ? 'text-brand-600 bg-brand-50 border-brand-200 dark:text-brand-400 dark:bg-brand-500/10 dark:border-brand-500/30' : 
+            reason === 'Superseded (New Version)' ? 'text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/30' :
+            'text-rose-600 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-500/10 dark:border-rose-500/30'
+          }`}>
+            {reason}
+          </span>
+        );
+      },
     },
   ];
 }

@@ -103,13 +103,7 @@ const DocumentRightPanel: React.FC<Props> = ({
             >
               {document.doctype && (
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${
-                    document.doctype === "internal"
-                      ? "bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border border-sky-100 dark:border-sky-800"
-                      : document.doctype === "external"
-                        ? "bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-100 dark:border-orange-800"
-                        : "bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400 border border-amber-200 dark:border-amber-900"
-                  }`}
+                  className={`rounded-full px-2 py-0.5 text-xs font-semibold capitalize bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300 border border-slate-200 dark:border-surface-300/10`}
                 >
                   {document.doctype}
                 </span>

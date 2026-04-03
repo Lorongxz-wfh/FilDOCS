@@ -19,14 +19,25 @@ const OfficeCheckList: React.FC<OfficeCheckListProps> = ({
 }) => {
   const [search, setSearch] = useState("");
 
-  const filtered = useMemo(() => {
+  const sortedAndFiltered = useMemo(() => {
     const q = search.toLowerCase();
-    if (!q) return offices;
-    return offices.filter(
+    
+    // Sort logic: selected first, then alphabetical by name
+    const baseList = [...offices].sort((a, b) => {
+      const aSelected = selectedIds.includes(a.id);
+      const bSelected = selectedIds.includes(b.id);
+      
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    if (!q) return baseList;
+    return baseList.filter(
       (o) =>
         o.name.toLowerCase().includes(q) || o.code.toLowerCase().includes(q),
     );
-  }, [offices, search]);
+  }, [offices, search, selectedIds]);
 
   return (
     <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
@@ -49,17 +60,17 @@ const OfficeCheckList: React.FC<OfficeCheckListProps> = ({
           </button>
         )}
       </div>
-      <ul className="max-h-48 overflow-y-auto py-1">
+      <ul className="max-h-[350px] overflow-y-auto py-1 custom-scrollbar">
         {loading ? (
           <li className="px-4 py-3 text-xs text-slate-400 dark:text-slate-500">
             Loading offices…
           </li>
-        ) : filtered.length === 0 ? (
+        ) : sortedAndFiltered.length === 0 ? (
           <li className="px-4 py-3 text-xs text-slate-400 dark:text-slate-500">
             No offices found.
           </li>
         ) : (
-          filtered.map((office) => {
+          sortedAndFiltered.map((office) => {
             const isSelected = selectedIds.includes(office.id);
             return (
               <li key={office.id}>

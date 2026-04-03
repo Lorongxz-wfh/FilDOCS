@@ -16,7 +16,6 @@ const MobileActionFab: React.FC = () => {
     "/work-queue",
     "/document-requests",
     "/documents",
-    "/archive",
     "/my-activity",
     "/settings",
     "/admin/users",

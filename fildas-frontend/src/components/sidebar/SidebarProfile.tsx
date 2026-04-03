@@ -1,14 +1,15 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { 
-  History, 
-  Archive, 
-  Settings, 
-  Megaphone, 
-  AlertCircle, 
-  HelpCircle, 
-  LogOut, 
-  ChevronsUpDown 
+import {
+  History,
+  Settings,
+  Megaphone,
+  AlertCircle,
+  HelpCircle,
+  LogOut,
+  ChevronsUpDown,
+  Archive,
+  User
 } from "lucide-react";
 
 interface SidebarProfileProps {
@@ -19,7 +20,6 @@ interface SidebarProfileProps {
   profileRef: React.RefObject<HTMLDivElement | null>;
   imgError: boolean;
   setImgError: (error: boolean) => void;
-  initials: string;
   onLogout?: () => void;
 }
 
@@ -31,7 +31,6 @@ const SidebarProfile: React.FC<SidebarProfileProps> = ({
   profileRef,
   imgError,
   setImgError,
-  initials,
   onLogout,
 }) => {
   const ProfileDropdownContent = () => (
@@ -100,10 +99,12 @@ const SidebarProfile: React.FC<SidebarProfileProps> = ({
           onClick={() => setProfileOpen(!profileOpen)}
           className={["flex w-full items-center gap-2.5 py-1.5 transition-all group rounded-lg", collapsed ? "justify-center" : "px-2 hover:bg-slate-100 dark:hover:bg-surface-400", profileOpen ? "bg-slate-100 dark:bg-surface-400" : ""].join(" ")}
         >
-          <div className="h-8.5 w-8.5 shrink-0 rounded-lg bg-brand-500 flex items-center justify-center text-white text-xs font-bold border border-white dark:border-surface-500 overflow-hidden shadow-sm">
+          <div className="h-8.5 w-8.5 shrink-0 rounded-lg bg-slate-100 dark:bg-surface-400 flex items-center justify-center border border-slate-200 dark:border-surface-300 overflow-hidden shadow-sm transition-colors">
             {!imgError && user?.profile_photo_url ? (
               <img src={user.profile_photo_url} alt={user.full_name} className="h-full w-full object-cover" onError={() => setImgError(true)} />
-            ) : initials}
+            ) : (
+              <User className="h-4.5 w-4.5 text-slate-400 dark:text-slate-500" strokeWidth={2.5} />
+            )}
           </div>
           {!collapsed && (
             <>

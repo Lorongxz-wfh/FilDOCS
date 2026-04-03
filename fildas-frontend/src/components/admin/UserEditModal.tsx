@@ -24,8 +24,8 @@ import { inputCls, labelCls } from "../../utils/formStyles";
 
 const apiMsg = (e: any, fallback: string) =>
   e?.response?.data?.message ?? e?.message ?? fallback;
-import { getInitials } from "../../utils/formatters";
 import { getAuthUser, AUTH_USER_KEY } from "../../lib/auth";
+import { User as UserIcon } from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -361,7 +361,6 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
   const isDisabled = mode === "edit" && !!user?.disabled_at;
   const currentPhoto =
     photoPreview ?? user?.profile_photo_url ?? user?.profile_photo_path ?? null;
-  const initials = getInitials(firstName || "?", lastName || "?");
 
   return (
     <Modal
@@ -384,10 +383,8 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
                 className="h-16 w-16 rounded-full object-cover ring-2 ring-slate-200 dark:ring-surface-400"
               />
             ) : (
-              <div className="h-16 w-16 rounded-full bg-sky-100 dark:bg-sky-950/40 ring-2 ring-slate-200 dark:ring-surface-400 flex items-center justify-center">
-                <span className="text-lg font-bold text-sky-600 dark:text-sky-400">
-                  {initials}
-                </span>
+              <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-surface-400 ring-2 ring-slate-200 dark:ring-surface-300 flex items-center justify-center">
+                <UserIcon className="h-8 w-8 text-slate-400 dark:text-slate-500" strokeWidth={2} />
               </div>
             )}
             {uploadingPhoto && (
@@ -466,19 +463,10 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
               />
             ) : (
               <div className="h-14 w-14 rounded-full bg-slate-100 dark:bg-surface-600 ring-2 ring-slate-200 dark:ring-surface-400 flex items-center justify-center">
-                <svg
-                  className="h-6 w-6 text-slate-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
+                <UserIcon
+                  className="h-7 w-7 text-slate-400 dark:text-slate-500"
+                  strokeWidth={2}
+                />
               </div>
             )}
           </div>

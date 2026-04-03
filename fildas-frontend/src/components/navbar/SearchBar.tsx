@@ -14,7 +14,6 @@ import {
   Megaphone,
   AlertCircle,
   HelpCircle,
-  Archive,
   PlusCircle,
   Activity,
   FileSearch,
@@ -60,7 +59,7 @@ function getPageResults(q: string, role: string): SearchResultItem[] {
 
   // Check static / auxiliary items
   const extraPages = [
-    { to: "/library/archive", label: "Archive", desc: "Library", roles: ["admin", "sysadmin", "qa"] },
+
     { to: "/documents/queue", label: "Work Queue", desc: "Documents" },
     { to: "/documents", label: "Documents List", desc: "Documents" },
     { to: "/activity-logs", label: "Activity Logs", desc: "Reports", roles: ["admin", "sysadmin", "qa"] },
@@ -69,7 +68,7 @@ function getPageResults(q: string, role: string): SearchResultItem[] {
     { to: "/document-requests/create", label: "New Document Request", desc: "Actions" },
     { to: "/settings", label: "Settings", desc: "Account" },
     { to: "/my-activity", label: "My Activity", desc: "Account" },
-    { to: "/archive", label: "Archive", desc: "Account" },
+
     { to: "/whats-new", label: "What's New", desc: "Support" },
     { to: "/report-issue", label: "Report Issue", desc: "Support" },
     { to: "/help", label: "Help & Support", desc: "Support" },
@@ -104,7 +103,7 @@ const ResultIcon: React.FC<{ item: SearchResultItem }> = ({ item }) => {
   const { type, url, title } = item;
   
   if (type === "document") return <FileText className={cls} />;
-  if (type === "archive") return <Archive className={cls} />;
+
   if (type === "user") return <Users className={cls} />;
   if (type === "office") return <Building2 className={cls} />;
   if (type === "template") return <LayoutTemplate className={cls} />;
@@ -121,7 +120,7 @@ const ResultIcon: React.FC<{ item: SearchResultItem }> = ({ item }) => {
     if (u.includes("activity") || t.includes("activity")) return <Activity className={cls} />;
     if (u.includes("issue") || t.includes("issue")) return <AlertCircle className={cls} />;
     if (u.includes("dashboard") || t.includes("dashboard")) return <LayoutDashboard className={cls} />;
-    if (u.includes("archive") || t.includes("archive")) return <Archive className={cls} />;
+
     if (u.includes("create") || t.includes("new")) return <PlusCircle className={cls} />;
     if (u.includes("queue") || t.includes("queue")) return <FileSearch className={cls} />;
     if (u.includes("/reports") || t === "reports") return <BarChart3 className={cls} />;
@@ -133,7 +132,7 @@ const ResultIcon: React.FC<{ item: SearchResultItem }> = ({ item }) => {
 
 const TYPE_ICON_BG: Record<string, string> = {
   document: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400",
-  archive: "bg-slate-50 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400",
+
   user: "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400",
   office: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400",
   template:

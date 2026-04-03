@@ -1,115 +1,104 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { listDocumentsPage, type Document } from "../services/documents";
+import {
+  listDocumentsPage,
+} from "../services/documents";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
-import { Search, X, SlidersHorizontal } from "lucide-react";
-import RefreshButton from "../components/ui/RefreshButton";
-import { inputCls } from "../utils/formStyles";
-import DateRangeInput from "../components/ui/DateRangeInput";
-import Button from "../components/ui/Button";
 import Table from "../components/ui/Table";
+import Select from "../components/ui/Select";
+import { Search, X, SlidersHorizontal } from "lucide-react";
+import { inputCls } from "../utils/formStyles";
 import Alert from "../components/ui/Alert";
+import DateRangeInput from "../components/ui/DateRangeInput";
+import RefreshButton from "../components/ui/RefreshButton";
 import { formatDate } from "../utils/formatters";
-import { buildArchiveColumns } from "./documentLibrary/DocumentLibraryColumns";
+import { buildBaseDocColumns } from "./documentLibrary/DocumentLibraryColumns";
+import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-function useDebounce(value: string, delay = 300) {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(t);
-  }, [value, delay]);
-  return debounced;
-}
-
-// ── Page ─────────────────────────────────────────────────────────────────────
 export default function ArchivePage() {
   const navigate = useNavigate();
+  
+  const [q, setQ] = useState("");
+  const [qDebounced, setQDebounced] = useState("");
+  const [typeFilter, setTypeFilter] = useState("ALL");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [sortBy, setSortBy] = useState<"created_at" | "title">("created_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
-  const [rows, setRows] = useState<Document[]>([]);
+  const [rows, setRows] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [q, setQ] = useState("");
-  const qDebounced = useDebounce(q);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const activeFiltersCount = useMemo(() => {
     let count = 0;
+    if (typeFilter !== "ALL") count++;
     if (dateFrom) count++;
     if (dateTo) count++;
     return count;
-  }, [dateFrom, dateTo]);
+  }, [typeFilter, dateFrom, dateTo]);
 
-  const [sortBy, setSortBy] = useState<"updated_at" | "created_at" | "title">("updated_at");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [reloadTick, setReloadTick] = useState(0);
-
-  const archiveColumns = useMemo(() => buildArchiveColumns(), []);
-  
-  // High density grid matching Created columns logic
-  const gridTemplateColumns = "130px minmax(120px, 1fr) 100px 110px 100px 140px";
-
-  const fetchPage = useCallback(
-    async (p: number, reset = false) => {
-      // Don't skip if initial load wait
-      if (loading && !reset) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await listDocumentsPage({
-          status: "Cancelled,Superseded",
-          q: qDebounced || undefined,
-          date_from: dateFrom || undefined,
-          date_to: dateTo || undefined,
-          page: p,
-          perPage: 25,
-          sort_by: sortBy,
-          sort_dir: sortDir,
-        });
-        const newRows = res.data ?? [];
-        setRows((prev) => (reset ? newRows : [...prev, ...newRows]));
-        setHasMore(p < (res.meta?.last_page ?? 1));
-      } catch (e: any) {
-        setError(e?.response?.data?.message ?? "Failed to load archived documents.");
-      } finally {
-        setLoading(false);
-        setInitialLoading(false);
-      }
-    },
-    [loading, qDebounced, dateFrom, dateTo, sortBy, sortDir],
-  );
-
-  // Reset + reload when filters/sort change
+  // Debounce search
   useEffect(() => {
-    setRows([]);
-    setPage(1);
-    setHasMore(true);
-    setInitialLoading(true);
-    fetchPage(1, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qDebounced, dateFrom, dateTo, sortBy, sortDir, reloadTick]);
+    const t = window.setTimeout(() => setQDebounced(q), 300);
+    return () => window.clearTimeout(t);
+  }, [q]);
 
-  // Load next page
+  const loadData = useCallback(async (isNextPage = false) => {
+    const targetPage = isNextPage ? page + 1 : 1;
+    if (!isNextPage) {
+      setInitialLoading(true);
+      setRows([]);
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await listDocumentsPage({
+        page: targetPage,
+        perPage: 15,
+        q: qDebounced.trim() || undefined,
+        space: "archive",
+        doctype: typeFilter !== "ALL" ? typeFilter : undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+        sort_by: sortBy === "created_at" ? "created_at" : "title",
+        sort_dir: sortDir,
+      });
+
+      const incoming = res.data ?? [];
+      setRows(prev => targetPage === 1 ? incoming : [...prev, ...incoming]);
+      setHasMore((res.meta?.current_page ?? 0) < (res.meta?.last_page ?? 0));
+      setPage(targetPage);
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to load archive.");
+    } finally {
+      setLoading(false);
+      setInitialLoading(false);
+    }
+  }, [qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, page]);
+
   useEffect(() => {
-    if (page > 1) fetchPage(page);
+    loadData(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, [qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir]);
 
-  const handleRowClick = (doc: Document) => {
-    navigate(`/documents/${doc.id}/view`, {
-      state: {
+  const { refreshing } = usePageBurstRefresh(() => loadData(false));
+
+  const columns = useMemo(() => buildBaseDocColumns(), []);
+  const gridTemplate = "130px minmax(120px, 1fr) 100px 110px 70px 140px";
+
+  const handleRowClick = (row: any) => {
+    navigate(`/documents/${row.id}/view`, { 
+      state: { 
         from: "/archive",
-        breadcrumbs: [
-          { label: "Library", to: "/documents" },
-          { label: "Archive", to: "/archive" },
-        ],
-      },
+        breadcrumbs: [{ label: "Archive", to: "/archive" }] 
+      } 
     });
   };
 
@@ -117,77 +106,82 @@ export default function ArchivePage() {
     <PageFrame
       title="Archive"
       onBack={() => navigate("/documents")}
-      contentClassName="flex flex-col h-full overflow-hidden"
       right={
         <RefreshButton
-          onClick={() => setReloadTick((t) => t + 1)}
-          loading={loading || initialLoading}
+          onRefresh={async () => { await loadData(false); }}
+          loading={refreshing || loading}
           title="Refresh archive"
         />
       }
+      contentClassName="flex flex-col min-h-0 h-full"
     >
-      {/* Filter bar - updated for mobile responsiveness */}
       <div className="shrink-0 py-3 flex flex-col gap-3 sm:gap-2">
         <div className="flex items-center gap-2">
           <div className="relative flex-1 sm:max-w-64">
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
             <input
-              type="text"
               value={q}
-              onChange={(e) => {
-                setQ(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Search title, code…"
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search archive..."
               className={`${inputCls} pl-9 pr-8 text-sm`}
             />
             {q && (
               <button
                 type="button"
-                onClick={() => {
-                  setQ("");
-                  setPage(1);
-                }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                title="Clear search"
+                onClick={() => setQ("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
 
-          <Button
+          <button
             type="button"
-            variant={isFiltersOpen || activeFiltersCount > 0 ? "primary" : "outline"}
-            size="sm"
             onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-            className="sm:hidden"
+            className={`sm:hidden flex items-center gap-2 px-3 h-9 rounded-lg border transition-all ${isFiltersOpen || activeFiltersCount > 0
+                ? "bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400"
+                : "bg-white border-slate-200 text-slate-600 dark:bg-surface-500 dark:border-surface-400 dark:text-slate-400"
+              }`}
           >
-            <SlidersHorizontal size={14} />
-            <span className="font-bold">Filters</span>
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            <span className="text-xs font-semibold">Filters</span>
             {activeFiltersCount > 0 && (
-              <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold bg-white text-brand-600 rounded-full">
+              <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold bg-brand-500 text-white rounded-full">
                 {activeFiltersCount}
               </span>
             )}
-          </Button>
+          </button>
 
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden sm:flex flex-wrap items-center gap-2 flex-1">
+            <Select
+              value={typeFilter}
+              onChange={(val) => setTypeFilter(val as string)}
+              placeholder="All Types"
+              className="w-32"
+              options={[
+                { value: "ALL", label: "All Types" },
+                { value: "INTERNAL", label: "Internal" },
+                { value: "EXTERNAL", label: "External" },
+                { value: "FORMS", label: "Forms" },
+              ]}
+            />
+
             <DateRangeInput
               from={dateFrom}
               to={dateTo}
               onFromChange={setDateFrom}
               onToChange={setDateTo}
             />
-            
-            {(q || dateFrom || dateTo) && (
+
+            {(q || typeFilter !== "ALL" || dateFrom || dateTo) && (
               <button
                 type="button"
                 onClick={() => {
                   setQ("");
+                  setTypeFilter("ALL");
                   setDateFrom("");
                   setDateTo("");
-                  setPage(1);
                 }}
                 className="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition"
               >
@@ -197,9 +191,24 @@ export default function ArchivePage() {
           </div>
         </div>
 
-        {/* Mobile secondary filters collapsible */}
         {isFiltersOpen && (
-          <div className="sm:hidden flex flex-col gap-3 p-4 bg-slate-50 dark:bg-surface-600 rounded-xl border border-slate-200 dark:border-surface-400 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="sm:hidden flex flex-col gap-3 p-4 bg-slate-50 dark:bg-surface-600 rounded-xl border border-slate-200 dark:border-surface-400 animate-in fade-in slide-in-from-top-1">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
+              <Select
+                value={typeFilter}
+                onChange={(val) => setTypeFilter(val as string)}
+                placeholder="All Types"
+                className="w-full"
+                options={[
+                  { value: "ALL", label: "All Types" },
+                  { value: "INTERNAL", label: "Internal" },
+                  { value: "EXTERNAL", label: "External" },
+                  { value: "FORMS", label: "Forms" },
+                ]}
+              />
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Date Range</label>
               <DateRangeInput
@@ -209,82 +218,51 @@ export default function ArchivePage() {
                 onToChange={setDateTo}
               />
             </div>
-
-            {(q || dateFrom || dateTo) && (
-              <Button
-                type="button"
-                variant="outline"
-                size="md"
-                onClick={() => {
-                  setQ("");
-                  setDateFrom("");
-                  setDateTo("");
-                  setPage(1);
-                }}
-                className="w-full font-bold text-rose-500 hover:text-rose-600 dark:text-rose-400"
-              >
-                Clear all filters
-              </Button>
-            )}
           </div>
         )}
       </div>
 
       {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
 
-      {/* Table Container - standardized with rounded-xl and library tokens */}
       <div className="flex-1 min-h-0 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
-        <Table<Document>
+        <Table<any>
           bare
-          columns={archiveColumns}
+          className="h-full"
+          columns={columns}
           rows={rows}
+          rowKey={(r, idx) => `archived-${r.id || idx}`}
           loading={loading}
-          initialLoading={initialLoading || (loading && rows.length === 0)}
-          emptyMessage={
-            q || dateFrom || dateTo
-              ? "No archived results match your filters."
-              : "No cancelled or superseded documents found."
-          }
-          rowKey={(doc) => doc.id}
+          initialLoading={initialLoading}
           onRowClick={handleRowClick}
           hasMore={hasMore}
-          onLoadMore={() => setPage((p) => p + 1)}
-          mobileRender={(doc: any) => (
-            <div className="px-4 py-3">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300">
-                    {doc.doctype || "DOC"}
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-400">
-                    {doc.code || "—"}
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-400 tabular-nums">
-                  {formatDate(doc.updated_at)}
-                </span>
-              </div>
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-0.5">
-                {doc.title}
-              </p>
-              <div className="flex items-center justify-between gap-2 overflow-hidden">
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                  {doc.office?.code || doc.ownerOffice?.code || "—"}
-                </span>
-                <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wide shrink-0">
-                  {doc.status}
-                </span>
-              </div>
-            </div>
-          )}
-          gridTemplateColumns={gridTemplateColumns}
-          className="h-full"
+          onLoadMore={() => loadData(true)}
+          gridTemplateColumns={gridTemplate}
           sortBy={sortBy}
           sortDir={sortDir}
           onSortChange={(key, dir) => {
             setSortBy(key as any);
             setSortDir(dir);
           }}
+          mobileRender={(r) => (
+            <div className="px-4 py-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300">
+                  {r.doctype}
+                </span>
+                <span className="text-[10px] text-slate-400 tabular-nums">
+                  {formatDate(r.created_at)}
+                </span>
+              </div>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-0.5">
+                {r.title}
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono text-slate-400">{r.code || "No Code"}</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">{r.ownerOffice?.code || "—"}</span>
+              </div>
+            </div>
+          )}
+          emptyMessage="No documents found in the archive."
         />
       </div>
     </PageFrame>

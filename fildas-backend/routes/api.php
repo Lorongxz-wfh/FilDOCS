@@ -96,7 +96,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::put('/documents/{document}/tags',    [DocumentController::class, 'setTags']);
     Route::get('/documents/{document}/shares',  [DocumentController::class, 'getShares']);
     Route::post('/documents/{document}/shares', [DocumentController::class, 'setShares']);
+    Route::post('/documents/{document}/archive',  [DocumentController::class, 'archive']);
+    Route::post('/documents/{document}/restore',  [DocumentController::class, 'restore']);
     Route::post('/documents/{document}/revision', [DocumentController::class, 'createRevision']);
+
 
     // ── Document Versions ──────────────────────────────────────────────────
     Route::get('/document-versions/{version}',              [DocumentController::class, 'showVersion']);

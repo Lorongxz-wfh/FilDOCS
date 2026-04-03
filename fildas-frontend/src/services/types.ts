@@ -59,6 +59,8 @@ export interface Document {
   tags?: string[];
   effective_date?: string | null;
   distributed_at?: string | null;
+  archived_at?: string | null;
+  archive_reason?: string | null;
 }
 
 export type Paginated<T> = {

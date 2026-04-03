@@ -562,13 +562,7 @@ const DashboardPage: React.FC = () => {
   const user = getAuthUser();
   const firstName =
     user?.first_name?.trim() || user?.full_name?.split(" ")[0] || "there";
-  const initials =
-    (user?.full_name ?? "")
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase())
-      .join("") || "?";
+
 
   const hour = new Date().getHours();
   const greeting =
@@ -585,27 +579,15 @@ const DashboardPage: React.FC = () => {
       {/* ── Page header ── */}
       <div className="shrink-0 border-b border-slate-200 bg-slate-50 dark:border-surface-400 dark:bg-surface-600 px-4 sm:px-5 py-3 sm:py-3.5">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-md overflow-hidden bg-white dark:bg-surface-400 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-surface-300 shadow-sm">
-              {(user as any)?.profile_photo_url ? (
-                <img
-                  src={(user as any).profile_photo_url}
-                  alt={user?.full_name ?? ""}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                initials
-              )}
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 leading-none">
-                {today}
-              </p>
-              <h1 className="mt-1 text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 leading-tight truncate">
-                {greeting}, {firstName}
-              </h1>
-            </div>
+          <div className="flex flex-col min-w-0">
+            <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 leading-none">
+              {today}
+            </p>
+            <h1 className="mt-1 text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 leading-tight truncate">
+              {greeting}, {firstName}
+            </h1>
           </div>
+
 
           <div className="flex shrink-0 items-center gap-2">
             {!loading &&

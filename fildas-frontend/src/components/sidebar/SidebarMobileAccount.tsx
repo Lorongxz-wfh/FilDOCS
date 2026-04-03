@@ -1,12 +1,11 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { History, Archive } from "lucide-react";
+import { History, Archive, User } from "lucide-react";
 
 interface SidebarMobileAccountProps {
   user: any;
   imgError: boolean;
   setImgError: (error: boolean) => void;
-  initials: string;
   onMobileClose?: () => void;
 }
 
@@ -14,7 +13,6 @@ const SidebarMobileAccount: React.FC<SidebarMobileAccountProps> = ({
   user,
   imgError,
   setImgError,
-  initials,
   onMobileClose,
 }) => {
   return (
@@ -30,7 +28,7 @@ const SidebarMobileAccount: React.FC<SidebarMobileAccountProps> = ({
                 onError={() => setImgError(true)}
               />
             ) : (
-              initials
+              <User className="h-5 w-5 text-brand-200 dark:text-brand-300" strokeWidth={2.5} />
             )}
           </div>
         </div>
@@ -49,26 +47,26 @@ const SidebarMobileAccount: React.FC<SidebarMobileAccountProps> = ({
         {[
           {
             label: "Activity",
-            icon: History,
-            to: "/my-activity",
-            color: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400",
-          },
-          {
-            label: "Archive",
-            icon: Archive,
-            to: "/archive",
-            color: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
-          },
-        ].map((item) => (
-          <NavLink
-            key={item.label}
-            to={item.to}
-            onClick={onMobileClose}
-            className="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white dark:bg-surface-400 border border-slate-200 dark:border-white/5 active:scale-95 transition-all shadow-xs"
-          >
-            <div className={`p-1.5 rounded-lg shrink-0 ${item.color}`}>
-              <item.icon className="h-4 w-4" />
-            </div>
+  icon: History,
+  to: "/my-activity",
+  color: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400",
+},
+{
+  label: "Archive",
+  icon: Archive,
+  to: "/archive",
+  color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
+},
+].map((item) => (
+<NavLink
+  key={item.label}
+  to={item.to}
+  onClick={onMobileClose}
+  className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white dark:bg-surface-400 border border-slate-200 dark:border-white/5 active:scale-95 transition-all shadow-xs overflow-hidden"
+>
+  <div className={`p-1.5 rounded-lg shrink-0 ${item.color}`}>
+    <item.icon className="h-4 w-4" />
+  </div>
             <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">
               {item.label}
             </span>

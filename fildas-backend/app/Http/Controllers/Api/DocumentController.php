@@ -158,8 +158,6 @@ class DocumentController extends Controller
 
         $canSeeAll = in_array($roleName, ['admin', 'president', 'qa'], true);
 
-        $isSharedToMe = false;
-
         if (!$canSeeAll && $roleName !== 'auditor') {
             $userOfficeId = $user?->office_id;
 
@@ -179,6 +177,9 @@ class DocumentController extends Controller
                 })
                 ->exists();
 
+            // Check if document was ever Distributed (public)
+            $isPublicArchive = $document->archived_at && DocumentVersion::where('document_id', $document->id)->where('status', 'Distributed')->exists();
+
             $vpOfficeCode = $this->officeHierarchy->vpRoleToOfficeCode($roleName);
             if ($vpOfficeCode) {
                 $vpOfficeId = Cache::remember("office_id:{$vpOfficeCode}", 3600, function () use ($vpOfficeCode) {
@@ -197,7 +198,7 @@ class DocumentController extends Controller
 
                 $inVpScope = in_array((int) $document->owner_office_id, array_map('intval', $vpOfficeIds), true);
 
-                if (!$inVpScope && !$isSharedToMe && !$hasOpenTaskOnLatest) {
+                if (!$inVpScope && !$isSharedToMe && !$hasOpenTaskOnLatest && !$isPublicArchive) {
                     return response()->json(['message' => 'Forbidden.'], 403);
                 }
             } else {
@@ -214,6 +215,7 @@ class DocumentController extends Controller
                     && !$isSharedToMe
                     && !$hasOpenTaskOnLatest
                     && !$wasWorkflowParticipant
+                    && !$isPublicArchive
                 ) {
                     return response()->json(['message' => 'Forbidden.'], 403);
                 }
@@ -222,22 +224,10 @@ class DocumentController extends Controller
 
         $q = DocumentVersion::query()
             ->where('document_id', $document->id);
-        // Keep Cancelled in history (Option A)
-
+        
         // Auditor: only Distributed history
         if ($roleName === 'auditor') {
             $q->where('status', 'Distributed');
-        }
-
-        if (!$canSeeAll && $roleName !== 'auditor' && ($isSharedToMe ?? false)) {
-            $latestDistributed = DocumentVersion::query()
-                ->where('document_id', $document->id)
-                ->where('status', 'Distributed')
-                ->orderByDesc('version_number')
-                ->limit(1)
-                ->get();
-
-            return response()->json($latestDistributed);
         }
 
         $versions = $q->orderByDesc('version_number')->get();
@@ -1411,4 +1401,54 @@ class DocumentController extends Controller
             ],
         ]);
     }
+
+    public function archive(Request $request, Document $document)
+    {
+        $user = $request->user();
+        
+        // Only Distributed documents can be manually archived
+        $latest = $document->latestVersion;
+        if (!$latest || $latest->status !== 'Distributed') {
+            return response()->json(['message' => 'Only distributed documents can be manually archived.'], 422);
+        }
+
+        $document->archived_at = now();
+        $document->save();
+
+        $this->logActivity('document.archived', 'Archived document manually', $user->id, $user->office_id, [], $document->id, $latest->id);
+
+        try {
+            broadcast(new \App\Events\WorkspaceChanged('document'));
+        } catch (\Throwable) {}
+
+        return response()->json(['message' => 'Document archived.']);
+    }
+
+    public function restore(Request $request, Document $document)
+    {
+        $user = $request->user();
+
+        if (!$document->archived_at) {
+            return response()->json(['message' => 'Document is not archived.'], 422);
+        }
+
+        // Restore is only for manually archived documents. 
+        // Cancelled and Superseded versions cannot be restored via this method.
+        $latest = $document->latestVersion;
+        if ($latest && in_array($latest->status, ['Cancelled', 'Superseded'])) {
+            return response()->json(['message' => 'Cancelled or Superseded documents cannot be restored.'], 422);
+        }
+
+        $document->archived_at = null;
+        $document->save();
+
+        $this->logActivity('document.restored', 'Restored document manually', $user->id, $user->office_id, [], $document->id, $latest?->id);
+
+        try {
+            broadcast(new \App\Events\WorkspaceChanged('document'));
+        } catch (\Throwable) {}
+
+        return response()->json(['message' => 'Document restored.']);
+    }
 }
+

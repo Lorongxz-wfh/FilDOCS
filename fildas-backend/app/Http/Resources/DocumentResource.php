@@ -100,6 +100,14 @@ class DocumentResource extends JsonResource
             'created_by' => $doc->created_by,
             'created_at' => optional($doc->created_at)->toISOString(),
             'updated_at' => optional($doc->updated_at)->toISOString(),
+            'archived_at' => optional($doc->archived_at)->toISOString(),
+
+            // Explicit reason for archiving, prioritized for the UI label
+            'archive_reason' => $doc->archived_at 
+                ? 'Manually Archived' 
+                : ($v?->status === 'Superseded' 
+                    ? 'Superseded' 
+                    : ($v?->status === 'Cancelled' ? 'Cancelled' : null)),
         ];
     }
 }

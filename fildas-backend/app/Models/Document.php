@@ -20,7 +20,14 @@ class Document extends Model
         'school_year',
         'semester',
         'created_by',
+        'archived_at',
     ];
+
+    protected $casts = [
+        'archived_at' => 'datetime',
+    ];
+
+
 
     public function ownerOffice()
     {

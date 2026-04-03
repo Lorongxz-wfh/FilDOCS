@@ -7,6 +7,7 @@ export type HeaderActionButton = {
   loading?: boolean;
   skipConfirm?: boolean;
   confirmMessage?: string;
+  icon?: any;
   onClick: (note?: string) => Promise<void> | void;
 };
 

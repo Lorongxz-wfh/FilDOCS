@@ -16,7 +16,7 @@ import Button from "../components/ui/Button";
 import Table from "../components/ui/Table";
 import Select from "../components/ui/Select";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
-import { Search, X, Archive, PlusCircle, SlidersHorizontal } from "lucide-react";
+import { Search, X, PlusCircle, SlidersHorizontal, Archive } from "lucide-react";
 import { inputCls } from "../utils/formStyles";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
 import Alert from "../components/ui/Alert";
@@ -113,6 +113,7 @@ export default function DocumentLibraryPage() {
           page: targetPage,
           perPage: 12,
           q: qDebounced.trim() || undefined,
+          space: "library",
           status: "Distributed",
           doctype: typeFilter !== "ALL" ? typeFilter : undefined,
           scope,
@@ -140,6 +141,8 @@ export default function DocumentLibraryPage() {
         const more = res.current_page != null && res.last_page != null && res.current_page < res.last_page;
         setHasMore(more);
         setPage(targetPage);
+        setHasMore(more);
+        setPage(targetPage);
       } else if (tab === "all") {
         // Parallel load for All tab
         const [docRes, reqRes] = await Promise.all([
@@ -147,6 +150,7 @@ export default function DocumentLibraryPage() {
             page: isNextPage ? allDocPage + 1 : 1,
             perPage: 8,
             q: qDebounced.trim() || undefined,
+            space: "library",
             status: "Distributed",
             doctype: typeFilter !== "ALL" ? typeFilter : undefined,
             scope: "all",
@@ -258,15 +262,17 @@ export default function DocumentLibraryPage() {
             title="Refresh library"
           />
 
+
+
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => navigate("/archive")}
-            className="flex items-center justify-center sm:gap-2"
-            title="View Archive"
+            className="hidden sm:flex"
           >
-            <Archive className="h-4 w-4" />
-            <span className="hidden sm:inline font-bold">Archive</span>
+            <Archive size={15} />
+            <span className="font-bold">Archive</span>
           </Button>
 
           {canCreate && (

@@ -31,9 +31,11 @@ class DocumentIndexRequest extends FormRequest
             'assigned_office_id' => 'nullable|integer|exists:offices,id',
             'office_id' => 'nullable|integer|exists:offices,id',
 
-            // workflow filters
+            // workflow / library filters
             'phase' => 'nullable|string',
             'version_number' => 'nullable|integer',
+            'space' => 'nullable|string|in:all,workqueue,library,archive',
+            'scope' => 'nullable|string|in:all,owned,shared,assigned,participant',
 
             // sorting
             'sort_by' => 'nullable|string|in:title,created_at,code,updated_at',

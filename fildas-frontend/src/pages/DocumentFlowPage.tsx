@@ -29,16 +29,19 @@ import { replaceDocumentVersionFileWithProgress } from "../services/documents";
 import { useToast } from "../components/ui/toast/ToastContext";
 import { getUserRole } from "../lib/roleFilters";
 import { getAuthUser } from "../lib/auth";
-import { Library, Loader2, RefreshCcw,
+import { 
+  FileX,
+  Share2,
+  Library,
+  Loader2,
+  XCircle,
   ArrowRightToLine,
   ArrowLeftCircle,
   CheckCircle2,
-  XCircle,
   Hash,
   Terminal,
   Layers,
-  Share2,
-  FileX,
+  RefreshCcw,
 } from "lucide-react";
 import { normalizeError } from "../lib/normalizeError";
 import VersionComparisonModal from "../components/documents/documentFlow/VersionComparisonModal";
@@ -85,6 +88,8 @@ const DocumentFlowPage: React.FC = () => {
 
   const [document, setDocument] = useState<Document | null>(null);
   const [allVersions, setAllVersions] = useState<DocumentVersion[]>([]);
+  const isArchived = !!document?.archived_at;
+
   const [headerState, setHeaderState] = useState<{
     title: string;
     code: string;
@@ -404,24 +409,7 @@ const refreshAndSelectBest = React.useCallback(
   }
 
   const current = selectedVersion ?? allVersions[0] ?? null;
-
-  const isLatestSelected = current
-    ? !allVersions.some(
-        (v) => Number(v.version_number) > Number(current.version_number),
-      )
-    : false;
-
-  const isOwner =
-    !!myOfficeId &&
-    !!document?.owner_office_id &&
-    Number(myOfficeId) === Number(document.owner_office_id);
-
-  const isRevisable =
-    role !== "AUDITOR" &&
-    isLatestSelected &&
-    current?.status === "Distributed" &&
-    (!isAdmin || adminDebugMode) &&
-    isOwner;
+  const isOwner = !!myOfficeId && !!document?.owner_office_id && Number(myOfficeId) === Number(document.owner_office_id);
 
   return (
     <>
@@ -474,7 +462,7 @@ const refreshAndSelectBest = React.useCallback(
         onCollapseToggle={() => setRightCollapsed((v) => !v)}
         actions={
           <div className="flex flex-wrap gap-2">
-            {current?.status === "Distributed" && isOwner && role !== "AUDITOR" && (
+            {current?.status === "Distributed" && isOwner && role !== "AUDITOR" && !isArchived && (
               <Button
                 type="button"
                 variant="outline"
@@ -488,7 +476,7 @@ const refreshAndSelectBest = React.useCallback(
                 <span>Share</span>
               </Button>
             )}
-            {current?.status === "Distributed" && (
+            {current?.status === "Distributed" && !isArchived && (
               <Button
                 type="button"
                 variant="outline"
@@ -502,7 +490,7 @@ const refreshAndSelectBest = React.useCallback(
                 <span>View in Library</span>
               </Button>
             )}
-            {isRevisable && (
+            {current?.status === "Distributed" && isOwner && role !== "AUDITOR" && !isArchived && (
               <Button
                 type="button"
                 variant="outline"
@@ -531,6 +519,7 @@ const refreshAndSelectBest = React.useCallback(
 
                 // Contextual Icons for Flow Actions
                 const Icon = 
+                  a.icon ? a.icon :
                   a.key === "REJECT" ? XCircle :
                   a.key.includes("CANCEL") ? XCircle :
                   a.key.includes("SEND") || a.key.includes("FORWARD") ? ArrowRightToLine :
@@ -548,7 +537,7 @@ const refreshAndSelectBest = React.useCallback(
                     type="button"
                     size="sm"
                     responsive
-                    variant={a.variant === "danger" ? "danger" : "primary"}
+                    variant={a.variant === "danger" ? "danger" : a.variant === "outline" ? "outline" : "primary"}
                     disabled={isBusy || a.disabled}
                     onClick={() => handleHeaderActionClick(a)}
                     tooltip={a.label}

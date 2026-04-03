@@ -127,8 +127,11 @@ export async function listDocumentsPage(params?: {
   phase?: string;
   version_number?: number;
 
+  // document library space
+  space?: "all" | "workqueue" | "library" | "archive";
+
   // document library scope
-  scope?: "all" | "owned" | "shared" | "assigned" | "participant" | "archived";
+  scope?: "all" | "owned" | "shared" | "assigned" | "participant";
 
   // sorting
   sort_by?: "title" | "created_at" | "code" | "updated_at";
@@ -152,6 +155,7 @@ export async function listDocumentsPage(params?: {
 
         phase: params?.phase,
         version_number: params?.version_number,
+        space: params?.space,
         scope: params?.scope,
         sort_by: params?.sort_by,
         sort_dir: params?.sort_dir,
@@ -656,6 +660,31 @@ export async function getDocumentPreviewLink(
       (status
         ? `Failed to get preview link (${status})`
         : "Failed to get preview link");
+    throw new Error(msg);
+  }
+}
+
+
+export async function archiveDocument(documentId: number): Promise<void> {
+  try {
+    const api = await getApi();
+    await api.post(`/documents/${documentId}/archive`);
+  } catch (e: any) {
+    const status = e?.response?.status;
+    const msg =
+      e?.response?.data?.message || (status ? `Failed (${status})` : "Failed");
+    throw new Error(msg);
+  }
+}
+
+export async function restoreDocument(documentId: number): Promise<void> {
+  try {
+    const api = await getApi();
+    await api.post(`/documents/${documentId}/restore`);
+  } catch (e: any) {
+    const status = e?.response?.status;
+    const msg =
+      e?.response?.data?.message || (status ? `Failed (${status})` : "Failed");
     throw new Error(msg);
   }
 }

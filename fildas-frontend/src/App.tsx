@@ -54,7 +54,6 @@ const CreateDocumentPage = React.lazy(
   () => import("./pages/CreateDocumentPage"),
 );
 const InboxPage = React.lazy(() => import("./pages/InboxPage"));
-const ArchivePage = React.lazy(() => import("./pages/ArchivePage"));
 const ReportsPage = React.lazy(() => import("./pages/ReportsPage"));
 const AdminReportsPage = React.lazy(() => import("./pages/AdminReportsPage"));
 const ReportExportPage = React.lazy(() => import("./pages/ReportExportPage"));
@@ -65,6 +64,8 @@ const OfficeManagerPage = React.lazy(() => import("./pages/OfficeManagerPage"));
 const ActivityLogsPage = React.lazy(() => import("./pages/ActivityLogsPage"));
 const DocumentFlowPage = React.lazy(() => import("./pages/DocumentFlowPage"));
 const DocumentViewPage = React.lazy(() => import("./pages/DocumentViewPage"));
+const ArchivePage = React.lazy(() => import("./pages/ArchivePage"));
+
 
 const DocumentRequestListPage = React.lazy(
   () => import("./pages/DocumentRequestListPage"),
@@ -194,6 +195,7 @@ export default function App() {
             <Route path="/documents/:id" element={<DocumentFlowPage />} />
             <Route path="/documents/all" element={<MyWorkQueueListPage />} />
             <Route path="/documents" element={<DocumentLibraryPage />} />
+            <Route path="/archive" element={<ArchivePage />} />
 
             <Route
               element={
@@ -257,7 +259,7 @@ export default function App() {
               <Route path="/backup" element={<BackupPage />} />
             </Route>
 
-            <Route path="/archive" element={<ArchivePage />} />
+
             <Route path="/announcements" element={<AnnouncementsPage />} />
             <Route path="/my-activity" element={<MyActivityPage />} />
             <Route path="/help" element={<HelpPage />} />

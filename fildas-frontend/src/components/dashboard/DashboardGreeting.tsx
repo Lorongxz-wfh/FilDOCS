@@ -9,7 +9,7 @@ type Props = {
 
 const DashboardGreeting: React.FC<Props> = ({ pendingCount, loading }) => {
   const user = getAuthUser();
-  const [imgError, setImgError] = React.useState(false);
+
 
   const firstName =
     user?.first_name?.trim() || user?.full_name?.split(" ")[0] || "there";
@@ -30,45 +30,25 @@ const DashboardGreeting: React.FC<Props> = ({ pendingCount, loading }) => {
     <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 dark:border-surface-400 dark:bg-surface-500">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* Left: greeting + status */}
-        <div className="flex items-center gap-4">
-          {/* Avatar */}
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white dark:bg-surface-400 text-sm font-bold text-slate-600 dark:text-slate-300 shadow-sm border border-slate-100 dark:border-surface-300 overflow-hidden">
-            {(user as any)?.profile_photo_url && !imgError ? (
-              <img
-                src={(user as any).profile_photo_url}
-                alt={user?.full_name ?? ""}
-                className="h-full w-full object-cover"
-                onError={() => setImgError(true)}
-              />
-            ) : (
-              (user?.full_name ?? "")
-                .split(" ")
-                .filter(Boolean)
-                .slice(0, 2)
-                .map((p) => p[0]?.toUpperCase())
-                .join("") || "?"
-            )}
-          </div>
-
-          <div>
-            <p className="text-xs text-slate-400 dark:text-slate-500">
-              {today}
-            </p>
-            <h1 className="mt-0.5 flex items-center gap-1.5 text-lg font-bold text-slate-900 dark:text-slate-100">
-              {greeting}, {firstName}
-              <Hand className="h-4 w-4 text-amber-400" />
-            </h1>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="text-xs text-slate-400 dark:text-slate-500">
-                {loading
-                  ? "Loading your workspace…"
-                  : pendingCount > 0
-                    ? `${pendingCount} task${pendingCount !== 1 ? "s" : ""} need${pendingCount === 1 ? "s" : ""} your attention`
-                    : "Everything is up to date"}
-              </span>
-            </div>
+        <div className="flex flex-col">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            {today}
+          </p>
+          <h1 className="mt-0.5 flex items-center gap-1.5 text-lg font-bold text-slate-900 dark:text-slate-100">
+            {greeting}, {firstName}
+            <Hand className="h-4 w-4 text-amber-400" />
+          </h1>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-xs text-slate-400 dark:text-slate-500">
+              {loading
+                ? "Loading your workspace…"
+                : pendingCount > 0
+                  ? `${pendingCount} task${pendingCount !== 1 ? "s" : ""} need${pendingCount === 1 ? "s" : ""} your attention`
+                  : "Everything is up to date"}
+            </span>
           </div>
         </div>
+
 
         {/* Right: status badge */}
         {!loading &&

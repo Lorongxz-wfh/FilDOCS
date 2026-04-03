@@ -378,13 +378,6 @@ const SettingsPage: React.FC = () => {
     window.dispatchEvent(new CustomEvent("admin_debug_mode_changed"));
   };
 
-  // ── Initials avatar ───────────────────────────────────────────────────
-  const initials = (user?.full_name ?? "")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p: string) => p[0]?.toUpperCase())
-    .join("");
 
   return (
     <PageFrame
@@ -411,8 +404,8 @@ const SettingsPage: React.FC = () => {
                     className="h-16 w-16 rounded-full object-cover border-2 border-slate-200 dark:border-surface-400"
                   />
                 ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/40 text-xl font-bold text-brand-600 dark:text-brand-300 border-2 border-slate-200 dark:border-surface-400">
-                    {initials || "?"}
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-surface-400 border-2 border-slate-200 dark:border-surface-300">
+                    <User className="h-8 w-8 text-slate-400 dark:text-slate-500" strokeWidth={2} />
                   </div>
                 )}
                 {!isAuditorUser && (
