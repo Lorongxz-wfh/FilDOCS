@@ -4,12 +4,12 @@ import { getAuthUser } from "../lib/auth";
 import PageFrame from "../components/layout/PageFrame";
 import ActivityCalendar from "../components/activityLogs/ActivityCalendar";
 import ActivityDetailModal from "../components/activityLogs/ActivityDetailModal";
-import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
 import Alert from "../components/ui/Alert";
 import { useActivityLogs } from "../hooks/useActivityLogs";
 import ActivityLogsHeader from "../components/activityLogs/ActivityLogsHeader";
 import ActivityLogsFilters from "../components/activityLogs/ActivityLogsFilters";
 import ActivityLogsTable from "../components/activityLogs/ActivityLogsTable";
+import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { getDocumentVersion } from "../services/documents";
 import type { ActivityLogItem } from "../services/types";
 
@@ -33,13 +33,12 @@ const ActivityLogsPage: React.FC = () => {
     loading,
     initialLoading,
     error,
-    refresh,
-    reload,
+    refresh: internalRefresh,
   } = useActivityLogs({
     scope: isOfficeHead ? "office" : "all",
   });
 
-  const { refreshing } = usePageBurstRefresh(reload);
+  const { refresh, isRefreshing } = useSmartRefresh(internalRefresh);
 
   const handleRowNavigate = async (row: any) => {
     if (row.meta?.document_request_id) {
@@ -97,7 +96,7 @@ const ActivityLogsPage: React.FC = () => {
           tab={tab}
           setTab={setTab}
           onRefresh={refresh}
-          refreshing={refreshing}
+          refreshing={isRefreshing}
           onExport={handleExport}
           exporting={exporting}
           disabled={initialLoading}

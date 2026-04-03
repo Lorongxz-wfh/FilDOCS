@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import Modal from "../ui/Modal";
 import OfficeDropdown from "../OfficeDropdown";
 import { getAuthUser } from "../../lib/auth";
+import { labelCls, choiceCardCls, helperCls } from "../../utils/formStyles";
 
 export type FlowSelection = {
   routingMode: "default" | "custom";
@@ -191,7 +192,7 @@ export default function FlowSelectModal({
       widthClassName="max-w-lg"
       headerActions={headerActions}
     >
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-4">
         {/* Mode toggle */}
         <div className="grid grid-cols-2 gap-2">
           {(["default", "custom"] as const).map((mode) => (
@@ -204,14 +205,12 @@ export default function FlowSelectModal({
                 if (mode === "default") setCustomOfficeIds([0]);
               }}
               className={[
-                "rounded-xl border px-4 py-3 text-left transition",
-                routingMode === mode
-                  ? "border-sky-400 bg-sky-50 dark:bg-sky-950/40 dark:border-sky-600"
-                  : "border-slate-200 dark:border-surface-400 hover:bg-slate-50 dark:hover:bg-surface-400",
+                choiceCardCls(routingMode === mode),
+                "p-3.5"
               ].join(" ")}
             >
               <p
-                className={`text-sm font-semibold ${routingMode === mode ? "text-sky-700 dark:text-sky-400" : "text-slate-700 dark:text-slate-300"}`}
+                className={`text-xs font-bold uppercase tracking-wide ${routingMode === mode ? "text-slate-900 dark:text-slate-50" : "text-slate-600 dark:text-slate-300"}`}
               >
                 {mode === "default"
                   ? isQA
@@ -219,7 +218,7 @@ export default function FlowSelectModal({
                     : "Default Office Flow"
                   : "Custom Flow"}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed font-medium">
                 {mode === "default"
                   ? "Standard chain through VP and President"
                   : "You choose 1–5 offices in order"}
@@ -231,7 +230,7 @@ export default function FlowSelectModal({
         {/* Default QA: reviewer office */}
         {routingMode === "default" && isQA && (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400 mb-2">
+            <p className={labelCls}>
               Reviewer office{" "}
               <span className="text-rose-500 normal-case">*</span>
             </p>
@@ -244,7 +243,7 @@ export default function FlowSelectModal({
                 setError(null);
               }}
             />
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            <p className={helperCls}>
               The first office that will review this document.
             </p>
           </div>
@@ -253,7 +252,7 @@ export default function FlowSelectModal({
         {/* Custom: recipient list */}
         {routingMode === "custom" && (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400 mb-2">
+            <p className={labelCls}>
               Recipients <span className="text-rose-500 normal-case">*</span>
             </p>
             <div className="flex flex-col gap-2">
@@ -317,10 +316,14 @@ export default function FlowSelectModal({
 
         {/* Chain preview — 3 phases */}
         {chain.length > 0 && (
-          <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-slate-50/80 dark:bg-surface-600/80 px-4 py-3 flex flex-col gap-2.5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-              Flow Preview
-            </p>
+          <div className="rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50/20 dark:bg-surface-600/10 px-3.5 py-3.5 space-y-2.5">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="h-px flex-1 bg-slate-100 dark:bg-surface-400/50"></span>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                Flow Preview
+              </p>
+              <span className="h-px flex-1 bg-slate-100 dark:bg-surface-400/50"></span>
+            </div>
             {[
               { label: "Review", nodes: chain.slice(0, reviewEndIndex(chain)) },
               {
@@ -335,27 +338,27 @@ export default function FlowSelectModal({
                 nodes: chain.slice(approvalEndIndex(chain)),
               },
             ].map((phase) => (
-              <div key={phase.label} className="flex items-start gap-2">
-                <span className="w-20 shrink-0 text-xs font-semibold text-slate-400 dark:text-slate-500 pt-0.5">
+              <div key={phase.label} className="flex items-start gap-4">
+                <span className="w-16 shrink-0 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider pt-1">
                   {phase.label}
                 </span>
-                <div className="flex flex-wrap items-center gap-1">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {phase.nodes.map((node, i) => (
                     <React.Fragment key={i}>
                       <span
                         className={[
-                          "rounded px-2 py-0.5 text-xs font-medium",
+                          "rounded border px-2 py-0.5 text-xs font-medium transition-colors",
                           node.includes("✓")
-                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/20 dark:text-emerald-400"
                             : node === "Register" || node === "Distribute"
-                              ? "bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-400"
-                              : "bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 text-slate-600 dark:text-slate-300",
+                              ? "border-slate-200 bg-slate-100 text-slate-600 dark:border-surface-400 dark:bg-surface-400 dark:text-slate-400"
+                              : "border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 text-slate-600 dark:text-slate-300",
                         ].join(" ")}
                       >
                         {node}
                       </span>
                       {i < phase.nodes.length - 1 && (
-                        <span className="text-slate-400 dark:text-slate-600 text-xs">
+                        <span className="text-slate-300 dark:text-slate-600 font-light">
                           →
                         </span>
                       )}

@@ -7,7 +7,7 @@ import Button from "../ui/Button";
 interface Props {
   tab: "log" | "calendar";
   setTab: (tab: "log" | "calendar") => void;
-  onRefresh: () => Promise<string | false>;
+  onRefresh: () => Promise<void | boolean>;
   refreshing: boolean;
   onExport: (format: "csv" | "pdf") => void;
   exporting: boolean;

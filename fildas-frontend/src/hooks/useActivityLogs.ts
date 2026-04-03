@@ -117,11 +117,9 @@ export function useActivityLogs(initialParams: Partial<ActivityLogsParams> = {})
     return () => { alive = false; };
   }, [page, params, qDebounced]);
 
-  const refresh = React.useCallback(async (): Promise<string | false> => {
+  const refresh = React.useCallback(async (): Promise<{ changed: boolean; data: ActivityLogItem[] } | undefined> => {
     const prevFirstId = firstIdRef.current;
     manualRefreshInProgress.current = true;
-    setLoading(true);
-    setError(null);
     try {
       const res = await listActivityLogs({
         scope: params.scope,
@@ -136,7 +134,8 @@ export function useActivityLogs(initialParams: Partial<ActivityLogsParams> = {})
       });
       
       const incoming = res.data ?? [];
-      firstIdRef.current = incoming[0]?.id ?? null;
+      const newFirstId = incoming[0]?.id ?? null;
+      firstIdRef.current = newFirstId;
       setRows(incoming);
       setPage(1);
       
@@ -145,13 +144,12 @@ export function useActivityLogs(initialParams: Partial<ActivityLogsParams> = {})
       hasMoreRef.current = more;
       setHasMore(more);
       
-      if (prevFirstId === null) return false;
-      return incoming[0]?.id !== prevFirstId ? "New activity entries loaded." : "Already up to date.";
+      const changed = newFirstId !== prevFirstId;
+      return { changed, data: incoming };
     } catch (e: any) {
       setError(e?.message ?? "Failed to load activity logs.");
       throw e;
     } finally {
-      setLoading(false);
       manualRefreshInProgress.current = false;
     }
   }, [params, qDebounced]);

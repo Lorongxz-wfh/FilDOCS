@@ -12,7 +12,7 @@ type Props = {
   onClose: () => void;
 };
 
-import { inputCls } from "../../utils/formStyles";
+import { inputCls, labelCls, choiceCardCls } from "../../utils/formStyles";
 
 export default function CreateDocumentRequestModal({ open, onClose }: Props) {
   const navigate = useNavigate();
@@ -137,7 +137,7 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
       widthClassName="max-w-lg"
       headerActions={headerActions}
     >
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-4">
         {/* Mode selector */}
         <div className="grid grid-cols-2 gap-2">
           {(
@@ -167,23 +167,21 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
                   setError(null);
                 }}
                 className={[
-                  "rounded-xl border px-4 py-3 text-left transition",
-                  active
-                    ? "border-sky-400 bg-sky-50 dark:bg-sky-950/40 dark:border-sky-600"
-                    : "border-slate-200 dark:border-surface-400 hover:bg-slate-50 dark:hover:bg-surface-400",
+                  choiceCardCls(active),
+                  "p-3.5"
                 ].join(" ")}
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <Icon
-                    className={`h-3.5 w-3.5 ${active ? "text-sky-600 dark:text-sky-400" : "text-slate-400"}`}
-                  />
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className={`p-1.5 rounded-md border transition-colors ${active ? "bg-slate-900 border-slate-900 text-white dark:bg-slate-100 dark:border-slate-100 dark:text-slate-900" : "bg-slate-50 dark:bg-surface-600 border-slate-200 dark:border-surface-400 text-slate-400"}`}>
+                    <Icon className="h-3.5 w-3.5" />
+                  </div>
                   <p
-                    className={`text-xs font-semibold ${active ? "text-sky-700 dark:text-sky-400" : "text-slate-700 dark:text-slate-300"}`}
+                    className={`text-xs font-bold uppercase tracking-wide ${active ? "text-slate-900 dark:text-slate-50" : "text-slate-600 dark:text-slate-300"}`}
                   >
                     {opt.label}
                   </p>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
                   {opt.desc}
                 </p>
               </button>
@@ -192,8 +190,8 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
         </div>
 
         {/* Title */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+        <div className="space-y-1.5">
+          <label className={labelCls}>
             Title <span className="text-rose-500 normal-case">*</span>
           </label>
           <input
@@ -215,14 +213,14 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
 
         {/* Offices */}
         {mode === "multi_office" ? (
-          <div className="flex flex-col gap-1.5">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+              <label className={labelCls}>
                 Recipient Offices{" "}
                 <span className="text-rose-500 normal-case">*</span>
               </label>
               {selectedOfficeIds.length > 0 && (
-                <span className="text-xs font-medium text-brand-500 dark:text-brand-400">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   {selectedOfficeIds.length} selected
                 </span>
               )}
@@ -233,13 +231,14 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
               selectedIds={selectedOfficeIds}
               onToggle={toggleOffice}
               multi={true}
+              maxHeight="max-h-[200px]"
             />
             {selectedOffices.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-0.5">
                 {selectedOffices.map((o) => (
                   <span
                     key={o.id}
-                    className="inline-flex items-center gap-1 rounded-full border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/30 px-2.5 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-400"
+                    className="inline-flex items-center gap-1 rounded border border-slate-200 dark:border-surface-300 bg-slate-50 dark:bg-surface-400/50 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 dark:text-slate-200"
                   >
                     {o.code}
                     <button
@@ -255,8 +254,8 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
             )}
           </div>
         ) : (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+          <div className="space-y-1.5">
+            <label className={labelCls}>
               Recipient Office{" "}
               <span className="text-rose-500 normal-case">*</span>
             </label>
@@ -266,10 +265,11 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
               selectedIds={selectedOfficeId ? [selectedOfficeId] : []}
               onToggle={selectSingleOffice}
               multi={false}
+              maxHeight="max-h-[200px]"
             />
             {selectedOffice && (
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="inline-flex items-center gap-1 rounded-full border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/30 px-2.5 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-400">
+                <span className="inline-flex items-center gap-1 rounded border border-slate-200 dark:border-surface-300 bg-slate-50 dark:bg-surface-400/50 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 dark:text-slate-200">
                   {selectedOffice.code} — {selectedOffice.name}
                   <button
                     type="button"

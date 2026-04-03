@@ -12,19 +12,30 @@ import { formatDate } from "../utils/formatters";
 import { StatusBadge } from "../components/ui/Badge";
 import { PageActions, CreateAction, RefreshAction } from "../components/ui/PageActions";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
+import { useSmartRefresh } from "../hooks/useSmartRefresh";
 
 const OFFICE_TYPES = ["office", "vp", "president", "committee", "unit"];
 
 export function OfficeManagerPage() {
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "active" | "disabled" | "all"
-  >("active");
+  const [statusFilter, setStatusFilter] = useState<"active" | "disabled" | "all">("active");
   const [typeFilter, setTypeFilter] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "code" | "type" | "created_at">("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [reloadTick, setReloadTick] = useState(0);
+
+  const _oc = pageCache.get<AdminOffice>("offices", '{"q":"","status":"active","type":""}', 10 * 60_000);
+  const [items, setItems] = useState<AdminOffice[]>(_oc?.rows ?? []);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(_oc?.hasMore ?? true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(!_oc);
+  const [error, setError] = useState<string | null>(null);
+
+  const location = useLocation();
+  const [modalOpen, setModalOpen] = useState(() => (location.state as any)?.openModal === true);
+  const [modalMode, setModalMode] = useState<"create" | "edit">(() => (location.state as any)?.openModal === true ? "create" : "edit");
+  const [selected, setSelected] = useState<AdminOffice | null>(null);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -33,23 +44,6 @@ export function OfficeManagerPage() {
     return count;
   }, [statusFilter, typeFilter]);
 
-  const _oc = pageCache.get<AdminOffice>("offices", '{"q":"","status":"active","type":""}', 10 * 60_000);
-  const [items, setItems] = useState<AdminOffice[]>(_oc?.rows ?? []);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(_oc?.hasMore ?? true);
-  const [loading, setLoading] = useState(!_oc);
-  const [initialLoading, setInitialLoading] = useState(!_oc);
-  const [error, setError] = useState<string | null>(null);
-
-  const location = useLocation();
-  const [modalOpen, setModalOpen] = useState(
-    () => (location.state as any)?.openModal === true,
-  );
-  const [modalMode, setModalMode] = useState<"create" | "edit">(() =>
-    (location.state as any)?.openModal === true ? "create" : "edit",
-  );
-  const [selected, setSelected] = useState<AdminOffice | null>(null);
-
   // Debounce search
   useEffect(() => {
     const t = window.setTimeout(() => setQDebounced(q), 400);
@@ -57,13 +51,10 @@ export function OfficeManagerPage() {
   }, [q]);
 
   const load = useCallback(
-    async (pageNum: number) => {
-      const filterKey = JSON.stringify({
-        q: qDebounced.trim(),
-        status: statusFilter,
-        type: typeFilter,
-      });
+    async (pageNum: number, silent = false) => {
+      const filterKey = JSON.stringify({ q: qDebounced.trim(), status: statusFilter, type: typeFilter });
       try {
+        if (!silent) setInitialLoading(true);
         setLoading(true);
         setError(null);
         const res = await getAdminOffices({
@@ -79,6 +70,7 @@ export function OfficeManagerPage() {
         setItems((prev) => (pageNum === 1 ? res.data : [...prev, ...res.data]));
         setHasMore(more);
         if (pageNum === 1) pageCache.set("offices", filterKey, res.data, more);
+        return res.data;
       } catch (e: any) {
         setError(e?.message ?? "Failed to load offices");
       } finally {
@@ -86,8 +78,16 @@ export function OfficeManagerPage() {
         setInitialLoading(false);
       }
     },
-    [qDebounced, statusFilter, typeFilter, sortBy, sortDir, reloadTick],
+    [qDebounced, statusFilter, typeFilter, sortBy, sortDir],
   );
+
+  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+    const prevItems = [...items];
+    const data = await load(1, true);
+    if (!data) return { changed: false };
+    const changed = JSON.stringify(data) !== JSON.stringify(prevItems.slice(0, data.length));
+    return { changed };
+  });
 
   // Reset on filter change
   useEffect(() => {
@@ -96,9 +96,9 @@ export function OfficeManagerPage() {
     setHasMore(true);
     setInitialLoading(true);
     load(1);
-  }, [load]);
+  }, [qDebounced, statusFilter, typeFilter, sortBy, sortDir, load]);
 
-  // Load next page when page increments beyond 1
+  // Load next page
   useEffect(() => {
     if (page === 1) return;
     load(page);
@@ -127,38 +127,22 @@ export function OfficeManagerPage() {
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
-      render: (o) => (
-        <span className="font-mono text-xs font-medium text-slate-700 dark:text-slate-300">
-          {o.code}
-        </span>
-      ),
+      render: (o) => <span className="font-mono text-xs font-medium text-slate-700 dark:text-slate-300">{o.code}</span>,
     },
     {
       key: "name",
       header: "Name",
       sortKey: "name",
       skeletonShape: "text",
-      render: (o) => (
-        <MiddleTruncate 
-          text={o.name}
-          className="font-semibold text-slate-900 dark:text-slate-100 placeholder:block"
-        />
-      ),
+      render: (o) => <MiddleTruncate text={o.name} className="font-semibold text-slate-900 dark:text-slate-100 placeholder:block" />,
     },
     {
       key: "parent",
       header: "Parent",
       skeletonShape: "text",
       render: (o) => {
-        const text = o.parent_office 
-          ? `${o.parent_office.name} (${o.parent_office.code})` 
-          : "—";
-        return (
-          <MiddleTruncate 
-            text={text}
-            className="text-sm text-slate-600 dark:text-slate-400"
-          />
-        );
+        const text = o.parent_office ? `${o.parent_office.name} (${o.parent_office.code})` : "—";
+        return <MiddleTruncate text={text} className="text-sm text-slate-600 dark:text-slate-400" />;
       },
     },
     {
@@ -169,11 +153,7 @@ export function OfficeManagerPage() {
       render: (o) => {
         const raw = o.type ?? "office";
         const label = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
-        return (
-          <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-            {label}
-          </span>
-        );
+        return <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{label}</span>;
       }
     },
     {
@@ -187,11 +167,7 @@ export function OfficeManagerPage() {
       header: "Created",
       sortKey: "created_at",
       skeletonShape: "narrow",
-      render: (o) => (
-        <span className="text-xs text-slate-500 dark:text-slate-400">
-          {(o as any).created_at ? formatDate((o as any).created_at) : "—"}
-        </span>
-      ),
+      render: (o) => <span className="text-xs text-slate-500 dark:text-slate-400">{(o as any).created_at ? formatDate((o as any).created_at) : "—"}</span>,
     },
   ], []);
 
@@ -201,23 +177,14 @@ export function OfficeManagerPage() {
       contentClassName="flex flex-col min-h-0 h-full"
       right={
         <PageActions>
-          <RefreshAction
-            onRefresh={async () => { setReloadTick((t) => t + 1); }}
-            loading={loading || initialLoading}
-          />
-          <CreateAction
-            label="New office"
-            onClick={openCreate}
-          />
+          <RefreshAction onRefresh={refresh} loading={isRefreshing} />
+          <CreateAction label="New office" onClick={openCreate} />
         </PageActions>
       }
     >
       <SearchFilterBar
         search={q}
-        setSearch={(val) => {
-          setQ(val);
-          setPage(1);
-        }}
+        setSearch={(val) => { setQ(val); setPage(1); }}
         placeholder="Search name or code…"
         activeFiltersCount={activeFiltersCount}
         onClear={clearFilters}
@@ -229,11 +196,7 @@ export function OfficeManagerPage() {
                 value={statusFilter}
                 onChange={(val) => setStatusFilter((val as any) || "active")}
                 className="w-full"
-                options={[
-                  { value: "active", label: "Active" },
-                  { value: "disabled", label: "Disabled" },
-                  { value: "all", label: "All" },
-                ]}
+                options={[{ value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }, { value: "all", label: "All" }]}
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -242,13 +205,7 @@ export function OfficeManagerPage() {
                 value={typeFilter}
                 onChange={(val) => setTypeFilter((val as string) || "")}
                 className="w-full"
-                options={[
-                  { value: "", label: "All types" },
-                  ...OFFICE_TYPES.map((t) => ({
-                    value: t,
-                    label: t.charAt(0).toUpperCase() + t.slice(1),
-                  })),
-                ]}
+                options={[{ value: "", label: "All types" }, ...OFFICE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))]}
               />
             </div>
           </div>
@@ -258,30 +215,18 @@ export function OfficeManagerPage() {
           value={statusFilter}
           onChange={(val) => setStatusFilter((val as any) || "active")}
           className="w-28"
-          options={[
-            { value: "active", label: "Active" },
-            { value: "disabled", label: "Disabled" },
-            { value: "all", label: "All" },
-          ]}
+          options={[{ value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }, { value: "all", label: "All" }]}
         />
-
         <SelectDropdown
           value={typeFilter}
           onChange={(val) => setTypeFilter((val as string) || "")}
           className="w-32"
-          options={[
-            { value: "", label: "All types" },
-            ...OFFICE_TYPES.map((t) => ({
-              value: t,
-              label: t.charAt(0).toUpperCase() + t.slice(1),
-            })),
-          ]}
+          options={[{ value: "", label: "All types" }, ...OFFICE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))]}
         />
       </SearchFilterBar>
 
       {error && <Alert variant="danger">{error}</Alert>}
 
-      {/* Table Container */}
       <div className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
         <Table<AdminOffice>
           bare
@@ -298,10 +243,7 @@ export function OfficeManagerPage() {
           gridTemplateColumns="minmax(80px, 6rem) minmax(140px, 1.2fr) minmax(140px, 1.2fr) 8rem 7rem 8rem"
           sortBy={sortBy}
           sortDir={sortDir}
-          onSortChange={(key, dir) => {
-            setSortBy(key as typeof sortBy);
-            setSortDir(dir);
-          }}
+          onSortChange={(key, dir) => { setSortBy(key as typeof sortBy); setSortDir(dir); }}
         />
       </div>
 
@@ -310,13 +252,7 @@ export function OfficeManagerPage() {
         mode={modalMode}
         office={selected}
         onClose={() => setModalOpen(false)}
-        onSaved={() => {
-          setPage(1);
-          setItems([]);
-          setHasMore(true);
-          setInitialLoading(true);
-          load(1);
-        }}
+        onSaved={() => load(1, true)}
       />
     </PageFrame>
   );

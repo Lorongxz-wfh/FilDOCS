@@ -12,12 +12,12 @@ import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import { PageActions, RefreshAction, UploadAction } from "../components/ui/PageActions";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
 import SelectDropdown from "../components/ui/SelectDropdown";
+import { useSmartRefresh } from "../hooks/useSmartRefresh";
 
 
 import {
   listTemplates,
   deleteTemplate,
-  invalidateTemplatesCache,
   appendToTemplatesCache,
   removeFromTemplatesCache,
   type DocumentTemplate,
@@ -43,7 +43,7 @@ const TemplatesPage: React.FC = () => {
     (isAdminUser && adminDebugMode);
 
   const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const location = useLocation();
@@ -117,48 +117,32 @@ const TemplatesPage: React.FC = () => {
 
   const templateIdsRef = React.useRef<string>("");
 
-  useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    setError(null);
-    listTemplates({ sort_by: sortBy, sort_dir: sortDir })
-      .then((data) => {
-        if (!alive) return;
-        templateIdsRef.current = data.map((t) => t.id).join(",");
-        setTemplates(data);
-      })
-      .catch((e: any) => {
-        if (!alive) return;
-        setError(e?.message ?? "Failed to load templates.");
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [sortBy, sortDir]);
-
-  const fetchTemplates = useCallback(async (): Promise<string | void> => {
-    const prevIds = templateIdsRef.current;
-    invalidateTemplatesCache();
-    setLoading(true);
+  const loadTemplates = useCallback(async (silent = false) => {
+    if (!silent) setInitialLoading(true);
     setError(null);
     try {
       const data = await listTemplates({ sort_by: sortBy, sort_dir: sortDir });
-      const newIds = data.map((t) => t.id).join(",");
-      templateIdsRef.current = newIds;
       setTemplates(data);
-      return newIds === prevIds
-        ? "Already up to date."
-        : `Updated — ${data.length} template${data.length !== 1 ? "s" : ""} loaded.`;
+      const newIds = data.map((t) => t.id).join(",");
+      const changed = newIds !== templateIdsRef.current;
+      templateIdsRef.current = newIds;
+      return { data, changed };
     } catch (e: any) {
       setError(e?.message ?? "Failed to load templates.");
-      throw e;
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   }, [sortBy, sortDir]);
+
+  useEffect(() => {
+    loadTemplates();
+  }, [loadTemplates]);
+
+  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+    await loadTemplates(false);
+    return { changed: true }; 
+  });
+
 
   const handleDeleteClick = async (id: number) => {
     if (!window.confirm("Delete this template? This cannot be undone.")) return;
@@ -211,8 +195,8 @@ const TemplatesPage: React.FC = () => {
         right={
           <PageActions>
             <RefreshAction
-              onRefresh={fetchTemplates}
-              loading={loading}
+              onRefresh={refresh}
+              loading={isRefreshing}
             />
             {canUpload && (
               <UploadAction
@@ -397,7 +381,7 @@ const TemplatesPage: React.FC = () => {
                 <button
                   type="button"
                   className="underline"
-                  onClick={fetchTemplates}
+                  onClick={() => loadTemplates()}
                 >
                   Retry
                 </button>
@@ -405,7 +389,7 @@ const TemplatesPage: React.FC = () => {
             </div>
           ) : viewMode === "grid" ? (
             <>
-              {loading ? (
+              {initialLoading ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div
@@ -464,7 +448,7 @@ const TemplatesPage: React.FC = () => {
             <div className="flex flex-col flex-1 min-h-0">
               <TemplateList
                 templates={filtered}
-                loading={loading}
+                loading={initialLoading}
                 deletingId={deletingId}
                 onDeleteClick={handleDeleteClick}
                 onSelect={setSelectedTemplate}

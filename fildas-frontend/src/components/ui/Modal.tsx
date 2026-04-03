@@ -39,7 +39,7 @@ export default function Modal({
       <div className="relative mx-auto mt-10 sm:mt-20 w-[92vw]">
         <div
           className={[
-            "mx-auto rounded-xl border border-slate-200 bg-white shadow-lg flex flex-col",
+            "mx-auto rounded-md border border-slate-200 bg-white shadow-lg flex flex-col",
             "dark:border-surface-400 dark:bg-surface-500",
             widthClassName,
           ].join(" ")}

@@ -212,7 +212,7 @@ export default function Table<T>({
                   if (shape === "badge") {
                     skeletonElement = (
                       <Skeleton
-                        className="rounded-sm h-5"
+                        className="rounded h-5"
                         style={{ width: `${60 + (r % 3) * 10}%`, maxWidth: '80px' }}
                       />
                     );
@@ -270,7 +270,7 @@ export default function Table<T>({
           </div>
         ) : error ? (
           <div className="px-5 py-4">
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-400">
+            <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-400">
               {error}
             </div>
           </div>
@@ -412,7 +412,7 @@ export default function Table<T>({
   return (
     <div
       className={[
-        "flex flex-col min-h-0 overflow-hidden rounded-sm border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500",
+        "flex flex-col min-h-0 overflow-hidden rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500",
         className ?? "",
       ].join(" ")}
     >

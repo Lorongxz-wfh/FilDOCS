@@ -11,7 +11,6 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import { getAuthUser } from "../lib/auth.ts";
 import CreateDocumentRequestModal from "../components/documentRequests/CreateDocumentRequestModal";
-import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
 import {
   LayoutList,
   TableProperties,
@@ -26,6 +25,7 @@ import { StatusBadge, TypePill } from "../components/ui/Badge";
 import Alert from "../components/ui/Alert";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
 import SelectDropdown from "../components/ui/SelectDropdown";
+import { useSmartRefresh } from "../hooks/useSmartRefresh";
 
 
 type ViewTab = "batches" | "all";
@@ -147,105 +147,71 @@ export default function DocumentRequestListPage() {
   const [initialLoading, setInitialLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
-  const hasMoreRef = React.useRef(true);
-
   const qDebounced = useDebouncedValue(q, 400);
   const navigate = useNavigate();
 
-  const reloadRequests = React.useCallback(async (silent = false) => {
-    if (!silent) {
-      setRows([]);
-      setPage(1);
-      setHasMore(true);
-      setInitialLoading(true);
-    } else {
-      setPage(1);
+  const loadData = React.useCallback(async (pageNum: number, silent = false) => {
+    if (!silent) setInitialLoading(true);
+    setLoading(true);
+    setError(null);
+    try {
+      const baseParams = {
+        q: qDebounced.trim() || undefined,
+        per_page: 10,
+        page: pageNum,
+        sort_by: sortBy,
+        sort_dir: sortDir,
+      };
+      let data: any;
+
+      if (tab === "all") {
+        data = await listDocumentRequestIndividual({
+          ...baseParams,
+          request_status: isQaAdmin ? status || undefined : undefined,
+          status: recipientStatus || undefined,
+        });
+      } else if (isQaAdmin) {
+        data = await listDocumentRequests({
+          ...baseParams,
+          status: status || undefined,
+        });
+      } else {
+        data = await listDocumentRequestInbox(baseParams);
+      }
+
+      const incoming = Array.isArray(data?.data) ? data.data : [];
+      setRows((prev) => (pageNum === 1 ? incoming : [...prev, ...incoming]));
+      const more =
+        data?.current_page != null &&
+        data?.last_page != null &&
+        data.current_page < data.last_page;
+      setHasMore(more);
+      return { data: incoming, changed: true }; // Rough changed flag
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? e?.message ?? "Failed to load.");
+    } finally {
+      setLoading(false);
+      setInitialLoading(false);
     }
-  }, []);
+  }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir]);
 
-  const { refresh: refreshRequests, refreshing: refreshingRequests } =
-    usePageBurstRefresh(reloadRequests);
-
-  React.useEffect(() => {
-    const id = window.setInterval(() => {
-      reloadRequests(true).catch(() => { });
-    }, 30_000);
-    return () => window.clearInterval(id);
-  }, [reloadRequests]);
+  const { refresh: refreshRequests, isRefreshing } = useSmartRefresh(async () => {
+    const result = await loadData(1, true);
+    return { changed: !!result?.data?.length };
+  });
 
   // Reset on filter/tab/sort change
   React.useEffect(() => {
     setRows([]);
     setPage(1);
-    hasMoreRef.current = true;
     setHasMore(true);
     setInitialLoading(true);
   }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir]);
 
+  // Main Effect
   React.useEffect(() => {
-    let alive = true;
-    const load = async () => {
-      if (!hasMoreRef.current && page > 1) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const baseParams = {
-          q: qDebounced.trim() || undefined,
-          per_page: 10,
-          page,
-          sort_by: sortBy,
-          sort_dir: sortDir,
-        };
-        let data: any;
-
-        if (tab === "all") {
-          data = await listDocumentRequestIndividual({
-            ...baseParams,
-            request_status: isQaAdmin ? status || undefined : undefined,
-            status: recipientStatus || undefined,
-          });
-        } else if (isQaAdmin) {
-          data = await listDocumentRequests({
-            ...baseParams,
-            status: status || undefined,
-          });
-        } else {
-          data = await listDocumentRequestInbox(baseParams);
-        }
-
-        if (!alive) return;
-        const incoming = Array.isArray(data?.data) ? data.data : [];
-        setRows((prev) => (page === 1 ? incoming : [...prev, ...incoming]));
-        const more =
-          data?.current_page != null &&
-          data?.last_page != null &&
-          data.current_page < data.last_page;
-        hasMoreRef.current = more;
-        setHasMore(more);
-      } catch (e: any) {
-        if (!alive) return;
-        setError(e?.response?.data?.message ?? e?.message ?? "Failed to load.");
-      } finally {
-        if (alive) {
-          setLoading(false);
-          setInitialLoading(false);
-        }
-      }
-    };
-    const safety = window.setTimeout(() => {
-      if (alive && initialLoading) {
-        setInitialLoading(false);
-        setLoading(false);
-      }
-    }, 5000);
-
-    load();
-    return () => {
-      alive = false;
-      window.clearTimeout(safety);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, page, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir]);
+    loadData(page, rows.length > 0);
+  }, [page, tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir]);
 
   function handleBatchRowClick(row: any) {
     if (isQaAdmin || row.mode === "multi_doc") {
@@ -414,7 +380,7 @@ export default function DocumentRequestListPage() {
         <PageActions>
           <RefreshAction
             onRefresh={refreshRequests}
-            loading={refreshingRequests}
+            loading={isRefreshing}
           />
           {isQaAdmin && (
             <CreateAction

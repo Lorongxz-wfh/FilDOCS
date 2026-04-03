@@ -25,6 +25,7 @@ import { useDashboardData } from "../hooks/useDashboardData";
 import { useAnnouncements } from "../hooks/useAnnouncements";
 import AnnouncementsBanner from "../components/dashboard/AnnouncementsBanner";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
+import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { getUserRole, isQA, isAuditor } from "../lib/roleFilters";
 import { getAuthUser } from "../lib/auth";
 import {
@@ -527,7 +528,6 @@ const DashboardPage: React.FC = () => {
   const dashData = useDashboardData(role);
   const { loading } = dashData;
   const isAdmin = role === "ADMIN" || role === "SYSADMIN";
-  const [refreshing, setRefreshing] = React.useState(false);
 
   const announcements = useAnnouncements();
 
@@ -535,20 +535,20 @@ const DashboardPage: React.FC = () => {
     dashData.reload();
   });
 
-  const handleRefresh = async (): Promise<string | false> => {
-    setRefreshing(true);
-    try {
-      const result = await dashData.reload();
-      if (!result.changed) return "Everything is up to date.";
-      if (result.delta > 0)
-        return `${result.delta} new pending task${result.delta === 1 ? "" : "s"} found.`;
-      if (result.delta < 0)
-        return `Queue updated — ${Math.abs(result.delta)} task${Math.abs(result.delta) === 1 ? "" : "s"} resolved.`;
-      return "Dashboard updated.";
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+    const result = await dashData.reload();
+    let message = "Dashboard updated.";
+    if (!result.changed) message = "Everything is up to date.";
+    else if (result.delta > 0)
+      message = `${result.delta} new pending task${result.delta === 1 ? "" : "s"} found.`;
+    else if (result.delta < 0)
+      message = `Queue updated — ${Math.abs(result.delta)} task${Math.abs(result.delta) === 1 ? "" : "s"} resolved.`;
+
+    return {
+      changed: result.changed,
+      message,
+    };
+  });
 
   const user = getAuthUser();
   const firstName =
@@ -603,7 +603,7 @@ const DashboardPage: React.FC = () => {
             )}
 
             <PageActions>
-              <RefreshAction onRefresh={handleRefresh} loading={refreshing || loading} />
+              <RefreshAction onRefresh={refresh} loading={isRefreshing} />
             </PageActions>
           </div>
         </div>
