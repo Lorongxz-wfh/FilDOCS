@@ -2,8 +2,8 @@ import React from "react";
 import { Activity } from "lucide-react";
 import { EVENT_DOT, EVENT_LABEL, FIELD_LABEL } from "../../../lib/activityConstants";
 import type { ActivityLogItem } from "../../../services/documents";
-
 import { formatRelative, formatDateTime } from "../../../utils/formatters";
+import SkeletonList from "../../ui/loader/SkeletonList";
 
 type Props = {
   logs: ActivityLogItem[];
@@ -38,11 +38,8 @@ const DocumentActivityPanel: React.FC<Props> = ({ logs, loading }) => {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center py-12">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-5 w-5 rounded-full border-2 border-slate-200 dark:border-surface-400 border-t-brand-500 animate-spin" />
-          <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Loading...</span>
-        </div>
+      <div className="flex-1 overflow-y-auto px-1 py-1">
+        <SkeletonList variant="activity" rows={6} className="divide-y divide-slate-100 dark:divide-surface-400/30" />
       </div>
     );
   }

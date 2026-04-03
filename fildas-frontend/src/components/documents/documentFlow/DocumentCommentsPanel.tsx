@@ -1,6 +1,6 @@
 import React from "react";
 import { Loader2, ChevronDown } from "lucide-react";
-import Skeleton from "../../ui/loader/Skeleton";
+import SkeletonList from "../../ui/loader/SkeletonList";
 import type { DocumentMessage } from "../../../services/documents";
 import CommentBubble from "./CommentBubble";
 import { getAuthUser } from "../../../lib/auth";
@@ -176,42 +176,8 @@ const DocumentCommentsPanel: React.FC<Props> = ({
           className="absolute inset-0 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/60 dark:border-surface-400 dark:bg-surface-600/60 scroll-smooth"
         >
           {isLoading ? (
-            <div className="space-y-3 p-3">
-              {Array.from({ length: skeletonCount }).map((_, i) => {
-                // Always alternate: even = other, odd = mine
-                const isMine = i % 2 === 1;
-                const widths = ["w-1/2", "w-2/5", "w-2/3", "w-1/3", "w-3/5"];
-                const bubbleWidth = widths[i % widths.length];
-                return isMine ? (
-                  <div key={i} className="flex items-start justify-end gap-2">
-                    <div className="space-y-1.5 items-end flex flex-col flex-1">
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-3 w-14" />
-                        <Skeleton className="h-3 w-16" />
-                      </div>
-                      <Skeleton
-                        className={`h-9 ${bubbleWidth} rounded-xl rounded-tr-none`}
-                      />
-                      <Skeleton className="h-2.5 w-20" />
-                    </div>
-                    <Skeleton className="h-7 w-7 rounded-full shrink-0" />
-                  </div>
-                ) : (
-                  <div key={i} className="flex items-start gap-2">
-                    <Skeleton className="h-7 w-7 rounded-full shrink-0" />
-                    <div className="space-y-1.5 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-3 w-20" />
-                        <Skeleton className="h-3 w-14" />
-                      </div>
-                      <Skeleton
-                        className={`h-9 ${bubbleWidth} rounded-xl rounded-tl-none`}
-                      />
-                      <Skeleton className="h-2.5 w-24" />
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="p-3">
+              <SkeletonList variant="comments" rows={skeletonCount} className="space-y-4" />
             </div>
           ) : messages.length === 0 ? (
             <div className="flex h-full items-center justify-center">

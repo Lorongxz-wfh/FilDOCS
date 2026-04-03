@@ -3,6 +3,7 @@ import { Send, ChevronDown } from "lucide-react";
 import CommentBubble from "../documents/documentFlow/CommentBubble";
 import type { DocumentRequestMessageRow } from "../../services/documentRequests";
 import { formatDateTime } from "./shared";
+import SkeletonList from "../ui/loader/SkeletonList";
 
 type Props = {
   messages: DocumentRequestMessageRow[];
@@ -113,7 +114,9 @@ export default function RequestCommentsPanel({
           onScroll={handleScroll}
           className="absolute inset-0 overflow-y-auto px-4 py-3 bg-slate-50/30 dark:bg-surface-600/30 space-y-4 scroll-smooth"
         >
-          {messages.length === 0 && !loading ? (
+          {loading ? (
+            <SkeletonList variant="comments" rows={4} className="py-2" />
+          ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
               <p className="text-sm text-slate-400 dark:text-slate-500">
                 {readOnly 

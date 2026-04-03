@@ -1,12 +1,19 @@
 import React from "react";
 import { BarChart2 } from "lucide-react";
+import Skeleton from "../ui/loader/Skeleton";
 
 const ChartSkeleton = ({ height = 200 }: { height?: number }) => (
   <div style={{ height }} className="flex items-end gap-2 px-2 pb-5 pt-2">
     {[55, 80, 45, 90, 60, 75, 40, 85].map((h, i) => (
-      <div key={i} className="flex-1 flex gap-0.5 items-end">
-        <div className="flex-1 animate-pulse rounded-t-sm bg-slate-100 dark:bg-surface-400" style={{ height: `${h}%` }} />
-        <div className="flex-1 animate-pulse rounded-t-sm bg-slate-100 dark:bg-surface-400 opacity-60" style={{ height: `${h * 0.6}%` }} />
+      <div key={i} className="flex-1 flex gap-1 items-end">
+        <Skeleton 
+          className="flex-1 rounded-t-sm" 
+          style={{ height: `${h}%` }} 
+        />
+        <Skeleton 
+          className="flex-1 rounded-t-sm opacity-60" 
+          style={{ height: `${h * 0.6}%` }} 
+        />
       </div>
     ))}
   </div>

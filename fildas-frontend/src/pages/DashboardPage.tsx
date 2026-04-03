@@ -339,22 +339,13 @@ const OfficeDashboard: React.FC<
               onClick: () => navigate("/documents"),
             }}
           >
-            {loading ? (
-              <div className="flex items-center gap-6">
-                <Skeleton className="h-40 w-40 rounded-full" />
-                <div className="flex-1 space-y-3">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                </div>
-              </div>
-            ) : (
-              <StatusDonutChart
-                segments={donutSegments}
-                centerValue={stats?.total ?? 0}
-                centerLabel="total"
-                size={160}
-              />
-            )}
+            <StatusDonutChart
+              segments={donutSegments}
+              centerValue={stats?.total ?? 0}
+              centerLabel="total"
+              size={160}
+              loading={loading}
+            />
           </Card>
 
           <DashboardPendingList items={pendingActions} loading={loading} />

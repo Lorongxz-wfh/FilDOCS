@@ -2,6 +2,7 @@ import { Activity } from "lucide-react";
 import { formatDateTime } from "./shared";
 import { EVENT_DOT, EVENT_LABEL, FIELD_LABEL } from "../../lib/activityConstants";
 import type { ActivityLogItem } from "../../services/types";
+import SkeletonList from "../ui/loader/SkeletonList";
 
 type FieldChange = { field: string; old: string | null; new: string | null };
 
@@ -9,7 +10,7 @@ function FieldChangeDiff({ changes }: { changes: FieldChange[] }) {
   return (
     <div className="mt-1.5 space-y-1.5">
       {changes.map((c, i) => (
-        <div key={i} className="rounded border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-600 text-[11px] overflow-hidden">
+        <div key={i} className="rounded border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-600 text-[11px] overflow-hidden shadow-sm">
           <div className="px-2 py-0.5 bg-slate-100 dark:bg-surface-500 text-slate-500 dark:text-slate-400 font-medium border-b border-slate-200 dark:border-surface-400">
             {FIELD_LABEL[c.field] ?? c.field}
           </div>
@@ -36,9 +37,7 @@ export default function RequestActivityPanel({ logs, loading }: Props) {
   return (
     <div className="flex-1 overflow-y-auto px-5 py-4 bg-slate-50/30 dark:bg-surface-600/30 min-h-0 min-w-0">
       {loading ? (
-        <div className="flex items-center justify-center py-10">
-          <div className="h-5 w-5 rounded-full border-2 border-sky-400 border-t-transparent animate-spin" />
-        </div>
+        <SkeletonList variant="activity" rows={6} className="divide-y divide-slate-100 dark:divide-surface-400/30" />
       ) : logs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 gap-2">
           <Activity size={28} className="text-slate-300 dark:text-slate-600" />

@@ -15,12 +15,14 @@ type Props = {
   loading?: boolean;
 };
 
+import Skeleton from "../ui/loader/Skeleton";
+
 const ChartSkeleton = ({ height = 180 }: { height?: number }) => (
-  <div style={{ height }} className="flex flex-col justify-center gap-3 px-4 py-3">
+  <div style={{ height }} className="flex flex-col justify-center gap-4 px-4 py-3">
     {[80, 55, 65, 40, 70].map((w, i) => (
       <div key={i} className="flex items-center gap-3">
-        <div className="w-20 h-2.5 animate-pulse rounded bg-slate-100 dark:bg-surface-400 shrink-0" />
-        <div className="animate-pulse rounded-r-sm bg-slate-100 dark:bg-surface-400 h-4" style={{ width: `${w}%` }} />
+        <Skeleton className="w-20 h-2.5 shrink-0 opacity-40" />
+        <Skeleton className="rounded-r-sm h-4 flex-1" style={{ maxWidth: `${w}%` }} />
       </div>
     ))}
   </div>

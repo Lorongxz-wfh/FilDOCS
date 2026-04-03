@@ -1,5 +1,6 @@
 import React from "react";
 import EmptyState from "./EmptyState";
+import Skeleton from "./loader/Skeleton";
 
 type Align = "left" | "center" | "right";
 
@@ -201,12 +202,7 @@ export default function Table<T>({
               >
                 {columns.map((col, c) => {
                   const shape = col.skeletonShape ?? "text";
-                  const base =
-                    "animate-pulse rounded bg-slate-100 dark:bg-surface-400/80";
                   
-                  // fill more of the column width
-                  const textWidths = ["92%", "85%", "90%", "88%", "94%"];
-
                   // Alignment logic for skeleton container
                   const cellAlign = col.align === "center" ? "justify-center" : col.align === "right" ? "justify-end" : "justify-start";
                   
@@ -214,36 +210,36 @@ export default function Table<T>({
 
                   if (shape === "badge") {
                     skeletonElement = (
-                      <div
-                        className={`${base} rounded-full h-5`}
-                        style={{ width: `${60 + (r % 3) * 10}%`, maxWidth: '100px' }}
+                      <Skeleton
+                        className="rounded-full h-5"
+                        style={{ width: `${60 + (r % 3) * 10}%`, maxWidth: '80px' }}
                       />
                     );
                   } else if (shape === "double") {
                     skeletonElement = (
                       <div className="flex flex-col gap-1.5 w-full">
-                        <div
-                          className={`${base} h-3.5`}
-                          style={{ width: textWidths[r % textWidths.length] }}
+                        <Skeleton
+                          className="h-3.5"
+                          style={{ width: `${85 + (r % 2) * 5}%` }}
                         />
-                        <div
-                          className={`${base} h-2.5`}
+                        <Skeleton
+                          className="h-2.5 opacity-60"
                           style={{ width: `${60 + (r % 4) * 8}%` }}
                         />
                       </div>
                     );
                   } else if (shape === "narrow") {
                     skeletonElement = (
-                      <div
-                        className={`${base} h-2.5`}
-                        style={{ width: `${80 + (r % 2) * 12}%` }}
+                      <Skeleton
+                        className="h-3"
+                        style={{ width: `${70 + (r % 2) * 10}%`, maxWidth: '90px' }}
                       />
                     );
                   } else {
                     skeletonElement = (
-                      <div
-                        className={`${base} h-3.5`}
-                        style={{ width: textWidths[(c + r) % textWidths.length] }}
+                      <Skeleton
+                        className="h-3.5"
+                        style={{ width: `${80 + ((c + r) % 3) * 8}%` }}
                       />
                     );
                   }
@@ -252,7 +248,7 @@ export default function Table<T>({
                     <div 
                       key={c} 
                       className={[
-                        "flex w-full min-w-0 px-0.5",
+                        "flex w-full min-w-0 items-center px-1",
                         cellAlign,
                         // hide extra columns on mobile if using card view
                         mobileRender && c >= (columns.length > 3 ? 3 : columns.length) ? "hidden sm:flex" : "flex"
