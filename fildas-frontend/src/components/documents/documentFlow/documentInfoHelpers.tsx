@@ -1,16 +1,26 @@
 import React from "react";
 
-export const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({
+export const InfoRow: React.FC<{ 
+  label: string; 
+  value: React.ReactNode;
+  highlight?: boolean;
+}> = ({
   label,
   value,
+  highlight = false,
 }) => (
-  <div className="flex items-start justify-between gap-2 rounded-md bg-slate-50 dark:bg-surface-600/50 border border-slate-100 dark:border-surface-400 px-3 py-2">
-    <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0 pt-px">
+  <div className={`flex items-baseline justify-between transition-all duration-700 rounded-lg px-3 py-2 ${
+    highlight 
+      ? "bg-emerald-50/80 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 ring-2 ring-emerald-500/20" 
+      : "bg-slate-50/50 dark:bg-surface-600/30 border-slate-100/80 dark:border-surface-300/10"
+    } border`}
+  >
+    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 shrink-0">
       {label}
     </span>
-    <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 text-right flex-1 min-w-0 wrap-break-word">
+    <span className="text-xs font-semibold text-slate-700 dark:text-slate-100 text-right flex-1 min-w-0 break-words">
       {value ?? (
-        <span className="text-slate-400 dark:text-slate-500 font-normal">
+        <span className="text-slate-300 dark:text-surface-500 font-normal">
           —
         </span>
       )}
@@ -20,9 +30,13 @@ export const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({
 
 export function fmt(iso: string | null | undefined): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch (e) {
+    return "—";
+  }
 }

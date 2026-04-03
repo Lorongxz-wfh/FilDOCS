@@ -11,7 +11,7 @@ import type {
 } from "../../../services/documents";
 import DocumentInfoPanel from "./DocumentInfoPanel";
 import DocumentCommentsPanel from "./DocumentCommentsPanel";
-import WorkflowFlowTimeline from "./WorkflowFlowTimeline";
+import DocumentActivityPanel from "./DocumentActivityPanel";
 
 type Props = {
   document: Document | null;
@@ -179,7 +179,7 @@ const DocumentRightPanel: React.FC<Props> = ({
             className={`h-3 w-3 shrink-0 text-slate-400 transition-transform duration-150 ${commentsExpanded ? "rotate-90" : "rotate-0"}`}
           />
           <div
-            className="flex items-center gap-0"
+            className="flex items-center gap-1 p-1 bg-slate-100/50 dark:bg-surface-400/30 rounded-md"
             onClick={(e) => e.stopPropagation()}
           >
             {(["comments", "logs"] as const).map((tab) => (
@@ -193,10 +193,10 @@ const DocumentRightPanel: React.FC<Props> = ({
                   if (!commentsExpanded) setCommentsExpanded(true);
                 }}
                 className={[
-                  "px-2.5 py-0.5 text-xs font-medium rounded transition",
+                  "px-3 py-1 text-xs font-semibold rounded-md transition-all duration-200",
                   activeSideTab === tab
-                    ? "text-slate-900 dark:text-slate-100 font-semibold"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200",
+                    ? "bg-white dark:bg-surface-300 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:bg-white/40 dark:hover:bg-surface-300/20 hover:text-slate-700 dark:hover:text-slate-200",
                 ].join(" ")}
               >
                 {tab === "comments" ? "Comments" : "Activity"}
@@ -233,10 +233,9 @@ const DocumentRightPanel: React.FC<Props> = ({
                 setOptimisticMessages={setOptimisticMessages}
               />
             ) : (
-              <WorkflowFlowTimeline
-                isLoading={isLoadingActivityLogs || !isDataReady}
+              <DocumentActivityPanel
+                loading={isLoadingActivityLogs || !isDataReady}
                 logs={activityLogs}
-                versionNumber={version?.version_number}
               />
             )}
           </div>

@@ -160,17 +160,12 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
       />
     );
   }, [
-    document,
-    state.localVersion,
-    state.isRegisterModalOpen,
-    state.isDistributeModalOpen,
-    state.isBusy,
-    state.activeWorkflowCode,
-    state.participantOfficeIds,
+    state,
+    actions.workflow,
+    actions.setActiveSideTab,
     draftMessage,
     isSendingMessage,
     optimisticMessages,
-    state.isQAOfficeUser,
     me,
     onChanged,
     push

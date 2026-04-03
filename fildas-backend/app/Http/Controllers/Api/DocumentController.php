@@ -799,6 +799,11 @@ class DocumentController extends Controller
         if ($isDuringApproval && $freshVersion->file_path) {
             $freshVersion->signed_file_path = $freshVersion->file_path;
             $freshVersion->save();
+        } else {
+            // Uploaded during draft/review — explicitly clear old in-app signature data
+            $freshVersion->signed_file_path = null;
+            $freshVersion->pre_sign_file_path = null;
+            $freshVersion->save();
         }
 
         $label = $isDuringApproval
