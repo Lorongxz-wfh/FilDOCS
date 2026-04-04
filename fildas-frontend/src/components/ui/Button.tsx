@@ -29,9 +29,9 @@ const variants: Record<Variant, string> = {
   ghost:
     "text-neutral-600 hover:bg-neutral-100/80 dark:text-neutral-400 dark:hover:bg-surface-400/50",
   danger:
-    "bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-400 dark:border dark:border-red-500/30 dark:hover:bg-red-500/30",
+    "bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500 shadow-sm border border-red-700/20 dark:border-white/10",
   success:
-    "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border dark:border-emerald-500/30 dark:hover:bg-emerald-500/30",
+    "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 shadow-sm border border-emerald-700/20 dark:border-white/10",
 };
 
 const sizes: Record<Size, string> = {

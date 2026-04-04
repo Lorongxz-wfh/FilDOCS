@@ -1,6 +1,6 @@
 import React from "react";
 
-type Variant = "info" | "success" | "warning" | "error" | "danger";
+type Variant = "info" | "success" | "warning" | "error" | "danger" | "primary";
 type Style = "box" | "accent"; // box = full border, accent = left-border stripe
 
 const boxStyles: Record<Variant, string> = {
@@ -9,6 +9,7 @@ const boxStyles: Record<Variant, string> = {
   warning: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300",
   error:   "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/15 dark:text-rose-300",
   danger:  "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/15 dark:text-rose-300",
+  primary: "border-brand-200 bg-brand-50 text-brand-800 dark:border-brand-800 dark:bg-brand-950/20 dark:text-brand-300",
 };
 
 const accentStyles: Record<Variant, { wrap: string; icon: string; border: string }> = {
@@ -17,6 +18,7 @@ const accentStyles: Record<Variant, { wrap: string; icon: string; border: string
   warning: { wrap: "bg-amber-50 dark:bg-amber-950/20",          icon: "text-amber-500 dark:text-amber-400",      border: "border-l-4 border-amber-400 dark:border-amber-600" },
   error:   { wrap: "bg-rose-50 dark:bg-rose-950/15",            icon: "text-rose-500 dark:text-rose-400",        border: "border-l-4 border-rose-400 dark:border-rose-800" },
   danger:  { wrap: "bg-rose-50 dark:bg-rose-950/15",            icon: "text-rose-500 dark:text-rose-400",        border: "border-l-4 border-rose-400 dark:border-rose-800" },
+  primary: { wrap: "bg-brand-50 dark:bg-brand-950/20",      icon: "text-brand-500 dark:text-brand-400",  border: "border-l-4 border-brand-400 dark:border-brand-600" },
 };
 
 const titleStyles: Record<Variant, string> = {
@@ -25,6 +27,7 @@ const titleStyles: Record<Variant, string> = {
   warning: "text-amber-800 dark:text-amber-300",
   error:   "text-rose-700 dark:text-rose-300",
   danger:  "text-rose-700 dark:text-rose-300",
+  primary: "text-brand-700 dark:text-brand-300",
 };
 
 const bodyStyles: Record<Variant, string> = {
@@ -33,6 +36,7 @@ const bodyStyles: Record<Variant, string> = {
   warning: "text-amber-700 dark:text-amber-400",
   error:   "text-rose-600 dark:text-rose-400",
   danger:  "text-rose-600 dark:text-rose-400",
+  primary: "text-brand-600 dark:text-brand-400",
 };
 
 export type AlertProps = {

@@ -157,13 +157,13 @@ const DocumentPreviewPanel: React.FC<Props> = ({
               </>
             )}
           </div>
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 overflow-visible">
             {isActiveApprover && onApproverDownload && (
               <button
                 type="button"
                 onClick={onApproverDownload}
                 title="Download for signing"
-                className="cursor-pointer flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition shadow-sm"
+                className="cursor-pointer flex items-center justify-center h-7 w-7 overflow-hidden rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition shadow-sm"
               >
                 <Download size={13} />
               </button>
@@ -174,7 +174,7 @@ const DocumentPreviewPanel: React.FC<Props> = ({
                 onClick={onApproverUpload}
                 title="Upload signed copy"
                 disabled={isUploading}
-                className="cursor-pointer flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="cursor-pointer flex items-center justify-center h-7 w-7 overflow-hidden rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Upload size={13} />
               </button>
@@ -184,7 +184,7 @@ const DocumentPreviewPanel: React.FC<Props> = ({
                 type="button"
                 onClick={onReloadPreview}
                 title="Reload preview"
-                className="cursor-pointer flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition shadow-sm"
+                className="cursor-pointer flex items-center justify-center h-7 w-7 overflow-hidden rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition shadow-sm"
               >
                 <RotateCcw size={12} />
               </button>
@@ -194,7 +194,7 @@ const DocumentPreviewPanel: React.FC<Props> = ({
                 type="button"
                 onClick={openModal}
                 title="View fullscreen"
-                className="cursor-pointer flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-slate-50 hover:text-slate-700 dark:hover:bg-surface-400 dark:hover:text-slate-200 transition shadow-sm"
+                className="cursor-pointer flex items-center justify-center h-7 w-7 overflow-hidden rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-500 dark:text-slate-400 hover:bg-slate-50 hover:text-slate-700 dark:hover:bg-surface-400 dark:hover:text-slate-200 transition shadow-sm"
               >
                 <Maximize2 size={13} />
               </button>

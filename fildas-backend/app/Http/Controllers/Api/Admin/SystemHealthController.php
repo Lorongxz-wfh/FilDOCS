@@ -36,20 +36,41 @@ class SystemHealthController extends Controller
             $cacheStatus = false;
         }
 
-        // Disk Usage
-        $diskPath = base_path();
-        $totalSpace = disk_total_space($diskPath);
-        $freeSpace = disk_free_space($diskPath);
-        $usedSpace = $totalSpace - $freeSpace;
-        $diskPercentage = round(($usedSpace / $totalSpace) * 100, 2);
+        // Disk Usage - Wrapped in safety check for restricted container environments (e.g., Render)
+        $totalSpace = 0;
+        $freeSpace = 0;
+        $usedSpace = 0;
+        $diskPercentage = 0;
+        
+        try {
+            $diskPath = base_path();
+            // Some environments may disable these functions or the path might not be accessible
+            if (function_exists('disk_total_space') && @disk_total_space($diskPath) !== false) {
+                $totalSpace = disk_total_space($diskPath);
+                $freeSpace = disk_free_space($diskPath);
+                $usedSpace = max(0, $totalSpace - $freeSpace);
+                $diskPercentage = $totalSpace > 0 ? round(($usedSpace / $totalSpace) * 100, 2) : 0;
+            }
+        } catch (\Exception $e) {
+            // Silently fail disk check to prevent 500 error
+        }
 
-        // Active Sessions (last 15 mins)
-        $activeSessions = DB::table('sessions')
-            ->where('last_activity', '>=', time() - 900)
-            ->count();
+        // Active Sessions (last 15 mins) - Safety check for session driver
+        $activeSessions = 0;
+        try {
+            if (config('session.driver') === 'database') {
+                $activeSessions = DB::table('sessions')
+                    ->where('last_activity', '>=', time() - 900)
+                    ->count();
+            }
+        } catch (\Exception $e) {
+            // Silently fail session count to prevent 500 error
+        }
 
-        // Check Thresholds & Alert
-        $this->checkThresholds($diskPercentage, $status);
+        // Check Thresholds & Alert - Only if status and disk data are valid
+        if ($status && $totalSpace > 0) {
+            $this->checkThresholds($diskPercentage, $status);
+        }
 
         return response()->json([
             'status' => [
@@ -64,11 +85,11 @@ class SystemHealthController extends Controller
                 'mail' => !empty(config('mail.mailers.smtp.host')),
             ],
             'maintenance' => [
-                'mode' => $status->maintenance_mode,
-                'message' => $status->maintenance_message,
-                'expires_at' => $status->maintenance_expires_at,
-                'starts_at' => $status->maintenance_starts_at ? $status->maintenance_starts_at->toIso8601String() : null,
-                'is_notified' => $status->is_notified,
+                'mode' => $status->maintenance_mode ?? 'off',
+                'message' => $status->maintenance_message ?? '',
+                'expires_at' => $status->maintenance_expires_at ?? null,
+                'starts_at' => ($status && $status->maintenance_starts_at) ? $status->maintenance_starts_at->toIso8601String() : null,
+                'is_notified' => $status->is_notified ?? false,
             ],
             'active_sessions' => $activeSessions,
             'server_info' => [

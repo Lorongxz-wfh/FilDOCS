@@ -96,6 +96,8 @@ export function useDocumentFlowUI({
     return () => { alive = false; };
   }, [localVersion?.id]);
 
+  const hasSignedFile = !!(localVersion as any)?.signed_file_path;
+
   // ── Sync when version prop changes ───────────────────────────
   useEffect(() => {
     if (!version || !document) return;
@@ -107,6 +109,9 @@ export function useDocumentFlowUI({
     const ed = String((version as any)?.effective_date ?? "").slice(0, 10);
     setLocalEffectiveDate(ed);
     setInitialEffectiveDate(ed);
+    if (hasSignedFile) {
+      setApproverHasUploaded(true);
+    }
   }, [
     document?.id,
     version?.id,
@@ -115,6 +120,7 @@ export function useDocumentFlowUI({
     version?.file_path,
     (version as any)?.signed_file_path,
     (version as any)?.needs_file_replacement,
+    hasSignedFile,
   ]);
 
   // ── Preview ──────────────────────────────────────────────────
@@ -361,10 +367,9 @@ export function useDocumentFlowUI({
   const isPreApprovalCreatorCheck = useMemo(() =>
     canAct && workflow.availableActions.some((a: string) => PRE_APPROVAL_START_ACTIONS.includes(a)), [canAct, workflow.availableActions]);
   
-  const hasSignedFile = !!(localVersion as any)?.signed_file_path;
 
   const [approverHasDownloaded, setApproverHasDownloaded] = useState(false);
-  const [approverHasUploaded, setApproverHasUploaded] = useState(false);
+  const [approverHasUploaded, setApproverHasUploaded] = useState(hasSignedFile);
   const approverNeedsSignedUpload = isActiveApprover && (!approverHasDownloaded || !approverHasUploaded);
 
   const isDraftStatus = localVersion?.status === "Draft" || localVersion?.status === "Office Draft";
@@ -474,7 +479,7 @@ export function useDocumentFlowUI({
         key: code,
         label,
         confirmMessage,
-        loading: (isRegisterAction && isRegisterModalOpen) || (isDistributeModalOpen && isDistributeModalOpen) || (workflow.isChangingStatus && code === activeWorkflowCode),
+        loading: (isRegisterAction && isRegisterModalOpen) || (isDistributeAction && isDistributeModalOpen) || (workflow.isChangingStatus && code === activeWorkflowCode),
         variant: (code === "REJECT" || code === "CANCEL_DOCUMENT") ? "danger" : "primary",
         disabled:
           workflow.isChangingStatus ||
@@ -482,7 +487,7 @@ export function useDocumentFlowUI({
           (code !== "CANCEL_DOCUMENT" && !canAct) ||
           (needsFileReplacement && !["REJECT", "CANCEL_DOCUMENT"].includes(code)) ||
           (!adminDebugMode && isPreApprovalCreatorCheck && PRE_APPROVAL_START_ACTIONS.includes(code) && !hasSignedFile) ||
-          (!adminDebugMode && approverNeedsSignedUpload && !["REJECT", "CANCEL_DOCUMENT"].includes(code)),
+          (!adminDebugMode && isInApprovalPhase && canAct && !isPreFinalizeCheck && !approverHasUploaded && !["REJECT", "CANCEL_DOCUMENT"].includes(code)),
         skipConfirm: isRegisterAction || isDistributeAction,
         onClick: async (note?: string) => {
           if (isRegisterAction) {

@@ -41,7 +41,7 @@ import {
   ArrowLeftCircle,
   CheckCircle2,
   Hash,
-  Terminal,
+  Play,
   Layers,
   RefreshCcw,
   Undo2,
@@ -531,7 +531,7 @@ const refreshAndSelectBest = React.useCallback(
                   a.key.includes("APPROVAL") || a.key === "QA_PRESIDENT_APPROVE" || a.key === "OFFICE_PRESIDENT_APPROVE" ? CheckCircle2 :
                   a.key.includes("REGISTER") ? Hash :
                   a.key.includes("DISTRIBUTE") ? Share2 :
-                  a.key.includes("FINALIZATION") ? Terminal :
+                  a.key.includes("FINALIZATION") ? Play :
                   a.key.includes("APPROVAL") ? Layers : 
                   ArrowRightToLine;
 

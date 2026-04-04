@@ -216,7 +216,7 @@ export const ACTION_CONFIRM_MESSAGES: Record<string, string> = {
   QA_PRESIDENT_APPROVE:
     "You are giving final approval for this document. It will be sent back to QA for a final check before finalization.",
   QA_START_FINALIZATION:
-    "This will move the document into the finalization phase for registration and distribution.",
+    "Approval is complete. This will move the document into the finalization phase. Note: Once you enter this phase, you can no longer cancel or revert the document. This action is final.",
   QA_REGISTER:
     "This will officially register the document and assign it a document number.",
   QA_DISTRIBUTE:
@@ -236,7 +236,7 @@ export const ACTION_CONFIRM_MESSAGES: Record<string, string> = {
   OFFICE_PRESIDENT_APPROVE:
     "You are giving final approval for this document. It will be sent back to the creator for a final check before finalization.",
   OFFICE_START_FINALIZATION:
-    "This will move the document into the finalization phase for registration and distribution.",
+    "Approval is complete. This will move the document into the finalization phase. Note: Once you enter this phase, you can no longer cancel or revert the document. This action is final.",
   OFFICE_REGISTER:
     "This will officially register the document and assign it a document number.",
   OFFICE_DISTRIBUTE:
@@ -247,7 +247,7 @@ export const ACTION_CONFIRM_MESSAGES: Record<string, string> = {
   CUSTOM_START_APPROVAL:
     "Review is complete. This will move the document into the approval phase.",
   CUSTOM_START_FINALIZATION:
-    "Approval is complete. This will move the document into the finalization phase.",
+    "Approval is complete. This will move the document into the finalization phase. Note: Once you enter this phase, you can no longer cancel or revert the document. This action is final.",
   CUSTOM_REGISTER:
     "This will officially register the document and assign it a document number.",
   CUSTOM_DISTRIBUTE:

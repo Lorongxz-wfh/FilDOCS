@@ -19,6 +19,8 @@ interface Props {
   hasPreSignBackup: boolean;
   currentUserSignatureUrl: string | null;
   needsFileReplacement: boolean;
+  isActiveApprover?: boolean;
+  approverHasUploaded?: boolean;
   
   // Actions
   onDownload: () => Promise<void>;
@@ -35,8 +37,6 @@ interface Props {
 
 /**
  * WorkflowHeaderPanel handles the actionable banners (Alerts) for the document flow.
- * The primary status and action buttons are synced to the parent layout, so we don't
- * render a redundant status row here per user feedback.
  */
 const WorkflowHeaderPanel: React.FC<Props> = ({
   approverNeedsSignedUpload,
@@ -46,6 +46,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
   hasPreSignBackup,
   currentUserSignatureUrl,
   needsFileReplacement,
+  isActiveApprover,
   canAct,
   
   onDownload,
@@ -61,14 +62,13 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
   return (
     <>
       {/* ───── Action-Required Banners ─────────────────────────────────────────── */}
-      {/* These only appear when the user specifically needs to perform a task like signing */}
       
+      {/* 1. Approver Signing Banner (Uniform Blue) */}
       {approverNeedsSignedUpload && (
         <Alert
-          alertStyle="accent"
-          variant="warning"
+          variant="primary"
           icon={<Upload className="h-4 w-4" />}
-          title={`Step ${!approverHasDownloaded ? '1' : '2'}: ${!approverHasDownloaded ? 'Download the document for signing' : 'Upload your signed copy'}`}
+          title={approverHasDownloaded ? "Step 2: Upload signed copy" : "Step 1: Download for signing"}
           action={
             !approverHasDownloaded ? (
               <div className="flex items-center gap-2">
@@ -78,7 +78,6 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                   size="sm"
                   onClick={onDownload}
                   disabled={isChangingStatus || signingInBackground || !canAct}
-                  className="!bg-amber-600 hover:!bg-amber-700 font-bold border-none"
                 >
                   Download
                 </Button>
@@ -88,7 +87,6 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                   size="sm"
                   onClick={() => onTriggerSign(false)}
                   disabled={isChangingStatus || signingInBackground || !canAct}
-                  className="!border-amber-500 !text-amber-500 hover:!bg-amber-500/10 font-bold"
                 >
                   {signingInBackground && <Loader2 size={12} className="animate-spin mr-1" />}
                   {signingInBackground ? "Signing…" : "Sign in-app"}
@@ -100,7 +98,6 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                 variant="primary"
                 size="sm"
                 onClick={onTriggerUpload}
-                className="!bg-amber-600 hover:!bg-amber-700 font-bold border-none"
                 disabled={isUploading || isChangingStatus}
               >
                 {isUploading ? "Uploading…" : "Upload signed"}
@@ -114,12 +111,12 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
         </Alert>
       )}
 
+      {/* 2. QA Creator Signing Banner (Pre-Approval) */}
       {isPreApprovalCreatorCheck && !hasSignedFile && (
         <Alert
-          alertStyle="accent"
-          variant="info"
+          variant="primary"
           icon={<Upload className="h-4 w-4" />}
-          title="Upload signed document to start approval"
+          title="Sign document before approval"
           action={
             <div className="flex items-center gap-2">
               <Button
@@ -144,49 +141,49 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
             </div>
           }
         >
-          Download the reviewed document, sign it, then upload the signed copy before starting the approval phase.
+          You must sign the document before starting the formal approval phase.
         </Alert>
       )}
 
-      {isPreApprovalCreatorCheck && hasSignedFile && (
+      {/* 3. Success Banner (Signed State - Persistent) */}
+      {(isPreApprovalCreatorCheck || isActiveApprover) && hasSignedFile && (
         <Alert
-          alertStyle="accent"
           variant="success"
           icon={<CheckCircle2 className="h-4 w-4" />}
-          title="Signed document uploaded — ready for approval"
+          title={isActiveApprover && !isPreApprovalCreatorCheck ? "Document signed" : "Draft signed & ready"}
           action={
-            hasPreSignBackup ? (
-              <div className="flex items-center gap-2">
-                {currentUserSignatureUrl && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="xs"
-                    onClick={() => onTriggerSign(true)}
-                    disabled={isChangingStatus || removingSignature || !canAct}
-                    className="!border-emerald-400 !text-emerald-700 font-medium"
-                  >
-                    Edit signature
-                  </Button>
-                )}
+            <div className="flex items-center gap-2">
+              {currentUserSignatureUrl && hasPreSignBackup && (
                 <Button
                   type="button"
                   variant="outline"
                   size="xs"
+                  onClick={() => onTriggerSign(true)}
                   disabled={isChangingStatus || removingSignature || !canAct}
-                  onClick={onRemoveSignature}
-                  className="!border-rose-300 !text-rose-600 font-medium"
                 >
-                  {removingSignature ? "Removing…" : "Remove signature"}
+                  Edit signature
                 </Button>
-              </div>
-            ) : undefined
+              )}
+              <Button
+                type="button"
+                variant="danger"
+                size="xs"
+                disabled={isChangingStatus || removingSignature || !canAct}
+                onClick={onRemoveSignature}
+                className="bg-red-600 hover:bg-red-700 border-red-600 text-white shadow-sm"
+              >
+                {removingSignature ? "Removing…" : "Remove signature"}
+              </Button>
+            </div>
           }
         >
-          A signed version is uploaded. You can now start the official approval phase.
+          {isActiveApprover && !isPreApprovalCreatorCheck
+            ? "You have uploaded your signed copy. You can now proceed with the approval action below."
+            : "You have attached your signature. You can now proceed to forward this document for approval."}
         </Alert>
       )}
 
+      {/* 4. Revision/Replacement Banner */}
       {needsFileReplacement && (
         <Alert
           variant="warning"

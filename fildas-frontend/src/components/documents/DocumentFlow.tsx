@@ -187,6 +187,7 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
           hasPreSignBackup={!!(state.localVersion as any)?.pre_sign_file_path}
           currentUserSignatureUrl={currentUserSignatureUrl}
           needsFileReplacement={state.needsFileReplacement}
+          isActiveApprover={state.isActiveApprover}
           onDownload={async () => {
              try {
                await downloadDocument(state.localVersion!);
@@ -368,7 +369,10 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
             
             // Close immediately for instant feedback
             actions.setIsRegisterModalOpen(false);
-
+            // Immediate feedback: start spinner while async logic runs
+            actions.setActiveWorkflowCode(state.activeWorkflowCode);
+            actions.workflow.setIsChangingStatus(true);
+            
             try {
               // 1. Sync effective date if changed
               await updateDocumentVersionEffectiveDate(
@@ -413,7 +417,10 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
             
             // Close immediately for instant feedback
             actions.setIsDistributeModalOpen(false);
-
+            // Immediate feedback: start spinner while async logic runs
+            actions.setActiveWorkflowCode(state.activeWorkflowCode);
+            actions.workflow.setIsChangingStatus(true);
+            
             try {
               // 1. Save shares first
               await setDocumentShares(document!.id, selectedOfficeIds);
