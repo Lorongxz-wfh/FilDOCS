@@ -35,8 +35,8 @@ const SidebarProfile: React.FC<SidebarProfileProps> = ({
 }) => {
   const ProfileDropdownContent = () => (
     <div className={[
-      "absolute z-50 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-xl py-1 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 bottom-full mb-2",
-      collapsed ? "left-1 w-52" : "left-2 right-2"
+      "absolute z-50 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-xl py-1 overflow-hidden",
+      collapsed ? "left-[calc(100%+8px)] bottom-0 w-64 animate-pop-in-left" : "left-2 right-2 bottom-full mb-2 animate-pop-in-bottom"
     ].join(" ")}>
       <div className="px-3.5 py-2 border-b border-slate-100 dark:border-surface-400">
         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Account</p>

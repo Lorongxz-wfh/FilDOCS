@@ -19,7 +19,7 @@ const QueueCard: React.FC<QueueCardProps> = ({ item, onClick }) => {
     >
       {/* Title + meta */}
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] sm:text-sm font-semibold text-slate-900 dark:text-slate-100 truncate leading-tight">
+        <p className="text-[13px] sm:text-sm font-display font-semibold text-slate-900 dark:text-slate-100 truncate leading-tight">
           {doc.title}
         </p>
         <div className="flex items-center gap-2 mt-0.5">

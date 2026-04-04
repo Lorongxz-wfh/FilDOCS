@@ -21,11 +21,13 @@ export function CreateAction({
   onClick,
   disabled,
   loading,
+  className = "",
 }: {
   label?: string;
   onClick: () => void;
   disabled?: boolean;
   loading?: boolean;
+  className?: string;
 }) {
   return (
     <Button
@@ -35,6 +37,7 @@ export function CreateAction({
       onClick={onClick}
       disabled={disabled}
       loading={loading}
+      className={className}
     >
       <Plus className="h-3.5 w-3.5" />
       <span className="font-bold">{label}</span>

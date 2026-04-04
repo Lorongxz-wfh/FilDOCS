@@ -377,7 +377,9 @@ export default function DocumentRequestListPage() {
 
   return (
     <PageFrame
-      title="Document Requests"
+      title="Requests"
+      onBack={() => navigate("/work-queue")}
+      breadcrumbs={[{ label: "Work Queue", to: "/work-queue" }]}
       right={
         <PageActions>
           <RefreshAction

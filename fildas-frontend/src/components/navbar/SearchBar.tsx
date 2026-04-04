@@ -60,12 +60,12 @@ function getPageResults(q: string, role: string): SearchResultItem[] {
   // Check static / auxiliary items
   const extraPages = [
 
-    { to: "/documents/queue", label: "Work Queue", desc: "Documents" },
-    { to: "/documents", label: "Documents List", desc: "Documents" },
+    { to: "/documents/queue", label: "Work Queue", desc: "Workflows" },
+    { to: "/documents", label: "Library", desc: "Documents" },
     { to: "/activity-logs", label: "Activity Logs", desc: "Reports", roles: ["admin", "sysadmin", "qa"] },
     { to: "/documents/create/office", label: "Create Office-start Doc", desc: "Actions", roles: ["office_staff", "office_head"] },
     { to: "/documents/create/qa", label: "Create QA-start Doc", desc: "Actions", roles: ["qa", "admin"] },
-    { to: "/document-requests/create", label: "New Document Request", desc: "Actions" },
+    { to: "/document-requests/create", label: "New Request", desc: "Actions" },
     { to: "/settings", label: "Settings", desc: "Account" },
     { to: "/my-activity", label: "My Activity", desc: "Account" },
 
@@ -381,7 +381,7 @@ const SearchBar: React.FC<SearchBarProps> = () => {
       <div className={[
         "relative flex items-center gap-2 rounded-md border transition-all duration-200",
         open 
-          ? "border-brand-400/50 ring-2 ring-brand-400/10 bg-white dark:bg-surface-400 shadow-sm" 
+          ? "border-brand-500 bg-white dark:bg-surface-400 shadow-sm" 
           : "border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 hover:border-slate-300 dark:hover:border-surface-300"
       ].join(" ")}>
         <Search className={[
@@ -424,7 +424,7 @@ const SearchBar: React.FC<SearchBarProps> = () => {
 
       {/* Results Dropdown */}
       {open && (
-        <div className="absolute top-full left-0 right-0 z-60 mt-1.5 max-h-[65vh] flex flex-col rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="absolute top-full left-0 right-0 z-60 mt-1.5 max-h-[65vh] flex flex-col rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-2xl overflow-hidden animate-pop-in-top">
           <div ref={listRef} className="flex-1 overflow-y-auto">
             {!query.trim() ? (
               <div className="px-4 py-8 text-center bg-slate-50/30 dark:bg-black/5">

@@ -36,7 +36,10 @@ const SidebarAction: React.FC<SidebarActionProps> = ({
           {!collapsed && <span>New</span>}
         </button>
         {newOpen && (
-          <div className="absolute left-0 top-full mt-1 z-50 w-52 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-500 shadow-md py-1 animate-in fade-in zoom-in-95 duration-100">
+          <div className={[
+            "absolute z-50 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-500 shadow-md py-1",
+            collapsed ? "left-[calc(100%+8px)] top-0 w-64 animate-pop-in-left" : "left-0 top-full mt-1 w-52 animate-pop-in-top"
+          ].join(" ")}>
             {visibleNewActions.map((action) => (
               <button
                 key={action.to}

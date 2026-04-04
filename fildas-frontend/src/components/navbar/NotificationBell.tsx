@@ -209,7 +209,7 @@ const NotificationBell: React.FC = () => {
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute right-4 top-14 w-80 rounded-xl border border-slate-200 bg-white shadow-md dark:border-surface-400 dark:bg-surface-500"
+          className="absolute right-4 top-14 w-80 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-surface-400 dark:bg-surface-500 animate-pop-in-top"
         >
           {/* ── Announcements section — always rendered, hides content when empty ── */}
           <div className="border-b border-slate-200 dark:border-surface-400">

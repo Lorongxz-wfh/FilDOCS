@@ -81,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       <aside
         className={[
-          "md:flex md:flex-col md:h-screen md:sticky md:top-0 md:shrink-0 fixed inset-y-0 left-0 z-[100] flex flex-col h-full border-r border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 transition-[width,transform] duration-300 ease-in-out overflow-hidden",
+          "md:flex md:flex-col md:h-screen md:sticky md:top-0 md:shrink-0 fixed inset-y-0 left-0 z-[100] flex flex-col h-full border-r border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 transition-[width,transform] duration-300 ease-in-out",
           mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0",
           collapsed ? "w-64 md:w-14" : "w-64 md:w-56",
         ].join(" ")}
@@ -134,6 +134,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                       collapsed={collapsed}
                       mobileOpen={mobileOpen}
                       onMobileClose={onMobileClose}
+                      children={item.children}
+                      userRole={role}
                     />
                   ))}
                 </ul>

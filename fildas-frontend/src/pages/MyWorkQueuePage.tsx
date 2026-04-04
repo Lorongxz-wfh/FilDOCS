@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  getDocumentStats,
   getWorkQueue,
   listActivityLogs,
   getDocumentVersion,
 } from "../services/documents";
+import { listDocumentRequestIndividual, listDocumentRequestInbox } from "../services/documentRequests";
 import type { WorkQueueItem } from "../services/documents";
 import {
   getUserRole,
@@ -18,9 +18,10 @@ import PageFrame from "../components/layout/PageFrame";
 import { PageActions, RefreshAction, CreateAction } from "../components/ui/PageActions";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
-import { FileText, ChevronDown, ChevronUp } from "lucide-react";
+import { FileText, ClipboardList, LayoutTemplate } from "lucide-react";
 import StatCard from "../components/workQueue/StatCard";
 import QueueCard from "../components/workQueue/QueueCard";
+import RequestQueueCard from "../components/workQueue/RequestQueueCard";
 import SkeletonList from "../components/ui/loader/SkeletonList";
 
 // ── Main page ──────────────────────────────────────────────────────────────
@@ -31,16 +32,13 @@ const MyWorkQueuePage: React.FC = () => {
 
   const [assignedItems, setAssignedItems] = useState<WorkQueueItem[]>([]);
   const [monitoringItems, setMonitoringItems] = useState<WorkQueueItem[]>([]);
-  const [stats, setStats] = useState<{
-    total: number;
-    pending: number;
-    distributed: number;
-  } | null>(null);
+  const [requestItems, setRequestItems] = useState<any[]>([]);
+  const [requestStats, setRequestStats] = useState<{ open: number; total: number } | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isActivityOpen, setIsActivityOpen] = useState(false);
 
   const formatWhen = (iso?: string | null) => {
     if (!iso) return "";
@@ -57,33 +55,49 @@ const MyWorkQueuePage: React.FC = () => {
   };
 
   const isAdmin = userRole === "ADMIN" || userRole === "SYSADMIN";
+  const isQaAdmin = isQA(userRole) || isAdmin;
 
   // ── Load queue + stats + activity ─────────────────────────────────────────
   const loadAll = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const [s, a, q] = await Promise.all([
-        getDocumentStats().catch(() => null),
+      const [alf_workflow, alf_request, q, r] = await Promise.all([
         listActivityLogs({
           scope: isAdmin ? "all" : "mine",
-          per_page: 10,
+          per_page: 8,
           category: "workflow",
         }).catch(() => ({ data: [] })),
+        listActivityLogs({
+          scope: isAdmin ? "all" : "mine",
+          per_page: 8,
+          category: "request",
+        }).catch(() => ({ data: [] })),
         getWorkQueue().catch(() => ({ assigned: [], monitoring: [] })),
+        (isQaAdmin 
+          ? listDocumentRequestIndividual({ per_page: 5, request_status: "open" }) 
+          : listDocumentRequestInbox({ per_page: 5 })
+        ).catch(() => ({ data: [], total: 0 })),
       ]);
 
-      if (s) setStats(s);
-      setRecentActivity((a as any)?.data ?? []);
+      const mergedActivity = [
+        ...((alf_workflow as any)?.data ?? []),
+        ...((alf_request as any)?.data ?? []),
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+       .slice(0, 12);
+
+      setRecentActivity(mergedActivity);
       setAssignedItems((q as any)?.assigned ?? []);
       setMonitoringItems((q as any)?.monitoring ?? []);
+      setRequestItems((r as any)?.data ?? []);
+      setRequestStats({ open: (r as any)?.total ?? 0, total: (r as any)?.total ?? 0 });
     } catch (e: any) {
-      setError(e?.message ?? "Failed to load work queue");
+      setError(e?.message ?? "Failed to load dashboard data");
     } finally {
       setLoading(false);
       setLoadingActivity(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, isQaAdmin]);
 
   useEffect(() => {
     loadAll();
@@ -108,13 +122,13 @@ const MyWorkQueuePage: React.FC = () => {
   };
 
   const adminDebugMode = useAdminDebugMode();
-  const canCreate =
+  const canCreateDoc =
     isQA(userRole) ||
     isOfficeStaff(userRole) ||
     isOfficeHead(userRole) ||
     (isAdmin && adminDebugMode);
 
-  // Combined + filtered lists
+  // Combined + filtered Workflow lists
   const allItems = React.useMemo(() => {
     const seen = new Set<string>();
     return [...assignedItems, ...monitoringItems].filter((item) => {
@@ -131,93 +145,76 @@ const MyWorkQueuePage: React.FC = () => {
   );
 
   const actionNeededCount = allItems.filter(i => i.can_act).length;
+  // For requests, actionable depends on the inbox/individual list fetched
+  // If QA/Admin, actionable might be a subset, but for this simplified view, we use the inbox total
+  const requestActionNeeded = isQaAdmin ? requestItems.filter(r => (r.item_status || r.status) === "Pending").length : requestItems.length;
 
   return (
     <PageFrame
-      title={isAdmin ? "Work Queue" : "My Work Queue"}
+      title="Work Queue Hub"
       contentClassName="flex flex-col min-h-0 gap-5 h-full overflow-hidden"
       right={
         <PageActions>
           <RefreshAction
             onRefresh={async () => {
               await loadAll();
-              return "Dashboard updated.";
+              return "Hub updated.";
             }}
             loading={refreshing || loading}
           />
-          <button
-            type="button"
-            onClick={() => navigate("/documents/all")}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-400 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-300 transition-colors"
-          >
-            <FileText className="h-3.5 w-3.5" />
-            All workflows
-          </button>
-          {canCreate && (
-            <CreateAction
-              label="Create document"
-              onClick={() => {
-                markWorkQueueSession();
-                navigate("/documents/create", {
-                  state: { fromWorkQueue: true },
-                });
-              }}
-            />
-          )}
         </PageActions>
       }
     >
       {/* Error */}
       {error && (
-        <div className="shrink-0 rounded-md border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 px-4 py-3 text-sm text-rose-700 dark:text-rose-400">
+        <div className="shrink-0 rounded-md border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 px-4 py-3 text-sm text-rose-700 dark:text-rose-400 font-medium font-display">
           {error}
         </div>
       )}
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 shrink-0 px-0.5">
-        <div className="col-span-2 sm:col-span-1">
-          <StatCard
-            label="Action Needed"
-            value={actionNeededCount}
-            loading={loading}
-          />
-        </div>
-        <StatCard
-          label="Ongoing"
-          value={allItems.length}
-          loading={loading}
-        />
-        <StatCard
-          label="Official/Distributed"
-          value={stats?.distributed ?? null}
-          loading={loading}
-        />
-      </div>
-
-      {/* Main 2-col layout */}
-      <div className="flex gap-4 flex-col lg:flex-row flex-1 min-h-0 overflow-hidden pb-4">
-        {/* Queue panel */}
-        <div className="flex flex-col flex-[2] rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
-          {/* Panel header */}
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 sm:py-3.5">
-            <div>
-              <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight uppercase tracking-wider">
-                Active workflows
-              </p>
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-                Ongoing documents requiring immediate attention or monitoring.
-              </p>
+      {/* Main Grid Layout (Proportional Columns: 35/35/20) */}
+      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 pb-2">
+        
+        {/* Column 1: Workflows (35%) */}
+        <div className="flex flex-col gap-4 min-h-0 lg:flex-[3.5]">
+          <div className="flex flex-col gap-1.5 shrink-0">
+            <p className="text-[11px] font-display font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.12em] ml-1">Workflow Overview</p>
+            <div className="grid grid-cols-2 gap-2">
+              <StatCard label="Active Flows" value={allItems.length} loading={loading} />
+              <StatCard label="Action Required" value={actionNeededCount} loading={loading} />
             </div>
           </div>
+          
+          <div className="relative flex flex-col flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden min-h-0 shadow-sm">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 sm:py-3.5">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-slate-400" />
+                <p className="text-sm font-display font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">
+                  Active Workflows
+                </p>
+              </div>
+              {canCreateDoc && (
+                <CreateAction
+                  label="Workflow"
+                  onClick={() => {
+                    markWorkQueueSession();
+                    navigate("/documents/create", {
+                      state: { fromWorkQueue: true },
+                    });
+                  }}
+                />
+              )}
+            </div>
 
-          {/* Queue list container with fading effect */}
-          <div className="relative flex flex-col h-[480px] overflow-hidden bg-slate-50/30 dark:bg-surface-500/20">
-            <div className="flex-1 px-4 py-4 space-y-1.5 overflow-hidden">
+            <div className="flex-1 px-4 py-4 space-y-1.5 overflow-hidden bg-slate-50/20 dark:bg-surface-500/10">
               {loading ? (
-                <SkeletonList variant="card" rows={4} />
+                <SkeletonList variant="card" rows={5} />
+              ) : sortedItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">No active document workflows found.</p>
+                </div>
               ) : (
-                <>
+                <div className="flex flex-col gap-1.5">
                   {sortedItems.slice(0, 5).map((item: WorkQueueItem) => (
                     <QueueCard
                       key={`${item.document.id}-${item.version.id}`}
@@ -225,111 +222,165 @@ const MyWorkQueuePage: React.FC = () => {
                       onClick={openByDocId}
                     />
                   ))}
-                </>
+                </div>
               )}
             </div>
 
-            {/* Subtle Fading overlay + Ultra-Minimal Sleek Button */}
-            <div className="absolute inset-x-0 bottom-0 pointer-events-none flex flex-col items-center justify-end h-32 bg-gradient-to-t from-white dark:from-surface-500 via-white/80 dark:via-surface-500/80 to-transparent">
-              <div className="pb-6 pointer-events-auto">
-                <button
-                  type="button"
-                  onClick={() => navigate("/documents/all")}
-                  className="flex items-center gap-2 px-4 py-1.5 border border-slate-300 dark:border-surface-300 bg-white dark:bg-surface-400 rounded-sm text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] shadow-xs hover:bg-slate-50 dark:hover:bg-surface-300 transition-all active:scale-95"
-                >
-                  <FileText className="h-3 w-3" />
-                  Open all workflows
-                </button>
-              </div>
+            {/* Fading Edge Mask */}
+            {!loading && sortedItems.length > 3 && (
+              <div className="absolute bottom-16 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-surface-500 via-white/80 dark:via-surface-500/80 to-transparent pointer-events-none z-10" />
+            )}
+
+            {/* Bottom View All Button */}
+            <div className="shrink-0 flex justify-center p-4 border-t border-slate-50/50 dark:border-surface-400/30">
+              <button 
+                onClick={() => navigate("/documents/all")}
+                className="flex items-center gap-2 px-4 py-2 rounded-md border border-slate-200 dark:border-surface-400 text-[10px] font-display font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors uppercase tracking-[0.1em]"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                View all workflows
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Recent activity panel — fixed on desktop */}
-        <div className={[
-          "flex flex-col lg:w-80 shrink-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden transition-all duration-300",
-          isActivityOpen ? "max-h-[500px]" : "max-h-12 lg:max-h-none"
-        ].join(" ")}>
-          <div
-            role="button"
-            tabIndex={window.innerWidth < 1024 ? 0 : -1}
-            onClick={() => {
-              if (window.innerWidth < 1024) {
-                setIsActivityOpen(!isActivityOpen);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (window.innerWidth < 1024 && (e.key === "Enter" || e.key === " ")) {
-                e.preventDefault();
-                setIsActivityOpen(!isActivityOpen);
-              }
-            }}
-            className="flex w-full shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 cursor-pointer lg:cursor-default"
-          >
-            <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 text-left uppercase tracking-wider">
-                Recent activity
-              </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 text-left uppercase tracking-tight">
-                LATEST SYSTEM ACTIONS
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate("/my-activity", {
-                    state: { category: "workflow" },
-                  });
-                }}
-                className="hidden sm:block text-[11px] font-bold text-brand-500 hover:text-brand-400 dark:text-brand-400 transition-colors uppercase"
-              >
-                View all →
-              </button>
-              <div className="lg:hidden">
-                {isActivityOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </div>
+        {/* Column 2: Requests (35%) */}
+        <div className="flex flex-col gap-4 min-h-0 lg:flex-[3.5]">
+          <div className="flex flex-col gap-1.5 shrink-0">
+            <p className="text-[11px] font-display font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.12em] ml-1">Requests Overview</p>
+            <div className="grid grid-cols-2 gap-2">
+              <StatCard label="Active Requests" value={requestStats?.open ?? 0} loading={loading} />
+              <StatCard label="Action Required" value={requestActionNeeded} loading={loading} />
             </div>
           </div>
 
-          <div className={[
-            "flex-1 overflow-y-auto px-3 py-3 lg:block",
-            isActivityOpen ? "block" : "hidden"
-          ].join(" ")}>
-            {loadingActivity ? (
-              <SkeletonList variant="activity" rows={5} />
-            ) : recentActivity.length === 0 ? (
-              <div className="flex h-full min-h-30 items-center justify-center">
-                <p className="text-xs text-slate-400 dark:text-slate-500">
-                  No workflow activity yet.
+          <div className="relative flex flex-col flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden min-h-0 shadow-sm">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 sm:py-3.5">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="h-4 w-4 text-slate-400" />
+                <p className="text-sm font-display font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">
+                  Active Requests
                 </p>
               </div>
-            ) : (
-              <div className="space-y-0.5">
-                {recentActivity.slice(0, 8).map((l: any) => (
-                  <button
-                    key={l.id}
-                    type="button"
-                    onClick={() => openActivity(l)}
-                    className="w-full text-left rounded-md px-3 py-2.5 transition hover:bg-slate-50 dark:hover:bg-surface-400"
-                  >
-                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
-                      {l.label || l.event}
-                    </p>
-                    <div className="flex items-center justify-between mt-0.5 gap-2">
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
-                        {l.event}
-                      </p>
-                      <p className="shrink-0 text-[10px] text-slate-400 dark:text-slate-500">
-                        {formatWhen(l.created_at)}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              {canCreateDoc && (
+                <CreateAction
+                  label="Request"
+                  onClick={() => {
+                    navigate("/document-requests", {
+                      state: { openModal: true },
+                    });
+                  }}
+                />
+              )}
+            </div>
+
+            <div className="flex-1 px-4 py-4 space-y-1.5 overflow-hidden bg-slate-50/20 dark:bg-surface-500/10">
+              {loading ? (
+                <SkeletonList variant="card" rows={5} />
+              ) : requestItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">No open document requests found.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {requestItems.slice(0, 5).map((item: any) => (
+                    <RequestQueueCard
+                      key={item.id || item.request_id}
+                      item={item}
+                      onClick={(id) => navigate(`/document-requests/${id}`)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Fading Edge Mask */}
+            {!loading && requestItems.length > 3 && (
+              <div className="absolute bottom-16 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-surface-500 via-white/80 dark:via-surface-500/80 to-transparent pointer-events-none z-10" />
             )}
+
+            {/* Bottom View All Button */}
+            <div className="shrink-0 flex justify-center p-4 border-t border-slate-50/50 dark:border-surface-400/30">
+              <button 
+                onClick={() => navigate("/document-requests")}
+                className="flex items-center gap-2 px-4 py-2 rounded-md border border-slate-200 dark:border-surface-400 text-[10px] font-display font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors uppercase tracking-[0.1em]"
+              >
+                <ClipboardList className="h-3.5 w-3.5" />
+                View all requests
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Column 3: Activity (20%) */}
+        <div className="flex flex-col gap-4 min-h-0 lg:flex-[2]">
+          <div className="flex flex-col gap-1.5 shrink-0">
+            <p className="text-[11px] font-display font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.12em] ml-1">System Health</p>
+            <div className="flex flex-col">
+              <StatCard label="Ongoing Progress" value={allItems.length + (requestStats?.open ?? 0)} loading={loading} />
+            </div>
+          </div>
+
+          <div className="relative flex flex-col flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden min-h-0 shadow-sm">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 sm:py-3.5">
+              <div className="flex items-center gap-2">
+                <LayoutTemplate className="h-4 w-4 text-slate-400" />
+                <p className="text-sm font-display font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">
+                  Recent Activity
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 px-3 py-3 overflow-hidden">
+              {loadingActivity ? (
+                <SkeletonList variant="activity" rows={6} />
+              ) : recentActivity.length === 0 ? (
+                <div className="flex h-full min-h-30 items-center justify-center">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    No recent creation/request activity found.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-0.5">
+                  {recentActivity.slice(0, 8).map((l: any) => (
+                    <button
+                      key={l.id}
+                      type="button"
+                      onClick={() => openActivity(l)}
+                      className="w-full text-left rounded-md px-3 py-2.5 transition hover:bg-slate-50 dark:hover:bg-surface-400"
+                    >
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate capitalize font-display">
+                        {l.label || l.event}
+                      </p>
+                      <div className="flex items-center justify-between mt-0.5 gap-2">
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate lowercase opacity-70">
+                          {l.event}
+                        </p>
+                        <p className="shrink-0 text-[10px] text-slate-400 dark:text-slate-500 font-medium tabular-nums font-display">
+                          {formatWhen(l.created_at)}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Fading Edge Mask */}
+            {!loadingActivity && recentActivity.length > 5 && (
+              <div className="absolute bottom-16 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-surface-500 via-white/80 dark:via-surface-500/80 to-transparent pointer-events-none z-10" />
+            )}
+
+            {/* Bottom View All Button */}
+            <div className="shrink-0 flex justify-center p-4 border-t border-slate-50/50 dark:border-surface-400/30">
+              <button 
+                onClick={() => navigate("/my-activity")}
+                className="flex items-center gap-2 px-4 py-2 rounded-md border border-slate-200 dark:border-surface-400 text-[10px] font-display font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors uppercase tracking-[0.1em]"
+              >
+                <LayoutTemplate className="h-3.5 w-3.5" />
+                View all activity
+              </button>
+            </div>
           </div>
         </div>
       </div>

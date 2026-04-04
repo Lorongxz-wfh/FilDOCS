@@ -211,7 +211,7 @@ export default function MyWorkQueueListPage() {
 
   return (
     <PageFrame
-      title="Workflow Documents"
+      title="Workflows"
       onBack={() => navigate("/work-queue")}
       breadcrumbs={[{ label: "Work Queue", to: "/work-queue" }]}
       right={

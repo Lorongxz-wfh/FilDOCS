@@ -37,9 +37,13 @@ const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={onThemeToggle}
-            className="hidden md:flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-surface-400 transition"
+            className="hidden md:flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-surface-400 transition-all duration-200 active:scale-90"
           >
-            {theme === "dark" ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+            {theme === "dark" ? (
+              <Sun className="h-4.5 w-4.5 text-amber-500 animate-theme-icon" />
+            ) : (
+              <Moon className="h-4.5 w-4.5 animate-theme-icon" />
+            )}
           </button>
 
           <NotificationBell />

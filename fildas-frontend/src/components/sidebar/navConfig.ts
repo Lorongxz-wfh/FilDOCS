@@ -22,6 +22,7 @@ export type NavItem = {
   label: string;
   icon: LucideIcon;
   roles?: string[];
+  children?: NavItem[];
 };
 
 export type NavGroup = {
@@ -102,25 +103,20 @@ export const navGroups: NavGroup[] = [
           "QA",
           "SYSADMIN",
         ],
-      },
-      { to: "/documents", label: "Library", icon: FolderOpen },
-      {
-        to: "/document-requests",
-        label: "Requests",
-        icon: Inbox,
-        roles: [
-          "OFFICE_STAFF",
-          "OFFICE_HEAD",
-          "VPAA",
-          "VPAD",
-          "VPF",
-          "VPR",
-          "PRESIDENT",
-          "ADMIN",
-          "QA",
-          "SYSADMIN",
+        children: [
+          {
+            to: "/documents/all",
+            label: "Workflows",
+            icon: FileText,
+          },
+          {
+            to: "/document-requests",
+            label: "Requests",
+            icon: Inbox,
+          },
         ],
       },
+      { to: "/documents", label: "Library", icon: FolderOpen },
       {
         to: "/templates",
         label: "Templates",
