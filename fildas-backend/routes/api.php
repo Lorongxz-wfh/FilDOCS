@@ -86,6 +86,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     });
     Route::get('/work-queue', [WorkflowController::class, 'workQueue']);
 
+    Route::get('/documents',            [DocumentController::class, 'index']);
     Route::post('/documents',           [DocumentController::class, 'store']);
     Route::get('/documents/{document}',         [DocumentController::class, 'show']);
     Route::patch('/documents/{document}',       [DocumentController::class, 'update']);

@@ -394,7 +394,7 @@ const NotificationBell: React.FC = () => {
                           </div>
                           {n.body && (
                             <div 
-                              className="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400"
+                              className="mt-1 line-clamp-2 text-xs font-normal text-slate-500 dark:text-slate-400"
                               dangerouslySetInnerHTML={{ __html: n.body }}
                             />
                           )}
@@ -434,8 +434,8 @@ const NotificationBell: React.FC = () => {
           <div className="flex items-center justify-between gap-2 border-t border-slate-200 px-3 py-2 dark:border-surface-400">
             <button
               type="button"
-              className="flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-              disabled={isMarkingRead}
+              className="flex items-center gap-1.5 text-xs font-medium text-brand-500 hover:text-brand-600 disabled:text-slate-400 disabled:cursor-not-allowed dark:text-brand-400 dark:hover:text-brand-300 dark:disabled:text-slate-600 transition-colors"
+              disabled={isMarkingRead || (prevUnreadRef.current === 0 && !notifItems.some(n => !n.read_at))}
               onClick={async () => {
                 try {
                   setIsMarkingRead(true);

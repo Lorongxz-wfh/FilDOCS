@@ -3,12 +3,22 @@ import api from "./api";
 export interface SystemHealthStatus {
   status: {
     database: boolean;
+    database_info: {
+      bytes: number;
+      formatted: string;
+      driver: string;
+    };
     cache: boolean;
     storage: {
-      total: number;
-      free: number;
-      used: number;
-      percentage: number;
+      driver: string;
+      connected: boolean;
+      bucket: string | null;
+      node: {
+        total: number;
+        free: number;
+        used: number;
+        percentage: number;
+      };
     };
     mail: boolean;
   };

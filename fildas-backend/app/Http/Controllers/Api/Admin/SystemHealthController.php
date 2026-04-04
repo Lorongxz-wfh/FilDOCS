@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class SystemHealthController extends Controller
 {
@@ -20,7 +21,7 @@ class SystemHealthController extends Controller
     {
         $status = SystemStatus::first();
         
-        // Connectivity Checks
+        // 1. Connectivity Checks
         $dbStatus = true;
         try {
             DB::connection()->getPdo();
@@ -36,7 +37,25 @@ class SystemHealthController extends Controller
             $cacheStatus = false;
         }
 
-        // Disk Usage - Wrapped in safety check for restricted container environments (e.g., Render)
+        // 2. Database Size Info
+        $dbInfo = $this->getDatabaseSize();
+
+        // 3. Storage Context & Connectivity
+        $storageDriver = config('filesystems.default');
+        $storageConnected = true;
+        $storageBucket = null;
+
+        if ($storageDriver === 's3') {
+            $storageBucket = config('filesystems.disks.s3.bucket');
+            try {
+                // Lightweight connectivity check - try to check if bucket exists or just reach endpoint
+                $storageConnected = Storage::disk('s3')->exists('connectivity_test_anchor');
+            } catch (\Exception $e) {
+                $storageConnected = false;
+            }
+        }
+
+        // 4. Node/System Disk Usage (Local)
         $totalSpace = 0;
         $freeSpace = 0;
         $usedSpace = 0;
@@ -44,18 +63,15 @@ class SystemHealthController extends Controller
         
         try {
             $diskPath = base_path();
-            // Some environments may disable these functions or the path might not be accessible
             if (function_exists('disk_total_space') && @disk_total_space($diskPath) !== false) {
                 $totalSpace = disk_total_space($diskPath);
                 $freeSpace = disk_free_space($diskPath);
                 $usedSpace = max(0, $totalSpace - $freeSpace);
                 $diskPercentage = $totalSpace > 0 ? round(($usedSpace / $totalSpace) * 100, 2) : 0;
             }
-        } catch (\Exception $e) {
-            // Silently fail disk check to prevent 500 error
-        }
+        } catch (\Exception $e) {}
 
-        // Active Sessions (last 15 mins) - Safety check for session driver
+        // Active Sessions (last 15 mins)
         $activeSessions = 0;
         try {
             if (config('session.driver') === 'database') {
@@ -63,11 +79,9 @@ class SystemHealthController extends Controller
                     ->where('last_activity', '>=', time() - 900)
                     ->count();
             }
-        } catch (\Exception $e) {
-            // Silently fail session count to prevent 500 error
-        }
+        } catch (\Exception $e) {}
 
-        // Check Thresholds & Alert - Only if status and disk data are valid
+        // Check Thresholds & Alert
         if ($status && $totalSpace > 0) {
             $this->checkThresholds($diskPercentage, $status);
         }
@@ -75,12 +89,19 @@ class SystemHealthController extends Controller
         return response()->json([
             'status' => [
                 'database' => $dbStatus,
+                'database_info' => $dbInfo,
                 'cache' => $cacheStatus,
                 'storage' => [
-                    'total' => $totalSpace,
-                    'free' => $freeSpace,
-                    'used' => $usedSpace,
-                    'percentage' => $diskPercentage,
+                    'driver' => $storageDriver,
+                    'connected' => $storageConnected,
+                    'bucket' => $storageBucket,
+                    // Keeping local stats for "Node System Health"
+                    'node' => [
+                        'total' => $totalSpace,
+                        'free' => $freeSpace,
+                        'used' => $usedSpace,
+                        'percentage' => $diskPercentage,
+                    ]
                 ],
                 'mail' => !empty(config('mail.mailers.smtp.host')),
             ],
@@ -335,5 +356,42 @@ class SystemHealthController extends Controller
             'label'           => $label,
             'meta'            => $meta,
         ]);
+    }
+
+    private function getDatabaseSize(): array
+    {
+        $connection = config('database.default');
+        $driver = config("database.connections.{$connection}.driver");
+        $sizeBytes = 0;
+        $formatted = '0 B';
+
+        try {
+            if ($driver === 'pgsql') {
+                $res = DB::select("SELECT pg_database_size(current_database()) as size");
+                $sizeBytes = $res[0]->size ?? 0;
+            } else if ($driver === 'mysql') {
+                $res = DB::select("SELECT SUM(data_length + index_length) AS size FROM information_schema.TABLES WHERE table_schema = DATABASE()");
+                $sizeBytes = $res[0]->size ?? 0;
+            }
+            
+            $formatted = $this->formatBytes($sizeBytes);
+        } catch (\Exception $e) {}
+
+        return [
+            'bytes' => $sizeBytes,
+            'formatted' => $formatted,
+            'driver' => $driver
+        ];
+    }
+
+    private function formatBytes($bytes, $precision = 2): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        $bytes /= (1 << (10 * $pow));
+
+        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 }

@@ -251,7 +251,7 @@ export default function SystemHealthPage() {
             status={health?.status.database ? 'ok' : 'error'}
             icon={Database}
             label={health?.status.database ? "Connected" : "Disconnected"}
-            subLabel="Relational data store"
+            subLabel={health?.status.database_info ? `Size: ${health.status.database_info.formatted} (${health.status.database_info.driver})` : "Relational data store"}
           />
           <HealthCard 
             title="Cache"
@@ -261,11 +261,13 @@ export default function SystemHealthPage() {
             subLabel="Redis / Application Cache"
           />
           <HealthCard 
-            title="Storage"
-            status={(health?.status.storage.percentage || 0) > 90 ? 'error' : (health?.status.storage.percentage || 0) > 80 ? 'warning' : 'ok'}
+            title={health?.status.storage.driver === 's3' ? "Object Storage (R2)" : "Storage"}
+            status={health?.status.storage.connected ? 'ok' : 'error'}
             icon={HardDrive}
-            label={`${health?.status.storage.percentage}% Used`}
-            subLabel={`${formatSize(health?.status.storage.free || 0)} available of ${formatSize(health?.status.storage.total || 0)}`}
+            label={health?.status.storage.connected ? "Connected" : "Disconnected"}
+            subLabel={health?.status.storage.driver === 's3' 
+              ? `Bucket: ${health.status.storage.bucket || 'N/A'}` 
+              : "Local application storage"}
           />
           <HealthCard 
             title="Email Service"
@@ -284,6 +286,40 @@ export default function SystemHealthPage() {
               </button>
             }
           />
+        </div>
+        
+        {/* ── Node System Health (Secondary) ── */}
+        <div className="bg-slate-50 dark:bg-surface-600/20 rounded-xl p-4 border border-slate-200 dark:border-surface-400">
+           <div className="flex items-center gap-2 mb-4">
+             <Server size={14} className="text-slate-400" />
+             <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Node System Disk (Instance)</h3>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
+              <div>
+                <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Local Usage</p>
+                <p className="text-xl font-bold text-slate-900 dark:text-slate-50">{health?.status.storage.node.percentage}%</p>
+              </div>
+              <div>
+                <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Total Capacity</p>
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                   {formatSize(health?.status.storage.node.total || 0)}
+                </p>
+              </div>
+              <div className="md:col-span-2">
+                 <div className="w-full bg-slate-200 dark:bg-surface-400 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-1000 ${
+                        (health?.status.storage.node.percentage || 0) > 90 ? 'bg-rose-500' : 
+                        (health?.status.storage.node.percentage || 0) > 75 ? 'bg-amber-500' : 'bg-brand-500'
+                      }`}
+                      style={{ width: `${health?.status.storage.node.percentage || 0}%` }}
+                    />
+                 </div>
+                 <p className="mt-1.5 text-[9px] text-slate-400 italic">
+                   Reports the storage allocated to the virtual machine or container running the application core.
+                 </p>
+              </div>
+           </div>
         </div>
 
         {/* ── Diagnostic Report (Conditional) ── */}
