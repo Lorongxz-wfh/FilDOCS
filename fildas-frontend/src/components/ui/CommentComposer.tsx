@@ -48,7 +48,7 @@ const CommentComposer: React.FC<CommentComposerProps> = ({
     <div className={`flex flex-col gap-1.5 shrink-0 ${className}`}>
       <div className="flex items-stretch gap-2 h-[44px]">
         {/* ── Textarea Input ── */}
-        <div className="flex-1 bg-slate-50 dark:bg-surface-600/50 border border-slate-200 dark:border-surface-400 rounded-lg transition-colors focus-within:border-slate-400 dark:focus-within:border-slate-300 overflow-hidden shadow-sm">
+        <div className="flex-1 bg-slate-50 dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-md transition-all focus-within:border-brand-600 dark:focus-within:border-brand-500 focus-within:bg-white dark:focus-within:bg-surface-500 focus-within:ring-1 focus-within:ring-brand-500/20 overflow-hidden shadow-sm">
           <textarea
             ref={textareaRef}
             rows={1}
@@ -58,7 +58,7 @@ const CommentComposer: React.FC<CommentComposerProps> = ({
             placeholder={placeholder}
             autoFocus={autoFocus}
             disabled={isDisabled}
-            className="w-full h-full bg-transparent px-3 py-1 text-[13px] text-slate-800 dark:text-slate-100 outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600 leading-relaxed font-medium"
+            className="w-full h-full bg-transparent px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 outline-none resize-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 leading-relaxed font-medium"
           />
         </div>
 
