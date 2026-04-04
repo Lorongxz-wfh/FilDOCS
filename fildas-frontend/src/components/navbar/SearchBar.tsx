@@ -25,25 +25,35 @@ import { getUserRole } from "../../lib/roleFilters";
 import SkeletonList from "../ui/loader/SkeletonList";
 
 // ── Page results (client-side) ─────────────────────────────────────────────
+// ── Page results (client-side) ─────────────────────────────────────────────
 function getPageResults(q: string, role: string): SearchResultItem[] {
   if (!q) return [];
   const lower = q.toLowerCase();
   const results: SearchResultItem[] = [];
-  for (const group of navGroups) {
-    for (const item of group.items) {
+
+  const addRecursive = (items: any[], groupLabel: string) => {
+    for (const item of items) {
       if (!item.roles || item.roles.includes(role)) {
         if (item.label.toLowerCase().includes(lower)) {
           results.push({
             type: "page",
             id: item.to,
             title: item.label,
-            description: group.label,
+            description: groupLabel,
             url: item.to,
           });
         }
+        if (item.children) {
+          addRecursive(item.children, item.label);
+        }
       }
     }
+  };
+
+  for (const group of navGroups) {
+    addRecursive(group.items, group.label);
   }
+
   // Check static items (Inbox, etc)
   for (const item of [inboxNavItem]) {
     if (item.label.toLowerCase().includes(lower)) {
@@ -59,18 +69,18 @@ function getPageResults(q: string, role: string): SearchResultItem[] {
 
   // Check static / auxiliary items
   const extraPages = [
-
-    { to: "/documents/queue", label: "Work Queue", desc: "Workflows" },
-    { to: "/documents", label: "Library", desc: "Documents" },
-    { to: "/activity-logs", label: "Activity Logs", desc: "Reports", roles: ["admin", "sysadmin", "qa"] },
-    { to: "/documents/create/office", label: "Create Office-start Doc", desc: "Actions", roles: ["office_staff", "office_head"] },
-    { to: "/documents/create/qa", label: "Create QA-start Doc", desc: "Actions", roles: ["qa", "admin"] },
-    { to: "/document-requests/create", label: "New Request", desc: "Actions" },
+    { to: "/documents/all", label: "Workflows", desc: "Work Queue" },
+    { to: "/document-requests", label: "Requests", desc: "Work Queue" },
+    { to: "/documents", label: "Document Library", desc: "General" },
+    { to: "/archive", label: "Archive Library", desc: "General" },
+    { to: "/reports", label: "Reports", desc: "Reports" },
+    { to: "/activity-logs", label: "Activity Logs", desc: "Reports" },
+    { to: "/user-manager", label: "User Manager", desc: "Admin", roles: ["admin", "sysadmin"] },
+    { to: "/office-manager", label: "Office Manager", desc: "Admin", roles: ["admin", "sysadmin"] },
+    { to: "/system-health", label: "System Health", desc: "Maintenance", roles: ["admin", "sysadmin"] },
+    { to: "/backup", label: "Database Backup", desc: "Maintenance", roles: ["admin", "sysadmin", "qa"] },
     { to: "/settings", label: "Settings", desc: "Account" },
     { to: "/my-activity", label: "My Activity", desc: "Account" },
-
-    { to: "/whats-new", label: "What's New", desc: "Support" },
-    { to: "/report-issue", label: "Report Issue", desc: "Support" },
     { to: "/help", label: "Help & Support", desc: "Support" },
   ];
 
@@ -127,6 +137,8 @@ const ResultIcon: React.FC<{ item: SearchResultItem }> = ({ item }) => {
     return <Hash className={cls} />;
   }
 
+  if (type === "suggestion") return <Search className={cls} />;
+  
   return <LayoutDashboard className={cls} />;
 };
 
@@ -141,6 +153,7 @@ const TYPE_ICON_BG: Record<string, string> = {
   announcement: "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400",
   activity: "bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400",
   page: "bg-slate-100 dark:bg-surface-400 text-slate-500 dark:text-slate-400",
+  suggestion: "bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400",
 };
 
 // ── Empty results shape ────────────────────────────────────────────────────
@@ -153,6 +166,7 @@ const emptyResults = {
   users: [] as SearchResultItem[],
   offices: [] as SearchResultItem[],
   activity: [] as SearchResultItem[],
+  suggestions: [] as SearchResultItem[],
 };
 
 // ── Command Menu ───────────────────────────────────────────────────────────
@@ -189,6 +203,7 @@ const SearchBar: React.FC<SearchBarProps> = () => {
   const flatResults = React.useMemo(() => {
     return [
       ...results.pages,
+      ...results.suggestions,
       ...results.documents,
       ...results.requests,
       ...results.activity,
@@ -228,7 +243,7 @@ const SearchBar: React.FC<SearchBarProps> = () => {
     // Ensure open if typing
     if (!open) setOpen(true);
 
-    const pages = getPageResults(q, role ?? "");
+    const pages = getPageResults(q, (role ?? "").toUpperCase());
     setResults((prev) => ({ ...prev, pages }));
 
     if (q.trim().length < 2) return;
@@ -246,6 +261,7 @@ const SearchBar: React.FC<SearchBarProps> = () => {
           requests: data.requests,
           announcements: data.announcements || [],
           activity: data.activity || [],
+          suggestions: data.suggestions || [],
         });
       } catch {
         // silent
@@ -256,6 +272,11 @@ const SearchBar: React.FC<SearchBarProps> = () => {
   };
 
   const navigate_to = (item: SearchResultItem) => {
+    if (item.type === "suggestion") {
+      setQuery(item.title);
+      // Wait for next fetch or trigger it manually
+      return;
+    }
     closeMenu();
     if (item.type === "document" && !item.url.includes("/view")) {
       navigate(item.url, { state: { from: "/work-queue" } });
@@ -367,7 +388,8 @@ const SearchBar: React.FC<SearchBarProps> = () => {
 
   // Calculate start indices for keyboard nav
   const pageStart = 0;
-  const docStart = results.pages.length;
+  const sugStart = pageStart + results.pages.length;
+  const docStart = sugStart + results.suggestions.length;
   const reqStart = docStart + results.documents.length;
   const actStart = reqStart + results.requests.length;
   const annStart = actStart + results.activity.length;
@@ -455,6 +477,11 @@ const SearchBar: React.FC<SearchBarProps> = () => {
                   label="Pages"
                   items={results.pages}
                   startIndex={pageStart}
+                />
+                <ResultGroup
+                  label="Suggestions"
+                  items={results.suggestions}
+                  startIndex={sugStart}
                 />
                 <ResultGroup
                   label="Documents"

@@ -207,6 +207,7 @@ export function useDocumentFlowUI({
   // ── Sub-hooks ────────────────────────────────────────────────
   const workflow = useDocumentWorkflow({
     versionId: localVersion?.id && localVersion.id > 0 ? localVersion.id : 0,
+    documentId: document?.id ?? 0,
     isTerminal,
     onChanged,
     onAfterActionClose,

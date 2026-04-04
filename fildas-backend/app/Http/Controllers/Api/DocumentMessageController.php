@@ -53,10 +53,11 @@ class DocumentMessageController extends Controller
             'actor_user_id' => $request->user()?->id,
             'actor_office_id' => $request->user()?->office_id,
             'target_office_id' => null,
-            'event' => 'message.posted',
-            'label' => 'Posted a message',
+            'event' => 'document.comment_added',
+            'label' => 'Posted a comment',
             'meta' => [
                 'type' => $msg->type,
+                'message' => $msg->message,
             ],
         ]);
 

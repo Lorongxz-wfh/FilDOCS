@@ -55,14 +55,31 @@ class SearchController extends Controller
         $isQA     = $roleName === 'qa';
         $canSeeSensitive = $isAdmin || $isQA;
 
-        // Documents — title / code / description match
         $documentQuery = Document::query()
-            ->where(function ($query) use ($like, $op) {
+            ->where(function ($query) use ($like, $op, $q) {
+                // Exact/Like matches
                 $query->where('documents.title', $op, $like)
                     ->orWhere('documents.code', $op, $like)
                     ->orWhereHas('latestVersion', function ($v) use ($like, $op) {
                         $v->where('description', $op, $like);
+                    })
+                    // Search by Tags
+                    ->orWhereHas('tags', function ($t) use ($like, $op) {
+                        $t->where('name', $op, $like);
+                    })
+                    // Search by Owner Office
+                    ->orWhereHas('ownerOffice', function ($o) use ($like, $op) {
+                        $o->where('name', $op, $like)->orWhere('code', $op, $like);
+                    })
+                    // Search by Version Filenames
+                    ->orWhereHas('versions', function ($v) use ($like, $op) {
+                        $v->where('original_filename', $op, $like);
                     });
+
+                // Direct ID Match (if numeric)
+                if (is_numeric($q)) {
+                    $query->orWhere('documents.id', $q);
+                }
             });
 
         $documentQuery = app(\App\Services\DocumentIndexService::class)->applyVisibility($documentQuery, $actor);
@@ -88,12 +105,33 @@ class SearchController extends Controller
                     'title'       => $d->title,
                     'description' => $d->code ?: $d->doctype,
                     'meta'        => $status,
-                    'status'      => $status, // redundant but useful for frontend logic
+                    'status'      => $status,
                     'url'         => ($status === 'Distributed' || $isArchived)
                         ? "/library/{$d->id}"
                         : "/documents/{$d->id}",
                 ];
             });
+
+        // ── Predictive Suggestions (Fuzzy) ──────────────────────────────────
+        $suggestions = collect();
+        if ($documents->isEmpty() && strlen($q) > 3) {
+            // Very simple fuzzy suggestion based on SOUNDEX (MySQL) or similar
+            // For cross-db, we'll just check for words starting with the term
+            $suggestedDocs = Document::query()
+                ->where('title', 'like', substr($q, 0, 3) . '%')
+                ->limit(3)
+                ->get(['title'])
+                ->pluck('title');
+            
+            foreach ($suggestedDocs as $s) {
+                $suggestions->push([
+                    'type' => 'suggestion',
+                    'id' => 'suggest-' . md5($s),
+                    'title' => $s,
+                    'url' => '#', 
+                ]);
+            }
+        }
 
         // Users — admin only
         $users = collect();
@@ -185,7 +223,7 @@ class SearchController extends Controller
                 'description' => $r->description ?: 'No description provided.',
                 'meta'        => $r->status,
                 'status'      => $r->status,
-                'url'         => "/requests/{$r->id}", // standardized route
+                'url'         => "/requests/{$r->id}", 
             ]);
 
         // Announcements
@@ -194,7 +232,7 @@ class SearchController extends Controller
                 $query->where('title', $op, $like)
                     ->orWhere('body', $op, $like);
             })
-            ->active() // uses the scope from Announcement model
+            ->active()
             ->ordered();
 
         $announcements = $announcementQuery
@@ -209,7 +247,7 @@ class SearchController extends Controller
                 'url'         => '/announcements',
             ]);
 
-        // Notifications — only current user's own
+        // Notifications
         $notifications = Notification::query()
             ->where('user_id', $actor?->id)
             ->where(function ($query) use ($like, $op) {
@@ -230,7 +268,7 @@ class SearchController extends Controller
                 'url'         => '/inbox',
             ]);
 
-        // NEW: Activity Logs (QA/Admin only)
+        // Activity Logs
         $logs = collect();
         if ($canSeeSensitive) {
             $logs = ActivityLog::query()
@@ -252,6 +290,18 @@ class SearchController extends Controller
                     'url'         => $log->document_id ? "/documents/{$log->document_id}" : "/activity",
                 ]);
         }
+
+        return response()->json([
+            'documents'     => $documents->values(),
+            'users'         => $users->values(),
+            'offices'       => $offices->values(),
+            'templates'     => $templates->values(),
+            'requests'      => $requests->values(),
+            'announcements' => $announcements->values(),
+            'notifications' => $notifications->values(),
+            'activity'      => $logs->values(),
+            'suggestions'   => $suggestions->values(),
+        ]);
 
         return response()->json([
             'documents'     => $documents->values(),

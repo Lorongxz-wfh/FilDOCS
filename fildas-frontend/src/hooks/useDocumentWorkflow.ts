@@ -16,6 +16,7 @@ import { useRealtimeUpdates } from "./useRealtimeUpdates";
 
 type Options = {
   versionId: number;
+  documentId?: number;
   isTerminal?: boolean;
   onChanged?: () => Promise<void> | void;
   onAfterActionClose?: () => void;
@@ -32,6 +33,7 @@ const MSG_POLL_MS = 10_000; // 10s message poll
 
 export function useDocumentWorkflow({
   versionId,
+  documentId,
   isTerminal = false,
   onChanged,
   onAfterActionClose,
@@ -330,7 +332,9 @@ export function useDocumentWorkflow({
     setIsLoadingActivityLogs(true);
     listActivityLogs({
       scope: "document",
-      document_version_id: versionId,
+      document_id: documentId || undefined,
+      document_version_id: !documentId ? versionId : undefined,
+      category: "workflow",
       per_page: 50,
     })
       .then((p) => {

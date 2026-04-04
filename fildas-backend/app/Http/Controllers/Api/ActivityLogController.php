@@ -147,7 +147,7 @@ class ActivityLogController extends Controller
         // Category filter
         $category = trim((string) ($request->query('category', '')));
         $categoryPrefixes = [
-            'workflow' => ['workflow.'],
+            'workflow' => ['workflow.', 'document.', 'version.'],
             'request'  => ['document_request.'],
             'document' => ['document.', 'version.', 'message.'],
             'user'     => ['user.', 'office.'],

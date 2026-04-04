@@ -38,14 +38,16 @@ const MACRO_EVENTS = [
   "workflow.registered",
   "workflow.distributed",
   "workflow.cancelled",
-  "document.sharing_updated",
 ];
 
 const DETAIL_EVENTS = [
   "document.comment_added",
+  "message.posted",
   "document.updated",
   "document.field_changed",
+  "document.sharing_updated",
   "version.file_replaced",
+  "version.file_uploaded",
   "version.effective_date_updated",
   "version.description_updated",
 ];
@@ -163,10 +165,12 @@ const WorkflowFlowTimeline: React.FC<Props> = ({ logs, isLoading, versionNumber 
 
   const getSubEventIcon = (event: string) => {
     switch (event) {
-      case "document.comment_added": return <MessageSquare className="h-3 w-3" />;
+      case "document.comment_added": 
+      case "message.posted": return <MessageSquare className="h-3 w-3" />;
       case "document.field_changed": 
       case "document.updated": return <FileEdit className="h-3 w-3" />;
-      case "version.file_replaced": return <FileCheck className="h-3 w-3" />;
+      case "version.file_replaced": 
+      case "version.file_uploaded": return <FileCheck className="h-3 w-3" />;
       case "version.effective_date_updated": return <Calendar className="h-3 w-3" />;
       case "document.sharing_updated": return <Layers className="h-3 w-3" />;
       default: return <Activity className="h-3 w-3" />;
