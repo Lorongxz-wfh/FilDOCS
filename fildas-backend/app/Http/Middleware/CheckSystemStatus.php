@@ -45,9 +45,9 @@ class CheckSystemStatus
             $startsAt = Carbon::parse($status->maintenance_starts_at);
 
             if ($now->greaterThanOrEqualTo($startsAt)) {
-                // Timer reached: Force HARD mode and logout
-                $mode = 'hard';
-                $forceLogout = true;
+                // Timer reached: Use the saved mode and logout only if hard mode
+                $mode = $status->maintenance_mode;
+                $forceLogout = ($mode === 'hard');
             } else {
                 // Countdown in progress: Force SOFT mode (grace period)
                 // This prevents users from starting new work during the countdown

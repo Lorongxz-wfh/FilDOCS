@@ -81,6 +81,8 @@ function getPageResults(q: string, role: string): SearchResultItem[] {
     { to: "/backup", label: "Database Backup", desc: "Maintenance", roles: ["admin", "sysadmin", "qa"] },
     { to: "/settings", label: "Settings", desc: "Account" },
     { to: "/my-activity", label: "My Activity", desc: "Account" },
+    { to: "/whats-new", label: "What's New", desc: "Support" },
+    { to: "/report-issue", label: "Report Issue", desc: "Support" },
     { to: "/help", label: "Help & Support", desc: "Support" },
   ];
 

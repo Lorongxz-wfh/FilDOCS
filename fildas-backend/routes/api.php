@@ -261,8 +261,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         // System Health & Maintenance
         Route::get('/system/health',              [SystemHealthController::class, 'index']);
         Route::patch('/system/maintenance',       [SystemHealthController::class, 'update']);
-        Route::post('/system/health/schedule',    [SystemHealthController::class, 'schedule']);
-        Route::post('/system/health/cancel',      [SystemHealthController::class, 'cancel']);
+        Route::post('/system/scheduler/schedule', [SystemHealthController::class, 'schedule']);
+        Route::post('/system/scheduler/cancel',   [SystemHealthController::class, 'cancel']);
         Route::get('/system/logs',                [SystemHealthController::class, 'logs']);
         Route::post('/system/diagnostics',        [SystemHealthController::class, 'diagnostics']);
         Route::post('/system/test-email',         [SystemHealthController::class, 'sendTestMail']);

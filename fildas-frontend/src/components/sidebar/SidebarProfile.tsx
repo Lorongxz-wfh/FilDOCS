@@ -66,7 +66,7 @@ const SidebarProfile: React.FC<SidebarProfileProps> = ({
         {[
           { label: "What's New", icon: Megaphone, to: "/whats-new" },
           { label: "Report Issue", icon: AlertCircle, to: "/report-issue" },
-          { label: "Help & Support", icon: HelpCircle, to: "/help-support" },
+          { label: "Help & Support", icon: HelpCircle, to: "/help" },
         ].map((item) => (
           <NavLink
             key={item.label}

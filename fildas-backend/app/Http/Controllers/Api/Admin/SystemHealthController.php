@@ -166,6 +166,7 @@ class SystemHealthController extends Controller
         $status->maintenance_starts_at = $startsAt;
         $status->maintenance_message = $validated['message'] ?? 'System will be undergoing maintenance.';
         $status->is_notified = true;
+        $status->maintenance_mode = $validated['mode']; 
 
         // When scheduled, we force the mode initially to 'off' or keep current, 
         // the middleware will handle the transition once the time arrives.
