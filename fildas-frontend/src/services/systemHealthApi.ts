@@ -53,7 +53,16 @@ export interface SystemDiagnostics {
 }
 
 /**
+ * Fetch maintenance status only. Safe for all authenticated users.
+ */
+export async function getMaintenanceStatus(): Promise<{ maintenance: SystemHealthStatus['maintenance'] }> {
+  const { data } = await api.get("/system/maintenance");
+  return data;
+}
+
+/**
  * Fetch system health metrics and current status.
+ * REQUIRES ADMIN ROLE.
  */
 export async function getSystemHealth(): Promise<SystemHealthStatus> {
   const { data } = await api.get("/admin/system/health");

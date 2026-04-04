@@ -210,7 +210,7 @@ const NotificationBell: React.FC = () => {
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute right-4 top-14 w-96 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-surface-400 dark:bg-surface-500 animate-pop-in-top overflow-hidden"
+          className="absolute right-4 left-4 sm:left-auto sm:right-4 top-14 sm:w-96 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-surface-400 dark:bg-surface-500 animate-pop-in-top overflow-hidden z-50"
         >
           {/* ── Announcements section ── */}
           <div className="border-b border-slate-200 dark:border-surface-400">

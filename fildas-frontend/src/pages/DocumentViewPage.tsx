@@ -611,7 +611,7 @@ export default function DocumentViewPage() {
 
       {/* Fullscreen preview */}
       {fullscreen && previewUrl && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black/95">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/95">
           <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-white/10">
             <span className="text-xs text-white/60 truncate">{version?.original_filename ?? "Preview"}</span>
             <button

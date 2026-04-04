@@ -120,7 +120,7 @@ const SupportEmailModal: React.FC<SupportEmailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div 
         className="w-full max-w-2xl rounded-2xl bg-white dark:bg-surface-500 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
         style={{ maxHeight: 'calc(100vh - 2rem)' }}

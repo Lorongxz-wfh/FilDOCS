@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
 import Modal from "../components/ui/Modal";
 import Alert from "../components/ui/Alert";
 import EmptyState from "../components/ui/EmptyState";
 import { useToast } from "../components/ui/toast/ToastContext";
 import { Tag, LayoutGrid, List, ChevronDown } from "lucide-react";
-import { Tabs, TabContent } from "../components/ui/Tabs";
+import { Tabs } from "../components/ui/Tabs";
 import { getAuthUser } from "../lib/auth";
 import { isAdmin } from "../lib/roleFilters";
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
@@ -14,6 +14,7 @@ import { PageActions, RefreshAction, UploadAction } from "../components/ui/PageA
 import SearchFilterBar from "../components/ui/SearchFilterBar";
 import SelectDropdown from "../components/ui/SelectDropdown";
 import { useSmartRefresh } from "../hooks/useSmartRefresh";
+import { motion, AnimatePresence } from "framer-motion";
 
 import {
   listTemplates,
@@ -38,6 +39,7 @@ const VIEW_TABS = [
 
 const TemplatesPage: React.FC = () => {
   const { push } = useToast();
+  const navigate = useNavigate();
   const authUser = getAuthUser();
   const userRole = authUser?.role?.toLowerCase() ?? "";
   const canChooseScope = userRole === "qa" || userRole === "sysadmin";
@@ -194,7 +196,9 @@ const TemplatesPage: React.FC = () => {
   return (
     <>
       <PageFrame
-        title="Document Templates"
+        title="Templates"
+        onBack={() => navigate("/work-queue")}
+        breadcrumbs={[{ label: "Work Queue", to: "/work-queue" }]}
         contentClassName="flex flex-col min-h-0 gap-0 h-full overflow-hidden"
         right={
           <PageActions>
@@ -211,7 +215,7 @@ const TemplatesPage: React.FC = () => {
           </PageActions>
         }
       >
-        <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0">
+        <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
           <Tabs 
             tabs={VIEW_TABS} 
             activeTab={viewMode} 
@@ -342,7 +346,7 @@ const TemplatesPage: React.FC = () => {
         </SearchFilterBar>
 
         {uploadingName && (
-          <div className="shrink-0 flex items-center gap-2.5 border-b border-slate-200 dark:border-surface-400 bg-sky-50 dark:bg-sky-950/20 px-4 py-2.5">
+          <div className="shrink-0 flex items-center gap-2.5 border-b border-slate-200 dark:border-surface-400 bg-sky-50 dark:bg-sky-950/20 px-4 py-2.5 mb-4">
             <svg
               className="h-3.5 w-3.5 animate-spin text-sky-500 shrink-0"
               viewBox="0 0 24 24"
@@ -368,93 +372,84 @@ const TemplatesPage: React.FC = () => {
           </div>
         )}
 
-        <div className="flex-1 min-h-0 flex flex-col pt-4">
-          {error ? (
-            <div className="p-4 shrink-0">
-              <Alert variant="danger">
-                {error}{" "}
-                <button
-                  type="button"
-                  className="underline"
-                  onClick={() => loadTemplates()}
-                >
-                  Retry
-                </button>
-              </Alert>
-            </div>
-          ) : (
-            <div className="flex-1 flex flex-col min-h-0 px-4 sm:px-5">
-              <TabContent activeKey={viewMode} currentKey="grid">
-                {initialLoading ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {Array.from({ length: 10 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 animate-pulse overflow-hidden aspect-3/4 flex flex-col"
-                      >
-                        <div className="flex-1 bg-slate-100 dark:bg-surface-600" />
-                        <div className="p-2.5 space-y-1.5">
-                          <div
-                            className="h-2.5 rounded bg-slate-100 dark:bg-surface-600"
-                            style={{ width: `${55 + (i % 4) * 10}%` }}
-                          />
-                          <div
-                            className="h-2 rounded bg-slate-100 dark:bg-surface-600"
-                            style={{ width: `${35 + (i % 3) * 8}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : filtered.length === 0 ? (
-                  <div className="flex-1 flex flex-col items-center justify-center py-20">
-                    <EmptyState
-                      label={
-                        templates.length === 0
-                          ? "No templates yet."
-                          : "No templates match your filters."
-                      }
-                      description={
-                        templates.length === 0
-                          ? "Upload the first template using the button above."
-                          : "Try adjusting your search or filters."
-                      }
-                      isSearch={templates.length > 0}
-                    />
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {filtered.map((t) => (
-                      <TemplateGridCard
-                        key={t.id}
-                        template={t}
-                        onSelect={setSelectedTemplate}
-                        onDeleteClick={handleDeleteClick}
-                        isDeleting={deletingId === t.id}
-                        adminDebugMode={adminDebugMode}
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabContent>
+        {error && !initialLoading && (
+          <Alert variant="danger" className="mt-4">
+            {error}{" "}
+            <button
+              type="button"
+              className="underline font-bold"
+              onClick={() => loadTemplates()}
+            >
+              Retry
+            </button>
+          </Alert>
+        )}
 
-              <TabContent activeKey={viewMode} currentKey="list">
-                <div className="flex flex-col flex-1 min-h-0 -mx-4 sm:-mx-5">
-                  <TemplateList
-                    templates={filtered}
-                    loading={initialLoading}
-                    deletingId={deletingId}
-                    onDeleteClick={handleDeleteClick}
-                    onSelect={setSelectedTemplate}
-                    sortBy={sortBy}
-                    sortDir={sortDir}
-                    onSortChange={handleSortChange}
-                    adminDebugMode={adminDebugMode}
-                  />
+        <div className="flex-1 min-h-0 min-w-0 flex flex-col">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={viewMode + debouncedQ + scope + activeTag}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+              className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden"
+            >
+              {viewMode === "grid" ? (
+                <div className="h-full overflow-y-auto p-4 sm:p-6">
+                  {initialLoading ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="rounded-xl border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600/30 animate-pulse aspect-3/4 flex flex-col"
+                        >
+                          <div className="flex-1 bg-slate-100/50 dark:bg-surface-600/50" />
+                          <div className="p-2.5 space-y-1.5">
+                            <div className="h-2.5 rounded bg-slate-100/50 dark:bg-surface-600/50 w-3/4" />
+                            <div className="h-2 rounded bg-slate-100/50 dark:bg-surface-600/50 w-1/2" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : filtered.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center py-20">
+                      <EmptyState
+                        label={templates.length === 0 ? "No templates yet." : "No matching templates."}
+                        description="Try adjusting your search or filters."
+                        isSearch={templates.length > 0}
+                      />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+                      {filtered.map((t) => (
+                        <TemplateGridCard
+                          key={t.id}
+                          template={t}
+                          onSelect={setSelectedTemplate}
+                          onDeleteClick={handleDeleteClick}
+                          isDeleting={deletingId === t.id}
+                          adminDebugMode={adminDebugMode}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </TabContent>
-            </div>
-          )}
+              ) : (
+                <TemplateList
+                  templates={filtered}
+                  loading={initialLoading}
+                  deletingId={deletingId}
+                  onDeleteClick={handleDeleteClick}
+                  onSelect={setSelectedTemplate}
+                  sortBy={sortBy}
+                  sortDir={sortDir}
+                  onSortChange={handleSortChange}
+                  adminDebugMode={adminDebugMode}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </PageFrame>
 

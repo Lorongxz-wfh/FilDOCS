@@ -59,7 +59,7 @@ const ActionConfirmModal: React.FC<ActionConfirmModalProps> = ({
         : action.label;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4">
       <div className="w-full max-w-md rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-xl p-6">
         <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">
           {title}

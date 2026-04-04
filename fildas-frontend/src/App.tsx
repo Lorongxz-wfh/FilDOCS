@@ -130,7 +130,7 @@ export default function App() {
       <MaintenanceBanner />
       <Suspense
         fallback={
-          <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-surface-600 z-50">
+          <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-surface-600 z-[100]">
             <div className="flex flex-col items-center gap-3">
               <div className="h-8 w-8 rounded-full border-2 border-sky-500 border-t-transparent animate-spin" />
               <span className="text-xs text-slate-400 dark:text-slate-500 tracking-wide">

@@ -180,14 +180,14 @@ const TemplatesBrowserPanel: React.FC<Props> = ({ open, onClose }) => {
           type="button"
           aria-label="Close templates panel"
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-slate-900/40 dark:bg-black/50"
+          className="fixed inset-0 z-[90] bg-slate-900/40 dark:bg-black/50"
         />
       )}
 
       {/* Panel */}
       <div
         className={[
-          "fixed inset-y-0 right-0 z-50 flex w-full max-w-2xl flex-col",
+          "fixed inset-y-0 right-0 z-[100] flex w-full max-w-2xl flex-col",
           "border-l border-slate-200 dark:border-surface-400",
           "bg-white dark:bg-surface-500 shadow-2xl",
           "transition-transform duration-300 ease-in-out",

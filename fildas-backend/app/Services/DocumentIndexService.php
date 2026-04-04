@@ -114,7 +114,7 @@ class DocumentIndexService
         $space = $data['space'] ?? 'all'; // workqueue, library, archive, all
 
         // Filters
-        if (!empty($data['doctype'])) $query->where('doctype', $data['doctype']);
+        if (!empty($data['doctype'])) $query->where('doctype', strtolower(trim((string)$data['doctype'])));
         if (!empty($data['visibility_scope'])) $query->where('visibility_scope', $data['visibility_scope']);
         if ($ownerOfficeFilter > 0) $query->where('owner_office_id', $ownerOfficeFilter);
 

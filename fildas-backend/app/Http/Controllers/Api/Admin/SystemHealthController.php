@@ -20,7 +20,7 @@ class SystemHealthController extends Controller
     public function index()
     {
         $status = SystemStatus::first();
-        
+
         // 1. Connectivity Checks
         $dbStatus = true;
         try {
@@ -45,16 +45,20 @@ class SystemHealthController extends Controller
         $storageConnected = true;
         $storageBucket = null;
 
-        if ($storageDriver === 's3') {
-            $storageBucket = config('filesystems.disks.s3.bucket');
+        if ($storageDriver === 's3' || $storageDriver === 'r2') {
+            $storageBucket = config('filesystems.disks.' . $storageDriver . '.bucket') ?? config('filesystems.disks.s3.bucket');
             try {
-                // Better connectivity check: just try to list (even if empty) to verify API access
-                Storage::disk('s3')->allFiles();
-                $storageConnected = true;
+                // Testing object-level connectivity (Write -> Delete) 
+                // allFiles() is often blocked by API tokens that lack "List Bucket" permissions.
+                $testPath = '.healthcheck_' . time();
+                Storage::disk()->put($testPath, 'health_status:ok');
+                if (Storage::disk()->exists($testPath)) {
+                    Storage::disk()->delete($testPath);
+                    $storageConnected = true;
+                }
             } catch (\Exception $e) {
-                // Return errors only for admins for security
                 $storageErrorKind = $e->getMessage();
-                \Log::error("SystemHealth: S3/R2 connectivity failed: " . $storageErrorKind);
+                \Log::error("SystemHealth: Storage connectivity failed: " . $storageErrorKind);
                 $storageConnected = false;
             }
         }
@@ -62,7 +66,7 @@ class SystemHealthController extends Controller
         // 4. Node/System Disk Usage (Removed - confusing for cloud setups)
         $totalSpace = 0;
         $diskPercentage = 0;
-        
+
 
         // Active Sessions (last 15 mins)
         $activeSessions = 0;
@@ -72,7 +76,8 @@ class SystemHealthController extends Controller
                     ->where('last_activity', '>=', time() - 900)
                     ->count();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         // Check Thresholds & Alert
         if ($status && $totalSpace > 0) {
@@ -85,7 +90,7 @@ class SystemHealthController extends Controller
                 'database_info' => $dbInfo,
                 'cache' => [
                     'active' => $cacheStatus,
-                    'driver' => config('cache.default') ?? 'file'
+                    'driver' => Cache::getDefaultDriver()
                 ],
                 'storage' => [
                     'driver' => $storageDriver,
@@ -119,7 +124,7 @@ class SystemHealthController extends Controller
         ]);
 
         $status = SystemStatus::first() ?? new SystemStatus();
-        
+
         // If turning OFF, clear scheduling
         if ($validated['mode'] === 'off') {
             $status->maintenance_starts_at = null;
@@ -130,7 +135,7 @@ class SystemHealthController extends Controller
             'maintenance_mode' => $validated['mode'],
             'maintenance_message' => $validated['message'],
         ]);
-        
+
         $status->save();
 
         $this->logActivity($request, 'system.maintenance_updated', "Updated maintenance mode to " . strtoupper($validated['mode']), [
@@ -156,12 +161,12 @@ class SystemHealthController extends Controller
         ]);
 
         $startsAt = now()->addMinutes($validated['minutes']);
-        
+
         $status = SystemStatus::first() ?? new SystemStatus();
         $status->maintenance_starts_at = $startsAt;
         $status->maintenance_message = $validated['message'] ?? 'System will be undergoing maintenance.';
         $status->is_notified = true;
-        
+
         // When scheduled, we force the mode initially to 'off' or keep current, 
         // the middleware will handle the transition once the time arrives.
         $status->save();
@@ -225,7 +230,7 @@ class SystemHealthController extends Controller
             fseek($fp, $pos);
             $chunk = fread($fp, $readSize);
             $buffer = $chunk . $buffer;
-            
+
             // split into lines and count back from end
             $currentLines = explode("\n", $buffer);
             if (count($currentLines) > 100) {
@@ -255,7 +260,8 @@ class SystemHealthController extends Controller
             $start = microtime(true);
             DB::select('SELECT 1');
             $results['db_latency'] = round((microtime(true) - $start) * 1000, 2);
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         // 2. Cache IO (Deep)
         try {
@@ -263,26 +269,30 @@ class SystemHealthController extends Controller
             Cache::put($testKey, 'PASSED', 10);
             $results['cache_io'] = Cache::get($testKey) === 'PASSED';
             Cache::forget($testKey);
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         // 3. Storage IO (Write -> Read -> Delete)
         try {
-            $testFile = storage_path('app/diag_test_' . time() . '.txt');
-            file_put_contents($testFile, 'DIAG_PASSED');
-            if (file_exists($testFile)) {
-                if (file_get_contents($testFile) === 'DIAG_PASSED') {
-                    unlink($testFile);
+            $testPath = 'diag_test_' . time() . '.txt';
+            Storage::disk()->put($testPath, 'DIAG_PASSED');
+            
+            if (Storage::disk()->exists($testPath)) {
+                if (Storage::disk()->get($testPath) === 'DIAG_PASSED') {
+                    Storage::disk()->delete($testPath);
                     $results['storage_io'] = true;
                 }
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            \Log::error("Diagnostics Storage IO error: " . $e->getMessage());
+        }
 
         // 4. Broadcasting check based on driver
         $driver = $results['broadcasting_driver'];
         if ($driver === 'pusher') {
-            $results['pusher'] = !empty(config('broadcasting.connections.pusher.key')) && 
-                                !empty(config('broadcasting.connections.pusher.secret')) && 
-                                !empty(config('broadcasting.connections.pusher.app_id'));
+            $results['pusher'] = !empty(config('broadcasting.connections.pusher.key')) &&
+                !empty(config('broadcasting.connections.pusher.secret')) &&
+                !empty(config('broadcasting.connections.pusher.app_id'));
         } else if ($driver === 'reverb') {
             $results['pusher'] = !empty(config('broadcasting.connections.reverb.key'));
         } else if ($driver === 'log' || $driver === 'null') {
@@ -304,9 +314,9 @@ class SystemHealthController extends Controller
     {
         try {
             Mail::to($request->user()->email)->send(new SystemTestMail($request->user()->full_name, now()->toDateTimeString()));
-            
+
             $this->logActivity($request, 'system.test_mail_sent', "Sent system test email to " . $request->user()->email);
-            
+
             return response()->json(['message' => 'Test email sent successfully to your account.']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Email failed: ' . $e->getMessage()], 500);
@@ -318,9 +328,9 @@ class SystemHealthController extends Controller
         // Alert if disk > 90% (less than 10% free) AND we haven't alerted in the last 24 hours
         if ($diskPercentage >= 90) {
             $lastAlert = $status->last_disk_alert_at;
-            
+
             if (!$lastAlert || $lastAlert->diffInHours(now()) >= 24) {
-                $admins = User::whereHas('role', function($q) {
+                $admins = User::whereHas('role', function ($q) {
                     $q->whereIn('name', ['Admin', 'SysAdmin']);
                 })->get();
 
@@ -337,14 +347,15 @@ class SystemHealthController extends Controller
     private function logActivity($request, string $event, string $label, array $meta = []): void
     {
         $user = $request instanceof Request ? $request->user() : auth()->user();
-        if (!$user) return;
+        if (!$user)
+            return;
 
         \App\Models\ActivityLog::create([
-            'actor_user_id'   => $user->id,
+            'actor_user_id' => $user->id,
             'actor_office_id' => $user->office_id ?? null,
-            'event'           => $event,
-            'label'           => $label,
-            'meta'            => $meta,
+            'event' => $event,
+            'label' => $label,
+            'meta' => $meta,
         ]);
     }
 
@@ -363,9 +374,10 @@ class SystemHealthController extends Controller
                 $res = DB::select("SELECT SUM(data_length + index_length) AS size FROM information_schema.TABLES WHERE table_schema = DATABASE()");
                 $sizeBytes = $res[0]->size ?? 0;
             }
-            
+
             $formatted = $this->formatBytes($sizeBytes);
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         return [
             'bytes' => $sizeBytes,
@@ -383,5 +395,23 @@ class SystemHealthController extends Controller
         $bytes /= (1 << (10 * $pow));
 
         return round($bytes, $precision) . ' ' . $units[$pow];
+    }
+
+    /**
+     * Publicly accessible maintenance status for the banner.
+     * Does not require admin middleware.
+     */
+    public function maintenance()
+    {
+        $status = SystemStatus::first();
+
+        return response()->json([
+            'maintenance' => [
+                'mode' => $status->maintenance_mode ?? 'off',
+                'message' => $status->maintenance_message ?? '',
+                'expires_at' => $status->maintenance_expires_at ?? null,
+                'starts_at' => ($status && $status->maintenance_starts_at) ? $status->maintenance_starts_at->toIso8601String() : null,
+            ]
+        ]);
     }
 }

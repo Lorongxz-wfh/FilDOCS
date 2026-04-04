@@ -109,7 +109,7 @@ const TemplateList: React.FC<Props> = ({
     () => [
       {
         key: "type",
-        header: "Type",
+        header: "TYPE",
         skeletonShape: "badge",
         sortKey: "mime_type",
         render: (t) => {
@@ -123,7 +123,7 @@ const TemplateList: React.FC<Props> = ({
       },
       {
         key: "name",
-        header: "Template",
+        header: "TEMPLATE",
         skeletonShape: "double",
         sortKey: "name",
         render: (t) => (
@@ -159,7 +159,7 @@ const TemplateList: React.FC<Props> = ({
       },
       {
         key: "scope",
-        header: "Scope",
+        header: "SCOPE",
         skeletonShape: "badge",
         render: (t) =>
           t.is_global ? (
@@ -176,39 +176,39 @@ const TemplateList: React.FC<Props> = ({
       },
       {
         key: "size",
-        header: "Size",
+        header: "SIZE",
         skeletonShape: "narrow",
         sortKey: "file_size",
         render: (t) => (
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tabular-nums">
             {t.file_size_label}
           </span>
         ),
       },
       {
         key: "uploaded_by",
-        header: "Uploaded by",
+        header: "UPLOADED BY",
         skeletonShape: "text",
         render: (t) => (
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
             {t.uploaded_by?.name ?? "—"}
           </span>
         ),
       },
       {
         key: "date",
-        header: "Date",
+        header: "DATE",
         skeletonShape: "narrow",
         sortKey: "created_at",
         render: (t) => (
-          <span className="text-xs text-slate-400 dark:text-slate-500">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tabular-nums">
             {new Date(t.created_at).toLocaleDateString()}
           </span>
         ),
       },
       {
         key: "actions",
-        header: "Actions",
+        header: "ACTIONS",
         align: "right",
         render: (t) => (
           <TemplateActions
@@ -225,6 +225,7 @@ const TemplateList: React.FC<Props> = ({
 
   return (
     <Table<DocumentTemplate>
+      bare
       columns={columns}
       rows={templates}
       rowKey={(t) => t.id}
@@ -262,8 +263,8 @@ const TemplateList: React.FC<Props> = ({
           </div>
         </div>
       )}
-      gridTemplateColumns="60px minmax(120px, 1fr) 80px 100px 140px 100px 100px"
-      className="flex-1 min-h-0"
+      gridTemplateColumns="80px minmax(200px, 1fr) 90px 100px 180px 110px 100px"
+      className="h-full"
       sortBy={sortBy}
       sortDir={sortDir}
       onSortChange={onSortChange}

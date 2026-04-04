@@ -251,7 +251,7 @@ const ReportsPage: React.FC = () => {
 
       {/* Mobile filter slide-over (simplified) */}
       {filtersOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex justify-end">
+        <div className="lg:hidden fixed inset-0 z-[100] flex justify-end">
           <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setFiltersOpen(false)} />
           <div className="relative w-full max-w-xs bg-white dark:bg-surface-500 h-full overflow-y-auto">
              <div className="p-4 border-b border-slate-200 dark:border-surface-400 flex items-center justify-between">

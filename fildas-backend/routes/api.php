@@ -237,6 +237,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         Route::get('/{template}/download', [DocumentTemplateController::class, 'download']);
     });
 
+    Route::get('/system/maintenance', [SystemHealthController::class, 'maintenance']);
+
     // ── Admin ──────────────────────────────────────────────────────────────
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/dashboard-stats', [\App\Http\Controllers\Api\AdminDashboardController::class, 'stats']);

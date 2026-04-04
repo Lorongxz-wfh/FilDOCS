@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Clock } from "lucide-react";
-import { getSystemHealth } from "../../services/systemHealthApi";
+import { getMaintenanceStatus } from "../../services/systemHealthApi";
 import echo from "../../lib/echo";
 
 export default function MaintenanceBanner() {
@@ -17,7 +17,7 @@ export default function MaintenanceBanner() {
     }
 
     try {
-      const data = await getSystemHealth();
+      const data = await getMaintenanceStatus();
       if (data.maintenance.starts_at) {
         setSchedule({
           startsAt: new Date(data.maintenance.starts_at),

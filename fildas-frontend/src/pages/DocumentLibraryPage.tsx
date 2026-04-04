@@ -64,12 +64,11 @@ export default function DocumentLibraryPage() {
   const [tab, setTab] = useState<LibTab>("all");
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
-  const [typeFilter, setTypeFilter] = useState("ALL");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [sortBy, setSortBy] = useState<"title" | "created_at">("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [sourceFilter, setSourceFilter] = useState<"all" | "doc" | "req">("all");
   const [officeFilter, setOfficeFilter] = useState("");
   const [batchFilter, setBatchFilter] = useState("");
 
@@ -104,20 +103,25 @@ export default function DocumentLibraryPage() {
     try {
       if (tab === "created" || tab === "shared") {
         const scope = isAdmin ? "all" : tab === "created" ? "owned" : "shared";
-        const res = await listDocumentsPage({
+        const params: any = {
           page: targetPage,
           perPage: 12,
           q: qDebounced.trim() || undefined,
           space: "library",
           status: "Distributed",
-          doctype: typeFilter !== "ALL" ? typeFilter : undefined,
           scope,
           date_from: dateFrom || undefined,
           date_to: dateTo || undefined,
           sort_by: sortBy,
           sort_dir: sortDir,
           owner_office_id: officeFilter ? Number(officeFilter) : undefined,
-        });
+        };
+
+        if (typeFilter !== "all") {
+          params.doctype = typeFilter;
+        }
+
+        const res = await listDocumentsPage(params);
         const incoming = res.data ?? [];
         setRows(prev => targetPage === 1 ? incoming : [...prev, ...incoming]);
         setHasMore(res.meta.current_page < res.meta.last_page);
@@ -147,7 +151,7 @@ export default function DocumentLibraryPage() {
             q: qDebounced.trim() || undefined,
             space: "library",
             status: "Distributed",
-            doctype: typeFilter !== "ALL" ? typeFilter : undefined,
+            doctype: typeFilter !== "all" ? typeFilter : undefined,
             scope: "all",
             date_from: dateFrom || undefined,
             date_to: dateTo || undefined,
@@ -213,27 +217,29 @@ export default function DocumentLibraryPage() {
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (typeFilter !== "ALL") count++;
-    if (sourceFilter !== "all" && tab === "all") count++;
+    if (typeFilter !== "all") count++;
     if (dateFrom) count++;
     if (dateTo) count++;
     if (officeFilter) count++;
     if (batchFilter) count++;
     return count;
-  }, [typeFilter, sourceFilter, dateFrom, dateTo, officeFilter, batchFilter, tab]);
+  }, [typeFilter, dateFrom, dateTo, officeFilter, batchFilter]);
 
   const availableOffices = useMemo(() => {
     const map = new Map<number, string>();
     rows.forEach((row: any) => {
-        const off = row.office || row.ownerOffice || row.office_name; 
-        if (off) {
-            const id = off.id || (tab === "requested" ? row.office_id : null);
-            const code = off.code || off.name || row.office_code || row.office_name;
-            if (id && code) map.set(id, code);
+        // Doc items have ownerOffice or office. Req items have office_id/office_code.
+        const offId = row.owner_office_id || row.office_id || row.ownerOffice?.id || row.office?.id;
+        const offCode = row.office_code || row.ownerOffice?.code || row.office?.code || row.ownerOffice?.name;
+        
+        if (offId && offCode) {
+            map.set(Number(offId), String(offCode));
         }
     });
-    return Array.from(map.entries()).map(([id, label]) => ({ value: String(id), label }));
-  }, [rows, tab]);
+    return Array.from(map.entries())
+        .sort((a, b) => a[1].localeCompare(b[1]))
+        .map(([id, label]) => ({ value: String(id), label }));
+  }, [rows]);
 
   const availableBatches = useMemo(() => {
     const map = new Map<number, string>();
@@ -323,7 +329,7 @@ export default function DocumentLibraryPage() {
         setSearch={(val) => { setQ(val); setPage(1); }}
         placeholder="Search library..."
         activeFiltersCount={activeFiltersCount}
-        onClear={() => { setQ(""); setTypeFilter("ALL"); setDateFrom(""); setDateTo(""); setSourceFilter("all"); setPage(1); }}
+        onClear={() => { setQ(""); setTypeFilter("all"); setDateFrom(""); setDateTo(""); setPage(1); }}
         mobileFilters={
           <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-2">
@@ -331,22 +337,11 @@ export default function DocumentLibraryPage() {
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
                 <SelectDropdown
                   value={typeFilter}
-                  onChange={(val) => setTypeFilter((val as string) || "ALL")}
+                  onChange={(val) => setTypeFilter((val as string) || "all")}
                   className="w-full"
-                  options={[{ value: "ALL", label: "All Types" }, { value: "INTERNAL", label: "Internal" }, { value: "EXTERNAL", label: "External" }, { value: "FORMS", label: "Forms" }]}
+                  options={[{ value: "all", label: "All Types" }, { value: "internal", label: "Internal" }, { value: "external", label: "External" }, { value: "forms", label: "Forms" }]}
                 />
               </div>
-              {tab === "all" && !isAuditor(role) && (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Source</label>
-                  <SelectDropdown
-                    value={sourceFilter}
-                    onChange={(val) => setSourceFilter((val as any) || "all")}
-                    className="w-full"
-                    options={[{ value: "all", label: "All Sources" }, { value: "doc", label: "Docs only" }, { value: "req", label: "Reqs only" }]}
-                  />
-                </div>
-              )}
             </div>
             <DateRangeInput from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
           </div>
@@ -355,21 +350,14 @@ export default function DocumentLibraryPage() {
         {tab !== "requested" && (
           <SelectDropdown
             value={typeFilter}
-            onChange={(val) => setTypeFilter((val as string) || "ALL")}
+            onChange={(val) => setTypeFilter((val as string) || "all")}
             className="w-32"
-            options={[{ value: "ALL", label: "All Types" }, { value: "INTERNAL", label: "Internal" }, { value: "EXTERNAL", label: "External" }, { value: "FORMS", label: "Forms" }]}
-          />
-        )}
-        {tab === "all" && !isAuditor(role) && (
-          <SelectDropdown
-            value={sourceFilter}
-            onChange={(val) => setSourceFilter((val as any) || "all")}
-            className="w-36"
-            options={[{ value: "all", label: "All Sources" }, { value: "doc", label: "Docs only" }, { value: "req", label: "Reqs only" }]}
+            options={[{ value: "all", label: "All Types" }, { value: "internal", label: "Internal" }, { value: "external", label: "External" }, { value: "forms", label: "Forms" }]}
           />
         )}
         {(tab === "all" || tab === "created" || tab === "shared" || (tab === "requested" && (isAdmin || isQA(role)))) && (
           <SelectDropdown
+            searchable
             value={officeFilter}
             onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
             className="w-40"
@@ -379,6 +367,7 @@ export default function DocumentLibraryPage() {
         )}
         {tab === "requested" && (
           <SelectDropdown
+            searchable
             value={batchFilter}
             onChange={(val) => { setBatchFilter(val as string); setPage(1); }}
             className="w-40"
@@ -394,7 +383,7 @@ export default function DocumentLibraryPage() {
       <div className="flex-1 min-h-0 min-w-0 flex flex-col">
         <AnimatePresence mode="wait">
           <motion.div
-            key={tab + qDebounced + typeFilter + dateFrom + dateTo + sourceFilter + officeFilter + batchFilter}
+            key={tab + qDebounced + typeFilter + dateFrom + dateTo + officeFilter + batchFilter}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}

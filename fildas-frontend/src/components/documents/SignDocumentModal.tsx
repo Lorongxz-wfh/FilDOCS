@@ -320,7 +320,7 @@ const SignDocumentModal: React.FC<SignDocumentModalProps> = ({
   const sigHeightPct = sigW / sigAspect;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
       <div
         className="flex w-full max-w-5xl flex-col rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-2xl overflow-hidden"
         style={{ maxHeight: "90vh" }}

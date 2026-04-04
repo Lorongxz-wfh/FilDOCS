@@ -14,7 +14,7 @@ const DeleteDraftConfirmModal: React.FC<Props> = ({
   onConfirm,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
       <div className="w-full max-w-sm rounded-xl bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 shadow-2xl p-6">
         <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-1">
           {pendingDelete === "draft" ? "Delete draft?" : "Cancel revision?"}

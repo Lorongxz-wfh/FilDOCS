@@ -172,11 +172,11 @@ const MyWorkQueuePage: React.FC = () => {
         </div>
       )}
 
-      {/* Main Grid Layout (Proportional Columns: 35/35/20) */}
-      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 pb-2">
+      {/* Main Grid Layout (Proportional Columns on LG, Single Column on Mobile) */}
+      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 pb-2 overflow-y-auto lg:overflow-hidden">
         
-        {/* Column 1: Workflows (35%) */}
-        <div className="flex flex-col gap-4 min-h-0 lg:flex-[3.5]">
+        {/* Column 1: Workflows */}
+        <div className="flex flex-col gap-4 min-h-0 lg:flex-[3.5] shrink-0">
           <div className="flex flex-col gap-1.5 shrink-0">
             <p className="text-[11px] font-display font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.12em] ml-1">Workflow Overview</p>
             <div className="grid grid-cols-2 gap-2">
@@ -208,14 +208,14 @@ const MyWorkQueuePage: React.FC = () => {
 
             <div className="flex-1 px-4 py-4 space-y-1.5 overflow-hidden bg-slate-50/20 dark:bg-surface-500/10">
               {loading ? (
-                <SkeletonList variant="card" rows={5} />
+                <SkeletonList variant="card" rows={3} />
               ) : sortedItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">No active document workflows found.</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-1.5">
-                  {sortedItems.slice(0, 5).map((item: WorkQueueItem) => (
+                  {sortedItems.slice(0, window.innerWidth < 1024 ? 3 : 5).map((item: WorkQueueItem) => (
                     <QueueCard
                       key={`${item.document.id}-${item.version.id}`}
                       item={item}
@@ -244,8 +244,8 @@ const MyWorkQueuePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Column 2: Requests (35%) */}
-        <div className="flex flex-col gap-4 min-h-0 lg:flex-[3.5]">
+        {/* Column 2: Requests */}
+        <div className="flex flex-col gap-4 min-h-0 lg:flex-[3.5] shrink-0">
           <div className="flex flex-col gap-1.5 shrink-0">
             <p className="text-[11px] font-display font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.12em] ml-1">Requests Overview</p>
             <div className="grid grid-cols-2 gap-2">
@@ -276,14 +276,14 @@ const MyWorkQueuePage: React.FC = () => {
 
             <div className="flex-1 px-4 py-4 space-y-1.5 overflow-hidden bg-slate-50/20 dark:bg-surface-500/10">
               {loading ? (
-                <SkeletonList variant="card" rows={5} />
+                <SkeletonList variant="card" rows={3} />
               ) : requestItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">No open document requests found.</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-1.5">
-                  {requestItems.slice(0, 5).map((item: any) => (
+                  {requestItems.slice(0, window.innerWidth < 1024 ? 3 : 5).map((item: any) => (
                     <RequestQueueCard
                       key={item.id || item.request_id}
                       item={item}
@@ -312,8 +312,8 @@ const MyWorkQueuePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Column 3: Activity (20%) */}
-        <div className="flex flex-col gap-4 min-h-0 lg:flex-[2]">
+        {/* Column 3: Activity */}
+        <div className="flex flex-col gap-4 min-h-0 lg:flex-[2] shrink-0">
           <div className="flex flex-col gap-1.5 shrink-0">
             <p className="text-[11px] font-display font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.12em] ml-1">System Health</p>
             <div className="flex flex-col">
@@ -342,7 +342,7 @@ const MyWorkQueuePage: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-0.5">
-                  {recentActivity.slice(0, 8).map((l: any) => (
+                  {recentActivity.slice(0, window.innerWidth < 1024 ? 6 : 8).map((l: any) => (
                     <button
                       key={l.id}
                       type="button"

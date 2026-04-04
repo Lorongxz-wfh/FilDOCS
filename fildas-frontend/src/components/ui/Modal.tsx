@@ -29,17 +29,17 @@ export default function Modal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4">
       <button
         type="button"
         aria-label="Close modal"
         onClick={onClose}
-        className="absolute inset-0 bg-slate-900/50 dark:bg-black/60"
+        className="absolute inset-0"
       />
-      <div className="relative mx-auto mt-10 sm:mt-20 w-[92vw]">
+      <div className="relative w-[92vw] max-h-[90vh] flex flex-col">
         <div
           className={[
-            "mx-auto rounded-md border border-slate-200 bg-white shadow-lg flex flex-col",
+            "mx-auto rounded-md border border-slate-200 bg-white shadow-lg flex flex-col w-full",
             "dark:border-surface-400 dark:bg-surface-500",
             widthClassName,
           ].join(" ")}
