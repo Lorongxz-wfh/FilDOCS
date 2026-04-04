@@ -69,6 +69,8 @@ const MyActivityPage: React.FC = () => {
   const [qDebounced, setQDebounced] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [sortBy, setSortBy] = useState<"created_at" | "event" | "label">("created_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const activeFiltersCount = React.useMemo(() => {
     let count = 0;
@@ -95,7 +97,7 @@ const MyActivityPage: React.FC = () => {
     hasMoreRef.current = true;
     setHasMore(true);
     setInitialLoading(true);
-  }, [category, qDebounced, dateFrom, dateTo]);
+  }, [category, qDebounced, dateFrom, dateTo, sortBy, sortDir]);
 
   // Load data
   useEffect(() => {
@@ -114,6 +116,8 @@ const MyActivityPage: React.FC = () => {
           category: category || undefined,
           date_from: dateFrom || undefined,
           date_to: dateTo || undefined,
+          sort_by: sortBy,
+          sort_dir: sortDir,
         });
         if (!alive) return;
         const incoming = (res.data ?? []) as ActivityLogRow[];
@@ -154,6 +158,8 @@ const MyActivityPage: React.FC = () => {
         category: category || undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
+        sort_by: sortBy,
+        sort_dir: sortDir,
       });
       const incoming = (res.data ?? []) as ActivityLogRow[];
       firstIdRef.current = incoming[0]?.id ?? null;
@@ -207,6 +213,7 @@ const MyActivityPage: React.FC = () => {
     {
       key: "when",
       header: "When",
+      sortKey: "created_at",
       skeletonShape: "narrow",
       render: (r) => (
         <span className="whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
@@ -411,6 +418,12 @@ const MyActivityPage: React.FC = () => {
             </div>
           )}
           gridTemplateColumns="13rem 1.2fr 1fr 8rem"
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSortChange={(key, dir) => {
+            setSortBy(key as any);
+            setSortDir(dir);
+          }}
         />
       </div>
       {selectedRow && (

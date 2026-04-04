@@ -139,6 +139,8 @@ export async function listDocumentRequestIndividual(params?: {
   page?: number;
   sort_by?: string;
   sort_dir?: "asc" | "desc";
+  office_id?: number;
+  batch_id?: number;
 }) {
   const res = await api.get("/document-requests/individual", { params });
   return res.data;

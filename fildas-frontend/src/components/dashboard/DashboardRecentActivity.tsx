@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import SkeletonList from "../ui/loader/SkeletonList";
 import type { ActivityLogItem } from "../../services/documents";
 import {
@@ -8,12 +9,14 @@ import {
   Share2,
   BookMarked,
   Activity,
+  History,
 } from "lucide-react";
 import { formatRelative } from "../../utils/formatters";
 
 type Props = {
   logs: ActivityLogItem[];
   loading: boolean;
+  hasData?: boolean;
 };
 
 type EventMeta = {
@@ -67,45 +70,72 @@ const getEventMeta = (event: string): EventMeta => {
   };
 };
 
-const DashboardRecentActivity: React.FC<Props> = ({ logs, loading }) => {
-  return (
-    <div className="min-h-[210px] divide-y divide-slate-100 dark:divide-surface-400">
-      {loading ? (
-        <SkeletonList variant="activity" rows={5} className="divide-y divide-slate-100 dark:divide-surface-400" />
-      ) : logs.length === 0 ? (
-        <div className="py-10 text-center text-sm text-slate-400 dark:text-slate-500">
-          No activity yet.
-        </div>
-      ) : (
-        logs.slice(0, 5).map((log) => {
-          const meta = getEventMeta(log.event);
-          return (
-            <div key={log.id} className="flex items-start gap-2.5 sm:gap-3 py-2.5 sm:py-2.5 px-0.5 sm:px-0">
-              {/* Event icon */}
-              <div
-                className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded ${meta.bg} ${meta.text} sm:scale-100 scale-90`}
-              >
-                {meta.icon}
-              </div>
+const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) => {
+  const navigate = useNavigate();
 
-              {/* Event text */}
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] sm:text-sm text-slate-800 dark:text-slate-200 leading-snug">
-                  <span className="font-semibold">{log.event}</span>
-                  {log.label && (
-                    <span className="text-slate-500 dark:text-slate-400 line-clamp-1">
-                      {" "}
-                      — {log.label}
-                    </span>
-                  )}
-                </p>
-                <p className="mt-0.5 text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500">
-                  {formatRelative(log.created_at)}
-                </p>
-              </div>
+  return (
+    <div className="relative h-[240px] overflow-hidden">
+      <div className={`divide-y divide-slate-100 dark:divide-surface-400 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"}`}>
+        {loading && !hasData ? (
+          <SkeletonList variant="activity" rows={4} className="divide-y divide-slate-100 dark:divide-surface-400" />
+        ) : logs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+            <div className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-950/40">
+              <Activity className="h-4.5 w-4.5 text-indigo-500" />
             </div>
-          );
-        })
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              No activity yet
+            </p>
+            <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+              Latest actions will appear here.
+            </p>
+          </div>
+        ) : (
+          logs.slice(0, 5).map((log) => {
+            const meta = getEventMeta(log.event);
+            return (
+              <div key={log.id} className="flex items-start gap-2.5 sm:gap-3 py-2.5 sm:py-2.5 px-0.5 sm:px-0">
+                {/* Event icon */}
+                <div
+                  className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded ${meta.bg} ${meta.text} sm:scale-100 scale-90`}
+                >
+                  {meta.icon}
+                </div>
+
+                {/* Event text */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] sm:text-sm text-slate-800 dark:text-slate-200 leading-snug">
+                    <span className="font-semibold">{log.event}</span>
+                    {log.label && (
+                      <span className="text-slate-500 dark:text-slate-400 line-clamp-1">
+                        {" — "}{log.label}
+                      </span>
+                    )}
+                  </p>
+                  <p className="mt-0.5 text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500">
+                    {formatRelative(log.created_at)}
+                  </p>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Fading overlay + Minimal Button */}
+      {!loading && (
+        <div className={`inset-x-0 bottom-0 flex items-center justify-center ${logs.length > 0 ? "absolute h-24 bg-gradient-to-t from-white dark:from-surface-500 via-white/80 dark:via-surface-500/80 to-transparent pointer-events-none" : "py-2"}`}>
+          <div className={`${logs.length > 0 ? "pb-4 pointer-events-auto" : "mt-2"}`}>
+            <button
+              type="button"
+              onClick={() => navigate("/activity-logs")}
+              className="flex items-center gap-1.5 px-3 py-1 border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-400 rounded-sm text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] shadow-xs hover:bg-slate-50 dark:hover:bg-surface-300 transition-all active:scale-95"
+            >
+              <History className="h-2.5 w-2.5" />
+              View all activity
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

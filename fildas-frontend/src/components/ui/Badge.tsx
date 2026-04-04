@@ -103,7 +103,7 @@ const ANN_TYPE_MAP: Record<string, string> = {
   urgent: "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400",
 };
 
-export function AnnouncementTypePill({ type }: { type: string }) {
+export function AnnouncementTypePill({ type, className = "" }: { type: string, className?: string }) {
   const t = String(type).toLowerCase();
   const cls =
     ANN_TYPE_MAP[t] ??
@@ -111,7 +111,7 @@ export function AnnouncementTypePill({ type }: { type: string }) {
   const label = t.charAt(0).toUpperCase() + t.slice(1);
   return (
     <span
-      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}
+      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${cls} ${className}`}
     >
       {label}
     </span>

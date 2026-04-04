@@ -38,7 +38,7 @@ class DocumentIndexRequest extends FormRequest
             'scope' => 'nullable|string|in:all,owned,shared,assigned,participant',
 
             // sorting
-            'sort_by' => 'nullable|string|in:title,created_at,code,updated_at',
+            'sort_by' => 'nullable|string|in:title,created_at,code,updated_at,distributed_at',
             'sort_dir' => 'nullable|string|in:asc,desc',
         ];
     }

@@ -235,7 +235,7 @@ class DocumentIndexService
         $perPage = (int) ($data['per_page'] ?? 25);
         $perPage = max(1, min(100, $perPage));
 
-        $allowedSorts = ['title', 'created_at', 'code', 'updated_at'];
+        $allowedSorts = ['title', 'created_at', 'code', 'updated_at', 'distributed_at'];
         $sortBy  = in_array($data['sort_by'] ?? '', $allowedSorts, true)
             ? $data['sort_by'] : 'created_at';
         $sortDir = ($data['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
@@ -248,6 +248,7 @@ class DocumentIndexService
             'document_versions.workflow_type',
             'document_versions.updated_at',
             'document_versions.created_at',
+            'document_versions.distributed_at',
         ];
 
         $withs = [
@@ -269,22 +270,33 @@ class DocumentIndexService
             $withs[] = 'latestDistributedVersion';
         }
 
-        return $query
-            ->select([
-                'documents.id',
-                'documents.title',
-                'documents.code',
-                'documents.doctype',
-                'documents.owner_office_id',
-                'documents.review_office_id',
-                'documents.visibility_scope',
-                'documents.school_year',
-                'documents.semester',
-                'documents.created_at',
-                'documents.updated_at',
-            ])
-            ->with($withs)
-            ->orderBy('documents.' . $sortBy, $sortDir)
-            ->paginate($perPage);
+        $query->select([
+            'documents.id',
+            'documents.title',
+            'documents.code',
+            'documents.doctype',
+            'documents.owner_office_id',
+            'documents.review_office_id',
+            'documents.visibility_scope',
+            'documents.school_year',
+            'documents.semester',
+            'documents.created_at',
+            'documents.updated_at',
+        ]);
+
+        if ($sortBy === 'distributed_at') {
+            $query->orderBy(
+                DocumentVersion::select('distributed_at')
+                    ->whereColumn('document_id', 'documents.id')
+                    ->where('status', 'Distributed')
+                    ->latest('version_number')
+                    ->take(1),
+                $sortDir
+            );
+        } else {
+            $query->orderBy('documents.' . $sortBy, $sortDir);
+        }
+
+        return $query->with($withs)->paginate($perPage);
     }
 }

@@ -134,9 +134,10 @@ export async function listDocumentsPage(params?: {
   scope?: "all" | "owned" | "shared" | "assigned" | "participant";
 
   // sorting
-  sort_by?: "title" | "created_at" | "code" | "updated_at";
+  sort_by?: "title" | "created_at" | "code" | "updated_at" | "distributed_at";
   sort_dir?: "asc" | "desc";
   archived?: number;
+  archive_reason?: string;
 }): Promise<Paginated<Document>> {
   try {
     const api = await getApi();
@@ -160,6 +161,7 @@ export async function listDocumentsPage(params?: {
         sort_by: params?.sort_by,
         sort_dir: params?.sort_dir,
         archived: params?.archived,
+        archive_reason: params?.archive_reason,
       },
     });
 

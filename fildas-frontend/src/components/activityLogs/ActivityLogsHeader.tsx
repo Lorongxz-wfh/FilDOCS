@@ -2,7 +2,6 @@ import React from "react";
 import { List, CalendarDays, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PageActions, RefreshAction, ExportSplitAction } from "../ui/PageActions";
-import Button from "../ui/Button";
 
 interface Props {
   tab: "log" | "calendar";
@@ -65,16 +64,14 @@ const ActivityLogsHeader: React.FC<Props> = ({
         </button>
       </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        responsive
+      <button
+        type="button"
         onClick={() => navigate("/my-activity")}
-        className="font-bold border-slate-200 dark:border-surface-400"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-400 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-300 transition-colors"
       >
         <User className="h-3.5 w-3.5" />
-        <span>My activity</span>
-      </Button>
+        <span className="hidden sm:inline">My activity</span>
+      </button>
     </PageActions>
   );
 };

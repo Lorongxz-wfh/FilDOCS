@@ -16,12 +16,12 @@ import { tabCls } from "../utils/formStyles";
 import { PageActions, CreateAction, RefreshAction } from "../components/ui/PageActions";
 import { StatusBadge } from "../components/ui/Badge";
 
-type WFTab = "all" | "active" | "done";
+type WFTab = "all" | "active" | "distributed";
 
 const TABS: { value: WFTab; label: string }[] = [
-  { value: "all",    label: "All" },
-  { value: "active", label: "Active" },
-  { value: "done",   label: "Done" },
+  { value: "all",         label: "All" },
+  { value: "active",      label: "Active" },
+  { value: "distributed", label: "Distributed" },
 ];
 
 const TERMINAL_STATUSES = new Set(["distributed", "cancelled", "superseded"]);
@@ -43,7 +43,7 @@ export default function MyWorkQueueListPage() {
   const [versionFilter, setVersionFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [sortBy, setSortBy] = useState<"title" | "created_at" | "code">("created_at");
+  const [sortBy, setSortBy] = useState<"title" | "created_at" | "code" | "updated_at" | "distributed_at">("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const [rows, setRows] = useState<Document[]>([]);
@@ -61,7 +61,7 @@ export default function MyWorkQueueListPage() {
     return () => window.clearTimeout(t);
   }, [q]);
 
-  const statusParam = tab === "done" ? "Distributed" : undefined;
+  const statusParam = tab === "distributed" ? "Distributed" : undefined;
 
   const loadData = useCallback(async (isNextPage = false, silent = false) => {
     const targetPage = isNextPage ? page + 1 : 1;
@@ -147,45 +147,67 @@ export default function MyWorkQueueListPage() {
   }, [rows]);
 
   const columns: TableColumn<Document>[] = useMemo(() => {
+    const isDistributed = tab === "distributed";
     const cols: TableColumn<Document>[] = [
       {
-        key: "code",
-        header: "Code",
-        sortKey: "code",
-        render: (doc) => <span className="font-mono text-xs font-semibold text-slate-500">{doc.code || "—"}</span>,
+        key: isDistributed ? "distributed" : "updated",
+        header: isDistributed ? "Distributed" : "Last Activity",
+        sortKey: isDistributed ? "distributed_at" : "updated_at",
+        align: "left",
+        render: (doc) => (
+          <span className="text-xs font-semibold text-slate-500 tabular-nums">
+            {formatDate(isDistributed ? doc.distributed_at : doc.updated_at)}
+          </span>
+        ),
       },
       {
         key: "title",
-        header: "Document Title",
+        header: "Name",
         sortKey: "title",
         render: (doc) => <p className="text-sm font-semibold truncate group-hover:text-brand-500">{doc.title}</p>,
       },
       {
+        key: "code",
+        header: "Code",
+        sortKey: "code",
+        render: (doc) => <span className="font-mono text-[10px] font-bold text-slate-400 bg-slate-50 dark:bg-surface-400/30 px-1.5 py-0.5 rounded-sm border border-slate-100 dark:border-surface-400/50">{doc.code || "—"}</span>,
+      },
+    ];
+    if (!isDistributed) {
+      cols.push({
         key: "status",
         header: "Status",
         render: (doc) => <StatusBadge status={doc.status} />,
-      },
-      {
-        key: "type",
-        header: "Type",
-        render: (doc) => <span className="text-xs text-slate-500 capitalize">{doc.doctype || "—"}</span>,
-      },
-    ];
+      });
+    }
     if (showOffice) {
       cols.push({
         key: "owner",
         header: "Office",
-        render: (doc: any) => <span className="text-xs font-medium">{doc.office?.code || doc.ownerOffice?.code || "—"}</span>,
+        render: (doc: any) => <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{doc.office?.code || doc.ownerOffice?.code || "—"}</span>,
       });
     }
     cols.push(
-      { key: "version", header: "Ver.", align: "center", render: (doc) => <span className="text-xs">v{doc.version_number}</span> },
-      { key: "created", header: "Date Created", sortKey: "created_at", align: "right", render: (doc) => <span className="text-xs">{formatDate(doc.created_at)}</span> }
+      {
+        key: "version",
+        header: "Ver.",
+        align: "center",
+        render: (doc) => <span className="text-[11px] font-medium text-slate-400">v{doc.version_number}</span>,
+      },
+      {
+        key: "created",
+        header: "Date Created",
+        sortKey: "created_at",
+        align: "right",
+        render: (doc) => <span className="text-[11px] font-medium text-slate-400 tabular-nums">{formatDate(doc.created_at)}</span>,
+      }
     );
     return cols;
-  }, [showOffice]);
+  }, [showOffice, tab]);
 
-  const gridTemplateColumns = showOffice ? "130px 1fr 200px 80px 80px 60px 140px" : "130px 1fr 200px 80px 60px 140px";
+  const gridTemplateColumns = showOffice
+    ? "110px minmax(200px, 1fr) 110px 120px 90px 60px 110px"
+    : "110px minmax(200px, 1fr) 110px 120px 60px 110px";
 
   return (
     <PageFrame
@@ -210,7 +232,7 @@ export default function MyWorkQueueListPage() {
     >
       <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
         {TABS.map((t) => (
-          <button key={t.value} type="button" onClick={() => setTab(t.value)} className={tabCls(tab === t.value)}>
+          <button key={t.value} type="button" onClick={() => { setTab(t.value); setPage(1); }} className={tabCls(tab === t.value)}>
             {t.label}
           </button>
         ))}

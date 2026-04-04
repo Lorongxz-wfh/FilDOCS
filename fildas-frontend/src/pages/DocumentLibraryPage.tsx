@@ -12,10 +12,10 @@ import Table from "../components/ui/Table";
 import SelectDropdown from "../components/ui/SelectDropdown";
 import Alert from "../components/ui/Alert";
 import DateRangeInput from "../components/ui/DateRangeInput";
-import { PageActions, CreateAction, RefreshAction, ArchiveAction } from "../components/ui/PageActions";
+import { PageActions, CreateAction, RefreshAction } from "../components/ui/PageActions";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
-import { LayoutGrid, List, Share2, ClipboardList } from "lucide-react";
+import { LayoutGrid, List, Share2, ClipboardList, Archive } from "lucide-react";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
 import { formatDate } from "../utils/formatters";
 import { tabCls } from "../utils/formStyles";
@@ -35,7 +35,7 @@ import { buildBaseDocColumns, buildSharedColumns, buildRequestedColumns, buildAl
 
 const TAB_LABELS: Record<LibTab, string> = {
   all: "All Documents",
-  created: "My Documents",
+  created: "Created",
   requested: "Requested",
   shared: "Shared with Me",
 };
@@ -69,6 +69,8 @@ export default function DocumentLibraryPage() {
   const [sortBy, setSortBy] = useState<"title" | "created_at">("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [sourceFilter, setSourceFilter] = useState<"all" | "doc" | "req">("all");
+  const [officeFilter, setOfficeFilter] = useState("");
+  const [batchFilter, setBatchFilter] = useState("");
 
   const [rows, setRows] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -113,6 +115,7 @@ export default function DocumentLibraryPage() {
           date_to: dateTo || undefined,
           sort_by: sortBy,
           sort_dir: sortDir,
+          owner_office_id: officeFilter ? Number(officeFilter) : undefined,
         });
         const incoming = res.data ?? [];
         setRows(prev => targetPage === 1 ? incoming : [...prev, ...incoming]);
@@ -127,6 +130,8 @@ export default function DocumentLibraryPage() {
           page: targetPage,
           sort_by: sortBy,
           sort_dir: sortDir,
+          office_id: officeFilter ? Number(officeFilter) : undefined,
+          batch_id: batchFilter ? Number(batchFilter) : undefined,
         });
         const incoming = Array.isArray(res.data) ? res.data : [];
         setRows(prev => targetPage === 1 ? incoming : [...prev, ...incoming]);
@@ -147,6 +152,7 @@ export default function DocumentLibraryPage() {
             date_to: dateTo || undefined,
             sort_by: sortBy,
             sort_dir: sortDir,
+            owner_office_id: officeFilter ? Number(officeFilter) : undefined,
           }) : Promise.resolve(null),
           (!isNextPage || allReqHasMore) && !isAuditor(role) ? listDocumentRequestIndividual({
             status: "accepted",
@@ -155,6 +161,8 @@ export default function DocumentLibraryPage() {
             page: isNextPage ? allReqPage + 1 : 1,
             sort_by: sortBy,
             sort_dir: sortDir,
+            office_id: officeFilter ? Number(officeFilter) : undefined,
+            batch_id: batchFilter ? Number(batchFilter) : undefined,
           }) : Promise.resolve(null)
         ]);
 
@@ -208,8 +216,33 @@ export default function DocumentLibraryPage() {
     if (sourceFilter !== "all" && tab === "all") count++;
     if (dateFrom) count++;
     if (dateTo) count++;
+    if (officeFilter) count++;
+    if (batchFilter) count++;
     return count;
-  }, [typeFilter, sourceFilter, dateFrom, dateTo, tab]);
+  }, [typeFilter, sourceFilter, dateFrom, dateTo, officeFilter, batchFilter, tab]);
+
+  const availableOffices = useMemo(() => {
+    const map = new Map<number, string>();
+    rows.forEach((row: any) => {
+        const off = row.office || row.ownerOffice || row.office_name; 
+        if (off) {
+            const id = off.id || (tab === "requested" ? row.office_id : null);
+            const code = off.code || off.name || row.office_code || row.office_name;
+            if (id && code) map.set(id, code);
+        }
+    });
+    return Array.from(map.entries()).map(([id, label]) => ({ value: String(id), label }));
+  }, [rows, tab]);
+
+  const availableBatches = useMemo(() => {
+    const map = new Map<number, string>();
+    rows.forEach((row: any) => {
+        if (row.request_id || row.batch_id) {
+            map.set(row.request_id || row.batch_id, row.batch_title || `Batch #${row.request_id || row.batch_id}`);
+        }
+    });
+    return Array.from(map.entries()).map(([id, label]) => ({ value: String(id), label }));
+  }, [rows]);
 
   const baseDocColumns = useMemo(() => buildBaseDocColumns(), []);
   const sharedColumns = useMemo(() => buildSharedColumns(), []);
@@ -238,18 +271,20 @@ export default function DocumentLibraryPage() {
     }
   };
 
-  const unifiedGrid = "130px minmax(120px, 1fr) 100px 110px 70px 140px";
-  const sharedGrid = "130px minmax(120px, 1fr) 100px 110px 70px 140px 140px";
-  const requestedGrid = (isAdmin || isQA(role)) ? "100px minmax(120px, 1fr) 130px 120px 140px" : "100px minmax(120px, 1fr) 120px 140px";
-  const allGrid = "100px minmax(120px, 1fr) 100px 110px 100px 140px 140px";
-
   return (
     <PageFrame
       title="Document Library"
       right={
         <PageActions>
           <RefreshAction onRefresh={refresh} loading={isRefreshing || remoteRefreshing} />
-          <ArchiveAction onClick={() => navigate("/archive")} />
+          <button
+            type="button"
+            onClick={() => navigate("/archive")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-400 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-300 transition-colors"
+          >
+            <Archive className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Archive library</span>
+          </button>
           {canCreate && (
             <CreateAction
               label="Create document"
@@ -306,18 +341,38 @@ export default function DocumentLibraryPage() {
           </div>
         }
       >
-        <SelectDropdown
-          value={typeFilter}
-          onChange={(val) => setTypeFilter((val as string) || "ALL")}
-          className="w-32"
-          options={[{ value: "ALL", label: "All Types" }, { value: "INTERNAL", label: "Internal" }, { value: "EXTERNAL", label: "External" }, { value: "FORMS", label: "Forms" }]}
-        />
+        {tab !== "requested" && (
+          <SelectDropdown
+            value={typeFilter}
+            onChange={(val) => setTypeFilter((val as string) || "ALL")}
+            className="w-32"
+            options={[{ value: "ALL", label: "All Types" }, { value: "INTERNAL", label: "Internal" }, { value: "EXTERNAL", label: "External" }, { value: "FORMS", label: "Forms" }]}
+          />
+        )}
         {tab === "all" && !isAuditor(role) && (
           <SelectDropdown
             value={sourceFilter}
             onChange={(val) => setSourceFilter((val as any) || "all")}
             className="w-36"
             options={[{ value: "all", label: "All Sources" }, { value: "doc", label: "Docs only" }, { value: "req", label: "Reqs only" }]}
+          />
+        )}
+        {(tab === "all" || tab === "created" || tab === "shared" || (tab === "requested" && (isAdmin || isQA(role)))) && (
+          <SelectDropdown
+            value={officeFilter}
+            onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
+            className="w-40"
+            placeholder="Office"
+            options={[{ value: "", label: "All Offices" }, ...availableOffices]}
+          />
+        )}
+        {tab === "requested" && (
+          <SelectDropdown
+            value={batchFilter}
+            onChange={(val) => { setBatchFilter(val as string); setPage(1); }}
+            className="w-40"
+            placeholder="Batch"
+            options={[{ value: "", label: "All Batches" }, ...availableBatches]}
           />
         )}
         <DateRangeInput from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
@@ -341,7 +396,7 @@ export default function DocumentLibraryPage() {
           onRowClick={handleRowClick}
           hasMore={hasMore}
           onLoadMore={() => loadData(true)}
-          gridTemplateColumns={tab === "created" ? unifiedGrid : tab === "shared" ? sharedGrid : tab === "requested" ? requestedGrid : allGrid}
+          gridTemplateColumns={tab === "created" ? "120px minmax(200px, 1fr) 110px 100px 100px 70px 120px" : tab === "shared" ? "120px minmax(200px, 1fr) 110px 90px 100px 70px 110px" : tab === "requested" ? "minmax(250px, 1fr) 130px 110px" : "110px minmax(200px, 1fr) 100px 100px 100px 110px 110px"}
           sortBy={sortBy}
           sortDir={sortDir}
           onSortChange={(key, dir) => { setSortBy(key as any); setSortDir(dir); }}

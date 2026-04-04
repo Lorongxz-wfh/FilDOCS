@@ -36,6 +36,8 @@ const emptyReport: ComplianceReport = {
 
 export type ReloadResult = { changed: boolean; delta: number };
 
+export type DashboardPeriod = "today" | "this_week" | "all";
+
 export type DashboardData = {
   stats: DocumentStats | null;
   pending: WorkQueueItem[];
@@ -49,6 +51,8 @@ export type DashboardData = {
   loading: boolean;
   error: string | null;
   reload: () => Promise<ReloadResult>;
+  period: DashboardPeriod;
+  setPeriod: (p: DashboardPeriod) => void;
 };
 
 export function useDashboardData(role: UserRole): DashboardData {
@@ -62,6 +66,7 @@ export function useDashboardData(role: UserRole): DashboardData {
   const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [period, setPeriod] = useState<DashboardPeriod>("this_week");
 
   // Tracks latest fetched pending count so reload() can detect changes
   const lastPendingCountRef = useRef(-1);
@@ -73,11 +78,33 @@ export function useDashboardData(role: UserRole): DashboardData {
     async (silent = false) => {
       if (!silent) setLoading(true);
       setError(null);
+
+      let dateFrom: string | undefined;
+      let dateTo: string | undefined;
+      const now = new Date();
+
+      if (period === "today") {
+        dateFrom = now.toISOString().split("T")[0];
+        dateTo = dateFrom;
+      } else if (period === "this_week") {
+        const d = new Date(now);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+        const monday = new Date(d.setDate(diff));
+        dateFrom = monday.toISOString().split("T")[0];
+        dateTo = now.toISOString().split("T")[0];
+      }
+
       try {
         if (isAdmin) {
           const [adminRes, activityRes] = await Promise.allSettled([
-            getAdminDashboardStats(),
-            listActivityLogs({ scope: "all", per_page: 8 }),
+            getAdminDashboardStats(), // Admin stats may need date filtering later if requested
+            listActivityLogs({ 
+              scope: "all", 
+              per_page: 8,
+              date_from: dateFrom,
+              date_to: dateTo
+            }),
           ]);
           if (adminRes.status === "fulfilled") setAdminStats(adminRes.value);
           if (activityRes.status === "fulfilled")
@@ -94,10 +121,20 @@ export function useDashboardData(role: UserRole): DashboardData {
         } else if (isQA(role)) {
           const [statsRes, queueRes, activityRes, reportRes, reqRes] =
             await Promise.allSettled([
-              getDocumentStats(),
-              getWorkQueue(),
-              listActivityLogs({ scope: "all", per_page: 8 }),
-              getComplianceReport(),
+              getDocumentStats({ date_from: dateFrom, date_to: dateTo }),
+              getWorkQueue(), // Work queue tasks are usually absolute, not date-filtered
+              listActivityLogs({ 
+                scope: "all", 
+                per_page: 8,
+                category: "workflow",
+                date_from: dateFrom,
+                date_to: dateTo
+              }),
+              getComplianceReport({ 
+                date_from: dateFrom, 
+                date_to: dateTo,
+                bucket: period === "this_week" ? "daily" : period === "today" ? "daily" : "monthly"
+              }),
               listDocumentRequests({ per_page: 1 }),
             ]);
           if (statsRes.status === "fulfilled") setStats(statsRes.value);
@@ -155,8 +192,13 @@ export function useDashboardData(role: UserRole): DashboardData {
             );
         } else if (isAuditor(role)) {
           const [statsRes, activityRes] = await Promise.allSettled([
-            getDocumentStats(),
-            listActivityLogs({ scope: "all", per_page: 8 }),
+            getDocumentStats({ date_from: dateFrom, date_to: dateTo }),
+            listActivityLogs({ 
+              scope: "all", 
+              per_page: 8,
+              date_from: dateFrom,
+              date_to: dateTo
+            }),
           ]);
           if (statsRes.status === "fulfilled") setStats(statsRes.value);
           if (activityRes.status === "fulfilled") {
@@ -174,9 +216,14 @@ export function useDashboardData(role: UserRole): DashboardData {
         } else {
           const [statsRes, queueRes, activityRes, inboxRes] =
             await Promise.allSettled([
-              getDocumentStats(),
+              getDocumentStats({ date_from: dateFrom, date_to: dateTo }),
               getWorkQueue(),
-              listActivityLogs({ scope: "office", per_page: 8 }),
+              listActivityLogs({ 
+                scope: "office", 
+                per_page: 8,
+                date_from: dateFrom,
+                date_to: dateTo
+              }),
               listDocumentRequestInbox({ per_page: 1 }),
             ]);
           if (statsRes.status === "fulfilled") setStats(statsRes.value);
@@ -245,7 +292,7 @@ export function useDashboardData(role: UserRole): DashboardData {
         setLoading(false);
       }
     },
-    [role, isAdmin],
+    [role, isAdmin, period],
   );
 
   useEffect(() => {
@@ -288,5 +335,7 @@ export function useDashboardData(role: UserRole): DashboardData {
     loading,
     error,
     reload,
+    period,
+    setPeriod,
   };
 }

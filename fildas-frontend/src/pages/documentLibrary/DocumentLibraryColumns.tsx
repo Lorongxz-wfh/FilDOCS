@@ -30,14 +30,15 @@ function TypeText({ type }: { type: string }) {
 export function buildCreatedColumns(): TableColumn<Document>[] {
   return [
     {
-      key: "code",
-      header: "Code",
-      sortKey: "code",
+      key: "date_distributed",
+      header: "Distributed",
       skeletonShape: "narrow",
+      sortKey: "distributed_at", // Better to use distributed_at if available
+      align: "left",
       render: (doc) => (
-        <span className="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
-          {doc.code || "—"}
-        </span>
+        <NormalText secondary>
+          {formatDate(doc.effective_date || doc.distributed_at || doc.created_at)}
+        </NormalText>
       ),
     },
     {
@@ -52,6 +53,17 @@ export function buildCreatedColumns(): TableColumn<Document>[] {
             className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
           />
         </div>
+      ),
+    },
+    {
+      key: "code",
+      header: "Code",
+      sortKey: "code",
+      skeletonShape: "narrow",
+      render: (doc) => (
+        <span className="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
+          {doc.code || "—"}
+        </span>
       ),
     },
     {
@@ -80,14 +92,14 @@ export function buildCreatedColumns(): TableColumn<Document>[] {
         ),
     },
     {
-      key: "date_distributed",
-      header: "Date Distributed",
+      key: "created_at",
+      header: "Date Created",
       skeletonShape: "narrow",
       sortKey: "created_at",
       align: "right",
       render: (doc) => (
         <NormalText secondary>
-          {formatDate(doc.effective_date || doc.created_at)}
+          {formatDate(doc.created_at)}
         </NormalText>
       ),
     },
@@ -97,14 +109,15 @@ export function buildCreatedColumns(): TableColumn<Document>[] {
 export function buildSharedColumns(): TableColumn<Document>[] {
   return [
     {
-      key: "code",
-      header: "Code",
-      sortKey: "code",
+      key: "date_distributed",
+      header: "Distributed",
       skeletonShape: "narrow",
+      sortKey: "distributed_at",
+      align: "left",
       render: (doc) => (
-        <span className="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
-          {doc.code || "—"}
-        </span>
+        <NormalText secondary>
+          {formatDate(doc.effective_date)}
+        </NormalText>
       ),
     },
     {
@@ -119,6 +132,17 @@ export function buildSharedColumns(): TableColumn<Document>[] {
             className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
           />
         </div>
+      ),
+    },
+    {
+      key: "code",
+      header: "Code",
+      sortKey: "code",
+      skeletonShape: "narrow",
+      render: (doc) => (
+        <span className="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
+          {doc.code || "—"}
+        </span>
       ),
     },
     {
@@ -145,17 +169,6 @@ export function buildSharedColumns(): TableColumn<Document>[] {
         render: (doc) => (
           <NormalText secondary>v{doc.version_number}</NormalText>
         ),
-    },
-    {
-      key: "date_distributed",
-      header: "Date Distributed",
-      skeletonShape: "narrow",
-      align: "right",
-      render: (doc) => (
-        <NormalText secondary>
-          {formatDate(doc.effective_date)}
-        </NormalText>
-      ),
     },
     {
       key: "date_shared",
@@ -177,12 +190,6 @@ export const buildBaseDocColumns = () => buildCreatedColumns();
 
 export function buildRequestedColumns(isQaAdmin: boolean): TableColumn<any>[] {
   const cols: TableColumn<any>[] = [
-    {
-      key: "type",
-      header: "Type",
-      skeletonShape: "text",
-      render: (r) => <TypeText type={r.batch_mode || "REQUEST"} />,
-    },
     {
       key: "request",
       header: "Request Title",
@@ -220,12 +227,6 @@ export function buildRequestedColumns(isQaAdmin: boolean): TableColumn<any>[] {
 
   cols.push(
     {
-      key: "status",
-      header: "Status",
-      skeletonShape: "badge",
-      render: () => <StatusBadge status="Accepted" />,
-    },
-    {
       key: "date",
       header: "Date Accepted",
       skeletonShape: "narrow",
@@ -245,13 +246,15 @@ export function buildRequestedColumns(isQaAdmin: boolean): TableColumn<any>[] {
 export function buildAllColumns(): TableColumn<LibraryItem>[] {
   return [
     {
-      key: "source",
-      header: "Source",
+      key: "distributed",
+      header: "Distributed",
       skeletonShape: "narrow",
+      sortKey: "distributed_at",
+      align: "left",
       render: (item) => (
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-surface-600 dark:text-slate-400 px-1.5 py-0.5 rounded">
-          {item.source}
-        </span>
+        <NormalText secondary>
+          {formatDate(item.dateDistributed || item.date)}
+        </NormalText>
       ),
     },
     {
@@ -269,6 +272,16 @@ export function buildAllColumns(): TableColumn<LibraryItem>[] {
               <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">{item.code}</p>
           )}
         </div>
+      ),
+    },
+    {
+      key: "source",
+      header: "Source",
+      skeletonShape: "narrow",
+      render: (item) => (
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-surface-600 dark:text-slate-400 px-1.5 py-0.5 rounded">
+          {item.source}
+        </span>
       ),
     },
     {
@@ -298,24 +311,14 @@ export function buildAllColumns(): TableColumn<LibraryItem>[] {
       render: (item) => <StatusBadge status={item.status || "Distributed"} />,
     },
     {
-      key: "distributed",
-      header: "Distributed",
+      key: "created_at",
+      header: "Date Created",
       skeletonShape: "narrow",
+      sortKey: "created_at",
       align: "right",
       render: (item) => (
         <NormalText secondary>
-          {formatDate(item.dateDistributed || item.date)}
-        </NormalText>
-      ),
-    },
-    {
-      key: "shared",
-      header: "Shared",
-      skeletonShape: "narrow",
-      align: "right",
-      render: (item) => (
-        <NormalText secondary>
-          {item.dateShared ? formatDate(item.dateShared) : "—"}
+          {formatDate(item.date)}
         </NormalText>
       ),
     },

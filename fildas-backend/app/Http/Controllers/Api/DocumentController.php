@@ -62,6 +62,11 @@ class DocumentController extends Controller
         $user = $request->user();
         $userOfficeId = $user?->office_id;
 
+        $data = $request->validate([
+            'date_from' => 'nullable|date',
+            'date_to'   => 'nullable|date',
+        ]);
+
         $qaOfficeId = Cache::remember('office_id:QA', 3600, function () {
             return \App\Models\Office::where('code', 'QA')->value('id');
         });
@@ -90,10 +95,24 @@ class DocumentController extends Controller
             }
         }
 
+        // Apply date filters if provided
+        if (!empty($data['date_from'])) {
+            $visibleDocs->where('created_at', '>=', $data['date_from']);
+        }
+        if (!empty($data['date_to'])) {
+            $visibleDocs->where('created_at', '<=', $data['date_to']);
+        }
+
         $total = (clone $visibleDocs)->count();
 
-        $distributed = (clone $visibleDocs)->whereHas('latestVersion', function ($v) {
+        $distributed = (clone $visibleDocs)->whereHas('latestVersion', function ($v) use ($data) {
             $v->where('status', 'Distributed');
+            if (!empty($data['date_from'])) {
+                $v->where('distributed_at', '>=', $data['date_from']);
+            }
+            if (!empty($data['date_to'])) {
+                $v->where('distributed_at', '<=', $data['date_to']);
+            }
         })->count();
 
         if ($isAdmin) {

@@ -116,10 +116,13 @@ export async function getRequestsReport(params?: {
   }
 }
 
-export async function getDocumentStats(): Promise<DocumentStats> {
+export async function getDocumentStats(params?: {
+  date_from?: string;
+  date_to?: string;
+}): Promise<DocumentStats> {
   try {
     const api = await getApi();
-    const res = await api.get("/documents/stats");
+    const res = await api.get("/documents/stats", { params });
     return res.data as DocumentStats;
   } catch (e: any) {
     const status = e?.response?.status;

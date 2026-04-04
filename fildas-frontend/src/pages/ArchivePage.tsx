@@ -24,6 +24,8 @@ export default function ArchivePage() {
   const [dateTo, setDateTo] = useState("");
   const [sortBy, setSortBy] = useState<"created_at" | "title">("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [officeFilter, setOfficeFilter] = useState("");
+  const [reasonFilter, setReasonFilter] = useState("");
 
   const [rows, setRows] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -37,8 +39,23 @@ export default function ArchivePage() {
     if (typeFilter !== "ALL") count++;
     if (dateFrom) count++;
     if (dateTo) count++;
+    if (officeFilter) count++;
+    if (reasonFilter) count++;
     return count;
-  }, [typeFilter, dateFrom, dateTo]);
+  }, [typeFilter, dateFrom, dateTo, officeFilter, reasonFilter]);
+
+  const availableOffices = useMemo(() => {
+    const map = new Map<number, string>();
+    rows.forEach((row: any) => {
+      const off = row.office || row.ownerOffice || row.office_name;
+      if (off) {
+        const id = off.id ?? null;
+        const code = off.code || off.name || "—";
+        if (id && code) map.set(id, code);
+      }
+    });
+    return Array.from(map.entries()).map(([id, label]) => ({ value: String(id), label }));
+  }, [rows]);
 
   // Debounce search
   useEffect(() => {
@@ -67,6 +84,8 @@ export default function ArchivePage() {
         date_to: dateTo || undefined,
         sort_by: sortBy === "created_at" ? "created_at" : "title",
         sort_dir: sortDir,
+        owner_office_id: officeFilter ? Number(officeFilter) : undefined,
+        archive_reason: reasonFilter || undefined,
       });
 
       const incoming = res.data ?? [];
@@ -79,17 +98,16 @@ export default function ArchivePage() {
       setLoading(false);
       setInitialLoading(false);
     }
-  }, [qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, page]);
+  }, [qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, page, officeFilter, reasonFilter]);
 
   useEffect(() => {
     loadData(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir]);
+  }, [qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, officeFilter, reasonFilter]);
 
   const { refreshing } = usePageBurstRefresh(() => loadData(false));
 
   const columns = useMemo(() => buildArchiveColumns(), []);
-  const gridTemplate = "130px minmax(120px, 1fr) 100px 110px 70px 140px";
 
   const handleRowClick = (row: any) => {
     navigate(`/documents/${row.id}/view`, { 
@@ -127,10 +145,31 @@ export default function ArchivePage() {
           setTypeFilter("ALL");
           setDateFrom("");
           setDateTo("");
+          setOfficeFilter("");
+          setReasonFilter("");
           setPage(1);
         }}
         mobileFilters={
           <div className="flex flex-col gap-3">
+             <div className="grid grid-cols-2 gap-2">
+              <SelectDropdown
+                value={officeFilter}
+                onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
+                placeholder="Office"
+                options={[{ value: "", label: "All Offices" }, ...availableOffices]}
+              />
+              <SelectDropdown
+                value={reasonFilter}
+                onChange={(val) => { setReasonFilter(val as string); setPage(1); }}
+                placeholder="Reason"
+                options={[
+                  { value: "", label: "All Reasons" },
+                  { value: "Archived", label: "Archived" },
+                  { value: "Superseded", label: "Superseded" },
+                  { value: "Cancelled", label: "Cancelled" },
+                ]}
+              />
+            </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
               <SelectDropdown
@@ -159,6 +198,25 @@ export default function ArchivePage() {
           </div>
         }
       >
+        <SelectDropdown
+          value={officeFilter}
+          onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
+          placeholder="Office"
+          className="w-40"
+          options={[{ value: "", label: "All Offices" }, ...availableOffices]}
+        />
+        <SelectDropdown
+          value={reasonFilter}
+          onChange={(val) => { setReasonFilter(val as string); setPage(1); }}
+          placeholder="Reason"
+          className="w-40"
+          options={[
+            { value: "", label: "All Reasons" },
+            { value: "Archived", label: "Archived" },
+            { value: "Superseded", label: "Superseded" },
+            { value: "Cancelled", label: "Cancelled" },
+          ]}
+        />
         <SelectDropdown
           value={typeFilter}
           onChange={(val) => setTypeFilter((val as string) || "ALL")}
@@ -191,11 +249,11 @@ export default function ArchivePage() {
           rowKey={(r, idx) => `archived-${r.id || idx}`}
           loading={loading}
           initialLoading={initialLoading}
-          emptyMessage={q || typeFilter !== "ALL" || dateFrom || dateTo ? "No archived documents match your filters." : "No archived documents found."}
+          emptyMessage={q || typeFilter !== "ALL" || dateFrom || dateTo || officeFilter || reasonFilter ? "No archived documents match your filters." : "No archived documents found."}
           onRowClick={handleRowClick}
           hasMore={hasMore}
           onLoadMore={() => loadData(true)}
-          gridTemplateColumns={gridTemplate}
+          gridTemplateColumns="140px minmax(200px, 1fr) 110px 100px 100px 140px"
           sortBy={sortBy}
           sortDir={sortDir}
           onSortChange={(key, dir) => {

@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import Skeleton from "../components/ui/loader/Skeleton";
+import InlineSpinner from "../components/ui/loader/InlineSpinner";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
 import Button from "../components/ui/Button";
 
@@ -30,9 +30,8 @@ import { getUserRole, isQA, isAuditor } from "../lib/roleFilters";
 import { getAuthUser } from "../lib/auth";
 import {
   FolderOpen,
-  Percent,
-  Timer,
-  AlertCircle,
+  Calendar,
+  CalendarDays,
 } from "lucide-react";
 
 // ─── Shared announcements prop ─────────────────────────────────────────────
@@ -45,36 +44,45 @@ const Card: React.FC<{
   action?: { label: string; onClick: () => void };
   children: React.ReactNode;
   className?: string;
-}> = ({ title, sub, action, children, className = "" }) => (
-  <div
-    className={`rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 ${className}`}
-  >
-    <div className={`flex items-start justify-between gap-3 border-b border-slate-100 dark:border-surface-400 p-3 sm:px-4 sm:py-3`}>
-      <div className="min-w-0">
-        <p className="text-[13px] sm:text-sm font-display font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
-          {title}
-        </p>
-        {sub && (
-          <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-            {sub}
-          </p>
+  loading?: boolean;
+  hasData?: boolean;
+}> = ({ title, sub, action, children, className = "" }) => {
+
+  return (
+    <div
+      className={`rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden ${className}`}
+    >
+      <div className={`flex items-start justify-between gap-3 border-b border-slate-100 dark:border-surface-400 p-3 sm:px-4 sm:py-3`}>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-[13px] sm:text-sm font-display font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
+              {title}
+            </p>
+          </div>
+          {sub && (
+            <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+              {sub}
+            </p>
+          )}
+        </div>
+        {action && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            onClick={action.onClick}
+            className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+          >
+            {action.label} →
+          </Button>
         )}
       </div>
-      {action && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="xs"
-          onClick={action.onClick}
-          className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
-        >
-          {action.label} →
-        </Button>
-      )}
+      <div className={`p-3 sm:p-4 transition-opacity duration-200`}>
+        {children}
+      </div>
     </div>
-    <div className="p-3 sm:p-4">{children}</div>
-  </div>
-);
+  );
+};
 
 // ─── QA Dashboard ─────────────────────────────────────────────────────────
 const QADashboard: React.FC<
@@ -93,153 +101,67 @@ const QADashboard: React.FC<
   navigate,
   announcements,
 }) => {
-    const kpiCards = [
-      {
-        label: "Waiting on QA",
-        value: report.waiting_on_qa ?? 0,
-        sub: "docs on QA's desk now",
-        icon: <AlertCircle className="h-4 w-4" />,
-        iconCls: "text-rose-400 dark:text-rose-400",
-        valueCls:
-          (report.waiting_on_qa ?? 0) > 0
-            ? "text-rose-600 dark:text-rose-400"
-            : "text-slate-900 dark:text-slate-100",
-      },
-      {
-        label: "First-pass yield",
-        value: `${report.kpis.first_pass_yield_pct}%`,
-        sub: "no returns, clean flow",
-        icon: <Percent className="h-4 w-4" />,
-        iconCls: "text-emerald-400 dark:text-emerald-400",
-        valueCls: "text-slate-900 dark:text-slate-100",
-      },
-      {
-        label: "Avg cycle time",
-        value: `${report.kpis.cycle_time_avg_days}d`,
-        sub: "draft to distributed",
-        icon: <Timer className="h-4 w-4" />,
-        iconCls: "text-sky-400 dark:text-sky-400",
-        valueCls: "text-slate-900 dark:text-slate-100",
-      },
-    ];
+  return (
+    <div className="space-y-4">
+      <AnnouncementsBanner
+        announcements={announcements.announcements}
+        loading={announcements.loading}
+        onDeleted={() => announcements.reload()}
+      />
 
-    return (
-      <div className="space-y-4">
-        <AnnouncementsBanner
-          announcements={announcements.announcements}
-          loading={announcements.loading}
-          onDeleted={() => announcements.reload()}
-        />
+      <DashboardStatRow
+        role="QA"
+        stats={stats}
+        pendingCount={pending.length}
+        pendingRequestsCount={pendingRequestsCount}
+        loading={loading}
+        onStatClick={(label) => {
+          if (label === "Action needed" || label === "In progress") navigate("/work-queue");
+          if (label === "Total documents" || label === "Distributed") navigate("/documents");
+          if (label === "Pending requests") navigate("/document-requests");
+        }}
+      />
 
-        <DashboardStatRow
-          role="QA"
-          stats={stats}
-          pendingCount={pending.length}
-          pendingRequestsCount={pendingRequestsCount}
-          loading={loading}
-          onStatClick={(label) => {
-            if (label === "Action needed" || label === "In progress") navigate("/work-queue");
-            if (label === "Total documents" || label === "Distributed") navigate("/documents");
-            if (label === "Pending requests") navigate("/document-requests");
-          }}
-        />
+      {/* Charts Carousel/Grid */}
+      <div className="relative group">
+        <div className="flex sm:grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0">
+          <Card
+            title="Document volume"
+            sub="Created vs distributed trend"
+            action={{
+              label: "View reports",
+              onClick: () => navigate("/reports"),
+            }}
+            className="min-w-[88vw] sm:min-w-0 snap-center lg:col-span-2"
+            loading={loading}
+            hasData={!!report.volume_series?.length}
+          >
+            <VolumeTrendChart
+              data={report.volume_series}
+              height={window.innerWidth < 640 ? 150 : 200}
+              loading={loading}
+            />
+          </Card>
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          {kpiCards.map((k) => (
-            <div
-              key={k.label}
-              className="min-w-0 rounded-md border border-slate-200 bg-white p-2 sm:px-4 sm:py-3.5 dark:border-surface-400 dark:bg-surface-500 flex flex-col justify-between"
-            >
-              <div className="flex items-center justify-between gap-1 text-slate-500 dark:text-slate-400">
-                <p className="text-[9px] sm:text-xs font-display font-bold uppercase tracking-wider leading-tight truncate">
-                  {k.label}
-                </p>
-                <span className={`shrink-0 ${k.iconCls} sm:scale-100 scale-75`}>{k.icon}</span>
-              </div>
+          <Card
+            title="Pipeline state"
+            sub="Docs by current phase"
+            action={{
+              label: "View library",
+              onClick: () => navigate("/documents"),
+            }}
+            className="min-w-[88vw] sm:min-w-0 snap-center"
+            loading={loading}
+            hasData={!!report.phase_distribution?.length}
+          >
+            <PhaseDistributionChart
+              data={report.phase_distribution ?? []}
+              variant="donut"
+              height={window.innerWidth < 640 ? 150 : 200}
+              loading={loading}
+            />
+          </Card>
 
-              <div className="mt-1.5 sm:mt-2.5">
-                {loading ? (
-                  <Skeleton className="h-5 sm:h-7 w-10 sm:w-14" />
-                ) : (
-                  <p
-                    className={`text-sm sm:text-2xl font-display font-black tabular-nums leading-none ${k.valueCls}`}
-                  >
-                    {k.value}
-                  </p>
-                )}
-              </div>
-
-              <p className="hidden sm:block mt-1.5 text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 italic truncate">
-                {k.sub}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Charts Carousel/Grid */}
-        <div className="relative group">
-          <div className="flex sm:grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0">
-            <Card
-              title="Document volume"
-              sub="Created vs distributed per month"
-              action={{
-                label: "View reports",
-                onClick: () => navigate("/reports"),
-              }}
-              className="min-w-[88vw] sm:min-w-0 snap-center lg:col-span-2"
-            >
-              <VolumeTrendChart
-                data={report.volume_series}
-                height={window.innerWidth < 640 ? 150 : 200}
-                loading={loading}
-              />
-            </Card>
-
-            <Card
-              title="Pipeline state"
-              sub="Docs by current phase"
-              action={{
-                label: "View library",
-                onClick: () => navigate("/documents"),
-              }}
-              className="min-w-[88vw] sm:min-w-0 snap-center"
-            >
-              <PhaseDistributionChart
-                data={report.phase_distribution ?? []}
-                variant="donut"
-                height={window.innerWidth < 640 ? 150 : 200}
-                loading={loading}
-              />
-            </Card>
-
-            <Card
-              title="Stage delay"
-              sub="Median hold time per workflow phase"
-              action={{
-                label: "View reports",
-                onClick: () => navigate("/reports"),
-              }}
-              className="min-w-[88vw] sm:min-w-0 snap-center lg:hidden"
-            >
-              <StageDelayChart
-                data={report.stage_delays_by_phase ?? []}
-                height={150}
-                loading={loading}
-              />
-            </Card>
-          </div>
-
-          {/* Pagination Dots (Mobile Only) */}
-          <div className="flex sm:hidden justify-center items-center gap-1 mt-1.5 mb-0.5">
-            <div className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-surface-400" />
-            <div className="h-1 w-1 rounded-full bg-slate-200 dark:bg-surface-300/40" />
-            <div className="h-1 w-1 rounded-full bg-slate-200 dark:bg-surface-300/40" />
-          </div>
-        </div>
-
-        {/* Desktop-only Stage Delay if not in carousel-span above */}
-        <div className="hidden lg:grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <DashboardPendingList items={pendingActions} loading={loading} />
           <Card
             title="Stage delay"
             sub="Median hold time per workflow phase"
@@ -247,33 +169,56 @@ const QADashboard: React.FC<
               label: "View reports",
               onClick: () => navigate("/reports"),
             }}
+            className="min-w-[88vw] sm:min-w-0 snap-center lg:hidden"
+            loading={loading}
+            hasData={!!report.stage_delays_by_phase?.length}
           >
             <StageDelayChart
               data={report.stage_delays_by_phase ?? []}
-              height={200}
+              height={150}
               loading={loading}
             />
           </Card>
         </div>
+      </div>
 
-        {/* Mobile-only Pending list */}
-        <div className="lg:hidden mt-1">
-          <DashboardPendingList items={pendingActions} loading={loading} />
-        </div>
-
+      {/* Desktop-only Stage Delay if not in carousel-span above */}
+      <div className="hidden lg:grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
         <Card
-          title="Recent activity"
-          sub="Latest actions in the system."
+          title="Stage delay"
+          sub="Median hold time per workflow phase"
           action={{
-            label: "View all",
-            onClick: () => navigate("/activity-logs"),
+            label: "View reports",
+            onClick: () => navigate("/reports"),
           }}
+          loading={loading}
+          hasData={!!report.stage_delays_by_phase?.length}
         >
-          <DashboardRecentActivity logs={recentActivity} loading={loading} />
+          <StageDelayChart
+            data={report.stage_delays_by_phase ?? []}
+            height={200}
+            loading={loading}
+          />
         </Card>
       </div>
-    );
-  };
+
+      {/* Mobile-only Pending list */}
+      <div className="lg:hidden mt-1">
+        <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
+      </div>
+
+      <Card
+        title="Recent activity"
+        sub="Latest actions in the system."
+        loading={loading}
+        hasData={!!recentActivity?.length}
+      >
+        <DashboardRecentActivity logs={recentActivity} loading={loading} />
+      </Card>
+    </div>
+  );
+};
 
 // ─── Office Dashboard ──────────────────────────────────────────────────────
 const OfficeDashboard: React.FC<
@@ -294,7 +239,6 @@ const OfficeDashboard: React.FC<
   pending,
 }) => {
     const inboxCount = pendingRequestsInboxCount ?? 0;
-
 
     const donutSegments = [
       { label: "Distributed", value: stats?.distributed ?? 0, color: "#10b981" },
@@ -339,6 +283,8 @@ const OfficeDashboard: React.FC<
               label: "Open library",
               onClick: () => navigate("/documents"),
             }}
+            loading={loading}
+            hasData={!!stats}
           >
             <StatusDonutChart
               segments={donutSegments}
@@ -349,19 +295,17 @@ const OfficeDashboard: React.FC<
             />
           </Card>
 
-          <DashboardPendingList items={pendingActions} loading={loading} />
+          <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
         </div>
 
         {/* Recent activity */}
         <Card
           title="Recent activity"
           sub="Latest actions on your office's documents."
-          action={{
-            label: "View all",
-            onClick: () => navigate("/activity-logs"),
-          }}
+          loading={loading}
+          hasData={!!recentActivity?.length}
         >
-          <DashboardRecentActivity logs={recentActivity} loading={loading} />
+          <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
         </Card>
       </div>
     );
@@ -381,7 +325,14 @@ const AdminDashboard: React.FC<
       onDeleted={() => announcements.reload()}
     />
 
-    <AdminStatGrid data={adminStats} loading={loading} />
+    <Card
+      title="Admin overview"
+      sub="System-wide document statistics"
+      loading={loading}
+      hasData={!!adminStats}
+    >
+      <AdminStatGrid data={adminStats} loading={loading && !adminStats} />
+    </Card>
 
     {/* Charts Carousel/Grid */}
     <div className="flex sm:grid grid-cols-1 gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0">
@@ -393,6 +344,8 @@ const AdminDashboard: React.FC<
           onClick: () => navigate("/documents"),
         }}
         className="min-w-[85vw] sm:min-w-0 snap-center lg:col-span-2"
+        loading={loading}
+        hasData={!!adminStats?.documents.by_phase}
       >
         <AdminDocumentPhaseChart
           byPhase={adminStats?.documents.by_phase}
@@ -409,6 +362,8 @@ const AdminDashboard: React.FC<
           onClick: () => navigate("/reports"),
         }}
         className="min-w-[85vw] sm:min-w-0 snap-center"
+        loading={loading}
+        hasData={!!adminStats?.activity.distribution?.length}
       >
         <ActivityDistributionChart
           data={adminStats?.activity.distribution ?? []}
@@ -425,20 +380,23 @@ const AdminDashboard: React.FC<
         label: "View full report",
         onClick: () => navigate("/reports"),
       }}
+      loading={loading}
+      hasData={!!adminStats?.activity.daily_trend?.length}
     >
       <DailyActivityStackedBarChart
         data={adminStats?.activity.daily_trend ?? []}
         height={200}
-        loading={loading}
+        loading={loading && !adminStats?.activity.daily_trend?.length}
       />
     </Card>
 
     <Card
       title="Recent activity"
       sub="Latest actions across the system."
-      action={{ label: "View all", onClick: () => navigate("/activity-logs") }}
+      loading={loading}
+      hasData={!!recentActivity?.length}
     >
-      <DashboardRecentActivity logs={recentActivity} loading={loading} />
+      <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
     </Card>
   </div>
 );
@@ -463,18 +421,26 @@ const AuditorDashboard: React.FC<
         <button
           type="button"
           onClick={() => navigate("/documents")}
-          className="min-w-0 rounded-md border border-slate-200 bg-white px-4 py-3.5 text-left transition-colors hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:hover:bg-surface-400"
+          className={`min-w-0 rounded-md border border-slate-200 bg-white px-4 py-3.5 text-left transition-all hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:hover:bg-surface-400 shadow-sm ${loading && stats ? "opacity-60" : "opacity-100"}`}
         >
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight">
-              Distributed Documents
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight">
+                Distributed Documents
+              </p>
+              {loading && stats && (
+                <InlineSpinner size="xs" variant="neutral" />
+              )}
+            </div>
             <span className="shrink-0 text-emerald-400 dark:text-emerald-400">
               <FolderOpen className="h-4 w-4" />
             </span>
           </div>
-          {loading ? (
-            <Skeleton className="mt-3 h-7 w-14" />
+          {loading && !stats ? (
+            <div
+              className="shrink-0 rounded-full border-[14px] border-slate-100 dark:border-surface-400"
+              style={{ width: 160, height: 160 }}
+            />
           ) : (
             <p className="mt-2.5 text-2xl font-display font-bold tabular-nums leading-none text-slate-900 dark:text-slate-100">
               {stats?.distributed ?? 0}
@@ -511,9 +477,10 @@ const AuditorDashboard: React.FC<
           <Card
             title="System-wide activity"
             sub="Live feed of global document actions."
-            action={{ label: "View log", onClick: () => navigate("/activity-logs") }}
+            loading={loading}
+            hasData={!!recentActivity?.length}
           >
-            <DashboardRecentActivity logs={recentActivity} loading={loading} />
+            <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
           </Card>
         </div>
       </div>
@@ -526,7 +493,7 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const role = getUserRole();
   const dashData = useDashboardData(role);
-  const { loading } = dashData;
+  const { period, setPeriod } = dashData;
   const isAdmin = role === "ADMIN" || role === "SYSADMIN";
 
   const announcements = useAnnouncements();
@@ -562,7 +529,6 @@ const DashboardPage: React.FC = () => {
     month: "long",
     day: "numeric",
   });
-  const pendingCount = dashData.pendingActions.length;
 
   return (
     <div className="min-h-0 flex flex-1 flex-col overflow-hidden">
@@ -579,28 +545,57 @@ const DashboardPage: React.FC = () => {
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
-            {!loading && (
-              <div className="hidden sm:flex items-center gap-2">
-                {pendingCount > 0 ? (
-                  <div className="flex items-center gap-1.5 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-1 dark:border-rose-900 dark:bg-rose-950/15">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-500" />
-                    </span>
-                    <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 uppercase tracking-tight">
-                      {pendingCount} pending
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5 rounded-sm border border-emerald-200 bg-emerald-50 px-2.5 py-1 dark:border-emerald-900 dark:bg-emerald-950/15">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-tight">
-                      All caught up
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Period Toggle */}
+            <div className="flex items-center rounded-sm border border-slate-200 bg-white p-0.5 dark:border-surface-400 dark:bg-surface-500 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setPeriod("today")}
+                className={`px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-all rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 ${
+                  period === "today"
+                    ? "bg-sky-50 text-sky-600 dark:bg-sky-950/30 dark:text-sky-400 shadow-xs"
+                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                }`}
+                title="Today"
+              >
+                <div className="md:hidden relative flex items-center justify-center">
+                  <Calendar className="h-4 w-4 stroke-[2.5]" />
+                  <span className="absolute text-[7px] font-black pt-1.5 leading-none">1</span>
+                </div>
+                <span className="hidden md:inline">Today</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setPeriod("this_week")}
+                className={`px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-all rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 ${
+                  period === "this_week"
+                    ? "bg-sky-50 text-sky-600 dark:bg-sky-950/30 dark:text-sky-400 shadow-xs"
+                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                }`}
+                title="This Week"
+              >
+                <div className="md:hidden relative flex items-center justify-center">
+                  <Calendar className="h-4 w-4 stroke-[2.5]" />
+                  <span className="absolute text-[7px] font-black pt-1.5 leading-none">7</span>
+                </div>
+                <span className="hidden md:inline">Week</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPeriod("all")}
+                className={`px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-all rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 ${
+                  period === "all"
+                    ? "bg-sky-50 text-sky-600 dark:bg-sky-950/30 dark:text-sky-400 shadow-xs"
+                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                }`}
+                title="All Time"
+              >
+                <CalendarDays className="h-4 w-4 md:hidden stroke-[2.5]" />
+                <span className="hidden md:inline">All</span>
+              </button>
+            </div>
+
 
             <PageActions>
               <RefreshAction onRefresh={refresh} loading={isRefreshing} />

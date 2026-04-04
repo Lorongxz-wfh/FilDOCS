@@ -349,6 +349,7 @@ export default function DocumentRequestListPage() {
       {
         key: "due",
         header: "Deadline",
+        sortKey: "due_at",
         skeletonShape: "narrow",
         align: "right",
         render: (r) => (
@@ -360,6 +361,7 @@ export default function DocumentRequestListPage() {
       {
         key: "batch_due",
         header: "Batch Deadline",
+        sortKey: "batch_due_at",
         skeletonShape: "narrow",
         align: "right",
         render: (r) => (
