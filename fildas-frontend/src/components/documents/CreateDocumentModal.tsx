@@ -170,7 +170,7 @@ export default function FlowSelectModal({
       <button
         type="button"
         onClick={onClose}
-        className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition"
+        className="rounded-md border border-neutral-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-surface-100 hover:bg-neutral-50 dark:hover:bg-surface-400 transition"
       >
         Cancel
       </button>
@@ -210,7 +210,7 @@ export default function FlowSelectModal({
               ].join(" ")}
             >
               <p
-                className={`text-xs font-bold uppercase tracking-wide ${routingMode === mode ? "text-slate-900 dark:text-slate-50" : "text-slate-600 dark:text-slate-300"}`}
+                className={`text-xs font-bold uppercase tracking-wide ${routingMode === mode ? "text-neutral-900 dark:text-surface-50" : "text-neutral-600 dark:text-neutral-400"}`}
               >
                 {mode === "default"
                   ? isQA
@@ -218,7 +218,7 @@ export default function FlowSelectModal({
                     : "Default Office Flow"
                   : "Custom Flow"}
               </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed font-medium">
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed font-medium">
                 {mode === "default"
                   ? "Standard chain through VP and President"
                   : "You choose 1–5 offices in order"}
@@ -258,7 +258,7 @@ export default function FlowSelectModal({
             <div className="flex flex-col gap-2">
               {customOfficeIds.map((val, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <span className="w-5 shrink-0 text-center text-xs font-bold text-slate-400">
+                  <span className="w-5 shrink-0 text-center text-xs font-bold text-neutral-400">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -295,7 +295,7 @@ export default function FlowSelectModal({
                         return next.length ? next : [0];
                       })
                     }
-                    className="shrink-0 h-8 w-8 flex items-center justify-center rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-400 hover:text-rose-500 hover:border-rose-300 dark:hover:border-rose-700 dark:hover:text-rose-400 transition"
+                    className="shrink-0 h-8 w-8 flex items-center justify-center rounded-md border border-neutral-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-neutral-400 hover:text-red-500 hover:border-red-300 dark:hover:border-red-700 dark:hover:text-red-400 transition"
                   >
                     ✕
                   </button>
@@ -305,7 +305,7 @@ export default function FlowSelectModal({
                 <button
                   type="button"
                   onClick={() => setCustomOfficeIds((p) => [...p, 0])}
-                  className="mt-1 rounded-md border border-dashed border-slate-200 dark:border-surface-400 py-2.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400 transition"
+                  className="mt-1 rounded-md border border-dashed border-neutral-200 dark:border-surface-400 py-2.5 text-xs font-medium text-neutral-500 dark:text-neutral-400 hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400 transition"
                 >
                   + Add recipient
                 </button>
@@ -318,11 +318,11 @@ export default function FlowSelectModal({
         {chain.length > 0 && (
           <div className="rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50/20 dark:bg-surface-600/10 px-3.5 py-3.5 space-y-2.5">
             <div className="flex items-center gap-2 mb-1">
-              <span className="h-px flex-1 bg-slate-100 dark:bg-surface-400/50"></span>
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+              <span className="h-px flex-1 bg-neutral-100 dark:bg-surface-400/50"></span>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">
                 Flow Preview
               </p>
-              <span className="h-px flex-1 bg-slate-100 dark:bg-surface-400/50"></span>
+              <span className="h-px flex-1 bg-neutral-100 dark:bg-surface-400/50"></span>
             </div>
             {[
               { label: "Review", nodes: chain.slice(0, reviewEndIndex(chain)) },
@@ -339,7 +339,7 @@ export default function FlowSelectModal({
               },
             ].map((phase) => (
               <div key={phase.label} className="flex items-start gap-4">
-                <span className="w-16 shrink-0 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider pt-1">
+                <span className="w-16 shrink-0 text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider pt-1">
                   {phase.label}
                 </span>
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -351,8 +351,8 @@ export default function FlowSelectModal({
                           node.includes("✓")
                             ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/20 dark:text-emerald-400"
                             : node === "Register" || node === "Distribute"
-                              ? "border-slate-200 bg-slate-100 text-slate-600 dark:border-surface-400 dark:bg-surface-400 dark:text-slate-400"
-                              : "border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 text-slate-600 dark:text-slate-300",
+                              ? "border-neutral-200 bg-neutral-100 text-neutral-600 dark:border-surface-400 dark:bg-surface-400 dark:text-neutral-400"
+                              : "border-neutral-200 bg-white dark:border-surface-400 dark:bg-surface-500 text-neutral-600 dark:text-surface-100",
                         ].join(" ")}
                       >
                         {node}

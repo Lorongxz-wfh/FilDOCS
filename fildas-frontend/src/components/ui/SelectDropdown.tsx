@@ -103,8 +103,8 @@ export default function SelectDropdown({
       ? "border-rose-300 dark:border-rose-800 bg-rose-50/30 dark:bg-rose-950/20"
       : "border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600",
     open
-      ? "ring-2 ring-brand-500/10 border-brand-400 dark:border-brand-300"
-      : "hover:border-slate-300 dark:hover:border-surface-300 focus:ring-2 focus:ring-brand-500/10 focus:border-brand-400 dark:focus:border-brand-300",
+      ? "ring-1 ring-brand-500 border-brand-500 dark:border-brand-400 shadow-sm"
+      : "hover:border-slate-300 dark:hover:border-surface-300 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 dark:focus:border-brand-400",
     disabled
       ? "opacity-50 cursor-not-allowed text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-surface-700"
       : "cursor-pointer text-slate-700 dark:text-slate-200",
@@ -126,7 +126,7 @@ export default function SelectDropdown({
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.stopPropagation()}
             placeholder="Search…"
-            className="w-full pl-9 pr-8 py-2 text-sm bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
+            className="w-full pl-9 pr-8 py-2 text-sm bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-0"
           />
           {search && (
             <button

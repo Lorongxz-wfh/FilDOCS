@@ -103,7 +103,8 @@ const DocumentRightPanel: React.FC<Props> = ({
           if (key === "comments") clearNewMessageCount();
         }} 
         id="document-flow-right" 
-        className="px-1.5 border-b border-slate-200 dark:border-surface-400 bg-slate-50/30 dark:bg-surface-600/20"
+        fullWidth={true}
+        className="px-0.5 border-b border-slate-200 dark:border-surface-400 bg-slate-50/30 dark:bg-surface-600/20"
       />
 
       {/* ── Tab Content ── */}

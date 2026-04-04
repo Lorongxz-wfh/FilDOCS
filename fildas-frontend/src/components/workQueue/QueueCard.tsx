@@ -23,8 +23,8 @@ const QueueCard: React.FC<QueueCardProps> = ({ item, onClick }) => {
           {doc.title}
         </p>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500">
-            {doc.code ?? "—"} · v{ver.version_number}
+          <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-mono">
+            {doc.code || (doc as any).reserved_code || "—"} · v{ver.version_number}
           </span>
           <StatusBadge status={ver.status} className="scale-[0.85] origin-left" />
         </div>

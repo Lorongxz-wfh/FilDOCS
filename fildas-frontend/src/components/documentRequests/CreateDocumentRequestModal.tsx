@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Modal from "../ui/Modal";
 import { listOffices } from "../../services/documents";
 import type { Office } from "../../services/documents";
-import { Users, FileStack } from "lucide-react";
 import type { RequestMode } from "../../services/documentRequests";
 import OfficeCheckList from "../ui/OfficeCheckList";
 
@@ -144,19 +143,16 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
             [
               {
                 value: "multi_office" as const,
-                icon: Users,
                 label: "Multiple Offices",
                 desc: "One document requested from multiple offices",
               },
               {
                 value: "multi_doc" as const,
-                icon: FileStack,
                 label: "Multiple Documents",
                 desc: "Multiple documents requested from one office",
               },
             ] as const
           ).map((opt) => {
-            const Icon = opt.icon;
             const active = mode === opt.value;
             return (
               <button
@@ -166,22 +162,16 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
                   setMode(opt.value);
                   setError(null);
                 }}
-                className={[
-                  choiceCardCls(active),
-                  "p-3.5"
-                ].join(" ")}
+                className={[choiceCardCls(active), "p-3.5"].join(" ")}
               >
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className={`p-1.5 rounded-md border transition-colors ${active ? "bg-slate-900 border-slate-900 text-white dark:bg-slate-100 dark:border-slate-100 dark:text-slate-900" : "bg-slate-50 dark:bg-surface-600 border-slate-200 dark:border-surface-400 text-slate-400"}`}>
-                    <Icon className="h-3.5 w-3.5" />
-                  </div>
+                <div className="flex items-center gap-2 mb-1 pt-0.5">
                   <p
-                    className={`text-xs font-bold uppercase tracking-wide ${active ? "text-slate-900 dark:text-slate-50" : "text-slate-600 dark:text-slate-300"}`}
+                    className={`text-xs font-bold uppercase tracking-wide ${active ? "text-neutral-900 dark:text-neutral-50" : "text-neutral-600 dark:text-neutral-400"}`}
                   >
                     {opt.label}
                   </p>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed font-medium">
                   {opt.desc}
                 </p>
               </button>

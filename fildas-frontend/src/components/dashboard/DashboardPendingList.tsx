@@ -88,8 +88,11 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
                     <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100 leading-tight">
                       {x.title}
                     </p>
-                    <p className="mt-0.5 truncate text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500">
-                      {x.code ?? "—"}
+                    <p className="mt-0.5 truncate text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-mono">
+                      {x.type === "document" ? (x.code || (x.item as any)?.document?.reserved_code || "—") : (x.code || "—")}
+                      {x.type === "document" && x.item?.version?.version_number !== undefined && (
+                        <> · v{x.item.version.version_number}</>
+                      )}
                     </p>
                   </div>
 

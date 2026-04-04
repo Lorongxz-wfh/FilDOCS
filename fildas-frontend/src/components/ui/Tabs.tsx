@@ -15,13 +15,15 @@ interface TabsProps {
   className?: string;
   /** Unique ID for framer-motion layoutId (essential for smooth transitions) */
   id: string;
+  /** If true, tabs will divide the full width equally (even distribution) */
+  fullWidth?: boolean;
 }
 
 /**
  * Animated Tab Indicator component.
  * Uses layoutId to slide the underline between tabs.
  */
-export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onChange, className = "", id }) => {
+export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onChange, className = "", id, fullWidth = false }) => {
   return (
     <div className={`shrink-0 flex items-center border-b border-neutral-200 dark:border-surface-400 overflow-x-auto hide-scrollbar ${className}`}>
       {tabs.map((t) => {
@@ -32,7 +34,8 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onChange, className
             type="button"
             onClick={() => onChange(t.key)}
             className={[
-              "relative group flex items-center gap-1.5 px-4 py-3 text-[13px] font-bold transition-all whitespace-nowrap",
+              "relative group flex items-center gap-2 py-3 text-[13px] font-bold transition-all whitespace-nowrap",
+              fullWidth ? "flex-1 justify-center px-1" : "px-6",
               isActive 
                 ? "text-neutral-900 dark:text-surface-50" 
                 : "text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-surface-50"

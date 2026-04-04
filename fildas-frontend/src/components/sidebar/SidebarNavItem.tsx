@@ -83,27 +83,25 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
   };
 
   const navCls = [
-    "group relative flex w-full items-center cursor-pointer overflow-hidden transition-all duration-150",
+    "group relative flex w-full items-center cursor-pointer overflow-hidden transition-all duration-300 ease-in-out",
     // Desktop Styles
     !mobileOpen ? [
-      "rounded-lg text-[14.5px] font-medium leading-none",
-      collapsed ? "justify-center px-0 py-3.5" : "gap-3.5 px-3.5 py-3",
+      "rounded-lg text-[14px] font-medium h-9.5",
+      collapsed ? "justify-center px-0" : "px-2.5 gap-2.5",
       isActuallyActive
         ? "text-neutral-900 dark:text-surface-50"
         : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-surface-400 dark:hover:text-surface-50",
-    ].join(" ") : "",
-    // Mobile Styles
-    mobileOpen ? [
-      "rounded-xl text-[13px] font-bold duration-150 active:scale-[0.98] gap-3 px-3 py-1.5 h-11",
+    ].join(" ") : [
+      "rounded-xl text-[13px] font-bold duration-150 active:scale-[0.98] h-11 gap-3 px-3",
       isActuallyActive
         ? "text-brand-600 dark:text-brand-400"
         : "text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-white/5 dark:hover:text-surface-50 shadow-none",
-    ].join(" ") : ""
+    ].join(" ")
   ].join(" ");
 
   const iconCls = [
-    "shrink-0 transition-opacity duration-200 z-10",
-    isActuallyActive ? "opacity-100" : "opacity-70 group-hover:opacity-100",
+    "shrink-0 transition-all duration-300 z-10",
+    isActuallyActive ? "opacity-100 scale-105" : "opacity-70 group-hover:opacity-100",
     // Desktop Icon colors
     !mobileOpen ? [
       isActuallyActive ? "text-brand-500 dark:text-brand-400" : "text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-600 dark:group-hover:text-neutral-300"
@@ -122,20 +120,23 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
         onClick={handleToggle}
         className={navCls}
       >
-        {isActuallyActive && !mobileOpen && (
+        {isActuallyActive && !mobileOpen ? (
           <>
             <motion.div
               layoutId="active-bg"
-              className="absolute inset-0 bg-neutral-100 dark:bg-surface-400 rounded-lg border border-neutral-200 dark:border-surface-300"
-              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+              className="absolute inset-0 bg-neutral-100/80 dark:bg-surface-400/80 rounded-lg border border-neutral-200/50 dark:border-surface-300/30 shadow-xs"
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
             />
-            <motion.div
-              layoutId="active-pill"
-              className="absolute left-0 top-3 bottom-3 w-1 bg-brand-500 rounded-r-full shadow-[0_0_8px_rgba(14,165,233,0.4)]"
-              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-            />
+            {collapsed && (
+              <motion.div
+                layoutId="active-pill"
+                className="absolute left-0 top-2 bottom-2 w-1 bg-brand-500 rounded-r-full shadow-[0_0_8px_rgba(14,165,233,0.3)]"
+                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              />
+            )}
           </>
-        )}
+        ) : null}
+        
         {isActuallyActive && mobileOpen && (
           <motion.div
             layoutId="active-bg-mobile"
@@ -144,18 +145,22 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
           />
         )}
         
-        <div className={!mobileOpen ? "flex items-center justify-center w-6" : ""}>
+        <div className={!mobileOpen ? "flex items-center justify-center w-10 shrink-0 relative z-10" : "relative z-10"}>
           <Icon className={iconCls} size={mobileOpen ? 18 : 20} />
         </div>
         
         {(!collapsed || mobileOpen) && (
-          <span className={[
-            "z-10 transition-all duration-200",
-            isActuallyActive ? "translate-x-0 font-semibold" : "translate-x-0 font-medium",
-            mobileOpen ? "truncate tracking-tight select-none flex-1" : "truncate flex-1"
-          ].join(" ")}>
+          <motion.span 
+            initial={collapsed ? { opacity: 0, x: -10 } : { opacity: 1, x: 0 }}
+            animate={{ opacity: 1, x: 0 }}
+            className={[
+              "z-10 transition-all duration-300 truncate flex-1",
+              isActuallyActive ? "font-semibold" : "font-medium text-neutral-500 dark:text-neutral-400",
+              mobileOpen ? "tracking-tight select-none" : ""
+            ].join(" ")}
+          >
             {label}
-          </span>
+          </motion.span>
         )}
 
         {hasChildren && (!collapsed || mobileOpen) && (

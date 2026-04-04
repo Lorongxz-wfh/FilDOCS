@@ -33,9 +33,9 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
   } = stats;
 
   return (
-    <>
+    <div className="flex flex-col gap-6">
       {/* KPI strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <KpiCard
           loading={loading}
           label="Total created"
@@ -77,7 +77,7 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
             <TrendingUp size={12} className="text-sky-500 rotate-90" />
           </div>
         </div>
-        <div className="flex lg:grid lg:grid-cols-3 gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
+        <div className="grid grid-flow-col lg:grid-flow-row lg:grid-cols-3 gap-4 lg:gap-6 overflow-x-auto lg:overflow-visible snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
           <div className="min-w-[85vw] lg:min-w-0 lg:col-span-2 snap-center">
             <ReportChartCard
               title={`Document volume · ${bucket}`}
@@ -106,7 +106,7 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
             <TrendingUp size={12} className="text-sky-500 rotate-90" />
           </div>
         </div>
-        <div className="flex lg:grid lg:grid-cols-2 gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
+        <div className="grid grid-flow-col lg:grid-flow-row lg:grid-cols-2 gap-4 lg:gap-6 overflow-x-auto lg:overflow-visible snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
           <div className="min-w-[85vw] lg:min-w-0 snap-center">
             <ReportChartCard
               title="Documents created by office"
@@ -199,7 +199,7 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
           </div>
         </ReportChartCard>
       </div>
-    </>
+    </div>
   );
 };
 

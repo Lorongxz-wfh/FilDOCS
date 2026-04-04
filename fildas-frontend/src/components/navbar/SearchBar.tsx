@@ -381,12 +381,12 @@ const SearchBar: React.FC<SearchBarProps> = () => {
       <div className={[
         "relative flex items-center gap-2 rounded-md border transition-all duration-200",
         open 
-          ? "border-brand-500 bg-white dark:bg-surface-400 shadow-sm" 
+          ? "border-brand-600 dark:border-brand-500 bg-white dark:bg-surface-500 shadow-lg ring-1 ring-brand-600" 
           : "border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 hover:border-slate-300 dark:hover:border-surface-300"
       ].join(" ")}>
         <Search className={[
           "absolute left-3 h-3.5 w-3.5 shrink-0 transition-colors",
-          open ? "text-brand-500" : "text-slate-400 dark:text-slate-500"
+          open ? "text-brand-500 dark:text-brand-400" : "text-slate-400 dark:text-slate-500"
         ].join(" ")} />
         
         <input

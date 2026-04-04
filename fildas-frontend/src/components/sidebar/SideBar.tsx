@@ -81,9 +81,9 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       <aside
         className={[
-          "md:flex md:flex-col md:h-screen md:sticky md:top-0 md:shrink-0 fixed inset-y-0 left-0 z-[100] flex flex-col h-full border-r border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 transition-[width,transform] duration-300 ease-in-out",
+          "md:flex md:flex-col md:h-screen md:sticky md:top-0 md:shrink-0 fixed inset-y-0 left-0 z-[100] flex flex-col h-full border-r border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 transition-all duration-300 ease-in-out",
           mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0",
-          collapsed ? "w-64 md:w-14" : "w-64 md:w-56",
+          collapsed ? "md:w-14 w-64" : "md:w-60 w-64",
         ].join(" ")}
       >
         <SidebarBrand
@@ -113,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         />
 
         {/* Navigation Section */}
-        <nav className={["flex-1 overflow-y-auto px-2 py-3", mobileOpen ? "space-y-1" : "space-y-4"].join(" ")}>
+        <nav className={["flex-1 overflow-y-auto px-2 py-2", mobileOpen ? "space-y-1" : "space-y-3"].join(" ")}>
           {navGroups.map((group) => {
             const visibleItems = group.items.filter((item) => !item.roles || item.roles.includes(role));
             if (visibleItems.length === 0) return null;

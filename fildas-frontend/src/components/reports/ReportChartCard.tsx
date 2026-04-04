@@ -52,7 +52,7 @@ const ReportChartCard: React.FC<Props> = ({
       ref={cardRef}
       className={`rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden ${className}`}
     >
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-5 py-4">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 dark:border-surface-400 px-4 sm:px-6 py-4">
         <div>
           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             {title}
@@ -110,7 +110,7 @@ const ReportChartCard: React.FC<Props> = ({
           )}
         </div>
       </div>
-      <div className="p-3.5 sm:p-5">
+      <div className="p-4 sm:p-6">
         {loading ? (
           <div
             className="animate-pulse rounded-lg bg-slate-100 dark:bg-surface-400"

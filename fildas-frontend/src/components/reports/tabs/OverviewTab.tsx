@@ -38,9 +38,9 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
   } = stats;
 
   return (
-    <>
+    <div className="flex flex-col gap-6">
       {/* KPI cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <KpiCard
           loading={loading}
           label="All documents"
@@ -74,7 +74,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             <TrendingUp size={12} className="text-sky-500 rotate-90" />
           </div>
         </div>
-        <div className="flex lg:grid lg:grid-cols-3 gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
+        <div className="grid grid-flow-col lg:grid-flow-row lg:grid-cols-3 gap-4 lg:gap-6 overflow-x-auto lg:overflow-visible snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
           <div className="min-w-[85vw] lg:min-w-0 lg:col-span-2 snap-center">
             <ReportChartCard
               title={`Document volume · ${bucket}`}
@@ -97,7 +97,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       </div>
 
       {/* Secondary KPI row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard
           loading={loading}
           label="First pass yield"
@@ -141,7 +141,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               <History size={12} className="text-amber-500 rotate-90" />
             </div>
           </div>
-          <div className="flex lg:grid lg:grid-cols-2 gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
+          <div className="grid grid-flow-col lg:grid-flow-row lg:grid-cols-2 gap-4 lg:gap-6 overflow-x-auto lg:overflow-visible snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
             <div className="min-w-[85vw] lg:min-w-0 snap-center">
               <ReportChartCard
                 title="System Activity Breakdown"
@@ -171,7 +171,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

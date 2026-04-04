@@ -18,9 +18,9 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
   bucket,
 }) => {
   return (
-    <>
+    <div className="flex flex-col gap-6">
       {/* KPI strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <KpiCard
           loading={requestsLoading}
           label="Total requests"
@@ -56,7 +56,7 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
       </div>
 
       {/* Secondary KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard
           loading={requestsLoading}
           label="Cancelled"
@@ -84,7 +84,7 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
       </div>
 
       {/* Volume trend + Status donut */}
-      <div className="flex lg:grid lg:grid-cols-3 gap-4 lg:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="grid grid-flow-col lg:grid-flow-row lg:grid-cols-3 gap-4 lg:gap-6 overflow-x-auto lg:overflow-visible snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         <div className="min-w-[85vw] lg:min-w-0 lg:col-span-2 snap-center">
           <ReportChartCard
             title={`Request volume · ${bucket}`}
@@ -112,7 +112,7 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
           </ReportChartCard>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

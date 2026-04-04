@@ -22,14 +22,14 @@ const SidebarAction: React.FC<SidebarActionProps> = ({
   if (visibleNewActions.length === 0) return null;
 
   return (
-    <div className="hidden md:block shrink-0 px-2 py-3" ref={newRef}>
+    <div className="hidden md:block shrink-0 px-2 py-2" ref={newRef}>
       <div className="relative">
         <button
           type="button"
           onClick={() => setNewOpen(!newOpen)}
           className={[
             "cursor-pointer flex items-center rounded-md text-sm font-semibold transition-all duration-150 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white shadow-sm",
-            collapsed ? "justify-center w-full px-0 h-9" : "gap-2 px-4 h-9",
+            collapsed ? "justify-center w-full px-0 h-9" : "gap-2 px-3 h-9",
           ].join(" ")}
         >
           <Plus className="h-4 w-4 shrink-0" />

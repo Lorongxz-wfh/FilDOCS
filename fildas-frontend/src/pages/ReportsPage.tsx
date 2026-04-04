@@ -8,7 +8,7 @@ import ReportFilters from "../components/reports/ReportFilters";
 import { useReportsData } from "../hooks/useReportsData";
 import { useReportFilters } from "../hooks/useReportFilters";
 import { getOffices } from "../services/reportsApi";
-import { SlidersHorizontal, BarChart3 } from "lucide-react";
+import { SlidersHorizontal, BarChart3, LayoutDashboard, BarChart2, FileQuestion, Activity, Users } from "lucide-react";
 import { Tabs, TabContent } from "../components/ui/Tabs";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
 
@@ -21,23 +21,23 @@ import UsersTab from "../components/reports/tabs/UsersTab";
 
 type Tab = "overview" | "workflow" | "requests" | "activity" | "users";
 
-const TABS_QA: { key: Tab; label: string }[] = [
-  { key: "overview", label: "Overview" },
-  { key: "workflow", label: "Workflow" },
-  { key: "requests", label: "Requests" },
-  { key: "activity", label: "Activity" },
+const TABS_QA: { key: Tab; label: string; icon: React.ReactNode }[] = [
+  { key: "overview", label: "Overview", icon: <LayoutDashboard className="h-3.5 w-3.5 opacity-70" /> },
+  { key: "workflow", label: "Workflow", icon: <BarChart2 className="h-3.5 w-3.5 opacity-70" /> },
+  { key: "requests", label: "Requests", icon: <FileQuestion className="h-3.5 w-3.5 opacity-70" /> },
+  { key: "activity", label: "Activity", icon: <Activity className="h-3.5 w-3.5 opacity-70" /> },
 ];
 
-const TABS_OFFICE_HEAD: { key: Tab; label: string }[] = [
-  { key: "overview", label: "Overview" },
-  { key: "workflow", label: "Workflow" },
+const TABS_OFFICE_HEAD: { key: Tab; label: string; icon: React.ReactNode }[] = [
+  { key: "overview", label: "Overview", icon: <LayoutDashboard className="h-3.5 w-3.5 opacity-70" /> },
+  { key: "workflow", label: "Workflow", icon: <BarChart2 className="h-3.5 w-3.5 opacity-70" /> },
 ];
 
-const TABS_ADMIN: { key: Tab; label: string }[] = [
-  { key: "overview", label: "Overview" },
-  { key: "users", label: "Users" },
-  { key: "requests", label: "Requests" },
-  { key: "activity", label: "Activity" },
+const TABS_ADMIN: { key: Tab; label: string; icon: React.ReactNode }[] = [
+  { key: "overview", label: "Overview", icon: <LayoutDashboard className="h-3.5 w-3.5 opacity-70" /> },
+  { key: "users", label: "Users", icon: <Users className="h-3.5 w-3.5 opacity-70" /> },
+  { key: "requests", label: "Requests", icon: <FileQuestion className="h-3.5 w-3.5 opacity-70" /> },
+  { key: "activity", label: "Activity", icon: <Activity className="h-3.5 w-3.5 opacity-70" /> },
 ];
 
 const ReportsPage: React.FC = () => {
@@ -170,7 +170,7 @@ const ReportsPage: React.FC = () => {
       {/* Content + filter panel */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div ref={tabContentRef} className="flex-1 min-w-0 overflow-y-auto">
-          <div className="flex flex-col gap-5 p-4 sm:p-5">
+          <div className="flex flex-col gap-6 p-4 sm:p-5">
             <TabContent activeKey={activeTab} currentKey="overview">
               <OverviewTab
                 loading={loading}
