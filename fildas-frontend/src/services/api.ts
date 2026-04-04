@@ -35,6 +35,16 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Force logout during maintenance hard-lock
+    if (status === 503 && error?.response?.data?.force_logout) {
+      const { message, expires_at } = error.response.data;
+      if (message) localStorage.setItem("maintenance_message", message);
+      if (expires_at) localStorage.setItem("maintenance_expires_at", expires_at);
+      
+      window.location.href = "/maintenance";
+      return Promise.reject(error);
+    }
+
     return Promise.reject(error);
   },
 );

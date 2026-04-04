@@ -23,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\Admin::class,
         ]);
 
+        $middleware->api(append: [
+            \App\Http\Middleware\CheckSystemStatus::class,
+        ]);
+
         // Trust proxies for Render/Vercel (required for correct protocol/IP detection)
         $middleware->trustProxies(at: '*');
     })

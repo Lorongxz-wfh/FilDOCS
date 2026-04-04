@@ -12,9 +12,6 @@ export function PageActions({ children }: { children: React.ReactNode }) {
 
 /**
  * Standardizes the "Create" action across all pages.
- * - Primary variant
- * - Plus icon
- * - Responsive text (icon only on mobile)
  */
 export function CreateAction({
   label = "Create",
@@ -137,42 +134,6 @@ export function UploadAction({
 }
 
 /**
- * Standardizes the "Export" split button (CSV/PDF common pair).
- */
-export function ExportSplitAction({
-  onExport,
-  loading,
-  disabled,
-}: {
-  onExport: (format: "csv" | "pdf") => void;
-  loading?: boolean;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="flex bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 rounded-sm overflow-hidden divide-x divide-slate-200 dark:divide-surface-400 shadow-sm shrink-0">
-      <button
-        type="button"
-        onClick={() => onExport("csv")}
-        disabled={loading || disabled}
-        title="Export to CSV"
-        className="px-3 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors disabled:opacity-50"
-      >
-        CSV
-      </button>
-      <button
-        type="button"
-        onClick={() => onExport("pdf")}
-        disabled={loading || disabled}
-        title="Export to PDF"
-        className="px-3 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors disabled:opacity-50"
-      >
-        PDF
-      </button>
-    </div>
-  );
-}
-
-/**
  * Standardizes the "Delete" or "Cancel" action.
  */
 export function DeleteAction({
@@ -198,5 +159,72 @@ export function DeleteAction({
       <Trash2 className="h-3.5 w-3.5" />
       <span className="font-bold">{label}</span>
     </Button>
+  );
+}
+
+/**
+ * A generic, responsive action button for page headers.
+ */
+export function ActionButton({
+  label,
+  icon: Icon,
+  onClick,
+  disabled,
+  loading,
+  variant = "outline",
+}: {
+  label: string;
+  icon: any;
+  onClick: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+  variant?: "primary" | "secondary" | "outline" | "danger" | "ghost";
+}) {
+  return (
+    <Button
+      variant={variant}
+      size="sm"
+      responsive
+      onClick={onClick}
+      disabled={disabled}
+      loading={loading}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      <span className="font-bold">{label}</span>
+    </Button>
+  );
+}
+
+/**
+ * Export split button (simplified).
+ */
+export function ExportSplitAction({
+  onExport,
+  loading,
+  disabled,
+}: {
+  onExport: (format: "csv" | "pdf") => void;
+  loading?: boolean;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 rounded-sm overflow-hidden divide-x divide-slate-200 dark:divide-surface-400 shadow-sm shrink-0">
+      <button
+        type="button"
+        onClick={() => onExport("csv")}
+        disabled={loading || disabled}
+        className="px-3 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors disabled:opacity-50"
+      >
+        CSV
+      </button>
+      <button
+        type="button"
+        onClick={() => onExport("pdf")}
+        disabled={loading || disabled}
+        className="px-3 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors disabled:opacity-50"
+      >
+        PDF
+      </button>
+    </div>
   );
 }

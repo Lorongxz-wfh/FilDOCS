@@ -74,3 +74,58 @@ export function downloadBackup(
       alert("Download failed. Please try again.");
     });
 }
+
+// ── System Snapshots (Backups) ──────────────────────────────────────────────
+export type SystemBackupFile = {
+  filename: string;
+  size: number;
+  created_at: string;
+};
+
+export type SystemBackupResponse = {
+  backups: SystemBackupFile[];
+  total_size: number;
+};
+
+export async function getSystemBackups(): Promise<SystemBackupResponse> {
+  const api = await getApi();
+  const res = await api.get("/admin/system/backups");
+  return res.data as SystemBackupResponse;
+}
+
+export async function createSystemSnapshot(): Promise<SystemBackupFile> {
+  const api = await getApi();
+  const res = await api.post("/admin/system/backups");
+  return res.data.backup as SystemBackupFile;
+}
+
+export async function deleteSystemBackup(filename: string): Promise<void> {
+  const api = await getApi();
+  await api.delete(`/admin/system/backups/${filename}`);
+}
+
+export async function downloadSystemSnapshot(filename: string): Promise<void> {
+  const token = localStorage.getItem("auth_token") ?? "";
+  const url = `${API_BASE}/admin/system/backups/${filename}`;
+
+  fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("Download failed");
+      return res.blob();
+    })
+    .then((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    })
+    .catch((err) => {
+      console.error("System backup download failed:", err);
+      alert("Download failed.");
+    });
+}

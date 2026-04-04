@@ -22,7 +22,7 @@ class Admin
 
 
         $role = $user->role;
-        if (! $role || strtolower(trim($role->name)) !== 'admin') {
+        if (! $role || ! in_array(strtolower(trim($role->name)), ['admin', 'sysadmin'])) {
             return response()->json(['message' => 'Admin access required.'], 403);
         }
 

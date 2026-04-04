@@ -65,6 +65,9 @@ const ActivityLogsPage = React.lazy(() => import("./pages/ActivityLogsPage"));
 const DocumentFlowPage = React.lazy(() => import("./pages/DocumentFlowPage"));
 const DocumentViewPage = React.lazy(() => import("./pages/DocumentViewPage"));
 const ArchivePage = React.lazy(() => import("./pages/ArchivePage"));
+const SystemHealthPage = React.lazy(
+  () => import("./pages/admin/SystemHealthPage"),
+);
 
 
 const DocumentRequestListPage = React.lazy(
@@ -94,6 +97,8 @@ import ProtectedLayout from "./lib/guards/ProtectedLayout";
 import RequireRole from "./lib/guards/RequireRole";
 import { getUserRole } from "./lib/roleFilters";
 
+import MaintenanceBanner from "./components/layout/MaintenanceBanner";
+
 // Routes /reports to the role-appropriate page
 const ReportsRoute: React.FC = () => {
   const role = getUserRole();
@@ -117,9 +122,12 @@ const nonAuditorRoles: UserRole[] = [
 ];
 
 
+const MaintenancePage = React.lazy(() => import("./pages/MaintenancePage"));
+
 export default function App() {
   return (
     <ChunkErrorBoundary>
+      <MaintenanceBanner />
       <Suspense
         fallback={
           <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-surface-600 z-50">
@@ -136,6 +144,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/maintenance" element={<MaintenancePage />} />
 
 
           <Route element={<ProtectedLayout />}>
@@ -249,6 +258,7 @@ export default function App() {
             <Route element={<RequireRole allow={["SYSADMIN", "ADMIN"]} />}>
               <Route path="/user-manager" element={<UserManagerPage />} />
               <Route path="/office-manager" element={<OfficeManagerPage />} />
+              <Route path="/system-health" element={<SystemHealthPage />} />
             </Route>
 
             <Route

@@ -90,12 +90,12 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       collapsed ? "justify-center px-0" : "px-2.5 gap-2.5",
       isActuallyActive
         ? "text-neutral-900 dark:text-surface-50"
-        : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-surface-400 dark:hover:text-surface-50",
+        : "text-neutral-500 hover:bg-neutral-200/50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-surface-50",
     ].join(" ") : [
       "rounded-xl text-[13px] font-bold duration-150 active:scale-[0.98] h-11 gap-3 px-3",
       isActuallyActive
         ? "text-brand-600 dark:text-brand-400"
-        : "text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-white/5 dark:hover:text-surface-50 shadow-none",
+        : "text-neutral-500 hover:bg-neutral-200/50 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-surface-50 shadow-none",
     ].join(" ")
   ].join(" ");
 
@@ -218,7 +218,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
                         !mobileOpen ? "ml-4.5" : "",
                         isActive
                           ? "text-slate-900 dark:text-slate-100"
-                          : "text-slate-500 hover:bg-slate-50/50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-surface-400/30 dark:hover:text-slate-200",
+                          : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200",
                       ].join(" ")}
                     >
                       {({ isActive }) => (

@@ -20,6 +20,8 @@ use App\Http\Controllers\Api\AdminOfficeController;
 use App\Http\Controllers\Api\DocumentRequestMessageController;
 use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\SupportController;
+use App\Http\Controllers\Api\Admin\SystemHealthController;
+use App\Http\Controllers\Api\Admin\SystemBackupController;
 
 
 // ── Public ─────────────────────────────────────────────────────────────────
@@ -84,11 +86,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     });
     Route::get('/work-queue', [WorkflowController::class, 'workQueue']);
 
-    // ── Documents ──────────────────────────────────────────────────────────
-    Route::get('/documents/stats',    [DocumentController::class, 'stats']);
-    Route::get('/documents/finished', [DocumentController::class, 'finished']);
-    Route::get('/documents',          [DocumentController::class, 'index']);
-    Route::post('/documents',       [DocumentController::class, 'store']);
+    Route::post('/documents',           [DocumentController::class, 'store']);
     Route::get('/documents/{document}',         [DocumentController::class, 'show']);
     Route::patch('/documents/{document}',       [DocumentController::class, 'update']);
     Route::get('/documents/{document}/versions', [DocumentController::class, 'versions']);
@@ -256,6 +254,21 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         Route::patch('/offices/{office}',         [AdminOfficeController::class, 'update']);
         Route::delete('/offices/{office}',        [AdminOfficeController::class, 'destroy']);
         Route::patch('/offices/{office}/restore', [AdminOfficeController::class, 'restore']);
+
+        // System Health & Maintenance
+        Route::get('/system/health',              [SystemHealthController::class, 'index']);
+        Route::patch('/system/maintenance',       [SystemHealthController::class, 'update']);
+        Route::post('/system/health/schedule',    [SystemHealthController::class, 'schedule']);
+        Route::post('/system/health/cancel',      [SystemHealthController::class, 'cancel']);
+        Route::get('/system/logs',                [SystemHealthController::class, 'logs']);
+        Route::post('/system/diagnostics',        [SystemHealthController::class, 'diagnostics']);
+        Route::post('/system/test-email',         [SystemHealthController::class, 'sendTestMail']);
+
+        // System Snapshots (Backups)
+        Route::get('/system/backups',             [SystemBackupController::class, 'index']);
+        Route::post('/system/backups',            [SystemBackupController::class, 'store']);
+        Route::get('/system/backups/{file}',      [SystemBackupController::class, 'download']);
+        Route::delete('/system/backups/{file}',   [SystemBackupController::class, 'destroy']);
     });
 
     // ── Support ────────────────────────────────────────────────────────────

@@ -68,7 +68,7 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onChange, className
  * Animated Tab Content wrapper.
  * Fades and slightly slides content when switching.
  */
-export const TabContent: React.FC<{ activeKey: string; currentKey: string; children: React.ReactNode }> = ({ activeKey, currentKey, children }) => {
+export const TabContent: React.FC<{ activeKey: string; currentKey: string; children: React.ReactNode; className?: string }> = ({ activeKey, currentKey, children, className = "" }) => {
   return (
     <AnimatePresence mode="wait">
       {activeKey === currentKey && (
@@ -78,7 +78,7 @@ export const TabContent: React.FC<{ activeKey: string; currentKey: string; child
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -4 }}
           transition={{ duration: 0.12, ease: "easeOut" }}
-          className="w-full"
+          className={className || "w-full"}
         >
           {children}
         </motion.div>

@@ -108,9 +108,9 @@ const DocumentRightPanel: React.FC<Props> = ({
       />
 
       {/* ── Tab Content ── */}
-      <div className="flex-1 min-h-0 flex flex-col p-2.5 overflow-y-auto hide-scrollbar">
+      <div className="flex-1 min-h-0 flex flex-col p-2.5 overflow-hidden">
         {!isDataReady ? (
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 overflow-y-auto hide-scrollbar">
             {[148, 100, 130, 90, 120, 110].map((w, i) => (
               <div
                 key={i}
@@ -126,7 +126,11 @@ const DocumentRightPanel: React.FC<Props> = ({
           </div>
         ) : (
           <>
-            <TabContent activeKey={activeSideTab} currentKey="details">
+            <TabContent 
+              activeKey={activeSideTab} 
+              currentKey="details" 
+              className="flex-1 min-h-0"
+            >
               <DocumentInfoPanel
                 document={document}
                 version={version}
@@ -140,7 +144,11 @@ const DocumentRightPanel: React.FC<Props> = ({
               />
             </TabContent>
 
-            <TabContent activeKey={activeSideTab} currentKey="participants">
+            <TabContent 
+              activeKey={activeSideTab} 
+              currentKey="participants" 
+              className="flex-1 min-h-0"
+            >
               <DocumentInfoPanel
                 document={document}
                 version={version}
@@ -154,7 +162,11 @@ const DocumentRightPanel: React.FC<Props> = ({
               />
             </TabContent>
 
-            <TabContent activeKey={activeSideTab} currentKey="comments">
+            <TabContent 
+              activeKey={activeSideTab} 
+              currentKey="comments" 
+              className="flex-1 min-h-0 flex flex-col"
+            >
               <DocumentCommentsPanel
                 isLoading={isLoadingMessages}
                 messages={messages}
@@ -169,7 +181,11 @@ const DocumentRightPanel: React.FC<Props> = ({
               />
             </TabContent>
 
-            <TabContent activeKey={activeSideTab} currentKey="logs">
+            <TabContent 
+              activeKey={activeSideTab} 
+              currentKey="logs" 
+              className="flex-1 min-h-0 flex flex-col"
+            >
               <DocumentActivityPanel
                 loading={isLoadingActivityLogs}
                 logs={activityLogs}

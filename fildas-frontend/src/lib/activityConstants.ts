@@ -31,6 +31,13 @@ export const EVENT_DOT: Record<string, string> = {
   "document_request.submission.rejected":  "bg-rose-500",
   "document_request.closed":               "bg-slate-500",
   "document_request.cancelled":            "bg-rose-400",
+
+  // System Health
+  "system.maintenance_updated":            "bg-sky-500",
+  "system.maintenance_scheduled":          "bg-amber-500",
+  "system.maintenance_cancelled":          "bg-rose-400",
+  "system.diagnostics_run":                "bg-indigo-500",
+  "system.test_mail_sent":                 "bg-emerald-500",
 };
 
 export const EVENT_LABEL: Record<string, string> = {
@@ -67,6 +74,13 @@ export const EVENT_LABEL: Record<string, string> = {
   "document_request.submission.rejected":  "Evidence rejected",
   "document_request.closed":               "Request closed",
   "document_request.cancelled":            "Request cancelled",
+
+  // System Health
+  "system.maintenance_updated":            "System maintenance updated",
+  "system.maintenance_scheduled":          "System maintenance scheduled",
+  "system.maintenance_cancelled":          "System maintenance cancelled",
+  "system.diagnostics_run":                "System diagnostics performed",
+  "system.test_mail_sent":                 "System test email sent",
 };
 
 export const FIELD_LABEL: Record<string, string> = {

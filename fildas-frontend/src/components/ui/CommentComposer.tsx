@@ -48,7 +48,7 @@ const CommentComposer: React.FC<CommentComposerProps> = ({
     <div className={`flex flex-col gap-1.5 shrink-0 ${className}`}>
       <div className="flex items-stretch gap-2 h-[44px]">
         {/* ── Textarea Input ── */}
-        <div className="flex-1 bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 rounded-lg transition-colors focus-within:border-slate-400 dark:focus-within:border-slate-300 overflow-hidden shadow-sm">
+        <div className="flex-1 bg-slate-50 dark:bg-surface-600/50 border border-slate-200 dark:border-surface-400 rounded-lg transition-colors focus-within:border-slate-400 dark:focus-within:border-slate-300 overflow-hidden shadow-sm">
           <textarea
             ref={textareaRef}
             rows={1}
