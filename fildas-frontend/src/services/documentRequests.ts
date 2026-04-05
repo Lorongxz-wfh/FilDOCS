@@ -95,14 +95,15 @@ export type DocumentRequestMessageRow = {
 
 // ── List ───────────────────────────────────────────────────────────────────
 export async function listDocumentRequests(params?: {
-  status?: "open" | "closed" | "cancelled";
-  mode?: RequestMode;
   q?: string;
   per_page?: number;
   page?: number;
   sort_by?: string;
   sort_dir?: "asc" | "desc";
   direction?: "all" | "incoming" | "outgoing";
+  status?: string;
+  request_status?: string;
+  office_id?: number;
 }) {
   const res = await api.get("/document-requests", { params });
   return res.data;
@@ -115,6 +116,8 @@ export async function listDocumentRequestInbox(params?: {
   sort_by?: string;
   sort_dir?: "asc" | "desc";
   direction?: "all" | "incoming" | "outgoing";
+  status?: string;
+  office_id?: number;
 }) {
   const res = await api.get("/document-requests/inbox", { params });
   return res.data;

@@ -16,11 +16,15 @@ class DocumentRequestRepository
         $direction = $filters['direction'] ?? null;
         $reqSt     = $filters['request_status'] ?? null;
         $status    = $filters['status'] ?? null;
+        $fOfficeId = $filters['office_id'] ?? null;
 
         // ── Sub-query A: multi_office recipients ──────────────────────────
         $q1 = DB::table('document_request_recipients as rr')
             ->join('document_requests as r', 'r.id', '=', 'rr.request_id')
             ->join('offices as o', 'o.id', '=', 'rr.office_id')
+            // Join with creator's office
+            ->join('users as u_cre', 'u_cre.id', '=', 'r.created_by_user_id')
+            ->join('offices as o_cre', 'o_cre.id', '=', 'u_cre.office_id')
             ->where('r.mode', 'multi_office')
             ->select([
                 DB::raw("'recipient' as row_type"),
@@ -29,11 +33,12 @@ class DocumentRequestRepository
                 'r.title as batch_title',
                 'r.mode as batch_mode',
                 'r.status as batch_status',
-                'r.due_at',
+                DB::raw('COALESCE(rr.due_at, r.due_at) as due_at'),
                 'rr.created_at',
                 'rr.status as item_status',
-                'o.name as office_name',
-                'o.code as office_code',
+                // Directional office logic:
+                DB::raw("CASE WHEN r.created_by_user_id = {$userId} THEN o.name ELSE o_cre.name END as office_name"),
+                DB::raw("CASE WHEN r.created_by_user_id = {$userId} THEN o.code ELSE o_cre.code END as office_code"),
                 DB::raw('NULL as item_title'),
                 'rr.id as recipient_id',
                 DB::raw('NULL as item_id'),
@@ -50,7 +55,10 @@ class DocumentRequestRepository
         }
 
         if ($direction === 'incoming') {
-            $q1->where('rr.office_id', $officeId)->where('r.created_by_user_id', '!=', $userId);
+            if (!$isQa) {
+                $q1->where('rr.office_id', $officeId);
+            }
+            $q1->where('r.created_by_user_id', '!=', $userId);
         } elseif ($direction === 'outgoing') {
             $q1->where('r.created_by_user_id', $userId);
         }
@@ -66,6 +74,9 @@ class DocumentRequestRepository
             ->join('document_requests as r', 'r.id', '=', 'dri.request_id')
             ->join('document_request_recipients as rr', 'rr.request_id', '=', 'r.id')
             ->join('offices as o', 'o.id', '=', 'rr.office_id')
+            // Join with creator's office
+            ->join('users as u_cre', 'u_cre.id', '=', 'r.created_by_user_id')
+            ->join('offices as o_cre', 'o_cre.id', '=', 'u_cre.office_id')
             ->where('r.mode', 'multi_doc')
             ->select([
                 DB::raw("'item' as row_type"),
@@ -76,9 +87,10 @@ class DocumentRequestRepository
                 'r.status as batch_status',
                 DB::raw('COALESCE(dri.due_at, r.due_at) as due_at'),
                 'dri.created_at',
-                DB::raw("COALESCE((SELECT s.status FROM document_request_submissions s WHERE s.item_id = dri.id AND s.recipient_id = rr.id ORDER BY s.attempt_no DESC LIMIT 1), 'pending') as item_status"),
-                'o.name as office_name',
-                'o.code as office_code',
+                DB::raw("COALESCE((SELECT s.status FROM document_request_submissions s WHERE s.item_id = dri.id AND s.recipient_id = rr.id ORDER BY s.attempt_no DESC LIMIT 1), rr.status) as item_status"),
+                // Directional office logic:
+                DB::raw("CASE WHEN r.created_by_user_id = {$userId} THEN o.name ELSE o_cre.name END as office_name"),
+                DB::raw("CASE WHEN r.created_by_user_id = {$userId} THEN o.code ELSE o_cre.code END as office_code"),
                 'dri.title as item_title',
                 'rr.id as recipient_id',
                 'dri.id as item_id',
@@ -95,10 +107,18 @@ class DocumentRequestRepository
         }
 
         if ($direction === 'incoming') {
-            $q2->where('rr.office_id', $officeId)->where('r.created_by_user_id', '!=', $userId);
+            if (!$isQa) {
+                $q2->where('rr.office_id', $officeId);
+            }
+            $q2->where('r.created_by_user_id', '!=', $userId);
         } elseif ($direction === 'outgoing') {
             $q2->where('r.created_by_user_id', $userId);
         }
+
+        if ($fOfficeId) {
+            $q2->where('rr.office_id', $fOfficeId);
+        }
+
         if ($term)  $q2->where(function ($qq) use ($term) {
             $qq->where('r.title', 'like', "%{$term}%")
                ->orWhere('dri.title', 'like', "%{$term}%");

@@ -38,39 +38,107 @@ class DocumentRequestController extends Controller
         $isQa = $this->isQaOrAdmin($role);
 
         $data = $request->validate([
-            'status'   => 'nullable|in:open,closed,cancelled',
-            'mode'     => 'nullable|in:multi_office,multi_doc',
-            'q'        => 'nullable|string|max:100',
-            'per_page' => 'nullable|integer|min:1|max:50',
+            'status'    => 'nullable|in:open,closed,cancelled',
+            'mode'      => 'nullable|in:multi_office,multi_doc',
+            'q'         => 'nullable|string|max:100',
+            'per_page'  => 'nullable|integer|min:1|max:50',
+            'office_id' => 'nullable|integer',
+            'direction' => 'nullable|in:incoming,outgoing',
         ]);
 
         $perPage = (int) ($data['per_page'] ?? 25);
 
-        $q = DB::table('document_requests')->orderByDesc('id');
+        $q = DB::table('document_requests as r')
+            ->join('users as u_cre', 'u_cre.id', '=', 'r.created_by_user_id')
+            ->join('offices as o_cre', 'o_cre.id', '=', 'u_cre.office_id')
+            ->orderByDesc('r.id')
+            ->select([
+                'r.*',
+                // Creator office info
+                'o_cre.code as creator_office_code',
+                'o_cre.name as creator_office_name',
+                // Recipient office(s) info via subqueries to avoid GROUP BY mess
+                DB::raw("(SELECT GROUP_CONCAT(DISTINCT o.code SEPARATOR ', ') 
+                          FROM document_request_recipients rr 
+                          JOIN offices o ON o.id = rr.office_id 
+                          WHERE rr.request_id = r.id) as recipient_offices_code"),
+                DB::raw("(SELECT GROUP_CONCAT(DISTINCT o.name SEPARATOR ', ') 
+                          FROM document_request_recipients rr 
+                          JOIN offices o ON o.id = rr.office_id 
+                          WHERE rr.request_id = r.id) as recipient_offices_name")
+            ]);
 
         if (!$isQa) {
-            $q->where('created_by_user_id', $user->id);
+            $q->where(function ($query) use ($user) {
+                $query->where('r.created_by_user_id', $user->id)
+                      ->orWhereExists(function ($sub) use ($user) {
+                          $sub->select(DB::raw(1))
+                              ->from('document_request_recipients as rr_access')
+                              ->whereColumn('rr_access.request_id', 'r.id')
+                              ->where('rr_access.office_id', $user->office_id);
+                      });
+            });
         }
 
-        if (!empty($data['status'])) $q->where('status', $data['status']);
-        if (!empty($data['mode']))   $q->where('mode', $data['mode']);
+        if (!empty($data['status'])) {
+            $q->where('r.status', $data['status']);
+        }
+
+        if (!empty($data['office_id'])) {
+            $q->whereExists(function ($sub) use ($data) {
+                $sub->select(DB::raw(1))
+                    ->from('document_request_recipients as rr_f')
+                    ->whereColumn('rr_f.request_id', 'r.id')
+                    ->where('rr_f.office_id', $data['office_id']);
+            });
+        }
+
+        if (!empty($data['direction'])) {
+            if ($data['direction'] === 'outgoing') {
+                $q->where('r.created_by_user_id', $user->id);
+            } elseif ($data['direction'] === 'incoming') {
+                $q->where('r.created_by_user_id', '!=', $user->id);
+                // And for non-QA, must be a recipient
+                if (!$isQa) {
+                    $q->whereExists(function ($sub) use ($user) {
+                        $sub->select(DB::raw(1))
+                            ->from('document_request_recipients as rr_dir')
+                            ->whereColumn('rr_dir.request_id', 'r.id')
+                            ->where('rr_dir.office_id', $user->office_id);
+                    });
+                }
+            }
+        }
+
+        if (!empty($data['mode'])) {
+            $q->where('r.mode', $data['mode']);
+        }
+
         if (!empty($data['q'])) {
             $term = trim($data['q']);
             $q->where(function ($qq) use ($term) {
-                $qq->where('title', 'like', "%{$term}%")
-                    ->orWhere('description', 'like', "%{$term}%");
+                $qq->where('r.title', 'like', "%{$term}%")
+                    ->orWhere('r.description', 'like', "%{$term}%");
             });
         }
 
         $paginated = $q->paginate($perPage);
 
-        // Attach progress to each row
+        // Attach progress and finalize directional office info
         $items = collect($paginated->items())->map(function ($row) use ($user) {
             $progress = $this->progress->buildProgress($row->id, $row->mode);
-            $direction = ((int)($row->created_by_user_id ?? 0) === $user->id) ? 'outgoing' : 'incoming';
+            $isOutgoing = ((int)($row->created_by_user_id ?? 0) === $user->id);
+            
+            // For Incoming: show WHO sent it (Creator Office)
+            // For Outgoing: show WHO it's for (Recipient Offices)
+            $offCode = $isOutgoing ? $row->recipient_offices_code : $row->creator_office_code;
+            $offName = $isOutgoing ? $row->recipient_offices_name : $row->creator_office_name;
+
             return array_merge((array) $row, [
                 'progress' => $progress,
-                'direction' => $direction
+                'direction' => $isOutgoing ? 'outgoing' : 'incoming',
+                'office_code' => $offCode,
+                'office_name' => $offName,
             ]);
         });
 
@@ -137,6 +205,10 @@ class DocumentRequestController extends Controller
 
         if (!empty($data['status'])) {
             $q->where('rr.status', $data['status']);
+        }
+
+        if (!empty($data['office_id'])) {
+            $q->where('rr.office_id', $data['office_id']);
         }
 
         if (!empty($data['request_status'])) {
@@ -892,6 +964,12 @@ class DocumentRequestController extends Controller
             'status'     => $data['status'],
             'updated_at' => $now,
         ]);
+
+        if ($data['status'] === 'cancelled') {
+            DB::table('document_request_recipients')
+                ->where('request_id', $requestId)
+                ->update(['status' => 'cancelled', 'updated_at' => $now]);
+        }
 
         $event = $data['status'] === 'closed' ? 'document_request.closed' : 'document_request.cancelled';
         $label = $data['status'] === 'closed' ? 'Closed document request' : 'Cancelled document request';

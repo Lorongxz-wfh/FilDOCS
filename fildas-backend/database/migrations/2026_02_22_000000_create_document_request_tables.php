@@ -41,7 +41,7 @@ return new class extends Migration
             $table->foreignId('request_id')->constrained('document_requests')->cascadeOnDelete();
             $table->foreignId('office_id')->constrained('offices')->restrictOnDelete();
 
-            $table->enum('status', ['pending', 'submitted', 'accepted', 'rejected'])->default('pending');
+            $table->enum('status', ['pending', 'submitted', 'accepted', 'rejected', 'cancelled'])->default('pending');
             $table->dateTime('due_at')->nullable();
             $table->dateTime('last_submitted_at')->nullable();
             $table->dateTime('last_reviewed_at')->nullable();

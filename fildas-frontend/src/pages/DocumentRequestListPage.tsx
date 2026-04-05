@@ -11,6 +11,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import { getAuthUser } from "../lib/auth.ts";
 import CreateDocumentRequestModal from "../components/documentRequests/CreateDocumentRequestModal";
+import api from "../services/api";
 import {
   LayoutList,
   TableProperties,
@@ -129,6 +130,8 @@ export default function DocumentRequestListPage() {
   const [recipientStatus, setRecipientStatus] = React.useState<
     "" | "pending" | "submitted" | "accepted" | "rejected"
   >("");
+  const [officeFilter, setOfficeFilter] = React.useState<number | "">("");
+  const [offices, setOffices] = React.useState<any[]>([]);
   const location = useLocation();
   const [createOpen, setCreateOpen] = React.useState(
     () => (location.state as any)?.openModal === true,
@@ -142,8 +145,9 @@ export default function DocumentRequestListPage() {
     if (status) count++;
     if (recipientStatus) count++;
     if (direction !== "all") count++;
+    if (officeFilter) count++;
     return count;
-  }, [status, recipientStatus]);
+  }, [status, recipientStatus, direction, officeFilter]);
 
   const [rows, setRows] = React.useState<any[]>([]);
   const [page, setPage] = React.useState(1);
@@ -175,12 +179,14 @@ export default function DocumentRequestListPage() {
           request_status: isQaAdmin ? status || undefined : undefined,
           status: recipientStatus || undefined,
           direction: direction !== "all" ? direction : undefined,
+          office_id: officeFilter ? Number(officeFilter) : undefined,
         });
       } else if (isQaAdmin) {
         data = await listDocumentRequests({
           ...baseParams,
           status: status || undefined,
           direction: direction !== "all" ? direction : undefined,
+          office_id: officeFilter ? Number(officeFilter) : undefined,
         });
       } else if (direction === "outgoing") {
         data = await listDocumentRequests({
@@ -213,7 +219,7 @@ export default function DocumentRequestListPage() {
       setLoading(false);
       setInitialLoading(false);
     }
-  }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir]);
+  }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter]);
 
   const { refresh: refreshRequests, isRefreshing } = useSmartRefresh(async () => {
     const result = await loadData(1, true);
@@ -226,12 +232,21 @@ export default function DocumentRequestListPage() {
     setPage(1);
     setHasMore(true);
     setInitialLoading(true);
-  }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir]);
+  }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter]);
 
   // Main Effect
   React.useEffect(() => {
     loadData(page, rows.length > 0);
-  }, [page, tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir]);
+  }, [page, tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter]);
+
+  // Fetch offices for filtering (Admin only)
+  React.useEffect(() => {
+    if (isQaAdmin) {
+      api.get("/offices").then((res) => {
+        setOffices(res.data || []);
+      });
+    }
+  }, [isQaAdmin]);
 
   function handleBatchRowClick(row: any) {
     if (isQaAdmin || row.mode === "multi_doc") {
@@ -288,6 +303,36 @@ export default function DocumentRequestListPage() {
         ),
       },
       {
+        key: "office",
+        header: "Source / Target",
+        skeletonShape: "narrow",
+        render: (r) => {
+          const isOutgoing = r.direction === 'outgoing';
+          const isMulti = r.mode === 'multi_office' && isOutgoing && r.office_code?.includes(',');
+          
+          return (
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                {isOutgoing ? "To" : "From"}
+              </span>
+              <span className="text-xs font-bold text-brand-600 dark:text-brand-400 truncate max-w-[140px]">
+                {isMulti ? "Multiple Offices" : r.office_code}
+              </span>
+              {!isMulti && (
+                <span className="text-[10px] text-slate-500 dark:text-slate-500 truncate max-w-[140px]">
+                  {r.office_name}
+                </span>
+              )}
+              {isMulti && (
+                <span className="text-[10px] text-slate-500 dark:text-slate-500 truncate">
+                  {r.office_code?.split(',').length} recipients
+                </span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
         key: "progress",
         header: "Progress",
         skeletonShape: "narrow",
@@ -328,7 +373,7 @@ export default function DocumentRequestListPage() {
     ];
   }, [isQaAdmin]);
 
-  const batchGrid = "100px 110px minmax(200px, 1fr) 200px 100px 140px";
+  const batchGrid = "100px 120px minmax(200px, 1fr) 140px 180px 100px 140px";
 
   const allColumns: TableColumn<any>[] = React.useMemo(() => {
     return [
@@ -379,19 +424,18 @@ export default function DocumentRequestListPage() {
         render: (r) => <TypeText type={r.batch_mode || "REQUEST"} />,
       },
       {
-        key: "batch_status",
-        header: "Batch Status",
-        skeletonShape: "narrow",
-        render: (r) => <NormalText secondary>{r.batch_status}</NormalText>,
-      },
-      {
         key: "office",
         header: "Office",
         skeletonShape: "narrow",
         render: (r) => (
-          <NormalText secondary>
-            {r.office_code || r.office_name || "—"}
-          </NormalText>
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+              {r.office_code}
+            </span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-500 truncate max-w-[120px]">
+              {r.office_name}
+            </span>
+          </div>
         ),
       },
       {
@@ -421,7 +465,7 @@ export default function DocumentRequestListPage() {
     ];
   }, []);
 
-  const gridCols = "100px minmax(120px, 1fr) 100px 100px 110px 100px 140px 140px";
+  const gridCols = "100px minmax(120px, 1fr) 100px 100px 120px 140px 140px";
 
   const REQ_TABS = [
     { key: "batches", label: "Request Batches", icon: <LayoutList className="h-3.5 w-3.5" /> },
@@ -480,14 +524,51 @@ export default function DocumentRequestListPage() {
           setStatus("");
           setRecipientStatus("");
           setDirection("all");
+          setOfficeFilter("");
           setPage(1);
         }}
         mobileFilters={
           <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1.5 col-span-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Direction</label>
+                <SelectDropdown
+                  value={direction}
+                  onChange={(val) => {
+                    setDirection(val as any);
+                    setPage(1);
+                  }}
+                  className="w-full"
+                  options={[
+                    { value: "all", label: "All directions" },
+                    { value: "incoming", label: "Incoming" },
+                    { value: "outgoing", label: "Outgoing" },
+                  ]}
+                />
+              </div>
+
+              {isQaAdmin && (
+                <div className="flex flex-col gap-1.5 col-span-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Office</label>
+                  <SelectDropdown
+                    value={officeFilter}
+                    onChange={(val) => {
+                      setOfficeFilter(val as any);
+                      setPage(1);
+                    }}
+                    placeholder="All offices"
+                    className="w-full"
+                    options={[
+                      { value: "", label: "All offices" },
+                      ...offices.map((o) => ({ value: o.id, label: `${o.code} - ${o.name}` })),
+                    ]}
+                  />
+                </div>
+              )}
+
               {isQaAdmin && tab === "batches" && (
                 <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Status</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Batch Progress</label>
                   <SelectDropdown
                     value={status}
                     onChange={(val) => {
@@ -504,72 +585,62 @@ export default function DocumentRequestListPage() {
                   />
                 </div>
               )}
-
-              {/* Direction Filter for non-QA users or QA too */}
-              {tab === "batches" && (
+              
+              {tab === "all" && (
                 <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Direction</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Item Progress</label>
                   <SelectDropdown
-                    value={direction}
+                    value={recipientStatus}
                     onChange={(val) => {
-                      setDirection(val as any);
+                      setRecipientStatus(val as any);
                       setPage(1);
                     }}
                     className="w-full"
                     options={[
-                      { value: "all", label: "Incoming & Outgoing" },
-                      { value: "incoming", label: "Incoming Requests" },
-                      { value: "outgoing", label: "My Outgoing Requests" },
+                      { value: "", label: "All progress" },
+                      { value: "pending", label: "Pending" },
+                      { value: "submitted", label: "Submitted" },
+                      { value: "accepted", label: "Accepted" },
+                      { value: "rejected", label: "Rejected" },
+                      { value: "cancelled", label: "Cancelled" },
                     ]}
                   />
                 </div>
-              )}
-
-              {tab === "all" && (
-                <>
-                  {isQaAdmin && (
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Batch</label>
-                      <SelectDropdown
-                        value={status}
-                        onChange={(val) => {
-                          setStatus(val as any);
-                          setPage(1);
-                        }}
-                        className="w-full"
-                        options={[
-                          { value: "", label: "All batches" },
-                          { value: "open", label: "Open" },
-                          { value: "closed", label: "Closed" },
-                          { value: "cancelled", label: "Cancelled" },
-                        ]}
-                      />
-                    </div>
-                  )}
-                  <div className={`flex flex-col gap-1.5 ${isQaAdmin ? "" : "col-span-2"}`}>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Progress</label>
-                    <SelectDropdown
-                      value={recipientStatus}
-                      onChange={(val) => {
-                        setRecipientStatus(val as any);
-                        setPage(1);
-                      }}
-                      className="w-full"
-                      options={[
-                        { value: "", label: "All progress" },
-                        { value: "pending", label: "Pending" },
-                        { value: "submitted", label: "Submitted" },
-                        { value: "accepted", label: "Accepted" },
-                        { value: "rejected", label: "Rejected" },
-                      ]}
-                    />
-                  </div>
-                </>
               )}
             </div>
           </div>
         }
       >
+        <SelectDropdown
+          value={direction}
+          onChange={(val) => {
+            setDirection(val as any);
+            setPage(1);
+          }}
+          className="w-40"
+          options={[
+            { value: "all", label: "All directions" },
+            { value: "incoming", label: "Incoming" },
+            { value: "outgoing", label: "Outgoing" },
+          ]}
+        />
+
+        {isQaAdmin && (
+          <SelectDropdown
+            value={officeFilter}
+            onChange={(val) => {
+              setOfficeFilter(val as any);
+              setPage(1);
+            }}
+            placeholder="All Offices"
+            className="w-48"
+            options={[
+              { value: "", label: "All Offices" },
+              ...offices.map((o) => ({ value: o.id, label: o.code })),
+            ]}
+          />
+        )}
+
         {isQaAdmin && tab === "batches" && (
           <SelectDropdown
             value={status}
@@ -587,56 +658,23 @@ export default function DocumentRequestListPage() {
           />
         )}
 
-        {tab === "batches" && (
+        {tab === "all" && (
           <SelectDropdown
-            value={direction}
+            value={recipientStatus}
             onChange={(val) => {
-              setDirection(val as any);
+              setRecipientStatus(val as any);
               setPage(1);
             }}
-            className="w-40"
+            className="w-32"
             options={[
-              { value: "all", label: "All directions" },
-              { value: "incoming", label: "Incoming" },
-              { value: "outgoing", label: "Outgoing" },
+              { value: "", label: "All progress" },
+              { value: "pending", label: "Pending" },
+              { value: "submitted", label: "Submitted" },
+              { value: "accepted", label: "Accepted" },
+              { value: "rejected", label: "Rejected" },
+              { value: "cancelled", label: "Cancelled" },
             ]}
           />
-        )}
-
-        {tab === "all" && (
-          <>
-            {isQaAdmin && (
-              <SelectDropdown
-                value={status}
-                onChange={(val) => {
-                  setStatus(val as any);
-                  setPage(1);
-                }}
-                className="w-32"
-                options={[
-                  { value: "", label: "All batches" },
-                  { value: "open", label: "Open" },
-                  { value: "closed", label: "Closed" },
-                  { value: "cancelled", label: "Cancelled" },
-                ]}
-              />
-            )}
-            <SelectDropdown
-              value={recipientStatus}
-              onChange={(val) => {
-                setRecipientStatus(val as any);
-                setPage(1);
-              }}
-              className="w-32"
-              options={[
-                { value: "", label: "All progress" },
-                { value: "pending", label: "Pending" },
-                { value: "submitted", label: "Submitted" },
-                { value: "accepted", label: "Accepted" },
-                { value: "rejected", label: "Rejected" },
-              ]}
-            />
-          </>
         )}
       </SearchFilterBar>
 
