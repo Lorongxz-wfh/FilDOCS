@@ -155,25 +155,20 @@ class DocumentTemplateController extends Controller
     {
         $this->authorize('delete', $template);
 
-        // Remove the file from storage
-        $disk = config('filesystems.default');
-
-        if ($template->file_path && Storage::disk($disk)->exists($template->file_path)) {
-            Storage::disk($disk)->delete($template->file_path);
-        }
-
-        // Delete thumbnail
-        if ($template->thumbnail_path) {
-            Storage::disk('public')->delete($template->thumbnail_path);
-        }
-
         $user = $request->user();
         $templateName = $template->name;
         $templateId   = $template->id;
 
-        $template->forceDelete(); // hard delete; use delete() if you want soft-delete history
+        $template->delete();
 
-        $this->logActivity('template.deleted', 'Deleted a template', $user->id, $user->office_id, ['template_id' => $templateId, 'name' => $templateName]);
+        $this->logActivity('template.deleted', 'Deleted a template', $user->id, $user->office_id, [
+            'template_id' => $templateId, 
+            'name' => $templateName
+        ]);
+
+        try {
+            broadcast(new \App\Events\WorkspaceChanged('template'));
+        } catch (\Throwable) {}
 
         return response()->json(['message' => 'Template deleted.']);
     }

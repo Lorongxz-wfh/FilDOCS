@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { 
   listDocumentsPage,
+  deleteDocument
 } from "../services/documents";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
@@ -8,6 +9,10 @@ import Table from "../components/ui/Table";
 import Alert from "../components/ui/Alert";
 import { formatDate } from "../utils/formatters";
 import { buildArchiveColumns } from "./documentLibrary/DocumentLibraryColumns";
+import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
+import { useToast } from "../components/ui/toast/ToastContext";
+import Modal from "../components/ui/Modal";
+import Button from "../components/ui/Button";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
@@ -16,6 +21,26 @@ import DateRangeInput from "../components/ui/DateRangeInput";
 
 export default function ArchivePage() {
   const navigate = useNavigate();
+  const adminDebugMode = useAdminDebugMode();
+  const { push } = useToast();
+
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!deletingId) return;
+    setIsDeleting(true);
+    try {
+      await deleteDocument(deletingId);
+      push({ type: "success", title: "Deleted", message: "Archived document has been soft-deleted." });
+      setRows(prev => prev.filter(r => r.id !== deletingId));
+      setDeletingId(null);
+    } catch (e: any) {
+      push({ type: "error", title: "Delete failed", message: e.message });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
@@ -107,7 +132,9 @@ export default function ArchivePage() {
 
   const { refreshing } = usePageBurstRefresh(() => loadData(false));
 
-  const columns = useMemo(() => buildArchiveColumns(), []);
+  const columns = useMemo(() => {
+    return buildArchiveColumns(adminDebugMode ? (id: number) => setDeletingId(id) : undefined);
+  }, [adminDebugMode]);
 
   const handleRowClick = (row: any) => {
     navigate(`/documents/${row.id}/view`, { 
@@ -253,7 +280,7 @@ export default function ArchivePage() {
           onRowClick={handleRowClick}
           hasMore={hasMore}
           onLoadMore={() => loadData(true)}
-          gridTemplateColumns="140px minmax(200px, 1fr) 110px 100px 100px 140px"
+          gridTemplateColumns={adminDebugMode ? "140px minmax(200px, 1fr) 110px 100px 100px 140px 50px" : "140px minmax(200px, 1fr) 110px 100px 100px 140px"}
           sortBy={sortBy}
           sortDir={sortDir}
           onSortChange={(key, dir) => {
@@ -281,6 +308,22 @@ export default function ArchivePage() {
           )}
         />
       </div>
+
+      <Modal
+        open={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        title="Confirm Deletion"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setDeletingId(null)}>Cancel</Button>
+            <Button variant="danger" loading={isDeleting} onClick={handleDelete}>Delete Permanently</Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Are you sure you want to delete this archived document? This action is reversible by system administrators but will remove the item from the archive list.
+        </p>
+      </Modal>
     </PageFrame>
   );
 }

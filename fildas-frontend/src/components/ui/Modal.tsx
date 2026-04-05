@@ -7,6 +7,7 @@ type Props = {
   onClose: () => void;
   widthClassName?: string;
   headerActions?: React.ReactNode;
+  footer?: React.ReactNode;
 };
 
 export default function Modal({
@@ -16,6 +17,7 @@ export default function Modal({
   onClose,
   widthClassName = "max-w-lg",
   headerActions,
+  footer,
 }: Props) {
   useEffect(() => {
     if (!open) return;
@@ -71,6 +73,13 @@ export default function Modal({
           <div className="p-3 sm:px-4 sm:py-4 max-h-[80vh] overflow-y-auto min-h-0 flex-1 sm:flex-none">
             {children}
           </div>
+
+          {/* Footer */}
+          {footer && (
+            <div className="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50/50 px-4 py-3 dark:border-surface-400 dark:bg-surface-600/30">
+              {footer}
+            </div>
+          )}
         </div>
       </div>
     </div>

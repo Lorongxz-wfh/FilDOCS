@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Sun, Moon, Menu, PanelLeftClose } from "lucide-react";
+import { Sun, Moon, Menu, PanelLeftClose, UserSearch } from "lucide-react";
+import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
 
 interface SidebarBrandProps {
   collapsed: boolean;
@@ -20,6 +21,7 @@ const SidebarBrand: React.FC<SidebarBrandProps> = ({
   theme,
 }) => {
   const navigate = useNavigate();
+  const debugMode = useAdminDebugMode();
 
   return (
     <div className="shrink-0 flex items-center justify-between border-b border-neutral-200 dark:border-surface-400 px-3 h-13.5">
@@ -31,9 +33,16 @@ const SidebarBrand: React.FC<SidebarBrandProps> = ({
           <img src="/favicon.png" alt="FilDAS" className="h-full w-full object-contain" />
         </div>
         {(!collapsed || mobileOpen) && (
-          <span className="text-[17px] font-bold tracking-tight text-neutral-900 dark:text-surface-50 truncate">
-            FilDAS
-          </span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[17px] font-bold tracking-tight text-neutral-900 dark:text-surface-50 truncate">
+              FilDAS
+            </span>
+            {debugMode && (
+              <div className="flex items-center justify-center h-5 w-5 rounded-full bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 animate-pulse shrink-0">
+                <UserSearch className="h-3 w-3" strokeWidth={2.5} />
+              </div>
+            )}
+          </div>
         )}
       </div>
 

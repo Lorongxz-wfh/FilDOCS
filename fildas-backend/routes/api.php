@@ -90,7 +90,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     });
     Route::get('/work-queue', [WorkflowController::class, 'workQueue']);
 
-    Route::get('/documents',            [DocumentController::class, 'index']);
+    Route::get('/documents',                [DocumentController::class, 'index']);
+    Route::delete('/documents/{document}',  [DocumentController::class, 'destroy']);
     Route::post('/documents',           [DocumentController::class, 'store']);
     Route::get('/documents/{document}',         [DocumentController::class, 'show']);
     Route::patch('/documents/{document}',       [DocumentController::class, 'update']);
@@ -200,6 +201,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::get('/document-request-items/{item}/example/preview-link', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'examplePreviewLink']);
     Route::get('/document-request-items/{item}/example/download-link', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'exampleDownloadLink']);
     Route::get('/document-requests/active-offices', [DocumentRequestController::class, 'activeOffices']);
+    Route::delete('/document-requests/{request}', [DocumentRequestController::class, 'destroy']);
     Route::get('/document-requests',         [DocumentRequestController::class, 'index']);
     Route::get('/documents/stats',           [DocumentController::class, 'stats']);
     Route::post('/document-requests',        [DocumentRequestController::class, 'store']);

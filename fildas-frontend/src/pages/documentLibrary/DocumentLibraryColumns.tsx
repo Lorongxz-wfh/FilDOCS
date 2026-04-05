@@ -1,4 +1,5 @@
 import React from "react";
+import { Trash2 } from "lucide-react";
 import type { TableColumn } from "../../components/ui/Table";
 import type { Document } from "../../services/documents";
 import { formatDate } from "../../utils/formatters";
@@ -27,8 +28,8 @@ function TypeText({ type }: { type: string }) {
 
 // ── Column builders ───────────────────────────────────────────────────────────
 
-export function buildCreatedColumns(): TableColumn<Document>[] {
-  return [
+export function buildCreatedColumns(onDelete?: (id: number) => void): TableColumn<Document>[] {
+  const cols: TableColumn<Document>[] = [
     {
       key: "date_distributed",
       header: "Distributed",
@@ -116,10 +117,31 @@ export function buildCreatedColumns(): TableColumn<Document>[] {
       ),
     },
   ];
+
+  if (onDelete) {
+    cols.push({
+      key: "actions",
+      header: "",
+      align: "right",
+      render: (doc) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(doc.id);
+          }}
+          className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      ),
+    });
+  }
+
+  return cols;
 }
 
-export function buildSharedColumns(): TableColumn<Document>[] {
-  return [
+export function buildSharedColumns(onDelete?: (id: number) => void): TableColumn<Document>[] {
+  const cols: TableColumn<Document>[] = [
     {
       key: "date_distributed",
       header: "Distributed",
@@ -207,12 +229,33 @@ export function buildSharedColumns(): TableColumn<Document>[] {
       ),
     },
   ];
+
+  if (onDelete) {
+    cols.push({
+      key: "actions",
+      header: "",
+      align: "right",
+      render: (doc) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(doc.id);
+          }}
+          className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      ),
+    });
+  }
+
+  return cols;
 }
 
 // Map old names to new unified builder with correct headers
 export const buildBaseDocColumns = () => buildCreatedColumns();
 
-export function buildRequestedColumns(isQaAdmin: boolean): TableColumn<any>[] {
+export function buildRequestedColumns(isQaAdmin: boolean, onDelete?: (id: number) => void): TableColumn<any>[] {
   const cols: TableColumn<any>[] = [
     {
       key: "request",
@@ -264,11 +307,30 @@ export function buildRequestedColumns(isQaAdmin: boolean): TableColumn<any>[] {
     },
   );
 
+  if (onDelete) {
+    cols.push({
+      key: "actions",
+      header: "",
+      align: "right",
+      render: (r) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(r.request_id || r.id);
+          }}
+          className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      ),
+    });
+  }
+
   return cols;
 }
 
-export function buildAllColumns(): TableColumn<LibraryItem>[] {
-  return [
+export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<LibraryItem>[] {
+  const cols: TableColumn<LibraryItem>[] = [
     {
       key: "distributed",
       header: "Distributed",
@@ -361,10 +423,31 @@ export function buildAllColumns(): TableColumn<LibraryItem>[] {
       ),
     },
   ];
+
+  if (onDelete) {
+    cols.push({
+      key: "actions",
+      header: "",
+      align: "right",
+      render: (item) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(item.docId || item.reqId || 0);
+          }}
+          className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      ),
+    });
+  }
+
+  return cols;
 }
 
-export function buildArchiveColumns(): TableColumn<Document>[] {
-  return [
+export function buildArchiveColumns(onDelete?: (id: number) => void): TableColumn<Document>[] {
+  const cols: TableColumn<Document>[] = [
     {
       key: "archived_on",
       header: "Archived At",
@@ -444,4 +527,25 @@ export function buildArchiveColumns(): TableColumn<Document>[] {
       },
     },
   ];
+
+  if (onDelete) {
+    cols.push({
+      key: "actions",
+      header: "",
+      align: "right",
+      render: (doc) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(doc.id);
+          }}
+          className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      ),
+    });
+  }
+
+  return cols;
 }

@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { useNavigate } from "react-router-dom";
-import { listDocumentsPage, type Document } from "../services/documents";
+import { listDocumentsPage, deleteDocument, type Document } from "../services/documents";
 import { getUserRole, isQA, isSysAdmin } from "../lib/roleFilters";
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
+import { useToast } from "../components/ui/toast/ToastContext";
+import { Trash2 } from "lucide-react";
+import Modal from "../components/ui/Modal";
+import Button from "../components/ui/Button";
 import PageFrame from "../components/layout/PageFrame";
 import Table, { type TableColumn } from "../components/ui/Table";
 import Alert from "../components/ui/Alert";
@@ -56,6 +60,25 @@ export default function MyWorkQueueListPage() {
 
   const hasMoreRef = useRef(true);
   const firstDocIdRef = useRef<number | null>(null);
+
+  const { push } = useToast();
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!deletingId) return;
+    setIsDeleting(true);
+    try {
+      await deleteDocument(deletingId);
+      push({ type: "success", title: "Deleted", message: "Workflow record has been soft-deleted." });
+      setRows(prev => prev.filter(r => r.id !== deletingId));
+      setDeletingId(null);
+    } catch (e: any) {
+      push({ type: "error", title: "Delete failed", message: e.message });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     const t = window.setTimeout(() => setQDebounced(q), 300);
@@ -203,12 +226,32 @@ export default function MyWorkQueueListPage() {
         render: (doc) => <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tabular-nums">{formatDate(doc.created_at)}</span>,
       }
     );
+
+    if (adminDebugMode) {
+      cols.push({
+        key: "actions",
+        header: "",
+        align: "right",
+        render: (doc) => (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeletingId(doc.id);
+            }}
+            className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )
+      });
+    }
+
     return cols;
-  }, [showOffice, tab]);
+  }, [showOffice, tab, adminDebugMode]);
 
   const gridTemplateColumns = showOffice
-    ? "110px minmax(200px, 1fr) 110px 120px 90px 60px 110px"
-    : "110px minmax(200px, 1fr) 110px 120px 60px 110px";
+    ? (adminDebugMode ? "110px minmax(200px, 1fr) 110px 120px 90px 60px 110px 50px" : "110px minmax(200px, 1fr) 110px 120px 90px 60px 110px")
+    : (adminDebugMode ? "110px minmax(200px, 1fr) 110px 120px 60px 110px 50px" : "110px minmax(200px, 1fr) 110px 120px 60px 110px");
 
   return (
     <PageFrame
@@ -306,6 +349,22 @@ export default function MyWorkQueueListPage() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <Modal
+        open={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        title="Confirm Deletion"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setDeletingId(null)}>Cancel</Button>
+            <Button variant="danger" loading={isDeleting} onClick={handleDelete}>Delete Document</Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Are you sure you want to delete this document workflow? This will soft-delete the record and remove it from active work queues across all offices.
+        </p>
+      </Modal>
     </PageFrame>
   );
 }

@@ -690,3 +690,14 @@ export async function restoreDocument(documentId: number): Promise<void> {
     throw new Error(msg);
   }
 }
+export async function deleteDocument(documentId: number): Promise<void> {
+  try {
+    const api = await getApi();
+    await api.delete(`/documents/${documentId}`);
+  } catch (e: any) {
+    const status = e?.response?.status;
+    const msg =
+      e?.response?.data?.message || (status ? `Delete failed (${status})` : "Delete failed");
+    throw new Error(msg);
+  }
+}

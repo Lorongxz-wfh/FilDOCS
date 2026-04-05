@@ -28,6 +28,7 @@ import TemplateList from "../components/templates/TemplateList";
 import TemplateGridCard from "../components/templates/TemplateGridCard";
 import TemplateUploadForm from "../components/templates/TemplateUploadForm";
 import TemplateDetailPanel from "../components/templates/TemplateDetailPanel";
+import Button from "../components/ui/Button";
 
 type ViewMode = "grid" | "list";
 type ScopeFilter = "all" | "global" | "mine";
@@ -51,7 +52,11 @@ const TemplatesPage: React.FC = () => {
   const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [confirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   const location = useLocation();
   const [modalOpen, setModalOpen] = useState(
     () => (location.state as any)?.openModal === true,
@@ -150,15 +155,22 @@ const TemplatesPage: React.FC = () => {
   });
 
 
-  const handleDeleteClick = async (id: number) => {
-    if (!window.confirm("Delete this template? This cannot be undone.")) return;
+  const handleDeleteClick = (id: number) => {
     setDeletingId(id);
+    setConfirmDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingId) return;
+    setIsDeleting(true);
     try {
-      await deleteTemplate(id);
-      removeFromTemplatesCache(id);
-      setTemplates((prev) => prev.filter((t) => t.id !== id));
-      setSelectedTemplate((prev) => (prev?.id === id ? null : prev));
+      await deleteTemplate(deletingId);
+      removeFromTemplatesCache(deletingId);
+      setTemplates((prev) => prev.filter((t) => t.id !== deletingId));
+      setSelectedTemplate((prev) => (prev?.id === deletingId ? null : prev));
       push({ type: "success", title: "Deleted", message: "Template removed." });
+      setConfirmDeleteModalOpen(false);
+      setDeletingId(null);
     } catch (e: any) {
       push({
         type: "error",
@@ -166,7 +178,7 @@ const TemplatesPage: React.FC = () => {
         message: e?.message ?? "Unknown error",
       });
     } finally {
-      setDeletingId(null);
+      setIsDeleting(false);
     }
   };
 
@@ -473,6 +485,22 @@ const TemplatesPage: React.FC = () => {
           onUploadError={handleUploadError}
           canChooseScope={canChooseScope}
         />
+      </Modal>
+
+      <Modal
+        open={confirmDeleteModalOpen}
+        onClose={() => setConfirmDeleteModalOpen(false)}
+        title="Confirm Deletion"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setConfirmDeleteModalOpen(false)}>Cancel</Button>
+            <Button variant="danger" loading={isDeleting} onClick={confirmDelete}>Delete Template</Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Are you sure you want to delete this template? This action will soft-delete the template, removing it from use across the system.
+        </p>
       </Modal>
     </>
   );

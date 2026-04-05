@@ -1469,5 +1469,32 @@ class DocumentController extends Controller
 
         return response()->json(['message' => 'Document restored.']);
     }
+
+    public function destroy(Request $request, Document $document)
+    {
+        $user = $request->user();
+        $roleName = $this->roleNameOf($user) ?: null;
+
+        if (!in_array($roleName, ['admin', 'sysadmin'], true)) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $latestVersionId = $document->latestVersion?->id;
+        $title = $document->title;
+        $id = $document->id;
+
+        $document->delete();
+
+        $this->logActivity('document.deleted', 'Deleted document', $user->id, $user->office_id, [
+            'document_id' => $id,
+            'title' => $title,
+        ], $id, $latestVersionId);
+
+        try {
+            broadcast(new \App\Events\WorkspaceChanged('document'));
+        } catch (\Throwable) {}
+
+        return response()->json(['message' => 'Document record deleted.']);
+    }
 }
 

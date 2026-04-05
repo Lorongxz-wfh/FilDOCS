@@ -28,11 +28,18 @@ import {
   docToLibraryItem,
   reqToLibraryItem,
 } from "./documentLibrary/documentLibraryTypes";
-import {
+import { 
   listDocumentsPage,
+  deleteDocument,
 } from "../services/documents";
-import { listDocumentRequestIndividual } from "../services/documentRequests";
-import { buildBaseDocColumns, buildSharedColumns, buildRequestedColumns, buildAllColumns } from "./documentLibrary/DocumentLibraryColumns";
+import { 
+  listDocumentRequestIndividual,
+  deleteDocumentRequest,
+} from "../services/documentRequests";
+import { useToast } from "../components/ui/toast/ToastContext";
+import Modal from "../components/ui/Modal";
+import Button from "../components/ui/Button";
+import { buildCreatedColumns, buildSharedColumns, buildRequestedColumns, buildAllColumns } from "./documentLibrary/DocumentLibraryColumns";
 
 const TAB_LABELS: Record<LibTab, string> = {
   all: "All Documents",
@@ -78,6 +85,33 @@ export default function DocumentLibraryPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { push } = useToast();
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingType, setDeletingType] = useState<"doc" | "req" | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!deletingId || !deletingType) return;
+    setIsDeleting(true);
+    try {
+      if (deletingType === "doc") {
+        await deleteDocument(deletingId);
+      } else {
+        await deleteDocumentRequest(deletingId);
+      }
+      push({ type: "success", title: "Deleted", message: "Record has been soft-deleted." });
+      setRows(prev => prev.filter(r => {
+        const id = r.docId || r.reqId || r.request_id || r.id;
+        return id !== deletingId;
+      }));
+      setDeletingId(null);
+    } catch (e: any) {
+      push({ type: "error", title: "Delete failed", message: e.message });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Tab-specific paging states
   const [allDocPage, setAllDocPage] = useState(1);
@@ -251,10 +285,20 @@ export default function DocumentLibraryPage() {
     return Array.from(map.entries()).map(([id, label]) => ({ value: String(id), label }));
   }, [rows]);
 
-  const baseDocColumns = useMemo(() => buildBaseDocColumns(), []);
-  const sharedColumns = useMemo(() => buildSharedColumns(), []);
-  const requestedColumns = useMemo(() => buildRequestedColumns(isAdmin || isQA(role)), [isAdmin, role]);
-  const allColumns = useMemo(() => buildAllColumns(), []);
+  const columns = useMemo(() => {
+    const delDoc = adminDebugMode ? (id: number) => { setDeletingId(id); setDeletingType("doc"); } : undefined;
+    const delReq = adminDebugMode ? (id: number) => { setDeletingId(id); setDeletingType("req"); } : undefined;
+    const delAll = adminDebugMode ? (id: number) => { 
+        setDeletingId(id);
+        const row = rows.find(r => (r.docId || r.reqId || r.id || r.request_id) === id);
+        setDeletingType(row?.docId ? "doc" : "req");
+    } : undefined;
+
+    if (tab === "created") return buildCreatedColumns(delDoc);
+    if (tab === "shared") return buildSharedColumns(delDoc);
+    if (tab === "requested") return buildRequestedColumns(!!isAdmin || isQA(role), delReq);
+    return buildAllColumns(delAll);
+  }, [tab, isAdmin, role, adminDebugMode, rows]);
 
   const handleRowClick = (row: any) => {
     const libCrumbs = [{ label: "Library", to: "/documents" }];
@@ -393,7 +437,7 @@ export default function DocumentLibraryPage() {
             <Table<any>
               bare
               className="h-full"
-              columns={tab === "created" ? baseDocColumns : tab === "shared" ? sharedColumns : tab === "requested" ? requestedColumns : allColumns}
+              columns={columns}
               rows={rows}
               rowKey={(r: any, idx) => {
                 if (tab === "all") return r._key || `item-${idx}-${r.id || r.docId || r.reqId}`;
@@ -451,6 +495,23 @@ export default function DocumentLibraryPage() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <Modal
+        open={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        title="Confirm Deletion"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setDeletingId(null)}>Cancel</Button>
+            <Button variant="danger" loading={isDeleting} onClick={handleDelete}>Delete Record</Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Are you sure you want to delete this {deletingType === "doc" ? "document" : "document request"}? 
+          This will soft-delete the record, removing it from the active library.
+        </p>
+      </Modal>
     </PageFrame>
   );
 }

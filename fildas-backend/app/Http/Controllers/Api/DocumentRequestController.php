@@ -1215,4 +1215,32 @@ class DocumentRequestController extends Controller
 
         return response()->json($offices);
     }
+
+    public function destroy(DocumentRequest $request)
+    {
+        $user = auth()->user();
+        if (!in_array($user?->role?->name, ['Admin', 'SysAdmin'], true)) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $id = $request->id;
+        $title = $request->title;
+
+        $request->delete();
+
+        // Manual log entry (trait is used in controller)
+        \App\Models\ActivityLog::create([
+            'user_id' => $user->id,
+            'office_id' => $user->office_id,
+            'event' => 'document_request.deleted',
+            'description' => 'Deleted document request',
+            'meta' => ['id' => $id, 'title' => $title],
+        ]);
+
+        try {
+            broadcast(new \App\Events\WorkspaceChanged('request'));
+        } catch (\Throwable) {}
+
+        return response()->json(['message' => 'Document Request deleted.']);
+    }
 }

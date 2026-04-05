@@ -432,3 +432,7 @@ export async function updateDocumentRequestRecipient(
   );
   return res.data as { message: string; id: number };
 }
+export async function deleteDocumentRequest(requestId: number): Promise<void> {
+  const res = await api.delete(`/document-requests/${requestId}`);
+  return res.data;
+}

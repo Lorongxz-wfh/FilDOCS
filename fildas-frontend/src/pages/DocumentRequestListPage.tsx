@@ -6,6 +6,7 @@ import {
   listDocumentRequestInbox,
   listDocumentRequests,
   listDocumentRequestIndividual,
+  deleteDocumentRequest,
   type DocumentRequestProgress,
 } from "../services/documentRequests";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -17,6 +18,7 @@ import {
   TableProperties,
   Users,
   FileStack,
+  Trash2,
 } from "lucide-react";
 import { Tabs } from "../components/ui/Tabs";
 import { PageActions, CreateAction, RefreshAction } from "../components/ui/PageActions";
@@ -28,6 +30,9 @@ import SearchFilterBar from "../components/ui/SearchFilterBar";
 import SelectDropdown from "../components/ui/SelectDropdown";
 import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from "../components/ui/toast/ToastContext";
+import Modal from "../components/ui/Modal";
+import Button from "../components/ui/Button";
 
 
 type ViewTab = "batches" | "all";
@@ -117,6 +122,7 @@ export default function DocumentRequestListPage() {
   const me = getAuthUser();
   const role = roleLower(me);
   const adminDebugMode = useAdminDebugMode();
+  const { push } = useToast();
   const isQaAdmin =
     ["qa", "sysadmin"].includes(role) || (role === "admin" && adminDebugMode);
   
@@ -141,6 +147,8 @@ export default function DocumentRequestListPage() {
   const [direction, setDirection] = React.useState<"all" | "incoming" | "outgoing">("all");
   const [sortBy, setSortBy] = React.useState<string>("created_at");
   const [sortDir, setSortDir] = React.useState<"asc" | "desc">("desc");
+  const [deletingId, setDeletingId] = React.useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const activeFiltersCount = React.useMemo(() => {
     let count = 0;
@@ -160,6 +168,21 @@ export default function DocumentRequestListPage() {
 
   const qDebounced = useDebouncedValue(q, 400);
   const navigate = useNavigate();
+
+  const handleDelete = async () => {
+    if (!deletingId) return;
+    setIsDeleting(true);
+    try {
+      await deleteDocumentRequest(deletingId);
+      push({ type: "success", title: "Deleted", message: "Document Request has been soft-deleted." });
+      setRows(prev => prev.filter(r => (r.request_id || r.id) !== deletingId));
+      setDeletingId(null);
+    } catch (e: any) {
+      push({ type: "error", title: "Delete failed", message: e.message });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const loadData = React.useCallback(async (pageNum: number, silent = false) => {
     if (!silent) setInitialLoading(true);
@@ -202,8 +225,6 @@ export default function DocumentRequestListPage() {
           direction: "incoming",
         });
       } else {
-        // "Both" for non-QA: For now we default to Outgoing if they can create, 
-        // but we've already handled specific filters.
         data = canCreate ? await listDocumentRequests(baseParams) : await listDocumentRequestInbox(baseParams);
       }
 
@@ -214,21 +235,20 @@ export default function DocumentRequestListPage() {
         data?.last_page != null &&
         data.current_page < data.last_page;
       setHasMore(more);
-      return { data: incoming, changed: true }; // Rough changed flag
+      return { data: incoming, changed: true };
     } catch (e: any) {
       setError(e?.response?.data?.message ?? e?.message ?? "Failed to load.");
     } finally {
       setLoading(false);
       setInitialLoading(false);
     }
-  }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter]);
+  }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter, canCreate]);
 
   const { refresh: refreshRequests, isRefreshing } = useSmartRefresh(async () => {
     const result = await loadData(1, true);
     return { changed: !!result?.data?.length };
   });
 
-  // Reset on filter/tab/sort change
   React.useEffect(() => {
     setRows([]);
     setPage(1);
@@ -236,12 +256,10 @@ export default function DocumentRequestListPage() {
     setInitialLoading(true);
   }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter]);
 
-  // Main Effect
   React.useEffect(() => {
     loadData(page, rows.length > 0);
   }, [page, tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter]);
 
-  // Fetch offices for filtering (Admin only)
   React.useEffect(() => {
     if (isQaAdmin) {
       api.get("/document-requests/active-offices").then((res) => {
@@ -269,7 +287,7 @@ export default function DocumentRequestListPage() {
   }
 
   const batchColumns: TableColumn<any>[] = React.useMemo(() => {
-    return [
+    const cols: TableColumn<any>[] = [
       {
         key: "direction",
         header: "Direction",
@@ -373,9 +391,33 @@ export default function DocumentRequestListPage() {
         ),
       },
     ];
-  }, [isQaAdmin]);
 
-  const batchGrid = "100px 120px minmax(200px, 1fr) 140px 180px 100px 140px";
+    if (adminDebugMode) {
+      cols.push({
+        key: "actions",
+        header: "",
+        align: "right",
+        render: (row) => (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeletingId(row.request_id || row.id);
+            }}
+            className="p-1.5 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+            title="Delete Request"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        ),
+      });
+    }
+
+    return cols;
+  }, [isQaAdmin, adminDebugMode]);
+
+  const batchGrid = adminDebugMode 
+    ? "100px 120px minmax(200px, 1fr) 140px 180px 100px 140px 60px"
+    : "100px 120px minmax(200px, 1fr) 140px 180px 100px 140px";
 
   const allColumns: TableColumn<any>[] = React.useMemo(() => {
     return [
@@ -808,6 +850,22 @@ export default function DocumentRequestListPage() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <Modal
+        open={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        title="Confirm Deletion"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setDeletingId(null)}>Cancel</Button>
+            <Button variant="danger" loading={isDeleting} onClick={handleDelete}>Delete Request</Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Are you sure you want to delete this document request? This action is reversible by system administrators but will remove the item from all active workspaces.
+        </p>
+      </Modal>
 
       <CreateDocumentRequestModal
         open={createOpen}
