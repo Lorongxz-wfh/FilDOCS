@@ -44,6 +44,7 @@ class SystemHealthController extends Controller
         $storageDriver = config('filesystems.default');
         $storageConnected = true;
         $storageBucket = null;
+        $storageErrorKind = null;
 
         if ($storageDriver === 's3' || $storageDriver === 'r2') {
             $storageBucket = config('filesystems.disks.' . $storageDriver . '.bucket') ?? config('filesystems.disks.s3.bucket');
@@ -129,11 +130,14 @@ class SystemHealthController extends Controller
         if ($validated['mode'] === 'off') {
             $status->maintenance_starts_at = null;
             $status->is_notified = false;
+            
+            // Broadcast cancellation so banners disappear immediately
+            broadcast(new \App\Events\MaintenanceCancelled());
         }
 
         $status->fill([
             'maintenance_mode' => $validated['mode'],
-            'maintenance_message' => $validated['message'],
+            'maintenance_message' => $validated['message'] ?? ($validated['mode'] !== 'off' ? 'System is currently undergoing maintenance.' : null),
         ]);
 
         $status->save();
@@ -164,7 +168,7 @@ class SystemHealthController extends Controller
 
         $status = SystemStatus::first() ?? new SystemStatus();
         $status->maintenance_starts_at = $startsAt;
-        $status->maintenance_message = $validated['message'] ?? 'System will be undergoing maintenance.';
+        $status->maintenance_message = $validated['message'] ?? 'System maintenance is scheduled. Please save your work.';
         $status->is_notified = true;
         $status->maintenance_mode = $validated['mode']; 
 

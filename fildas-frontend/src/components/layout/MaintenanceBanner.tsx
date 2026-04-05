@@ -83,18 +83,19 @@ export default function MaintenanceBanner() {
     return () => clearInterval(timer);
   }, [schedule]);
 
-  if (!schedule || !timeLeft) return null;
+  const isStarted = schedule && new Date() >= schedule.startsAt;
+  if (!schedule || (!timeLeft && !isStarted)) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] animate-in slide-in-from-top-full duration-500">
-      <div className="bg-amber-500 text-white px-4 py-2.5 flex items-center justify-between shadow-lg">
+    <div className="relative z-[100] animate-in slide-in-from-top-full duration-500">
+      <div className={`${isStarted ? 'bg-rose-500/90' : 'bg-amber-500/90'} backdrop-blur-md text-white px-4 py-2 border-b ${isStarted ? 'border-rose-600/20' : 'border-amber-600/20'} flex items-center justify-between shadow-sm`}>
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="bg-white/20 p-1.5 rounded-md shrink-0">
-            <Clock size={16} className="animate-pulse" />
+            <Clock size={16} className={isStarted ? "" : "animate-pulse"} />
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 overflow-hidden">
             <span className="text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
-              Scheduled Maintenance
+              {isStarted ? "Ongoing Maintenance" : "Scheduled Maintenance"}
             </span>
             <span className="text-xs opacity-90 truncate max-w-md">
               {schedule.message}
@@ -103,9 +104,13 @@ export default function MaintenanceBanner() {
         </div>
 
         <div className="flex items-center gap-4 shrink-0">
-          <div className="flex items-center gap-2 bg-black/10 px-3 py-1 rounded-full border border-white/20">
-            <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest">Starts in</span>
-            <span className="text-sm font-mono font-bold">{timeLeft}</span>
+          <div className={`flex items-center gap-2 ${isStarted ? 'bg-white/20' : 'bg-black/10'} px-3 py-1 rounded-full border border-white/20`}>
+            <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest">
+              {isStarted ? "Status" : "Starts in"}
+            </span>
+            <span className="text-sm font-mono font-bold">
+              {isStarted ? "ACTIVE" : timeLeft}
+            </span>
           </div>
         </div>
       </div>

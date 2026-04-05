@@ -97,7 +97,6 @@ import ProtectedLayout from "./lib/guards/ProtectedLayout";
 import RequireRole from "./lib/guards/RequireRole";
 import { getUserRole } from "./lib/roleFilters";
 
-import MaintenanceBanner from "./components/layout/MaintenanceBanner";
 
 // Routes /reports to the role-appropriate page
 const ReportsRoute: React.FC = () => {
@@ -127,7 +126,6 @@ const MaintenancePage = React.lazy(() => import("./pages/MaintenancePage"));
 export default function App() {
   return (
     <ChunkErrorBoundary>
-      <MaintenanceBanner />
       <Suspense
         fallback={
           <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-surface-600 z-[100]">

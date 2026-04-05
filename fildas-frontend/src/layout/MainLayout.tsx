@@ -3,6 +3,7 @@ import Navbar from "../components/navbar/NavBar";
 import Sidebar from "../components/sidebar/SideBar";
 import BottomNav from "../components/layout/BottomNav";
 import MobileActionFab from "../components/layout/MobileActionFab";
+import MaintenanceBanner from "../components/layout/MaintenanceBanner";
 import { ToastProvider } from "../components/ui/toast/ToastContext";
 import { useThemeContext } from "../lib/ThemeContext";
 
@@ -37,6 +38,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         />
 
         <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
+          <MaintenanceBanner />
           <Navbar
             onThemeToggle={toggle}
             theme={theme}
