@@ -110,8 +110,8 @@ export function buildCreatedColumns(onDelete?: (id: number) => void): TableColum
         header: "Ver.",
         align: "center",
         skeletonShape: "narrow",
-        render: (doc) => (
-          <NormalText secondary>v{doc.version_number}</NormalText>
+        render: (doc: any) => (
+          <NormalText secondary>v{doc.version_number ?? doc.version}</NormalText>
         ),
     },
     {
@@ -233,8 +233,8 @@ export function buildSharedColumns(onDelete?: (id: number) => void): TableColumn
         header: "Ver.",
         align: "center",
         skeletonShape: "narrow",
-        render: (doc) => (
-          <NormalText secondary>v{doc.version_number}</NormalText>
+        render: (doc: any) => (
+          <NormalText secondary>v{doc.version_number ?? doc.version}</NormalText>
         ),
     },
     {
