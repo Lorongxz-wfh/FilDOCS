@@ -203,10 +203,8 @@ class ActivityLogController extends Controller
                 }
             }
 
-            // Fetch activity logs where meta->document_request_id matches
-            $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(meta, '$.document_request_id')) = ?", [
-                (string) $reqId
-            ]);
+            // Fetch activity logs where meta->document_request_id matches (database agnostic)
+            $q->where('meta->document_request_id', (string) $reqId);
         } elseif ($scope === 'office') {
             if (!$userOfficeId) {
                 return response()->json(['message' => 'Your account has no office assigned. Use scope=all or scope=mine.'], 422);

@@ -31,6 +31,7 @@ const TABS_QA: { key: Tab; label: string; icon: React.ReactNode }[] = [
 const TABS_OFFICE_HEAD: { key: Tab; label: string; icon: React.ReactNode }[] = [
   { key: "overview", label: "Overview", icon: <LayoutDashboard className="h-3.5 w-3.5 opacity-70" /> },
   { key: "workflow", label: "Workflow", icon: <BarChart2 className="h-3.5 w-3.5 opacity-70" /> },
+  { key: "requests", label: "Requests", icon: <FileQuestion className="h-3.5 w-3.5 opacity-70" /> },
 ];
 
 const TABS_ADMIN: { key: Tab; label: string; icon: React.ReactNode }[] = [
