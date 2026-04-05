@@ -312,8 +312,18 @@ export default function DocumentRequestPage() {
   }, [loadMessages]);
 
   React.useEffect(() => {
+    let tick = 0;
     const interval = window.setInterval(async () => {
+      tick++;
+      // Poll messages every 10s
       await loadMessages().catch(() => { });
+      
+      // Poll full request state every 3 cycles (30s)
+      if (tick % 3 === 0) {
+        await load(true).catch(() => { });
+        await loadActivity(true).catch(() => { });
+      }
+
       if (isFirstMsgLoadRef.current) {
         isFirstMsgLoadRef.current = false;
         prevMsgCountRef.current = messages.length;
@@ -321,7 +331,7 @@ export default function DocumentRequestPage() {
       }
     }, 10_000);
     return () => window.clearInterval(interval);
-  }, [loadMessages, messages.length]);
+  }, [load, loadMessages, loadActivity]);
 
   // Poll inactive thread for unread indicator — recipient multi-office only
   React.useEffect(() => {

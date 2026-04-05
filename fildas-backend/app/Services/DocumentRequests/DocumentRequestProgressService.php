@@ -11,8 +11,11 @@ class DocumentRequestProgressService
      *
      * Returns an array with keys: total, submitted, accepted.
      */
-    public function buildProgress(int $requestId, string $mode): array
+    public function buildProgress(int $requestId, ?string $mode = 'multi_office'): array
     {
+        $requestId = (int) $requestId;
+        $mode = $mode ?: 'multi_office';
+
         if ($mode === 'multi_office') {
             $recipients = DB::table('document_request_recipients')
                 ->where('request_id', $requestId)

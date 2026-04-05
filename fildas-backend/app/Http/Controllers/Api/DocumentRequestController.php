@@ -44,30 +44,41 @@ class DocumentRequestController extends Controller
             'q'         => 'nullable|string|max:100',
             'per_page'  => 'nullable|integer|min:1|max:50',
             'office_id' => 'nullable|integer',
-            'direction' => 'nullable|in:incoming,outgoing',
+            'direction' => 'nullable|in:all,incoming,outgoing',
+            'sort_by'   => 'nullable|string|in:id,title,created_at,due_at',
+            'sort_dir'  => 'nullable|in:asc,desc',
         ]);
 
         $perPage = (int) ($data['per_page'] ?? 25);
+        $sortMap = [
+            'id'         => 'r.id',
+            'title'      => 'r.title',
+            'created_at' => 'r.created_at',
+            'due_at'     => 'r.due_at'
+        ];
+        $actualSort = $sortMap[$data['sort_by'] ?? 'id'] ?? 'r.id';
+        $sortDir    = $data['sort_dir'] ?? 'desc';
 
         try {
             $q = DB::table('document_requests as r')
                 ->leftJoin('users as u_cre', 'u_cre.id', '=', 'r.created_by_user_id')
                 ->leftJoin('offices as o_cre', 'o_cre.id', '=', 'u_cre.office_id')
-                ->orderByDesc('r.id')
+                ->orderBy($actualSort, $sortDir)
                 ->select([
                     'r.id', 'r.title', 'r.description', 'r.status', 'r.mode', 'r.due_at', 'r.created_at', 'r.created_by_user_id',
-                    // Creator office info (null-safe)
+                    // Creator office info
                     DB::raw("COALESCE(o_cre.code, 'N/A') as creator_office_code"),
-                    DB::raw("COALESCE(o_cre.name, 'System Admin / Unit') as creator_office_name"),
-                    // Recipient office(s) info via subqueries to avoid GROUP BY mess
-                    DB::raw("(SELECT GROUP_CONCAT(DISTINCT o.code SEPARATOR ', ') 
-                              FROM document_request_recipients rr 
-                              JOIN offices o ON o.id = rr.office_id 
-                              WHERE rr.request_id = r.id) as recipient_offices_code"),
-                    DB::raw("(SELECT GROUP_CONCAT(DISTINCT o.name SEPARATOR ', ') 
-                              FROM document_request_recipients rr 
-                              JOIN offices o ON o.id = rr.office_id 
-                              WHERE rr.request_id = r.id) as recipient_offices_name")
+                    DB::raw("COALESCE(o_cre.name, 'Admin Unit') as creator_office_name"),
+                    // Recipient office codes via subquery
+                    DB::raw("(SELECT GROUP_CONCAT(DISTINCT o_sub.code SEPARATOR ', ')
+                              FROM document_request_recipients rr_sub
+                              JOIN offices o_sub ON o_sub.id = rr_sub.office_id
+                              WHERE rr_sub.request_id = r.id) as recipient_offices_code"),
+                    // Recipient office names via subquery
+                    DB::raw("(SELECT GROUP_CONCAT(DISTINCT o_sub.name SEPARATOR ', ')
+                              FROM document_request_recipients rr_sub
+                              JOIN offices o_sub ON o_sub.id = rr_sub.office_id
+                              WHERE rr_sub.request_id = r.id) as recipient_offices_name")
                 ]);
 
             if (!empty($data['q'])) {
@@ -86,7 +97,7 @@ class DocumentRequestController extends Controller
                 $q->where('r.mode', $data['mode']);
             }
 
-            // Visibility filtering
+            // General Visibility (Non-QA must see their own OR where they are recipient)
             if (!$isQa) {
                 $q->where(function ($query) use ($user) {
                     $query->where('r.created_by_user_id', $user->id)
@@ -94,41 +105,51 @@ class DocumentRequestController extends Controller
                               $sub->select(DB::raw(1))
                                   ->from('document_request_recipients as rr_access')
                                   ->whereColumn('rr_access.request_id', 'r.id')
-                                  ->where('rr_access.office_id', $user->office_id);
+                                  ->where('rr_access.office_id', (int) ($user->office_id ?? 0));
                           });
                 });
             }
 
-            // Directional filtering
-            if (!empty($data['direction'])) {
+            // Directional filtering (if selected)
+            if (!empty($data['direction']) && $data['direction'] !== 'all') {
                 if ($data['direction'] === 'outgoing') {
                     $q->where('r.created_by_user_id', $user->id);
                 } elseif ($data['direction'] === 'incoming') {
+                    // Strictly NOT the creator AND must have access (either as QA or as recipient)
                     $q->where('r.created_by_user_id', '!=', $user->id);
                 }
             }
 
-            // Specific office recipient filter
+            // Explicit office filter (mostly for QA)
             if (!empty($data['office_id'])) {
                 $q->whereExists(function ($sub) use ($data) {
                     $sub->select(DB::raw(1))
                         ->from('document_request_recipients as rr_f')
                         ->whereColumn('rr_f.request_id', 'r.id')
-                        ->where('rr_f.office_id', $data['office_id']);
+                        ->where('rr_f.office_id', (int) $data['office_id']);
                 });
             }
 
             $paginated = $q->paginate($perPage);
 
             $items = collect($paginated->items())->map(function ($row) use ($user) {
-                $progress = $this->progress->buildProgress($row->id, $row->mode);
+                // Safeguard against missing mode or ID
+                $progress = null;
+                try {
+                    $progress = $this->progress->buildProgress((int)$row->id, $row->mode ?? 'multi_office');
+                } catch (\Throwable $err) {
+                    // Fallback to zeros if progress calculation fails for one row
+                    \Log::warning("BuildProgress Error on req #{$row->id}: " . $err->getMessage());
+                    $progress = ['total' => 0, 'submitted' => 0, 'accepted' => 0];
+                }
+
                 $isOutgoing = ((int)($row->created_by_user_id ?? 0) === (int)$user->id);
                 
-                $offCode = $isOutgoing ? $row->recipient_offices_code : $row->creator_office_code;
-                $offName = $isOutgoing ? $row->recipient_offices_name : $row->creator_office_name;
+                $offCode = $isOutgoing ? ($row->recipient_offices_code ?? '—') : ($row->creator_office_code ?? '—');
+                $offName = $isOutgoing ? ($row->recipient_offices_name ?? '—') : ($row->creator_office_name ?? '—');
 
                 return [
-                    'id'          => $row->id,
+                    'id'          => (int) $row->id,
                     'title'       => $row->title,
                     'description' => $row->description,
                     'status'      => $row->status,
@@ -140,22 +161,26 @@ class DocumentRequestController extends Controller
                     'office_name' => $offName,
                     'direction'   => $isOutgoing ? 'outgoing' : 'incoming',
                     'is_outgoing' => $isOutgoing,
-                    'created_by_user_id' => $row->created_by_user_id,
+                    'created_by_user_id' => (int) $row->created_by_user_id,
                 ];
             });
 
+            // Convert to array explicitly to avoid Collection JSON wrap issues in array_merge
             return response()->json(array_merge(
                 $paginated->toArray(),
                 [
-                    'data' => $items,
-                    'debug_user_role' => $role,
-                    'debug_is_qa' => $isQa
+                    'data' => $items->all(),
+                    'debug' => [
+                        'role' => $role,
+                        'is_qa' => $isQa,
+                        'user_id' => $user->id
+                    ]
                 ]
             ));
 
         } catch (\Throwable $e) {
-            \Log::error("DocumentRequestController@index error: " . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
+            \Log::error("DocumentRequestController@index fatal: " . $e->getMessage(), [
+                'trace'   => substr($e->getTraceAsString(), 0, 500),
                 'user_id' => $user?->id
             ]);
             return response()->json([
@@ -164,6 +189,7 @@ class DocumentRequestController extends Controller
             ], 500);
         }
     }
+
 
     // ── GET /api/document-requests/recipients (flat individual recipients) ─
     public function indexRecipients(Request $request)
@@ -183,6 +209,7 @@ class DocumentRequestController extends Controller
             'request_status' => 'nullable|in:open,closed,cancelled',
             'per_page'       => 'nullable|integer|min:1|max:50',
             'page'           => 'nullable|integer|min:1',
+            'office_id'      => 'nullable|integer',
         ]);
 
         $perPage = (int) ($data['per_page'] ?? 25);
@@ -225,7 +252,7 @@ class DocumentRequestController extends Controller
         }
 
         if (!empty($data['office_id'])) {
-            $q->where('rr.office_id', $data['office_id']);
+            $q->where('rr.office_id', (int) $data['office_id']);
         }
 
         if (!empty($data['request_status'])) {
@@ -253,6 +280,8 @@ class DocumentRequestController extends Controller
             'request_status' => 'nullable|in:open,closed,cancelled',
             'per_page'       => 'nullable|integer|min:1|max:50',
             'page'           => 'nullable|integer|min:1',
+            'direction'      => 'nullable|in:all,incoming,outgoing',
+            'office_id'      => 'nullable|integer',
         ]);
 
         $perPage = (int) ($data['per_page'] ?? 25);
@@ -286,50 +315,65 @@ class DocumentRequestController extends Controller
         ]);
         $perPage = (int) ($data['per_page'] ?? 25);
 
-        if ($isAdmin) {
-            // Admin: see all requests globally
-            $q = DB::table('document_requests as r')
-                ->orderByDesc('r.id')
-                ->select(['r.*']);
-        } else {
-            $q = DB::table('document_requests as r')
-                ->join('document_request_recipients as rr', 'rr.request_id', '=', 'r.id')
-                ->where('rr.office_id', $officeId)
-                ->orderByDesc('r.id')
-                ->select([
-                    'r.*',
-                    'rr.id as recipient_id',
-                    'rr.status as recipient_status',
-                    'rr.last_submitted_at',
-                    'rr.last_reviewed_at',
+        try {
+            if ($isAdmin) {
+                // Admin: see all requests globally
+                $q = DB::table('document_requests as r')
+                    ->orderByDesc('r.id')
+                    ->select(['r.*']);
+            } else {
+                $q = DB::table('document_requests as r')
+                    ->join('document_request_recipients as rr', 'rr.request_id', '=', 'r.id')
+                    ->where('rr.office_id', $officeId)
+                    ->orderByDesc('r.id')
+                    ->select([
+                        'r.*',
+                        'rr.id as recipient_id',
+                        'rr.status as recipient_status',
+                        'rr.last_submitted_at',
+                        'rr.last_reviewed_at',
+                    ]);
+            }
+
+            if (!empty($data['q'])) {
+                $term = trim($data['q']);
+                $q->where(function ($qq) use ($term) {
+                    $qq->where('r.title', 'like', "%{$term}%")
+                        ->orWhere('r.description', 'like', "%{$term}%");
+                });
+            }
+
+            $paginated = $q->paginate($perPage);
+
+            // Attach progress per row
+            $rows = collect($paginated->items())->map(function ($row) use ($user) {
+                $progress = null;
+                try {
+                    $progress = $this->progress->buildProgress((int)$row->id, $row->mode ?? 'multi_office');
+                } catch (\Throwable $e) {
+                    \Log::warning("Inbox Progress Error on req #{$row->id}: " . $e->getMessage());
+                    $progress = ['total'=>0,'submitted'=>0,'accepted'=>0];
+                }
+
+                $direction = ((int)($row->created_by_user_id ?? 0) === (int)$user->id) ? 'outgoing' : 'incoming';
+                
+                return array_merge((array) $row, [
+                    'progress' => $progress,
+                    'direction' => $direction
                 ]);
-        }
-
-        if (!empty($data['q'])) {
-            $term = trim($data['q']);
-            $q->where(function ($qq) use ($term) {
-                $qq->where('r.title', 'like', "%{$term}%")
-                    ->orWhere('r.description', 'like', "%{$term}%");
             });
+
+            return response()->json(array_merge(
+                $paginated->toArray(),
+                ['data' => $rows->all()]
+            ));
+            
+        } catch (\Throwable $e) {
+            \Log::error("DocumentRequestController@inbox fatal: " . $e->getMessage());
+            return response()->json(['message' => 'Failed to load inbox.', 'error' => $e->getMessage()], 500);
         }
-
-        $paginated = $q->paginate($perPage);
-
-        // Attach progress per row
-        $rows = collect($paginated->items())->map(function ($row) use ($user) {
-            $progress = $this->progress->buildProgress($row->id, $row->mode);
-            $direction = ((int)($row->created_by_user_id ?? 0) === $user->id) ? 'outgoing' : 'incoming';
-            return array_merge((array) $row, [
-                'progress' => $progress,
-                'direction' => $direction
-            ]);
-        });
-
-        return response()->json(array_merge(
-            $paginated->toArray(),
-            ['data' => $rows]
-        ));
     }
+
 
     // ── GET /api/document-requests/{id} ───────────────────────────────────
     public function show(Request $request, int $requestId)
@@ -551,6 +595,21 @@ class DocumentRequestController extends Controller
             'items.*.title'       => 'required|string|max:180',
             'items.*.description' => 'nullable|string',
         ]);
+
+        $user = $request->user();
+        $myOfficeId = (int) ($user->office_id ?? 0);
+        
+        if ($myOfficeId > 0) {
+            if ($data['mode'] === 'multi_office') {
+                if (in_array($myOfficeId, array_map('intval', $data['office_ids']), true)) {
+                    return response()->json(['message' => 'You cannot request documents from your own office.'], 422);
+                }
+            } else {
+                if ((int)$data['office_id'] === $myOfficeId) {
+                    return response()->json(['message' => 'You cannot request documents from your own office.'], 422);
+                }
+            }
+        }
 
         $requestId = $this->service->createRequest(
             data:        $data,

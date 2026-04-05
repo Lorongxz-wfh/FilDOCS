@@ -5,6 +5,7 @@ import { listOffices } from "../../services/documents";
 import type { Office } from "../../services/documents";
 import type { RequestMode } from "../../services/documentRequests";
 import OfficeCheckList from "../ui/OfficeCheckList";
+import { getAuthUser } from "../../lib/auth";
 
 type Props = {
   open: boolean;
@@ -15,6 +16,8 @@ import { inputCls, labelCls, choiceCardCls } from "../../utils/formStyles";
 
 export default function CreateDocumentRequestModal({ open, onClose }: Props) {
   const navigate = useNavigate();
+  const me = getAuthUser();
+  const myOffId = me?.office_id ? Number(me.office_id) : null;
 
   const [mode, setMode] = useState<RequestMode>("multi_office");
   const [title, setTitle] = useState("");
@@ -34,6 +37,11 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
       .catch(() => {})
       .finally(() => setOfficesLoading(false));
   }, [open]);
+
+  const filteredOffices = useMemo(() => {
+    if (!myOffId) return offices;
+    return offices.filter((o) => Number(o.id) !== myOffId);
+  }, [offices, myOffId]);
 
   const selectedOffices = useMemo(
     () => offices.filter((o) => selectedOfficeIds.includes(o.id)),
@@ -216,7 +224,7 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
               )}
             </div>
             <OfficeCheckList
-              offices={offices}
+              offices={filteredOffices}
               loading={officesLoading}
               selectedIds={selectedOfficeIds}
               onToggle={toggleOffice}
@@ -250,7 +258,7 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
               <span className="text-rose-500 normal-case">*</span>
             </label>
             <OfficeCheckList
-              offices={offices}
+              offices={filteredOffices}
               loading={officesLoading}
               selectedIds={selectedOfficeId ? [selectedOfficeId] : []}
               onToggle={selectSingleOffice}
