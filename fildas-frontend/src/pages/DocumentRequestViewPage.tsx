@@ -99,7 +99,11 @@ export default function DocumentRequestViewPage() {
       }
       setReq(data.request);
       setRecipient(data.recipient);
-      setAcceptedSubmission(data.accepted_submission);
+      
+      // Fallback: if backend didn't explicitly find the accepted submission, scan the list
+      const accepted = data.accepted_submission ?? 
+                       (Array.isArray(data.submissions) ? data.submissions.find((s: any) => s.status === "accepted") : null);
+      setAcceptedSubmission(accepted);
     } catch (e: any) {
       setError(e?.message ?? "Failed to load request view.");
     } finally {
@@ -329,8 +333,8 @@ export default function DocumentRequestViewPage() {
                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate">
                   {title}
                 </p>
-                <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                  Approved Request Submission
+                <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate uppercase tracking-wider">
+                  {isItemView ? "Individual Item" : "Office Submission"}
                 </p>
               </div>
               <ChevronDown className={`h-3.5 w-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${infoCollapsed ? "-rotate-90" : ""}`} />
@@ -347,8 +351,8 @@ export default function DocumentRequestViewPage() {
 
                 <div className="px-4 py-3 grid grid-cols-1 gap-y-3">
                   <div className="grid grid-cols-2 gap-x-4">
-                    <Field label="Requester" value={req.created_by_name ?? "QA System"} />
-                    <Field label="Batch Ref" value={`#${requestId}`} />
+                    <Field label="Requester" value={req.created_by_name ?? "System"} />
+                    <Field label="Request ID" value={`#${requestId}`} />
                   </div>
                   <div className="grid grid-cols-2 gap-x-4">
                     <Field label="Due Date" value={formatDate(isItemView ? (req.item_due_at ?? req.due_at) : (recipient?.due_at ?? req.due_at))} />

@@ -805,14 +805,16 @@ class DocumentRequestController extends Controller
         })->values()->all();
 
         $latestSubmissionPayload = !empty($submissionsPayload) ? $submissionsPayload[0] : null;
+        $acceptedSubmissionPayload = collect($submissionsPayload)->firstWhere('status', 'accepted');
 
         return response()->json([
-            'request'           => $requestPayload,
-            'recipient'         => $recipient,
-            'recipients'        => [],
-            'items'             => [],
-            'latest_submission' => $latestSubmissionPayload,
-            'submissions'       => $submissionsPayload,
+            'request'             => $requestPayload,
+            'recipient'           => $recipient,
+            'recipients'          => [],
+            'items'               => [],
+            'latest_submission'   => $latestSubmissionPayload,
+            'accepted_submission' => $acceptedSubmissionPayload,
+            'submissions'         => $submissionsPayload,
         ]);
     }
 
@@ -911,15 +913,17 @@ class DocumentRequestController extends Controller
         })->values()->all();
 
         $latestSubmissionPayload = !empty($submissionsPayload) ? $submissionsPayload[0] : null;
+        $acceptedSubmissionPayload = collect($submissionsPayload)->firstWhere('status', 'accepted');
 
         return response()->json([
-            'request'           => $requestPayload,
-            'recipient'         => $recipient,
-            'recipients'        => [],
-            'items'             => [],
-            'item'              => $item,
-            'latest_submission' => $latestSubmissionPayload,
-            'submissions'       => $submissionsPayload,
+            'request'             => $requestPayload,
+            'recipient'           => $recipient,
+            'recipients'          => [],
+            'items'               => [],
+            'item'                => $item,
+            'latest_submission'   => $latestSubmissionPayload,
+            'accepted_submission' => $acceptedSubmissionPayload,
+            'submissions'         => $submissionsPayload,
         ]);
     }
 
@@ -1093,8 +1097,17 @@ class DocumentRequestController extends Controller
         $row = DB::table('document_requests')->where('id', $requestId)->first();
         if (!$row) return response()->json(['message' => 'Not found.'], 404);
 
-        if ($row->status === $data['status']) {
-            return response()->json(['message' => 'Already ' . $data['status'] . '.'], 422);
+        if ($data['status'] === 'cancelled') {
+            $hasAccepted = DB::table('document_request_recipients')
+                ->where('request_id', $requestId)
+                ->where('status', 'accepted')
+                ->exists();
+
+            if ($hasAccepted) {
+                return response()->json([
+                    'message' => 'Cannot cancel this request because some items have already been accepted. Please close it instead.'
+                ], 422);
+            }
         }
 
         $now = now();

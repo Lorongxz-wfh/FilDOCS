@@ -31,6 +31,16 @@ function TypeText({ type }: { type: string }) {
 export function buildCreatedColumns(onDelete?: (id: number) => void): TableColumn<Document>[] {
   const cols: TableColumn<Document>[] = [
     {
+      key: "id",
+      header: "ID",
+      skeletonShape: "narrow",
+      render: (doc) => (
+        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+          #{doc.id}
+        </span>
+      ),
+    },
+    {
       key: "date_distributed",
       header: "Distributed",
       skeletonShape: "narrow",
@@ -143,6 +153,16 @@ export function buildCreatedColumns(onDelete?: (id: number) => void): TableColum
 
 export function buildSharedColumns(onDelete?: (id: number) => void): TableColumn<Document>[] {
   const cols: TableColumn<Document>[] = [
+    {
+      key: "id",
+      header: "ID",
+      skeletonShape: "narrow",
+      render: (doc) => (
+        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+          #{doc.id}
+        </span>
+      ),
+    },
     {
       key: "date_distributed",
       header: "Distributed",
@@ -260,6 +280,16 @@ export const buildBaseDocColumns = () => buildCreatedColumns();
 export function buildRequestedColumns(isQaAdmin: boolean, onDelete?: (id: number) => void): TableColumn<any>[] {
   const cols: TableColumn<any>[] = [
     {
+      key: "id",
+      header: "ID",
+      skeletonShape: "narrow",
+      render: (r) => (
+        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+          #{r.id}
+        </span>
+      ),
+    },
+    {
       key: "request",
       header: "Request Title",
       skeletonShape: "text",
@@ -334,6 +364,16 @@ export function buildRequestedColumns(isQaAdmin: boolean, onDelete?: (id: number
 
 export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<LibraryItem>[] {
   const cols: TableColumn<LibraryItem>[] = [
+    {
+      key: "id",
+      header: "ID",
+      skeletonShape: "narrow",
+      render: (item) => (
+        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+          #{item.docId || item.reqId || ""}
+        </span>
+      ),
+    },
     {
       key: "distributed",
       header: "Distributed",
@@ -452,6 +492,16 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
 
 export function buildArchiveColumns(onDelete?: (id: number) => void): TableColumn<Document>[] {
   const cols: TableColumn<Document>[] = [
+    {
+      key: "id",
+      header: "ID",
+      skeletonShape: "narrow",
+      render: (doc) => (
+        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+          #{doc.id}
+        </span>
+      ),
+    },
     {
       key: "archived_on",
       header: "Archived At",

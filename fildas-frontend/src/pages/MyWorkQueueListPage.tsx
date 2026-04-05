@@ -174,6 +174,17 @@ export default function MyWorkQueueListPage() {
     const isDistributed = tab === "distributed";
     const cols: TableColumn<Document>[] = [
       {
+        key: "id",
+        header: "ID",
+        skeletonShape: "narrow",
+        align: "center",
+        render: (doc) => (
+          <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+            #{doc.id}
+          </span>
+        ),
+      },
+      {
         key: isDistributed ? "distributed" : "updated",
         header: isDistributed ? "Distributed" : "Last Activity",
         sortKey: isDistributed ? "distributed_at" : "updated_at",
@@ -251,8 +262,8 @@ export default function MyWorkQueueListPage() {
   }, [showOffice, tab, adminDebugMode]);
 
   const gridTemplateColumns = showOffice
-    ? (adminDebugMode ? "110px minmax(200px, 1fr) 110px 120px 90px 60px 110px 50px" : "110px minmax(200px, 1fr) 110px 120px 90px 60px 110px")
-    : (adminDebugMode ? "110px minmax(200px, 1fr) 110px 120px 60px 110px 50px" : "110px minmax(200px, 1fr) 110px 120px 60px 110px");
+    ? (adminDebugMode ? "60px 110px minmax(200px, 1fr) 110px 120px 90px 60px 110px 50px" : "60px 110px minmax(200px, 1fr) 110px 120px 90px 60px 110px")
+    : (adminDebugMode ? "60px 110px minmax(200px, 1fr) 110px 120px 60px 110px 50px" : "60px 110px minmax(200px, 1fr) 110px 120px 60px 110px");
 
   return (
     <PageFrame

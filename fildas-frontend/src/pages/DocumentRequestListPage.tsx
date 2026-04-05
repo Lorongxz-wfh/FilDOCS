@@ -289,6 +289,17 @@ export default function DocumentRequestListPage() {
   const batchColumns: TableColumn<any>[] = React.useMemo(() => {
     const cols: TableColumn<any>[] = [
       {
+        key: "id",
+        header: "ID",
+        skeletonShape: "narrow",
+        align: "center",
+        render: (row) => (
+          <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+            #{row.id}
+          </span>
+        ),
+      },
+      {
         key: "direction",
         header: "Direction",
         skeletonShape: "narrow",
@@ -416,11 +427,22 @@ export default function DocumentRequestListPage() {
   }, [isQaAdmin, adminDebugMode]);
 
   const batchGrid = adminDebugMode 
-    ? "100px 120px minmax(200px, 1fr) 140px 180px 100px 140px 60px"
-    : "100px 120px minmax(200px, 1fr) 140px 180px 100px 140px";
+    ? "60px 100px 120px minmax(200px, 1fr) 140px 180px 100px 140px 60px"
+    : "60px 100px 120px minmax(200px, 1fr) 140px 180px 100px 140px";
 
   const allColumns: TableColumn<any>[] = React.useMemo(() => {
     return [
+      {
+        key: "id",
+        header: "ID",
+        skeletonShape: "narrow",
+        align: "center",
+        render: (r) => (
+          <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+            #{r.request_id || r.id}
+          </span>
+        ),
+      },
       {
         key: "direction",
         header: "Direction",
@@ -509,7 +531,7 @@ export default function DocumentRequestListPage() {
     ];
   }, []);
 
-  const gridCols = "100px minmax(120px, 1fr) 100px 100px 120px 140px 140px";
+  const gridCols = "60px 100px minmax(120px, 1fr) 100px 100px 120px 140px 140px";
 
   const REQ_TABS = [
     { key: "batches", label: "Request Batches", icon: <LayoutList className="h-3.5 w-3.5" /> },

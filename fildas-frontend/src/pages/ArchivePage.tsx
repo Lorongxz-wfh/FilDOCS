@@ -280,7 +280,7 @@ export default function ArchivePage() {
           onRowClick={handleRowClick}
           hasMore={hasMore}
           onLoadMore={() => loadData(true)}
-          gridTemplateColumns={adminDebugMode ? "140px minmax(200px, 1fr) 110px 100px 100px 140px 50px" : "140px minmax(200px, 1fr) 110px 100px 100px 140px"}
+          gridTemplateColumns={adminDebugMode ? "60px 120px minmax(200px, 1fr) 110px 100px 100px 140px 50px" : "60px 120px minmax(200px, 1fr) 110px 100px 100px 140px"}
           sortBy={sortBy}
           sortDir={sortDir}
           onSortChange={(key, dir) => {
