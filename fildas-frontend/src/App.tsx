@@ -171,7 +171,7 @@ export default function App() {
             </Route>
 
             <Route
-              element={<RequireRole allow={["QA", "SYSADMIN", "ADMIN"]} />}
+              element={<RequireRole allow={["QA", "SYSADMIN", "ADMIN", "OFFICE_STAFF", "OFFICE_HEAD"]} />}
             >
               <Route
                 path="/document-requests/create"

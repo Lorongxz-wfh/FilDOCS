@@ -200,6 +200,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::get('/document-request-items/{item}/example/preview-link', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'examplePreviewLink']);
     Route::get('/document-request-items/{item}/example/download-link', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'exampleDownloadLink']);
     Route::get('/document-requests',         [DocumentRequestController::class, 'index']);
+    Route::get('/documents/stats',           [DocumentController::class, 'stats']);
     Route::post('/document-requests',        [DocumentRequestController::class, 'store']);
     Route::get('/document-requests/inbox',       [DocumentRequestController::class, 'inbox']);
     Route::get('/document-requests/recipients',  [DocumentRequestController::class, 'indexRecipients']);
