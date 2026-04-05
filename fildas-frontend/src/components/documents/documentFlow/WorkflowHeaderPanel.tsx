@@ -64,7 +64,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
       {/* ───── Action-Required Banners ─────────────────────────────────────────── */}
       
       {/* 1. Approver Signing Banner (Uniform Blue) */}
-      {approverNeedsSignedUpload && (
+      {approverNeedsSignedUpload && !hasSignedFile && (
         <Alert
           variant="primary"
           icon={<Upload className="h-4 w-4" />}
@@ -106,7 +106,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
           }
         >
           {!approverHasDownloaded
-            ? "Download the document, sign it, then upload your signed copy to enable forwarding."
+            ? "Please choose one of the signing options below to enable forwarding."
             : "Upload your signed copy to enable forwarding."}
         </Alert>
       )}

@@ -4,12 +4,12 @@ type Variant = "info" | "success" | "warning" | "error" | "danger" | "primary";
 type Style = "box" | "accent"; // box = full border, accent = left-border stripe
 
 const boxStyles: Record<Variant, string> = {
-  info:    "border-neutral-200 bg-neutral-50 text-neutral-800 dark:border-surface-300 dark:bg-surface-400 dark:text-neutral-200",
-  success: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-300",
-  warning: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300",
-  error:   "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/15 dark:text-rose-300",
-  danger:  "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/15 dark:text-rose-300",
-  primary: "border-brand-200 bg-brand-50 text-brand-800 dark:border-brand-800 dark:bg-brand-950/30 dark:text-brand-100",
+  info:    "border-neutral-200 bg-neutral-50 text-neutral-800 dark:border-surface-300 dark:bg-surface-600 dark:text-neutral-100",
+  success: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-900/90 dark:text-emerald-50",
+  warning: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-900/80 dark:text-amber-50",
+  error:   "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/80 dark:text-rose-100",
+  danger:  "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/80 dark:text-rose-100",
+  primary: "border-brand-200 bg-brand-50 text-brand-800 dark:border-brand-800 dark:bg-brand-900/90 dark:text-brand-50",
 };
 
 const accentStyles: Record<Variant, { wrap: string; icon: string; border: string }> = {
