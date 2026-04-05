@@ -262,8 +262,8 @@ export default function MyWorkQueueListPage() {
   }, [showOffice, tab, adminDebugMode]);
 
   const gridTemplateColumns = showOffice
-    ? (adminDebugMode ? "60px 110px minmax(200px, 1fr) 110px 120px 90px 60px 110px 50px" : "60px 110px minmax(200px, 1fr) 110px 120px 90px 60px 110px")
-    : (adminDebugMode ? "60px 110px minmax(200px, 1fr) 110px 120px 60px 110px 50px" : "60px 110px minmax(200px, 1fr) 110px 120px 60px 110px");
+    ? (adminDebugMode ? "50px 100px minmax(200px, 1fr) 100px 100px 90px 50px 100px 40px" : "50px 100px minmax(200px, 1fr) 100px 100px 90px 50px 100px")
+    : (adminDebugMode ? "50px 110px minmax(200px, 1fr) 110px 120px 60px 110px 40px" : "50px 110px minmax(200px, 1fr) 110px 120px 60px 110px");
 
   return (
     <PageFrame

@@ -451,13 +451,13 @@ export default function DocumentLibraryPage() {
               onLoadMore={() => loadData(true)}
               gridTemplateColumns={
                 (tab === "created" 
-                  ? "60px 110px 110px minmax(200px, 1fr) 100px 100px 60px 110px" 
+                  ? "50px 90px 95px minmax(200px, 1fr) 90px 80px 50px 100px" 
                   : tab === "shared" 
-                    ? "60px 110px 110px minmax(200px, 1fr) 100px 90px 60px 110px" 
+                    ? "50px 90px 95px minmax(200px, 1fr) 90px 80px 50px 100px" 
                     : tab === "requested" 
-                      ? "60px minmax(250px, 1fr) 130px 110px" 
-                      : "60px 100px 100px minmax(200px, 1fr) 90px 90px 60px 100px 110px") 
-                + (adminDebugMode ? " 60px" : "")
+                      ? "50px minmax(250px, 1fr) 110px 110px" 
+                      : "50px 90px 95px minmax(180px, 1fr) 80px 80px 50px 90px 100px") 
+                + (adminDebugMode ? " 50px" : "")
               }
               sortBy={sortBy}
               sortDir={sortDir}

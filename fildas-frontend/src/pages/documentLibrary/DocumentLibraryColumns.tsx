@@ -101,7 +101,7 @@ export function buildCreatedColumns(onDelete?: (id: number) => void): TableColum
       skeletonShape: "text",
       render: (doc: any) => (
         <NormalText secondary>
-          {doc.office?.code || doc.ownerOffice?.code || "—"}
+          {doc.ownerOffice?.code || doc.office?.code || "—"}
         </NormalText>
       ),
     },
@@ -224,7 +224,7 @@ export function buildSharedColumns(onDelete?: (id: number) => void): TableColumn
       skeletonShape: "text",
       render: (doc: any) => (
         <NormalText secondary>
-          {doc.office?.code || doc.ownerOffice?.code || "—"}
+          {doc.ownerOffice?.code || doc.office?.code || "—"}
         </NormalText>
       ),
     },
@@ -285,7 +285,7 @@ export function buildRequestedColumns(isQaAdmin: boolean, onDelete?: (id: number
       skeletonShape: "narrow",
       render: (r) => (
         <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
-          #{r.id}
+          #{r.id || r.recipient_id || "?"}
         </span>
       ),
     },
@@ -370,7 +370,7 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
       skeletonShape: "narrow",
       render: (item) => (
         <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
-          #{item.docId || item.reqId || ""}
+          #{item.docId || item.reqId || (item._key?.split('-').pop()) || "?"}
         </span>
       ),
     },
@@ -409,8 +409,11 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
             text={item.title}
             className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
           />
-          {item.code && (
-              <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">{item.code}</p>
+          {item.subtitle && (
+              <MiddleTruncate 
+                text={item.subtitle}
+                className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5"
+              />
           )}
         </div>
       ),
@@ -551,7 +554,7 @@ export function buildArchiveColumns(onDelete?: (id: number) => void): TableColum
       skeletonShape: "text",
       render: (doc: any) => (
         <NormalText secondary>
-          {doc.office?.code || doc.ownerOffice?.code || "—"}
+          {doc.ownerOffice?.code || doc.office?.code || "—"}
         </NormalText>
       ),
     },

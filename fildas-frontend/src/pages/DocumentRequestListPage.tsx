@@ -349,13 +349,8 @@ export default function DocumentRequestListPage() {
               <span className="text-xs font-bold text-brand-600 dark:text-brand-400 truncate max-w-[140px]">
                 {isMulti ? "Multiple Offices" : r.office_code}
               </span>
-              {!isMulti && (
-                <span className="text-[10px] text-slate-500 dark:text-slate-500 truncate max-w-[140px]">
-                  {r.office_name}
-                </span>
-              )}
               {isMulti && (
-                <span className="text-[10px] text-slate-500 dark:text-slate-500 truncate">
+                <span className="text-[10px] text-slate-500 dark:text-slate-500 truncate mt-0.5 uppercase tracking-wide">
                   {r.office_code?.split(',').length} recipients
                 </span>
               )}
@@ -427,8 +422,8 @@ export default function DocumentRequestListPage() {
   }, [isQaAdmin, adminDebugMode]);
 
   const batchGrid = adminDebugMode 
-    ? "60px 100px 120px minmax(200px, 1fr) 140px 180px 100px 140px 60px"
-    : "60px 100px 120px minmax(200px, 1fr) 140px 180px 100px 140px";
+    ? "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px 50px"
+    : "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px";
 
   const allColumns: TableColumn<any>[] = React.useMemo(() => {
     return [
@@ -531,7 +526,7 @@ export default function DocumentRequestListPage() {
     ];
   }, []);
 
-  const gridCols = "60px 100px minmax(120px, 1fr) 100px 100px 120px 140px 140px";
+  const gridCols = "50px 90px minmax(150px, 1fr) 90px 90px 110px 130px 130px";
 
   const REQ_TABS = [
     { key: "batches", label: "Request Batches", icon: <LayoutList className="h-3.5 w-3.5" /> },
