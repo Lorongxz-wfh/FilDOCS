@@ -91,9 +91,32 @@ class ProfileController extends Controller
         /** @var \App\Models\User $user */
         $user = $request->user();
 
-        $disk = config('filesystems.default') === 's3' ? 's3' : 'public';
-        if (!$user->signature_path || !Storage::disk($disk)->exists($user->signature_path)) {
+        if (!$user->signature_path) {
             return response()->json(['message' => 'No signature found.'], 404);
+        }
+
+        // If stored as Data URI (Base64 in DB)
+        if (str_starts_with($user->signature_path, 'data:')) {
+            try {
+                // Format: data:image/png;base64,xxxx
+                $parts = explode(',', $user->signature_path);
+                if (count($parts) < 2) throw new \Exception("Invalid data URI");
+                
+                $header = $parts[0]; // data:image/png;base64
+                $data = base64_decode($parts[1]);
+                
+                $mimeParts = explode(':', $header);
+                $mimeType = explode(';', $mimeParts[1] ?? 'image/png')[0];
+
+                return response($data)->header('Content-Type', $mimeType);
+            } catch (\Throwable $e) {
+                return response()->json(['message' => 'Failed to decode signature data.'], 500);
+            }
+        }
+
+        $disk = config('filesystems.default') === 's3' ? 's3' : 'public';
+        if (!Storage::disk($disk)->exists($user->signature_path)) {
+            return response()->json(['message' => 'No signature found on disk.'], 404);
         }
 
         return Storage::disk($disk)->response($user->signature_path);

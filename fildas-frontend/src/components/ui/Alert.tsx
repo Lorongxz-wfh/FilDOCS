@@ -9,7 +9,7 @@ const boxStyles: Record<Variant, string> = {
   warning: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300",
   error:   "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/15 dark:text-rose-300",
   danger:  "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/15 dark:text-rose-300",
-  primary: "border-brand-200 bg-brand-50 text-brand-800 dark:border-brand-800 dark:bg-brand-950/20 dark:text-brand-300",
+  primary: "border-brand-200 bg-brand-50 text-brand-800 dark:border-brand-800 dark:bg-brand-950/30 dark:text-brand-100",
 };
 
 const accentStyles: Record<Variant, { wrap: string; icon: string; border: string }> = {

@@ -271,7 +271,13 @@ const SignDocumentModal: React.FC<SignDocumentModalProps> = ({
         if (snapshotSigFile) {
           sigBytes = await snapshotSigFile.arrayBuffer();
           contentType = snapshotSigFile.type;
+        } else if (activeSigUrl?.startsWith("data:")) {
+          // If the profile signature is a Data URI, fetch it directly to avoid API roundtrip
+          const r = await fetch(activeSigUrl);
+          sigBytes = await r.arrayBuffer();
+          contentType = activeSigUrl.split(":")[1].split(";")[0];
         } else {
+          // Fallback to API if it's a URL path
           const sigResp = await api.get("/profile/signature-file", {
             responseType: "arraybuffer",
           });

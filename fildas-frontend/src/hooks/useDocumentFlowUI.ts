@@ -522,13 +522,15 @@ export function useDocumentFlowUI({
 
     const finalButtons = isActiveApprover
       ? normalButtons
-          .filter((b) => b.key !== "CANCEL_DOCUMENT")
           .map((b) => ({
             ...b,
-            disabled: b.disabled || (!adminDebugMode && (!approverHasDownloaded || !approverHasUploaded)),
+            disabled: b.disabled || (!adminDebugMode && (!approverHasDownloaded || !approverHasUploaded)) || (isPreApprovalCreatorCheck && !hasSignedFile && !["REJECT", "CANCEL_DOCUMENT"].includes(b.key)),
           }))
           .concat(cancelBtn)
-      : normalButtons;
+      : normalButtons.map(b => ({
+          ...b,
+          disabled: b.disabled || (isPreApprovalCreatorCheck && !hasSignedFile && !["REJECT", "CANCEL_DOCUMENT"].includes(b.key)),
+        }));
 
 
 
