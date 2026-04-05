@@ -292,7 +292,6 @@ export default function DocumentRequestListPage() {
         key: "id",
         header: "ID",
         skeletonShape: "narrow",
-        align: "center",
         render: (row) => (
           <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
             #{row.id}
@@ -431,7 +430,6 @@ export default function DocumentRequestListPage() {
         key: "id",
         header: "ID",
         skeletonShape: "narrow",
-        align: "center",
         render: (r) => (
           <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
             #{r.request_id || r.id}

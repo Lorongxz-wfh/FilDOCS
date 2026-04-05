@@ -34,6 +34,16 @@ const ActivityLogsTable: React.FC<Props> = ({
 }) => {
   const columns: TableColumn<ActivityLogItem>[] = [
     {
+      key: "id",
+      header: "ID",
+      skeletonShape: "narrow",
+      render: (r) => (
+        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+          #{r.id}
+        </span>
+      ),
+    },
+    {
       key: "when",
       header: "When",
       skeletonShape: "narrow",
@@ -140,7 +150,7 @@ const ActivityLogsTable: React.FC<Props> = ({
             </div>
           </div>
         )}
-        gridTemplateColumns="12rem minmax(140px, 1.2fr) minmax(120px, 1fr) 12rem 10rem"
+        gridTemplateColumns="50px 12rem minmax(140px, 1.2fr) minmax(120px, 1fr) 12rem 8rem"
         sortBy={sortBy}
         sortDir={sortDir}
         onSortChange={onSortChange}

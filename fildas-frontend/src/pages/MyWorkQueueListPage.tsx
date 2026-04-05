@@ -177,7 +177,6 @@ export default function MyWorkQueueListPage() {
         key: "id",
         header: "ID",
         skeletonShape: "narrow",
-        align: "center",
         render: (doc) => (
           <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
             #{doc.id}
