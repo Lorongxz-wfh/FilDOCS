@@ -74,8 +74,7 @@ class DocumentRequestController extends Controller
                     'u_cre.name as creator_user_name',
                     'o_cre.name as creator_office_name',
                     'o_cre.code as creator_office_code',
-                ])
-                ->addSelect(DB::raw("CASE WHEN r.created_by_user_id = " . (int)$user->id . " THEN 'YOU' ELSE COALESCE(o_cre.code, 'System') END as creator_label"));
+                ]);
 
             if (!$isQa) {
                 $q->where(function ($query) use ($user, $officeId) {
@@ -123,20 +122,26 @@ class DocumentRequestController extends Controller
                     $requestId = (int) $row->id;
                     $mode = $row->mode ?? 'multi_office';
                     
+                    // Safer progress check
+                    $prog = ['total' => 0, 'submitted' => 0, 'accepted' => 0];
                     try {
-                        $progress = $this->progress->buildProgress($requestId, $mode);
-                    } catch (\Throwable $pe) {
-                        $progress = ['total' => 0, 'submitted' => 0, 'accepted' => 0];
-                    }
+                        $prog = $this->progress->buildProgress($requestId, $mode);
+                    } catch (\Throwable $pe) {}
 
-                    $recipients = DB::table('document_request_recipients as rr')
-                        ->join('offices as o', 'o.id', '=', 'rr.office_id')
-                        ->where('rr.request_id', $requestId)
-                        ->select(['o.code', 'o.name'])
-                        ->get();
+                    // Fetch recipients separately to avoid complex joins crashing on Render
+                    $recipients = [];
+                    try {
+                        $recipients = DB::table('document_request_recipients as rr')
+                            ->join('offices as o', 'o.id', '=', 'rr.office_id')
+                            ->where('rr.request_id', $requestId)
+                            ->select(['o.code', 'o.name'])
+                            ->get();
+                    } catch (\Throwable $re) {}
+
+                    $isMine = (int)$row->created_by_user_id === (int)$user->id;
 
                     return [
-                        'id'                     => (int) $row->id,
+                        'id'                     => $requestId,
                         'title'                  => $row->title,
                         'description'            => $row->description,
                         'status'                 => $row->status,
@@ -147,13 +152,14 @@ class DocumentRequestController extends Controller
                         'creator_user_name'      => $row->creator_user_name,
                         'creator_office_name'    => $row->creator_office_name,
                         'creator_office_code'    => $row->creator_office_code,
-                        'creator_label'          => $row->creator_label,
-                        'direction'              => ((int)$row->created_by_user_id === (int)$user->id) ? 'outgoing' : 'incoming',
-                        'progress'               => $progress,
-                        'recipient_offices_code' => $recipients->pluck('code')->unique()->implode(', '),
-                        'recipient_offices_name' => $recipients->pluck('name')->unique()->implode(', '),
+                        'creator_label'          => $isMine ? 'YOU' : ($row->creator_office_code ?: 'System'),
+                        'direction'              => $isMine ? 'outgoing' : 'incoming',
+                        'progress'               => $prog,
+                        'recipient_offices_code' => collect($recipients)->pluck('code')->unique()->implode(', '),
+                        'recipient_offices_name' => collect($recipients)->pluck('name')->unique()->implode(', '),
                     ];
                 } catch (\Throwable $e) {
+                    \Log::warning("Skipping bad request row ID: " . ($row->id ?? 'unknown') . " - " . $e->getMessage());
                     return null;
                 }
             })->filter()->values();
