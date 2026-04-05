@@ -157,10 +157,10 @@ class DocumentRequestController extends Controller
                         'creator_label'          => $isMine ? 'YOU' : ($row->creator_office_code ?: 'System'),
                         'direction'              => $isMine ? 'outgoing' : 'incoming',
                         'progress'               => $prog,
-                        'recipient_offices_code' => collect($recipients)->pluck('code')->unique()->implode(','),
-                        'recipient_offices_name' => collect($recipients)->pluck('name')->unique()->implode(', '),
                         'office_code'            => $isMine ? collect($recipients)->pluck('code')->unique()->implode(',') : $row->creator_office_code,
                         'office_name'            => $isMine ? collect($recipients)->pluck('name')->unique()->implode(', ') : $row->creator_office_name,
+                        'recipient_offices_code' => collect($recipients)->pluck('code')->unique()->implode(','),
+                        'recipient_offices_name' => collect($recipients)->pluck('name')->unique()->implode(', '),
                     ];
                 } catch (\Throwable $e) {
                     \Log::warning("Skipping bad request row ID: " . ($row->id ?? 'unknown') . " - " . $e->getMessage());
@@ -1188,5 +1188,31 @@ class DocumentRequestController extends Controller
         } catch (\Throwable) {}
 
         return response()->json(['message' => ucfirst($data['status']) . '.', 'id' => $requestId]);
+    }
+
+    /**
+     * Get offices that have active document requests (for filtering).
+     */
+    public function activeOffices(Request $request)
+    {
+        $senderOfficeIds = DB::table('document_requests as dr')
+            ->join('users as u', 'u.id', '=', 'dr.created_by_user_id')
+            ->whereNotNull('u.office_id')
+            ->distinct()
+            ->pluck('u.office_id');
+
+        $recipientOfficeIds = DB::table('document_request_recipients')
+            ->distinct()
+            ->pluck('office_id');
+
+        $allActiveIds = $senderOfficeIds->concat($recipientOfficeIds)->unique()->filter()->values();
+
+        $offices = DB::table('offices')
+            ->whereIn('id', $allActiveIds)
+            ->whereNull('deleted_at')
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name', 'code', 'type']);
+
+        return response()->json($offices);
     }
 }

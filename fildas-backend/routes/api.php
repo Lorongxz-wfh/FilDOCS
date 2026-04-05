@@ -199,6 +199,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::post('/document-request-items/{item}/example', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'uploadExample']);
     Route::get('/document-request-items/{item}/example/preview-link', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'examplePreviewLink']);
     Route::get('/document-request-items/{item}/example/download-link', [\App\Http\Controllers\Api\DocumentRequestItemController::class, 'exampleDownloadLink']);
+    Route::get('/document-requests/active-offices', [DocumentRequestController::class, 'activeOffices']);
     Route::get('/document-requests',         [DocumentRequestController::class, 'index']);
     Route::get('/documents/stats',           [DocumentController::class, 'stats']);
     Route::post('/document-requests',        [DocumentRequestController::class, 'store']);

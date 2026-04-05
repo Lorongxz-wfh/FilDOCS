@@ -17,6 +17,7 @@ try {
     $request = new Request([
         'per_page' => 10,
         'page' => 1,
+        'direction' => 'incoming',
         'sort_by' => 'created_at',
         'sort_dir' => 'desc'
     ]);

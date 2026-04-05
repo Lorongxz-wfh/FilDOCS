@@ -244,7 +244,7 @@ export default function DocumentRequestListPage() {
   // Fetch offices for filtering (Admin only)
   React.useEffect(() => {
     if (isQaAdmin) {
-      api.get("/offices").then((res) => {
+      api.get("/document-requests/active-offices").then((res) => {
         setOffices(res.data || []);
       });
     }
