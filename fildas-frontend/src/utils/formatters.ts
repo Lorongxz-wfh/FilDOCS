@@ -88,8 +88,10 @@ export function getAvatarUrl(path: string | null | undefined): string | null {
   if (path.startsWith("http") || path.startsWith("data:")) return path;
   
   // Prepend backend storage URL if it's a relative path
-  const base = (import.meta.env.VITE_API_BASE_URL as string)?.replace("/api", "") 
-    ?? (import.meta.env.PROD ? "https://fildas-v2.onrender.com" : "http://127.0.0.1:8001");
+  const apiUrl = (import.meta.env.VITE_API_BASE_URL as string) || "";
+  const base = apiUrl.startsWith("http") 
+    ? apiUrl.replace(/\/api\/?$/, "") 
+    : window.location.origin; // Same host production deployment
     
   return `${base}/storage/${path.replace(/^storage\//, "")}`;
 }

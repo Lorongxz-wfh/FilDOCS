@@ -357,12 +357,14 @@ class UserController extends Controller
             'photo' => ['required', 'image', 'max:2048'],
         ]);
 
+        $disk = config('filesystems.default') === 's3' ? 's3' : 'public';
+
         // Delete old photo if exists
         if ($user->profile_photo_path) {
-            Storage::disk('public')->delete($user->profile_photo_path);
+            Storage::disk($disk)->delete($user->profile_photo_path);
         }
 
-        $path = $request->file('photo')->store('profile-photos', 'public');
+        $path = $request->file('photo')->store('profile-photos', $disk);
         $user->profile_photo_path = $path;
         $user->save();
 

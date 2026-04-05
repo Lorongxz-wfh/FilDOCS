@@ -125,14 +125,7 @@ class DocumentTemplateController extends Controller
         // Generate thumbnail in the background (best-effort)
         try {
             $thumbnailService = app(ThumbnailService::class);
-            $storagePath = Storage::disk('public')->path($path);
-            // Copy file to public disk if on a different disk
-            if ($disk !== 'public') {
-                $contents = Storage::disk($disk)->get($path);
-                Storage::disk('public')->put($path, $contents);
-                $storagePath = Storage::disk('public')->path($path);
-            }
-            $thumbPath = $thumbnailService->generateForTemplate($path, $mimeType);
+            $thumbPath = $thumbnailService->generateForTemplate($path, $mimeType, $disk);
             if ($thumbPath) {
                 $template->thumbnail_path = $thumbPath;
                 $template->save();
@@ -260,7 +253,7 @@ class DocumentTemplateController extends Controller
                 'name' => trim("{$t->uploader->first_name} {$t->uploader->last_name}"),
             ] : null,
             'can_delete'      => $canDelete,
-            'thumbnail_url'   => $t->thumbnail_path ? asset('storage/' . $t->thumbnail_path) : null,
+            'thumbnail_url'   => $t->thumbnail_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($t->thumbnail_path) : null,
             'tags'            => $t->tags->pluck('name')->values()->all(),
             'created_at'      => $t->created_at?->toISOString(),
         ];

@@ -54,17 +54,16 @@ class User extends Authenticatable
 
     public function getProfilePhotoUrlAttribute(): ?string
     {
-        if ($this->profile_photo_path) {
-            return asset(Storage::disk('public')->url($this->profile_photo_path));
-        }
-        
-        return null;
+        if (!$this->profile_photo_path) return null;
+        $disk = config('filesystems.default') === 's3' ? 's3' : 'public';
+        return Storage::disk($disk)->url($this->profile_photo_path);
     }
 
     public function getSignatureUrlAttribute(): ?string
     {
         if (!$this->signature_path) return null;
-        return asset(Storage::disk('public')->url($this->signature_path));
+        $disk = config('filesystems.default') === 's3' ? 's3' : 'public';
+        return Storage::disk($disk)->url($this->signature_path);
     }
 
     /**

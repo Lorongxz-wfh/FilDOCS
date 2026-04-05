@@ -5,7 +5,7 @@ import { clearAuthAndRedirect } from "../lib/auth";
 const BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string) ||
   (import.meta.env.PROD
-    ? "https://fildas-v2.onrender.com/api"
+    ? `${window.location.origin}/api`
     : "http://127.0.0.1:8001/api");
 
 const api = axios.create({

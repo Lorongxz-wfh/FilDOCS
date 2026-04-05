@@ -12,33 +12,45 @@ class ThumbnailService
      * Generate a thumbnail for a given file and store it.
      * Returns the storage path or null on failure.
      */
-    public function generateForTemplate(string $filePath, string $mimeType): ?string
+    public function generateForTemplate(string $filePath, string $mimeType, string $diskName = 'public'): ?string
     {
-        $fullPath = Storage::disk('public')->path($filePath);
+        $disk = Storage::disk($diskName);
+        if (!$disk->exists($filePath)) return null;
 
-        if (!file_exists($fullPath)) return null;
+        $tmpOriginal = sys_get_temp_dir() . '/fildas_orig_' . uniqid();
+        file_put_contents($tmpOriginal, $disk->get($filePath));
 
         $outputPath = 'template-thumbnails/' . Str::uuid() . '.png';
-        $outputFullPath = Storage::disk('public')->path($outputPath);
-
-        // Ensure directory exists
-        $dir = dirname($outputFullPath);
-        if (!is_dir($dir)) mkdir($dir, 0755, true);
+        
+        // We ALWAYS generate the thumbnail locally first
+        $localTmpThumb = sys_get_temp_dir() . '/fildas_thumb_out_' . uniqid() . '.png';
 
         try {
             if ($mimeType === 'application/pdf') {
-                $success = $this->pdfToThumbnail($fullPath, $outputFullPath);
+                $success = $this->pdfToThumbnail($tmpOriginal, $localTmpThumb);
             } elseif ($this->isOfficeFile($mimeType)) {
-                $success = $this->officeToThumbnail($fullPath, $outputFullPath, $mimeType);
+                $success = $this->officeToThumbnail($tmpOriginal, $localTmpThumb, $mimeType);
             } else {
+                @unlink($tmpOriginal);
                 return null;
             }
 
-            if ($success && file_exists($outputFullPath)) {
+            @unlink($tmpOriginal);
+
+            if ($success && file_exists($localTmpThumb)) {
+                // Upload local thumbnail to the specified disk
+                $disk->putFileAs(
+                    dirname($outputPath), 
+                    new \Illuminate\Http\File($localTmpThumb), 
+                    basename($outputPath)
+                );
+                @unlink($localTmpThumb);
                 return $outputPath;
             }
         } catch (\Throwable $e) {
             Log::warning('ThumbnailService failed', ['error' => $e->getMessage()]);
+            @unlink($tmpOriginal);
+            @unlink($localTmpThumb);
         }
 
         return null;
