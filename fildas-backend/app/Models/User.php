@@ -56,33 +56,39 @@ class User extends Authenticatable
     public function getProfilePhotoUrlAttribute(): ?string
     {
         if (!$this->profile_photo_path) return null;
-        $url = Storage::url($this->profile_photo_path);
         
-        // If relative path, make it absolute using APP_URL
+        $diskName = config('filesystems.default') === 's3' ? 's3' : 'public';
+        $url = Storage::disk($diskName)->url($this->profile_photo_path);
+        
+        // Final fallback: Ensure absolute URL and force HTTPS in production
         if ($url && !Str::startsWith($url, 'http')) {
-            $appUrl = config('app.url');
-            $url = rtrim($appUrl, '/') . '/' . ltrim($url, '/');
+            $base = rtrim(config('app.url'), '/');
+            $url = $base . '/' . ltrim($url, '/');
         }
 
         if (config('app.env') === 'production' && $url) {
-            return str_replace('http://', 'https://', $url);
+            $url = str_replace('http://', 'https://', $url);
         }
+        
         return $url;
     }
 
     public function getSignatureUrlAttribute(): ?string
     {
         if (!$this->signature_path) return null;
-        $url = Storage::url($this->signature_path);
+        
+        $diskName = config('filesystems.default') === 's3' ? 's3' : 'public';
+        $url = Storage::disk($diskName)->url($this->signature_path);
         
         if ($url && !Str::startsWith($url, 'http')) {
-            $appUrl = config('app.url');
-            $url = rtrim($appUrl, '/') . '/' . ltrim($url, '/');
+            $base = rtrim(config('app.url'), '/');
+            $url = $base . '/' . ltrim($url, '/');
         }
 
         if (config('app.env') === 'production' && $url) {
-            return str_replace('http://', 'https://', $url);
+            $url = str_replace('http://', 'https://', $url);
         }
+        
         return $url;
     }
 
