@@ -243,4 +243,101 @@ class SystemBackupController extends Controller
 
         return response()->json(['message' => 'Backup deleted successfully.']);
     }
+
+    public function restore(Request $request, $filename)
+    {
+        $this->checkAccess($request);
+
+        set_time_limit(600); // 10 minutes for large restores
+
+        $filename = basename($filename);
+        $path = "{$this->backupDir}/{$filename}";
+
+        if (!Storage::disk('local')->exists($path)) {
+            abort(404, 'Backup file not found.');
+        }
+
+        $fullPath = Storage::disk('local')->path($path);
+        $tempExtractDir = storage_path('app/temp/restore_' . time());
+
+        if (!is_dir($tempExtractDir)) {
+            mkdir($tempExtractDir, 0755, true);
+        }
+
+        try {
+            $sqlFile = null;
+
+            if (str_ends_with($filename, '.zip')) {
+                $zip = new ZipArchive();
+                if ($zip->open($fullPath) === true) {
+                    $zip->extractTo($tempExtractDir);
+                    $zip->close();
+
+                    // Find the .sql or .sqlite file
+                    $extractedFiles = scandir($tempExtractDir);
+                    foreach ($extractedFiles as $f) {
+                        if (str_ends_with($f, '.sql') || str_ends_with($f, '.sqlite')) {
+                            $sqlFile = $tempExtractDir . '/' . $f;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                $sqlFile = $fullPath;
+            }
+
+            if (!$sqlFile || !file_exists($sqlFile)) {
+                throw new \Exception('No valid SQL or SQLite file found in backup.');
+            }
+
+            $dbConnection = config('database.default');
+
+            if ($dbConnection === 'sqlite' && str_ends_with($sqlFile, '.sqlite')) {
+                // Direct file replacement for SQLite
+                $dbPath = config('database.connections.sqlite.database');
+                copy($sqlFile, $dbPath);
+            } else {
+                // Execute SQL commands
+                $sql = file_get_contents($sqlFile);
+                
+                // Disable foreign keys for the restore process
+                if ($dbConnection === 'mysql') {
+                    DB::statement('SET FOREIGN_KEY_CHECKS=0');
+                } elseif ($dbConnection === 'pgsql') {
+                    DB::statement('SET session_replication_role = \'replica\'');
+                }
+
+                // Execute the SQL. split by semicolon if needed for large files? 
+                // DB::unprepared is usually okay for moderate sizes.
+                DB::unprepared($sql);
+
+                if ($dbConnection === 'mysql') {
+                    DB::statement('SET FOREIGN_KEY_CHECKS=1');
+                } elseif ($dbConnection === 'pgsql') {
+                    DB::statement('SET session_replication_role = \'origin\'');
+                }
+            }
+
+            // Cleanup temp dir
+            File::deleteDirectory($tempExtractDir);
+
+            return response()->json([
+                'message' => 'System restored successfully. You may need to refresh the page.',
+            ]);
+
+        } catch (\Throwable $e) {
+            if (is_dir($tempExtractDir)) {
+                File::deleteDirectory($tempExtractDir);
+            }
+
+            \Log::error('Restore failed', [
+                'filename' => $filename,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Restore failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

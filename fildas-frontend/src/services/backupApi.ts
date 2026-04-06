@@ -129,3 +129,8 @@ export async function downloadSystemSnapshot(filename: string): Promise<void> {
       alert("Download failed.");
     });
 }
+
+export async function restoreSystemSnapshot(filename: string): Promise<void> {
+  const api = await getApi();
+  await api.post(`/admin/system/backups/${filename}/restore`);
+}

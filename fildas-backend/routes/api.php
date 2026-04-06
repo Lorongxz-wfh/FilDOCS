@@ -173,6 +173,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::post('/admin/system/backups',          [SystemBackupController::class, 'store']);
     Route::get('/admin/system/backups/{file}',    [SystemBackupController::class, 'download']);
     Route::delete('/admin/system/backups/{file}', [SystemBackupController::class, 'destroy']);
+    Route::post('/admin/system/backups/{file}/restore', [SystemBackupController::class, 'restore']);
 
     // ── Search ─────────────────────────────────────────────────────────────────
     Route::get('/search', \App\Http\Controllers\Api\SearchController::class);

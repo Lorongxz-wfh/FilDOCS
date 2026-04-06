@@ -15,6 +15,8 @@ import {
   CheckCircle2,
   FolderArchive,
   Users,
+  RotateCcw,
+  AlertTriangle,
 } from "lucide-react";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
 import {
@@ -24,6 +26,7 @@ import {
   createSystemSnapshot,
   deleteSystemBackup,
   downloadSystemSnapshot,
+  restoreSystemSnapshot,
   type BackupPreset,
   type BackupSummary,
   type SystemBackupFile,
@@ -133,6 +136,8 @@ export default function BackupPage() {
   const [loading, setLoading] = useState(true);
   const [backupsLoading, setBackupsLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [restoring, setRestoring] = useState<string | null>(null);
+  const [confirmingRestore, setConfirmingRestore] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [downloading, setDownloading] = useState<Record<string, boolean>>({});
@@ -212,6 +217,21 @@ export default function BackupPage() {
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? e?.message ?? "Failed to delete backup.";
       setError(msg);
+    }
+  };
+
+  const handleRestoreSnapshot = async (filename: string) => {
+    setRestoring(filename);
+    setConfirmingRestore(null);
+    setError(null);
+    try {
+      await restoreSystemSnapshot(filename);
+      alert("System restored successfully. The application will now reload.");
+      window.location.reload();
+    } catch (e: any) {
+      const msg = e?.response?.data?.message ?? e?.message ?? "Restore failed.";
+      setError(msg);
+      setRestoring(null);
     }
   };
 
@@ -416,15 +436,25 @@ export default function BackupPage() {
                          <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => downloadSystemSnapshot(b.filename)}
-                              className="p-1 text-slate-400 hover:text-brand-500 transition-colors"
+                              className="p-1.5 text-slate-400 hover:text-brand-500 transition-colors"
                               title="Download Snapshot"
+                              disabled={!!restoring}
                             >
                               <Download className="h-4 w-4" />
                             </button>
                             <button
+                              onClick={() => setConfirmingRestore(b.filename)}
+                              className="p-1.5 text-slate-400 hover:text-amber-600 transition-colors"
+                              title="Restore System"
+                              disabled={!!restoring}
+                            >
+                              <RotateCcw className={`h-4 w-4 ${restoring === b.filename ? 'animate-spin' : ''}`} />
+                            </button>
+                            <button
                               onClick={() => handleDeleteBackup(b.filename)}
-                              className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                              className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors"
                               title="Delete Snapshot"
+                              disabled={!!restoring}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -447,6 +477,57 @@ export default function BackupPage() {
           </p>
         </div>
       </div>
+
+      {/* ── Restore Confirmation Modal ── */}
+      {confirmingRestore && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-xl dark:border-surface-400 dark:bg-surface-500">
+            <div className="flex items-center gap-4 text-rose-600 dark:text-rose-400 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-900/20">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Confirm System Restore</h3>
+                <p className="text-xs text-rose-500/80">This action is permanent.</p>
+              </div>
+            </div>
+
+            <p className="mb-6 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              You are about to restore the system to state: <span className="font-mono font-bold text-slate-900 dark:text-white px-1.5 py-0.5 bg-slate-100 dark:bg-black/20 rounded">{confirmingRestore}</span>. 
+              This will <span className="font-bold underline decoration-rose-500">overwrite all current database records</span>. Any changes made since this snapshot will be lost.
+            </p>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmingRestore(null)}
+                className="flex-1 rounded-md border border-slate-200 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50 dark:border-surface-400 dark:text-slate-300 dark:hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRestoreSnapshot(confirmingRestore)}
+                className="flex-1 rounded-md bg-rose-600 py-2.5 text-sm font-bold text-white transition hover:bg-rose-700 shadow-sm"
+              >
+                Proceed with Restore
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Global Restore Overlay ── */}
+      {restoring && (
+        <div className="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-md text-white">
+          <Loader2 className="h-12 w-12 animate-spin text-brand-500 mb-6" />
+          <h2 className="text-xl font-bold tracking-tight">Recovering System State...</h2>
+          <p className="mt-2 text-slate-400 text-sm italic">Restoring database snapshot: {restoring}</p>
+          <div className="mt-8 px-4 py-2 bg-white/10 rounded-full text-[10px] uppercase font-bold tracking-widest animate-pulse border border-white/20">
+            Do not refresh or close this tab
+          </div>
+        </div>
+      )}
     </PageFrame>
   );
 }

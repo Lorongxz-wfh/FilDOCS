@@ -164,16 +164,30 @@ class BackupController extends Controller
             ->chunk(100, function ($versions) use ($zip) {
                 foreach ($versions as $v) {
                     $disk = Storage::disk('local');
-                    if (!$disk->exists($v->file_path)) continue;
+                    $path = $v->file_path;
+                    
+                    if (!$disk->exists($path)) {
+                        // Resilient Fallback: maybe it's renamed to "original.ext" in the same folder?
+                        $dir = dirname($path);
+                        $ext = pathinfo($path, PATHINFO_EXTENSION);
+                        $fallback = "{$dir}/original.{$ext}";
+                        
+                        if ($disk->exists($fallback)) {
+                            $path = $fallback;
+                        } else {
+                            \Log::warning("Backup ZIP: File not found for version {$v->id}", ['path' => $path]);
+                            continue;
+                        }
+                    }
 
                     $officeCode = $v->document?->ownerOffice?->code ?? 'Unknown';
                     $docCode    = $v->document?->code ?? "doc-{$v->document_id}";
                     $vNum       = $v->version_number;
-                    $ext        = pathinfo($v->original_filename ?? 'file.pdf', PATHINFO_EXTENSION) ?: 'pdf';
+                    $ext        = pathinfo($v->original_filename ?? $path, PATHINFO_EXTENSION) ?: 'pdf';
                     $date       = $v->created_at?->format('Y-m-d') ?? 'Unknown Date';
 
                     $entryName = "{$officeCode}/Created Documents/{$date}/{$docCode}_v{$vNum}.{$ext}";
-                    $zip->addFile($disk->path($v->file_path), $entryName);
+                    $zip->addFile($disk->path($path), $entryName);
                 }
             });
 
@@ -194,7 +208,20 @@ class BackupController extends Controller
             ->chunk(100, function ($files) use ($zip) {
                 foreach ($files as $f) {
                     $disk = Storage::disk('local');
-                    if (!$disk->exists($f->file_path)) continue;
+                    $path = $f->file_path;
+
+                    if (!$disk->exists($path)) {
+                        $dir = dirname($path);
+                        $ext = pathinfo($path, PATHINFO_EXTENSION);
+                        $fallback = "{$dir}/original.{$ext}";
+                        
+                        if ($disk->exists($fallback)) {
+                            $path = $fallback;
+                        } else {
+                            \Log::warning("Backup ZIP: Request file not found", ['id' => $f->id, 'path' => $path]);
+                            continue;
+                        }
+                    }
 
                     $officeCode = $f->submission?->recipient?->office?->code ?? 'Unknown';
                     $date       = $f->created_at?->format('Y-m-d') ?? 'Unknown Date';
@@ -205,13 +232,11 @@ class BackupController extends Controller
                     $safeReqTitle  = substr(trim($safeReqTitle), 0, 50);
                     $safeItemTitle = substr(trim($safeItemTitle), 0, 50);
                     
-                    $ext      = pathinfo($f->original_filename ?? "file_{$f->id}.pdf", PATHINFO_EXTENSION) ?: 'pdf';
+                    $ext      = pathinfo($f->original_filename ?? $path, PATHINFO_EXTENSION) ?: 'pdf';
                     $fileName = "{$safeReqTitle} - {$safeItemTitle}.{$ext}";
 
                     $entryName = "{$officeCode}/Document Requests/{$date}/{$fileName}";
-                    if (file_exists($disk->path($f->file_path))) {
-                        $zip->addFile($disk->path($f->file_path), $entryName);
-                    }
+                    $zip->addFile($disk->path($path), $entryName);
                 }
             });
 
