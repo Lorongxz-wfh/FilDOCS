@@ -105,62 +105,84 @@ class DocumentController extends Controller
             $visibleDocs->where('documents.created_at', '<=', $data['date_to']);
         }
 
-        $total = (clone $visibleDocs)->count();
+        // --- Efficient Single-Pass Stats ---
+        // Instead of multiple whereHas clones (which cause SQL alias conflicts),
+        // we capture the IDs of visible documents and then query their latest versions once.
+        $visibleDocIds = $visibleDocs->pluck('documents.id')->all();
+        $total = count($visibleDocIds);
 
-        // Calculate counts by phase efficiently
-        // We use a single query to get counts of ALL documents grouped by their LATEST version's status.
-        // This is much faster and avoids multiple complex whereHas joins.
-        
-        $distributed = (clone $visibleDocs)->whereHas('latestVersion', function ($v) use ($data) {
-            $v->where('document_versions.status', 'Distributed');
-            if (!empty($data['date_from'])) {
-                $v->where('document_versions.distributed_at', '>=', $data['date_from']);
-            }
-            if (!empty($data['date_to'])) {
-                $v->where('document_versions.distributed_at', '<=', $data['date_to']);
-            }
-        })->count();
+        $byPhase = [
+            'draft'        => 0,
+            'review'       => 0,
+            'approval'     => 0,
+            'finalization' => 0,
+        ];
+        $distributed = 0;
 
+        if ($total > 0) {
+            // Get latest versions for all visible documents
+            $latestVersions = DocumentVersion::query()
+                ->whereIn('document_id', $visibleDocIds)
+                ->whereIn('version_number', function($sq) {
+                    $sq->selectRaw('MAX(version_number)')
+                       ->from('document_versions as dv_inner')
+                       ->whereColumn('dv_inner.document_id', 'document_versions.document_id');
+                })
+                ->select('status', 'distributed_at')
+                ->get();
+
+            foreach ($latestVersions as $lv) {
+                $status = $lv->status;
+                
+                if ($status === 'Distributed') {
+                    // Check if distributed date matches filter (special case for distributed count)
+                    $passDate = true;
+                    if (!empty($data['date_from']) && $lv->distributed_at < $data['date_from']) $passDate = false;
+                    if (!empty($data['date_to']) && $lv->distributed_at > $data['date_to']) $passDate = false;
+                    if ($passDate) $distributed++;
+                } 
+                elseif (in_array($status, ['Draft', 'Office Draft'])) {
+                    $byPhase['draft']++;
+                } 
+                elseif (stripos($status, 'Review') !== false || stripos($status, 'Check') !== false) {
+                    $byPhase['review']++;
+                } 
+                elseif (stripos($status, 'Approval') !== false) {
+                    $byPhase['approval']++;
+                } 
+                elseif (stripos($status, 'Registration') !== false || stripos($status, 'Distribution') !== false) {
+                    $byPhase['finalization']++;
+                }
+            }
+        }
+
+        // Pending Tasks count (Optimized)
         if ($isAdmin) {
             $pending = (int) WorkflowTask::where('status', 'open')->count();
         } elseif ($roleName === 'auditor') {
             $pending = 0;
         } else {
-            // Refined pending query to be more robust
             $pending = (int) WorkflowTask::query()
                 ->where('workflow_tasks.status', 'open')
                 ->where('workflow_tasks.assigned_office_id', $userOfficeId)
-                ->whereIn('workflow_tasks.document_version_id', function ($query) {
-                    $query->select('id')
-                        ->from('document_versions')
-                        ->whereIn('version_number', function ($sq) {
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('document_versions as dv_pending')
+                        ->whereColumn('dv_pending.id', 'workflow_tasks.document_version_id')
+                        ->where('dv_pending.version_number', function ($sq) {
                             $sq->selectRaw('MAX(version_number)')
-                                ->from('document_versions as dv2')
-                                ->whereColumn('dv2.document_id', 'document_versions.document_id');
+                                ->from('document_versions as dv_max')
+                                ->whereColumn('dv_max.document_id', 'dv_pending.document_id');
                         });
                 })
                 ->count();
         }
 
-        $byPhase = [
-            'draft'        => (clone $visibleDocs)->whereHas('latestVersion', fn($q) => $q->whereIn('document_versions.status', ['Draft', 'Office Draft']))->count(),
-            'review'       => (clone $visibleDocs)->whereHas('latestVersion', fn($q) => $q->where(function($sq) {
-                                $sq->where('document_versions.status', 'like', '%Review%')
-                                   ->orWhere('document_versions.status', 'like', '%Check%');
-                            }))->count(),
-            'approval'     => (clone $visibleDocs)->whereHas('latestVersion', fn($q) => $q->where('document_versions.status', 'like', '%Approval%'))->count(),
-            'finalization' => (clone $visibleDocs)->whereHas('latestVersion', fn($q) => $q->where(function ($r) {
-                                $r->where('document_versions.status', 'like', '%Registration%')
-                                  ->orWhere('document_versions.status', 'like', '%Distribution%');
-                            }))->count(),
-            'distributed'  => $distributed,
-        ];
-
         return response()->json([
             'total' => $total,
             'pending' => $pending,
             'distributed' => $distributed,
-            'by_phase' => $byPhase,
+            'by_phase' => array_merge($byPhase, ['distributed' => $distributed]),
         ]);
     }
 

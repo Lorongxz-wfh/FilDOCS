@@ -140,24 +140,26 @@ class BackupController extends Controller
         if ($from) $query->where('document_versions.created_at', '>=', "{$from} 00:00:00");
         if ($to)   $query->where('document_versions.created_at', '<=', "{$to} 23:59:59");
 
-        $filename = "fildas-documents-{$suffix}.zip";
-        $tempPath = storage_path("app/temp/{$filename}");
-
-        // Ensure temp directory exists
-        if (!is_dir(dirname($tempPath))) {
-            mkdir(dirname($tempPath), 0755, true);
-        }
+        set_time_limit(0); // Prevent timeout for large backups
 
         if (!class_exists('ZipArchive')) {
             abort(500, 'PHP Zip extension is not installed. Please contact administrator.');
         }
 
-        set_time_limit(0); // Prevent timeout for large backups
+        $filename = "fildas-documents-{$suffix}.zip";
+
+        // Use system temp directory for maximum cross-platform compatibility
+        $tempPath = tempnam(sys_get_temp_dir(), 'fildas_backup_') . '.zip';
+        \Log::info("Starting Document ZIP generation", ['temp' => $tempPath]);
 
         try {
             $zip = new ZipArchive();
-            if ($zip->open($tempPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-                abort(500, "Could not create temporary ZIP file at {$tempPath}.");
+            $res = $zip->open($tempPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+            
+            if ($res !== true) {
+                $errMsg = "ZipArchive::open failed with code: " . $res;
+                \Log::error($errMsg, ['path' => $tempPath]);
+                abort(500, $errMsg);
             }
 
             $filesAdded = 0;
@@ -246,19 +248,22 @@ class BackupController extends Controller
             }
 
             $zip->close();
+            \Log::info("Document ZIP completed", ['files' => $filesAdded]);
         } catch (\Throwable $e) {
             \Log::error("Backup ZIP failed: 500", [
                 'message' => $e->getMessage(),
                 'line'    => $e->getLine(),
                 'file'    => basename($e->getFile()),
             ]);
+            @unlink($tempPath);
             abort(500, "Backup ZIP failed: " . $e->getMessage());
         }
 
-
         return response()->streamDownload(function () use ($tempPath) {
-            readfile($tempPath);
-            @unlink($tempPath);
+            if (file_exists($tempPath)) {
+                readfile($tempPath);
+                @unlink($tempPath);
+            }
         }, $filename, [
             'Content-Type' => 'application/zip',
         ]);
