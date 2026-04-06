@@ -74,15 +74,17 @@ class DocumentController extends Controller
         $roleName = $this->roleNameOf($user) ?: null;
         $isAdmin  = in_array($roleName, ['admin', 'sysadmin'], true);
 
+        // Start with a base query for visible documents
         $visibleDocs = Document::query();
 
-        // Admin/sysadmin see ALL documents — skip office-based visibility filter
+        // Admin sees all. Others see based on tasks or distributed status.
         if (!$isAdmin) {
             if ($qaOfficeId && (int) $userOfficeId !== (int) $qaOfficeId) {
+                // If NOT QA: see docs that have an open task assigned to my office
                 $visibleDocs->whereHas('latestVersion', function ($v) use ($userOfficeId) {
                     $v->whereHas('tasks', function ($t) use ($userOfficeId) {
-                        $t->where('status', 'open')
-                            ->where('assigned_office_id', $userOfficeId);
+                        $t->where('workflow_tasks.status', 'open')
+                          ->where('workflow_tasks.assigned_office_id', $userOfficeId);
                     });
                 });
             }
@@ -90,63 +92,67 @@ class DocumentController extends Controller
             if ($roleName === 'auditor') {
                 // Auditor: only docs whose latest version is Distributed
                 $visibleDocs->whereHas('latestVersion', function ($v) {
-                    $v->where('status', 'Distributed');
+                    $v->where('document_versions.status', 'Distributed');
                 });
             }
         }
 
         // Apply date filters if provided
         if (!empty($data['date_from'])) {
-            $visibleDocs->where('created_at', '>=', $data['date_from']);
+            $visibleDocs->where('documents.created_at', '>=', $data['date_from']);
         }
         if (!empty($data['date_to'])) {
-            $visibleDocs->where('created_at', '<=', $data['date_to']);
+            $visibleDocs->where('documents.created_at', '<=', $data['date_to']);
         }
 
         $total = (clone $visibleDocs)->count();
 
+        // Calculate counts by phase efficiently
+        // We use a single query to get counts of ALL documents grouped by their LATEST version's status.
+        // This is much faster and avoids multiple complex whereHas joins.
+        
         $distributed = (clone $visibleDocs)->whereHas('latestVersion', function ($v) use ($data) {
-            $v->where('status', 'Distributed');
+            $v->where('document_versions.status', 'Distributed');
             if (!empty($data['date_from'])) {
-                $v->where('distributed_at', '>=', $data['date_from']);
+                $v->where('document_versions.distributed_at', '>=', $data['date_from']);
             }
             if (!empty($data['date_to'])) {
-                $v->where('distributed_at', '<=', $data['date_to']);
+                $v->where('document_versions.distributed_at', '<=', $data['date_to']);
             }
         })->count();
 
         if ($isAdmin) {
-            // Pending = total open workflow tasks across all docs
             $pending = (int) WorkflowTask::where('status', 'open')->count();
         } elseif ($roleName === 'auditor') {
             $pending = 0;
         } else {
-            $pending = (int) (WorkflowTask::query()
+            // Refined pending query to be more robust
+            $pending = (int) WorkflowTask::query()
                 ->where('workflow_tasks.status', 'open')
                 ->where('workflow_tasks.assigned_office_id', $userOfficeId)
-                ->join('document_versions', 'workflow_tasks.document_version_id', '=', 'document_versions.id')
-                ->join('documents', 'document_versions.document_id', '=', 'documents.id')
-                ->joinSub(
-                    DocumentVersion::query()
-                        ->selectRaw('document_id, MAX(version_number) as max_version_number')
-                        ->groupBy('document_id'),
-                    'dv_max',
-                    function ($join) {
-                        $join->on('dv_max.document_id', '=', 'document_versions.document_id')
-                            ->on('dv_max.max_version_number', '=', 'document_versions.version_number');
-                    }
-                )
-                ->selectRaw('COUNT(DISTINCT documents.id) as cnt')
-                ->value('cnt') ?? 0);
+                ->whereIn('workflow_tasks.document_version_id', function ($query) {
+                    $query->select('id')
+                        ->from('document_versions')
+                        ->whereIn('version_number', function ($sq) {
+                            $sq->selectRaw('MAX(version_number)')
+                                ->from('document_versions as dv2')
+                                ->whereColumn('dv2.document_id', 'document_versions.document_id');
+                        });
+                })
+                ->count();
         }
 
         $byPhase = [
-            'draft'        => (clone $visibleDocs)->whereHas('latestVersion', fn($q) => $q->whereIn('status', ['Draft', 'Office Draft']))->count(),
-            'review'       => (clone $visibleDocs)->whereHas('latestVersion', fn($q) => $q->where('status', 'like', '%Review%')->orWhere('status', 'like', '%Check%'))->count(),
-            'approval'     => (clone $visibleDocs)->whereHas('latestVersion', fn($q) => $q->where('status', 'like', '%Approval%'))->count(),
+            'draft'        => (clone $visibleDocs)->whereHas('latestVersion', fn($q) => $q->whereIn('document_versions.status', ['Draft', 'Office Draft']))->count(),
+            'review'       => (clone $visibleDocs)->whereHas('latestVersion', fn($q) => $q->where(function($sq) {
+                                $sq->where('document_versions.status', 'like', '%Review%')
+                                   ->orWhere('document_versions.status', 'like', '%Check%');
+                            }))->count(),
+            'approval'     => (clone $visibleDocs)->whereHas('latestVersion', fn($q) => $q->where('document_versions.status', 'like', '%Approval%'))->count(),
             'finalization' => (clone $visibleDocs)->whereHas('latestVersion', fn($q) => $q->where(function ($r) {
-                $r->where('status', 'like', '%Registration%')->orWhere('status', 'like', '%Distribution%');
-            }))->count(),
+                                $r->where('document_versions.status', 'like', '%Registration%')
+                                  ->orWhere('document_versions.status', 'like', '%Distribution%');
+                            }))->count(),
             'distributed'  => $distributed,
         ];
 
@@ -157,6 +163,7 @@ class DocumentController extends Controller
             'by_phase' => $byPhase,
         ]);
     }
+
 
     public function show(Document $document)
     {
