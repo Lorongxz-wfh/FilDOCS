@@ -22,11 +22,21 @@ const QueueCard: React.FC<QueueCardProps> = ({ item, onClick }) => {
         <p className="text-[13px] sm:text-sm font-display font-semibold text-slate-900 dark:text-slate-100 truncate leading-tight">
           {doc.title}
         </p>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center gap-2 mt-1">
+          {item.can_act ? (
+            <span className="text-[10px] sm:text-[11px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">
+              Action needed
+            </span>
+          ) : (
+            <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider">
+              Monitoring
+            </span>
+          )}
+          <span className="text-slate-200 dark:text-surface-400 font-light">•</span>
           <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-mono">
-            {doc.code || (doc as any).reserved_code || "—"} · v{ver.version_number}
+            v{ver.version_number}
           </span>
-          <StatusBadge status={ver.status} className="scale-[0.85] origin-left" />
+          <StatusBadge status={ver.status} className="scale-[0.85] origin-left translate-y-[0.5px]" />
         </div>
       </div>
 
