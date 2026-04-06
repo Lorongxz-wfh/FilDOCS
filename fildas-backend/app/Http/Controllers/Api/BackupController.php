@@ -159,35 +159,36 @@ class BackupController extends Controller
             abort(500, "Could not create temporary ZIP file at {$tempPath}.");
         }
 
+        $filesAdded = 0;
+
         // 1. Regular Documents
         $query->orderBy('document_versions.created_at', 'desc')
-            ->chunk(100, function ($versions) use ($zip) {
+            ->chunk(100, function ($versions) use ($zip, &$filesAdded) {
                 foreach ($versions as $v) {
-                    $disk = Storage::disk('local');
-                    $path = $v->file_path;
+                    $found = $this->findFileAcrossDisks($v->file_path);
                     
-                    if (!$disk->exists($path)) {
+                    if (!$found) {
                         // Resilient Fallback: maybe it's renamed to "original.ext" in the same folder?
-                        $dir = dirname($path);
-                        $ext = pathinfo($path, PATHINFO_EXTENSION);
+                        $dir = dirname($v->file_path);
+                        $ext = pathinfo($v->file_path, PATHINFO_EXTENSION);
                         $fallback = "{$dir}/original.{$ext}";
-                        
-                        if ($disk->exists($fallback)) {
-                            $path = $fallback;
-                        } else {
-                            \Log::warning("Backup ZIP: File not found for version {$v->id}", ['path' => $path]);
-                            continue;
-                        }
+                        $found = $this->findFileAcrossDisks($fallback);
+                    }
+
+                    if (!$found) {
+                        \Log::warning("Backup ZIP: Document file not found in any disk", ['id' => $v->id, 'path' => $v->file_path]);
+                        continue;
                     }
 
                     $officeCode = $v->document?->ownerOffice?->code ?? 'Unknown';
                     $docCode    = $v->document?->code ?? "doc-{$v->document_id}";
                     $vNum       = $v->version_number;
-                    $ext        = pathinfo($v->original_filename ?? $path, PATHINFO_EXTENSION) ?: 'pdf';
+                    $ext        = pathinfo($v->original_filename ?? $v->file_path, PATHINFO_EXTENSION) ?: 'pdf';
                     $date       = $v->created_at?->format('Y-m-d') ?? 'Unknown Date';
 
                     $entryName = "{$officeCode}/Created Documents/{$date}/{$docCode}_v{$vNum}.{$ext}";
-                    $zip->addFile($disk->path($path), $entryName);
+                    $zip->addFile($found['abs_path'], $entryName);
+                    $filesAdded++;
                 }
             });
 
@@ -205,22 +206,20 @@ class BackupController extends Controller
         if ($to)   $reqQuery->where('document_request_submission_files.created_at', '<=', "{$to} 23:59:59");
 
         $reqQuery->orderBy('document_request_submission_files.created_at', 'desc')
-            ->chunk(100, function ($files) use ($zip) {
+            ->chunk(100, function ($files) use ($zip, &$filesAdded) {
                 foreach ($files as $f) {
-                    $disk = Storage::disk('local');
-                    $path = $f->file_path;
+                    $found = $this->findFileAcrossDisks($f->file_path);
 
-                    if (!$disk->exists($path)) {
-                        $dir = dirname($path);
-                        $ext = pathinfo($path, PATHINFO_EXTENSION);
+                    if (!$found) {
+                        $dir = dirname($f->file_path);
+                        $ext = pathinfo($f->file_path, PATHINFO_EXTENSION);
                         $fallback = "{$dir}/original.{$ext}";
-                        
-                        if ($disk->exists($fallback)) {
-                            $path = $fallback;
-                        } else {
-                            \Log::warning("Backup ZIP: Request file not found", ['id' => $f->id, 'path' => $path]);
-                            continue;
-                        }
+                        $found = $this->findFileAcrossDisks($fallback);
+                    }
+
+                    if (!$found) {
+                        \Log::warning("Backup ZIP: Request file not found in any disk", ['id' => $f->id, 'path' => $f->file_path]);
+                        continue;
                     }
 
                     $officeCode = $f->submission?->recipient?->office?->code ?? 'Unknown';
@@ -232,16 +231,17 @@ class BackupController extends Controller
                     $safeReqTitle  = substr(trim($safeReqTitle), 0, 50);
                     $safeItemTitle = substr(trim($safeItemTitle), 0, 50);
                     
-                    $ext      = pathinfo($f->original_filename ?? $path, PATHINFO_EXTENSION) ?: 'pdf';
+                    $ext      = pathinfo($f->original_filename ?? $f->file_path, PATHINFO_EXTENSION) ?: 'pdf';
                     $fileName = "{$safeReqTitle} - {$safeItemTitle}.{$ext}";
 
                     $entryName = "{$officeCode}/Document Requests/{$date}/{$fileName}";
-                    $zip->addFile($disk->path($path), $entryName);
+                    $zip->addFile($found['abs_path'], $entryName);
+                    $filesAdded++;
                 }
             });
 
-        if ($zip->numFiles === 0) {
-            $zip->addFromString('readme.txt', 'No document files found in the specified range.');
+        if ($filesAdded === 0) {
+            $zip->addFromString('readme.txt', 'No document files found in the specified range across local or public storage.');
         }
 
         $zip->close();
@@ -348,6 +348,32 @@ class BackupController extends Controller
         }, $filename, [
             'Content-Type' => 'text/csv',
         ]);
+    }
+
+    /**
+     * Resilient file lookup across potential disks.
+     */
+    private function findFileAcrossDisks(?string $path): ?array
+    {
+        if (!$path) return null;
+
+        $disks = ['local', 'public', 's3'];
+
+        foreach ($disks as $diskName) {
+            try {
+                $disk = Storage::disk($diskName);
+                if ($disk->exists($path)) {
+                    return [
+                        'disk'     => $diskName,
+                        'abs_path' => $disk->path($path),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                continue;
+            }
+        }
+
+        return null;
     }
 
     // ─── Summary counts (for the UI cards) ────────────────────────────────────

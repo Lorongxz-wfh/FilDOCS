@@ -204,8 +204,9 @@ export default function DocumentRequestPage() {
 
   // Final roles: 
   // isReviewer determines if they can Accept/Reject and post Announcements.
-  // We grant this to the actual creator AND all QA users (Document Controllers).
-  const isReviewer = isRequesterUser || isQa || canDebug;
+  // We grant this to the actual creator AND all third-party QA users.
+  // CRITICAL: A recipient (Requestee) can NEVER be their own Reviewer.
+  const isReviewer = isRequesterUser || (isQa && !isRequestee) || canDebug;
   
   // isSubmitter determines if they can upload the file.
   // This is strictly for the intended recipient office.

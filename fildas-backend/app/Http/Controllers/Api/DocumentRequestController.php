@@ -709,6 +709,12 @@ class DocumentRequestController extends Controller
         
         $isCreatorUser = ($user->id === (int)$docRequest->created_by_user_id);
         $isCreatorOffice = ($myOfficeId > 0 && $myOfficeId === (int)$creatorOfficeId);
+        $recipientOfficeId = DB::table('document_request_recipients')->where('id', $submission->recipient_id)->value('office_id');
+        $isRecipientOffice = ($myOfficeId > 0 && $myOfficeId === (int)$recipientOfficeId);
+
+        if ($isRecipientOffice && !$isAdmin) {
+             return response()->json(['message' => 'Forbidden. Recipient cannot review their own submission.'], 403);
+        }
 
         if (!$isCreatorUser && !$isCreatorOffice && !$isQa) {
             return response()->json(['message' => 'Forbidden. Only the requester office or QA can review submissions.'], 403);
