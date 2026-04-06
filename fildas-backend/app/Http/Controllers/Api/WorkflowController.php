@@ -224,10 +224,15 @@ class WorkflowController extends Controller
             'can_act' => true,
         ])->values();
 
-        // Monitoring: docs owned by this office, not currently assigned to this office (excluding Cancelled/Superseded/Distributed)
+        // Monitoring: docs visible to this office (owned, shared, or participant), 
+        // not currently assigned (excluding Cancelled/Superseded/Distributed)
         $monitorVersions = \App\Models\DocumentVersion::query()
             ->whereNotIn('status', ['Cancelled', 'Superseded', 'Distributed'])
-            ->whereHas('document', fn($q) => $q->where('owner_office_id', $userOfficeId))
+            ->whereHas('document', function ($q) use ($userOfficeId) {
+                $q->where('owner_office_id', $userOfficeId)
+                    ->orWhereHas('sharedOffices', fn($s) => $s->where('offices.id', $userOfficeId))
+                    ->orWhereHas('versions.tasks', fn($t) => $t->where('assigned_office_id', $userOfficeId));
+            })
             ->with([
                 'document.ownerOffice',
                 'tasks' => fn($q) => $q->orderByDesc('id'),
