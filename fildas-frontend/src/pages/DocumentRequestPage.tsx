@@ -190,20 +190,25 @@ export default function DocumentRequestPage() {
   }, [selectedSubmission]);
 
   // ── Logic: Requester (Reviewer) vs. Requestee (Submitter) ──
-  // A Requester is the user who created the request.
-  const isRequester = me.id === Number(req?.created_by_user_id);
+  // A Requester is the user who created the request OR a QA supervisor.
+  const isRequesterUser = me.id === Number(req?.created_by_user_id);
 
   // A Requestee is the office who received the request.
   const isRequestee =
     (me.office_id && Number(me.office_id) === Number(recipient?.office_id)) ||
-    (isQa && String(recipient?.office_code || "").toUpperCase() === "QA");
+    (isQa && (recipient?.office_code || "").toUpperCase() === "QA");
 
   // Privileged user (can override in debug mode)
   const isPrivileged = isQa || isAdminUser;
   const canDebug = isPrivileged && adminDebugMode;
 
-  // Final roles
-  const isReviewer = isRequester || canDebug;
+  // Final roles: 
+  // isReviewer determines if they can Accept/Reject and post Announcements.
+  // We grant this to the actual creator AND all QA users (Document Controllers).
+  const isReviewer = isRequesterUser || isQa || canDebug;
+  
+  // isSubmitter determines if they can upload the file.
+  // This is strictly for the intended recipient office.
   const isSubmitter = isRequestee || canDebug;
 
 

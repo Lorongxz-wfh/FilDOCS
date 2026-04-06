@@ -38,8 +38,8 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       .map(child => {
          // This is a bit hacky but works without changing navConfig structure
          // In a real system, we'd add 'badgeKey' to NavItem type
-         if (child.to === "/documents/all") (child as any).badgeCount = (window as any).__NAV_STATS__?.workflows || 0;
-         if (child.to === "/document-requests") (child as any).badgeCount = (window as any).__NAV_STATS__?.requests || 0;
+         if (child.to === "/documents/all") (child as any).badgeCount = (window as any).__NAV_STATS__?.workflowBadge || 0;
+         if (child.to === "/document-requests") (child as any).badgeCount = (window as any).__NAV_STATS__?.requestBadge || 0;
          return child;
       });
   }, [children, userRole]);

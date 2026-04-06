@@ -143,7 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                       onMobileClose={onMobileClose}
                       children={item.children}
                       userRole={role}
-                      badgeCount={item.to === "/work-queue" ? stats.workflows + stats.requests : undefined}
+                      badgeCount={item.to === "/work-queue" ? stats.workflowBadge + stats.requestBadge : undefined}
                     />
                   ))}
                 </ul>

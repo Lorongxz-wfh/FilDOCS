@@ -710,8 +710,8 @@ class DocumentRequestController extends Controller
         $isCreatorUser = ($user->id === (int)$docRequest->created_by_user_id);
         $isCreatorOffice = ($myOfficeId > 0 && $myOfficeId === (int)$creatorOfficeId);
 
-        if (!$isCreatorUser && !$isCreatorOffice && !$isAdmin) {
-            return response()->json(['message' => 'Forbidden. Only the requester office can review submissions.'], 403);
+        if (!$isCreatorUser && !$isCreatorOffice && !$isQa) {
+            return response()->json(['message' => 'Forbidden. Only the requester office or QA can review submissions.'], 403);
         }
 
         $data = $request->validate([
