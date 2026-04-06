@@ -699,15 +699,19 @@ class DocumentRequestController extends Controller
         $docRequest = DB::table('document_requests')->where('id', $requestId)->first();
         if (!$docRequest) return response()->json(['message' => 'Request not found'], 404);
 
-
         // Authorization:
         // 1. User is the specific requester (creator)
-        // 2. User is QA and the request belongs to QA
+        // 2. User belongs to the same office as the requester
         // 3. Admin (all-access)
-        $isCreator = ($user->id === (int)$docRequest->created_by_user_id);
+        
+        $creatorOfficeId = DB::table('users')->where('id', $docRequest->created_by_user_id)->value('office_id');
+        $myOfficeId = (int) ($user?->office_id ?? 0);
+        
+        $isCreatorUser = ($user->id === (int)$docRequest->created_by_user_id);
+        $isCreatorOffice = ($myOfficeId > 0 && $myOfficeId === (int)$creatorOfficeId);
 
-        if (!$isCreator && !$isQa && !$isAdmin) {
-            return response()->json(['message' => 'Forbidden. Only the requester can review submissions.'], 403);
+        if (!$isCreatorUser && !$isCreatorOffice && !$isAdmin) {
+            return response()->json(['message' => 'Forbidden. Only the requester office can review submissions.'], 403);
         }
 
         $data = $request->validate([

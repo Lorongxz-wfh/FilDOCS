@@ -4,10 +4,12 @@ import MainLayout from "../../layout/MainLayout";
 import { getAuthToken, logoutUser } from "../auth";
 import { useIdleTimeout } from "../../hooks/useIdleTimeout";
 import api from "../../services/api";
+import { Loader2 } from "lucide-react";
 
 export default function ProtectedLayout() {
   const token = getAuthToken();
   const checkedTokenRef = React.useRef<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -33,8 +35,9 @@ export default function ProtectedLayout() {
     };
   }, [token]);
 
-  const handleLogout = () => {
-    logoutUser("manual");
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await logoutUser("manual");
   };
 
   const { showWarning, stayLoggedIn } = useIdleTimeout(
@@ -62,10 +65,12 @@ export default function ProtectedLayout() {
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => logoutUser("manual")}
-                className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-surface-300 dark:text-slate-300 dark:hover:bg-surface-400 transition"
+                disabled={isLoggingOut}
+                onClick={handleLogout}
+                className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-surface-300 dark:text-slate-300 dark:hover:bg-surface-400 transition disabled:opacity-50"
               >
-                Log out now
+                {isLoggingOut && <Loader2 className="h-3 w-3 animate-spin" />}
+                {isLoggingOut ? "Logging out..." : "Log out now"}
               </button>
               <button
                 type="button"

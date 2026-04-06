@@ -9,7 +9,8 @@ import {
   LogOut,
   ChevronsUpDown,
   Archive,
-  User
+  User,
+  Loader2
 } from "lucide-react";
 
 interface SidebarProfileProps {
@@ -33,6 +34,19 @@ const SidebarProfile: React.FC<SidebarProfileProps> = ({
   setImgError,
   onLogout,
 }) => {
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+
+  const handleLogoutClick = async () => {
+    if (!onLogout) return;
+    setIsLoggingOut(true);
+    try {
+      await Promise.resolve(onLogout());
+    } finally {
+      // Intentionally not setting false if we expect a redirect, but uncomment if needed
+      // setIsLoggingOut(false);
+    }
+  };
+
   const ProfileDropdownContent = () => (
     <div className={[
       "absolute z-50 rounded-xl border border-neutral-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-xl py-1.5 overflow-hidden",
@@ -81,11 +95,16 @@ const SidebarProfile: React.FC<SidebarProfileProps> = ({
 
       <div className="border-t border-neutral-100 dark:border-surface-400 mt-1 pt-1 pb-1">
         <button
-          onClick={onLogout}
-          className="flex w-full items-center gap-3 px-3.5 py-2.5 text-[13.5px] font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+          onClick={handleLogoutClick}
+          disabled={isLoggingOut}
+          className="flex w-full items-center gap-3 px-3.5 py-2.5 text-[13.5px] font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors disabled:opacity-50"
         >
-          <LogOut className="h-4.5 w-4.5" />
-          Sign Out
+          {isLoggingOut ? (
+            <Loader2 className="h-4.5 w-4.5 animate-spin" />
+          ) : (
+            <LogOut className="h-4.5 w-4.5" />
+          )}
+          {isLoggingOut ? "Signing Out..." : "Sign Out"}
         </button>
       </div>
     </div>

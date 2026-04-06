@@ -13,6 +13,8 @@ import {
   Trash2,
   HardDrive,
   CheckCircle2,
+  FolderArchive,
+  Users,
 } from "lucide-react";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
 import {
@@ -194,20 +196,22 @@ export default function BackupPage() {
     try {
       await createSystemSnapshot();
       fetchSystemBackups();
-    } catch (e) {
-      alert("Failed to create snapshot.");
+    } catch (e: any) {
+      const msg = e?.response?.data?.message ?? e?.message ?? "Failed to create snapshot.";
+      setError(msg);
     } finally {
       setCreating(false);
     }
   };
 
   const handleDeleteBackup = async (filename: string) => {
-    if (!confirm(`Are you sure you want to delete ${filename}? This action cannot be undone.`)) return;
+    if (!confirm(`Delete "${filename}"? This cannot be undone.`)) return;
     try {
       await deleteSystemBackup(filename);
       fetchSystemBackups();
-    } catch (e) {
-      alert("Failed to delete backup.");
+    } catch (e: any) {
+      const msg = e?.response?.data?.message ?? e?.message ?? "Failed to delete backup.";
+      setError(msg);
     }
   };
 
@@ -300,6 +304,30 @@ export default function BackupPage() {
               downloading={!!downloading["activity-csv"]}
               onDownload={() => handleDownload("activity-csv")}
             />
+
+            <BackupCard
+              title="Document Files (ZIP)"
+              description="Download all document files in a structured archive — organised by Office / Type / Date."
+              icon={<FolderArchive className="h-5 w-5 text-sky-500" />}
+              iconBg="bg-sky-50 dark:bg-sky-950/30"
+              count={summary?.files ?? null}
+              countLabel="files"
+              loading={loading}
+              downloading={!!downloading["documents-zip"]}
+              onDownload={() => handleDownload("documents-zip")}
+            />
+
+            <BackupCard
+              title="User Directory"
+              description="Export the full user roster — names, roles, offices, and account status."
+              icon={<Users className="h-5 w-5 text-indigo-500" />}
+              iconBg="bg-indigo-50 dark:bg-indigo-950/30"
+              count={summary?.users ?? null}
+              countLabel="users"
+              loading={loading}
+              downloading={!!downloading["users-csv"]}
+              onDownload={() => handleDownload("users-csv")}
+            />
           </div>
         </div>
 
@@ -385,7 +413,7 @@ export default function BackupPage() {
                          })}
                        </td>
                        <td className="px-5 py-4 text-right">
-                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => downloadSystemSnapshot(b.filename)}
                               className="p-1 text-slate-400 hover:text-brand-500 transition-colors"

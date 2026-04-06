@@ -167,6 +167,13 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         Route::get('/users-csv',     [\App\Http\Controllers\Api\BackupController::class, 'usersCsv']);
     });
 
+    // ── System Snapshots ──────────────────────────────────────────────────
+    // Controller enforces its own role check (qa, admin, sysadmin, office_head)
+    Route::get('/admin/system/backups',           [SystemBackupController::class, 'index']);
+    Route::post('/admin/system/backups',          [SystemBackupController::class, 'store']);
+    Route::get('/admin/system/backups/{file}',    [SystemBackupController::class, 'download']);
+    Route::delete('/admin/system/backups/{file}', [SystemBackupController::class, 'destroy']);
+
     // ── Search ─────────────────────────────────────────────────────────────────
     Route::get('/search', \App\Http\Controllers\Api\SearchController::class);
 
@@ -274,14 +281,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         Route::get('/system/logs',                [SystemHealthController::class, 'logs']);
         Route::post('/system/diagnostics',        [SystemHealthController::class, 'diagnostics']);
         Route::post('/system/test-email',         [SystemHealthController::class, 'sendTestMail']);
-
-        // System Snapshots (Backups)
-        Route::get('/system/backups',             [SystemBackupController::class, 'index']);
-        Route::post('/system/backups',            [SystemBackupController::class, 'store']);
-        Route::get('/system/backups/{file}',      [SystemBackupController::class, 'download']);
-        Route::delete('/system/backups/{file}',   [SystemBackupController::class, 'destroy']);
     });
 
     // ── Support ────────────────────────────────────────────────────────────
     Route::post('/support/send', [SupportController::class, 'send']);
 });
+

@@ -34,7 +34,6 @@ class ReportsController extends Controller
     // GET /api/reports/approval?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
     public function approval(Request $request)
     {
-
         $user = $request->user();
         $roleName = $this->roleNameOf($user);
         $userOfficeId = (int) ($user?->office_id ?? 0);
@@ -43,8 +42,10 @@ class ReportsController extends Controller
         $isQA = ($roleName === 'qa') || ($qaOfficeId && $userOfficeId === $qaOfficeId);
         $isAdmin = in_array($roleName, ['admin', 'sysadmin'], true);
         $isOfficeHead = ($roleName === 'office_head');
+        $isPresident = ($roleName === 'president');
+        $isVP = in_array($roleName, ['vpaa', 'vpad', 'vpf', 'vpr'], true);
 
-        if (!$isQA && !$isAdmin && !$isOfficeHead) {
+        if (!$isQA && !$isAdmin && !$isOfficeHead && !$isPresident && !$isVP) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
@@ -63,6 +64,12 @@ class ReportsController extends Controller
         $parent = $data['parent'] ?? 'ALL';
         $dateField = $data['date_field'] ?? 'completed';
         $dateColumn = $dateField === 'created' ? 'created_at' : 'completed_at';
+
+        // VP Hardlock Check: VPs can only ever request data for their assigned cluster.
+        if ($isVP) {
+            $vpMap = ['vpaa' => 'VA', 'vpad' => 'VAd', 'vpf' => 'VF', 'vpr' => 'VR'];
+            $parent = $vpMap[$roleName] ?? 'ALL';
+        }
 
         $offices = Office::query()->get(['id', 'code', 'parent_office_id']);
         $officeById = $offices->keyBy('id')->map(function ($o) {

@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Megaphone, AlertCircle, HelpCircle, Settings, LogOut } from "lucide-react";
+import { Megaphone, AlertCircle, HelpCircle, Settings, LogOut, Loader2 } from "lucide-react";
 
 interface SidebarMobileFooterProps {
   onLogout?: () => void;
@@ -8,6 +8,18 @@ interface SidebarMobileFooterProps {
 }
 
 const SidebarMobileFooter: React.FC<SidebarMobileFooterProps> = ({ onLogout, onMobileClose }) => {
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+
+  const handleLogoutClick = async () => {
+    if (!onLogout) return;
+    setIsLoggingOut(true);
+    try {
+      await Promise.resolve(onLogout());
+    } finally {
+      // Typically redirects, but safe to have finally
+    }
+  };
+
   return (
     <div className="shrink-0 p-2.5 bg-slate-50/10 dark:bg-black/5 space-y-1.5">
       <div className="flex items-center gap-1 bg-slate-100/30 dark:bg-white/5 p-1 rounded-lg">
@@ -38,11 +50,16 @@ const SidebarMobileFooter: React.FC<SidebarMobileFooterProps> = ({ onLogout, onM
           <span className="truncate">Settings</span>
         </NavLink>
         <button
-          onClick={onLogout}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/20 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/30 border border-rose-100 dark:border-rose-900/30 transition-all active:scale-95"
-          title="Log Out"
+          onClick={handleLogoutClick}
+          disabled={isLoggingOut}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/20 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/30 border border-rose-100 dark:border-rose-900/30 transition-all active:scale-95 disabled:opacity-50"
+          title={isLoggingOut ? "Logging out..." : "Log Out"}
         >
-          <LogOut className="h-4 w-4" />
+          {isLoggingOut ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <LogOut className="h-4 w-4" />
+          )}
         </button>
       </div>
     </div>
