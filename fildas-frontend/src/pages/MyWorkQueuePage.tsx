@@ -5,8 +5,14 @@ import {
   listActivityLogs,
   getDocumentVersion,
 } from "../services/documents";
-import { listDocumentRequestIndividual, listDocumentRequestInbox } from "../services/documentRequests";
-import type { WorkQueueItem } from "../services/documents";
+import {
+  listDocumentRequestIndividual,
+  listDocumentRequestInbox,
+  getDocumentRequestStats,
+} from "../services/documentRequests";
+import type { WorkQueueItem } from "../services/types";
+import type { DocumentRequestStats as ReqStatsType } from "../services/documentRequests";
+
 import {
   getUserRole,
   isQA,
@@ -33,7 +39,8 @@ const MyWorkQueuePage: React.FC = () => {
   const [assignedItems, setAssignedItems] = useState<WorkQueueItem[]>([]);
   const [monitoringItems, setMonitoringItems] = useState<WorkQueueItem[]>([]);
   const [requestItems, setRequestItems] = useState<any[]>([]);
-  const [requestStats, setRequestStats] = useState<{ open: number; total: number } | null>(null);
+  const [requestStats, setRequestStats] = useState<ReqStatsType | null>(null);
+
 
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
@@ -62,35 +69,27 @@ const MyWorkQueuePage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const [alf_workflow, alf_request, q, r] = await Promise.all([
+      
+      const [alf_actions, q, r, r_stats] = await Promise.all([
         listActivityLogs({
-          scope: isAdmin ? "all" : "mine",
+          scope: isAdmin ? "all" : "office",
           per_page: 8,
-          category: "workflow",
-        }).catch(() => ({ data: [] })),
-        listActivityLogs({
-          scope: isAdmin ? "all" : "mine",
-          per_page: 8,
-          category: "request",
+          category: "actions",
         }).catch(() => ({ data: [] })),
         getWorkQueue().catch(() => ({ assigned: [], monitoring: [] })),
         (isQaAdmin 
           ? listDocumentRequestIndividual({ per_page: 5, request_status: "open" }) 
           : listDocumentRequestInbox({ per_page: 5 })
         ).catch(() => ({ data: [], total: 0 })),
+        getDocumentRequestStats().catch(() => null),
       ]);
 
-      const mergedActivity = [
-        ...((alf_workflow as any)?.data ?? []),
-        ...((alf_request as any)?.data ?? []),
-      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-       .slice(0, 12);
-
-      setRecentActivity(mergedActivity);
+      setRecentActivity((alf_actions as any)?.data ?? []);
       setAssignedItems((q as any)?.assigned ?? []);
       setMonitoringItems((q as any)?.monitoring ?? []);
       setRequestItems((r as any)?.data ?? []);
-      setRequestStats({ open: (r as any)?.total ?? 0, total: (r as any)?.total ?? 0 });
+      setRequestStats(r_stats as any);
+
     } catch (e: any) {
       setError(e?.message ?? "Failed to load dashboard data");
     } finally {
@@ -149,9 +148,8 @@ const MyWorkQueuePage: React.FC = () => {
   );
 
   const actionNeededCount = allItems.filter(i => i.can_act).length;
-  // For requests, actionable depends on the inbox/individual list fetched
-  // If QA/Admin, actionable might be a subset, but for this simplified view, we use the inbox total
-  const requestActionNeeded = isQaAdmin ? requestItems.filter(r => (r.item_status || r.status) === "Pending").length : requestItems.length;
+  const requestActionNeeded = requestStats?.action_required ?? 0;
+
 
   return (
     <PageFrame
@@ -182,12 +180,12 @@ const MyWorkQueuePage: React.FC = () => {
         {/* Column 1: Workflows */}
         <div className="flex flex-col gap-4 min-h-0 lg:flex-[3.5] shrink-0">
           <div className="flex flex-col gap-1.5 shrink-0">
-            <p className="text-[11px] font-display font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.12em] ml-1">Document Overview</p>
             <div className="grid grid-cols-2 gap-2">
               <StatCard label="Active Flows" value={allItems.length} loading={loading} />
               <StatCard label="Action Required" value={actionNeededCount} loading={loading} />
             </div>
           </div>
+
           
           <div className="relative flex flex-col flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden min-h-0 shadow-sm">
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 sm:py-3.5">
@@ -251,12 +249,12 @@ const MyWorkQueuePage: React.FC = () => {
         {/* Column 2: Requests */}
         <div className="flex flex-col gap-4 min-h-0 lg:flex-[3.5] shrink-0">
           <div className="flex flex-col gap-1.5 shrink-0">
-            <p className="text-[11px] font-display font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.12em] ml-1">Requests Overview</p>
             <div className="grid grid-cols-2 gap-2">
-              <StatCard label="Active Requests" value={requestStats?.open ?? 0} loading={loading} />
+              <StatCard label="Active Requests" value={requestStats?.active ?? 0} loading={loading} />
               <StatCard label="Action Required" value={requestActionNeeded} loading={loading} />
             </div>
           </div>
+
 
           <div className="relative flex flex-col flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden min-h-0 shadow-sm">
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 sm:py-3.5">
@@ -319,11 +317,11 @@ const MyWorkQueuePage: React.FC = () => {
         {/* Column 3: Activity */}
         <div className="flex flex-col gap-4 min-h-0 lg:flex-[2] shrink-0">
           <div className="flex flex-col gap-1.5 shrink-0">
-            <p className="text-[11px] font-display font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.12em] ml-1">System Health</p>
             <div className="flex flex-col">
-              <StatCard label="Ongoing Progress" value={allItems.length + (requestStats?.open ?? 0)} loading={loading} />
+              <StatCard label="Ongoing Progress" value={allItems.length + (requestStats?.active ?? 0)} loading={loading} />
             </div>
           </div>
+
 
           <div className="relative flex flex-col flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden min-h-0 shadow-sm">
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 sm:py-3.5">

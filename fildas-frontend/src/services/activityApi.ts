@@ -21,7 +21,9 @@ export async function listActivityLogs(params: {
     | "document"
     | "user"
     | "template"
-    | "profile";
+    | "profile"
+    | "actions";
+
 
   // sorting
   sort_by?: "created_at" | "event" | "label";
@@ -76,7 +78,9 @@ export async function exportActivityLogs(params: {
     | "document"
     | "user"
     | "template"
-    | "profile";
+    | "profile"
+    | "actions";
+
   sort_by?: "created_at" | "event" | "label";
   sort_dir?: "asc" | "desc";
 }): Promise<ActivityLogItem[]> {

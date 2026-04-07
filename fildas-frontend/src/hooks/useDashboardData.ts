@@ -98,7 +98,10 @@ export function useDashboardData(role: UserRole): DashboardData {
       try {
         if (isAdmin) {
           const [adminRes, activityRes] = await Promise.allSettled([
-            getAdminDashboardStats(), // Admin stats may need date filtering later if requested
+            getAdminDashboardStats({ 
+              date_from: dateFrom,
+              date_to: dateTo
+            }), 
             listActivityLogs({ 
               scope: "all", 
               per_page: 8,
@@ -135,7 +138,11 @@ export function useDashboardData(role: UserRole): DashboardData {
                 date_to: dateTo,
                 bucket: period === "this_week" ? "daily" : period === "today" ? "daily" : "monthly"
               }),
-              listDocumentRequests({ per_page: 1 }),
+              listDocumentRequests({ 
+                per_page: 1,
+                date_from: dateFrom,
+                date_to: dateTo
+              }),
             ]);
           if (statsRes.status === "fulfilled") setStats(statsRes.value);
           if (queueRes.status === "fulfilled") {
@@ -224,7 +231,11 @@ export function useDashboardData(role: UserRole): DashboardData {
                 date_from: dateFrom,
                 date_to: dateTo
               }),
-              listDocumentRequestInbox({ per_page: 1 }),
+              listDocumentRequestInbox({ 
+                per_page: 8,
+                date_from: dateFrom,
+                date_to: dateTo
+              }),
             ]);
           if (statsRes.status === "fulfilled") setStats(statsRes.value);
           if (queueRes.status === "fulfilled") {

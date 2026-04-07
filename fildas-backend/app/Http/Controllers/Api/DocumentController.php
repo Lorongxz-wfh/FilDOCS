@@ -101,13 +101,7 @@ class DocumentController extends Controller
             }
         }
 
-        // 2. Base Date Filters (Creation Date)
-        if (!empty($data['date_from'])) {
-            $visibleDocsQuery->where('documents.created_at', '>=', $data['date_from']);
-        }
-        if (!empty($data['date_to'])) {
-            $visibleDocsQuery->where('documents.created_at', '<=', $data['date_to']);
-        }
+        // (Date filters will be applied inside the aggregation below for precision)
 
         // 3. Single-Pass SQL Aggregation
         // We join the latest version once to calculate all stats at the same time.
@@ -118,19 +112,42 @@ class DocumentController extends Controller
                      ->whereRaw('lv.version_number = (SELECT MAX(version_number) FROM document_versions as dv2 WHERE dv2.document_id = documents.id)');
             })
             ->selectRaw("
-                COUNT(documents.id) as total,
+                COUNT(CASE 
+                    WHEN (documents.created_at >= ? OR ? IS NULL) 
+                    AND (documents.created_at <= ? OR ? IS NULL) 
+                    THEN 1 END) as total,
                 COUNT(CASE 
                     WHEN lv.status = 'Distributed' 
                     AND (lv.distributed_at >= ? OR ? IS NULL) 
                     AND (lv.distributed_at <= ? OR ? IS NULL) 
                     THEN 1 END) as distributed,
-                COUNT(CASE WHEN lv.status IN ('Draft', 'Office Draft') THEN 1 END) as draft_count,
-                COUNT(CASE WHEN (LOWER(lv.status) LIKE '%review%' OR LOWER(lv.status) LIKE '%check%') THEN 1 END) as review_count,
-                COUNT(CASE WHEN (LOWER(lv.status) LIKE '%approval%') THEN 1 END) as approval_count,
-                COUNT(CASE WHEN (LOWER(lv.status) LIKE '%registration%' OR LOWER(lv.status) LIKE '%distribution%') THEN 1 END) as finalization_count
+                COUNT(CASE 
+                    WHEN lv.status IN ('Draft', 'Office Draft') 
+                    AND (documents.created_at >= ? OR ? IS NULL) 
+                    AND (documents.created_at <= ? OR ? IS NULL) 
+                    THEN 1 END) as draft_count,
+                COUNT(CASE 
+                    WHEN (LOWER(lv.status) LIKE '%review%' OR LOWER(lv.status) LIKE '%check%') 
+                    AND (documents.created_at >= ? OR ? IS NULL) 
+                    AND (documents.created_at <= ? OR ? IS NULL) 
+                    THEN 1 END) as review_count,
+                COUNT(CASE 
+                    WHEN (LOWER(lv.status) LIKE '%approval%') 
+                    AND (documents.created_at >= ? OR ? IS NULL) 
+                    AND (documents.created_at <= ? OR ? IS NULL) 
+                    THEN 1 END) as approval_count,
+                COUNT(CASE 
+                    WHEN (LOWER(lv.status) LIKE '%registration%' OR LOWER(lv.status) LIKE '%distribution%') 
+                    AND (documents.created_at >= ? OR ? IS NULL) 
+                    AND (documents.created_at <= ? OR ? IS NULL) 
+                    THEN 1 END) as finalization_count
             ", [
-                $data['date_from'] ?? null, $data['date_from'] ?? null,
-                $data['date_to'] ?? null, $data['date_to'] ?? null
+                $data['date_from'] ?? null, $data['date_from'] ?? null, $data['date_to'] ?? null, $data['date_to'] ?? null,
+                $data['date_from'] ?? null, $data['date_from'] ?? null, $data['date_to'] ?? null, $data['date_to'] ?? null,
+                $data['date_from'] ?? null, $data['date_from'] ?? null, $data['date_to'] ?? null, $data['date_to'] ?? null,
+                $data['date_from'] ?? null, $data['date_from'] ?? null, $data['date_to'] ?? null, $data['date_to'] ?? null,
+                $data['date_from'] ?? null, $data['date_from'] ?? null, $data['date_to'] ?? null, $data['date_to'] ?? null,
+                $data['date_from'] ?? null, $data['date_from'] ?? null, $data['date_to'] ?? null, $data['date_to'] ?? null,
             ])
             ->first();
 

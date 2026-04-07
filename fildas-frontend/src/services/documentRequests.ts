@@ -8,6 +8,14 @@ export type DocumentRequestProgress = {
   accepted: number;
 };
 
+export type DocumentRequestStats = {
+  active: number;
+  action_required: number;
+  incoming_action: number;
+  outgoing_action: number;
+};
+
+
 export type DocumentRequestRow = {
   id: number;
   title: string;
@@ -104,6 +112,8 @@ export async function listDocumentRequests(params?: {
   status?: string;
   request_status?: string;
   office_id?: number;
+  date_from?: string;
+  date_to?: string;
 }) {
   const res = await api.get("/document-requests", { params });
   return res.data;
@@ -118,6 +128,8 @@ export async function listDocumentRequestInbox(params?: {
   direction?: "all" | "incoming" | "outgoing";
   status?: string;
   office_id?: number;
+  date_from?: string;
+  date_to?: string;
 }) {
   const res = await api.get("/document-requests/inbox", { params });
   return res.data;
@@ -152,6 +164,15 @@ export async function listDocumentRequestIndividual(params?: {
   const res = await api.get("/document-requests/individual", { params });
   return res.data;
 }
+
+export async function getDocumentRequestStats(params?: {
+  date_from?: string;
+  date_to?: string;
+}) {
+  const res = await api.get("/document-requests/stats", { params });
+  return res.data as DocumentRequestStats;
+}
+
 
 // ── Show ───────────────────────────────────────────────────────────────────
 export async function getDocumentRequest(requestId: number) {

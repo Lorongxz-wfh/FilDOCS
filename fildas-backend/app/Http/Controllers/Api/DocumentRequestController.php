@@ -31,6 +31,85 @@ class DocumentRequestController extends Controller
         private DocumentRequestRepository $repository,
     ) {}
 
+    // ── GET /api/document-requests/stats ───────────────────────────────────
+    public function stats(Request $request)
+    {
+        $user     = $request->user();
+        $role     = $this->roleName($request);
+        $isQa     = $this->isQaOrAdmin($role);
+        $officeId = (int) ($user?->office_id ?? 0);
+
+        $params = $request->validate([
+            'date_from' => 'nullable|date',
+            'date_to'   => 'nullable|date',
+        ]);
+
+        if (!$isQa && $officeId <= 0) {
+            return response()->json(['message' => 'Your account has no office assigned.'], 422);
+        }
+
+        // Active Requests: All requests where I am the creator OR a recipient (open status)
+        $activeQuery = DB::table('document_requests as r')
+            ->where('r.status', 'open');
+
+        if (!empty($params['date_from'])) $activeQuery->whereDate('r.created_at', '>=', $params['date_from']);
+        if (!empty($params['date_to']))   $activeQuery->whereDate('r.created_at', '<=', $params['date_to']);
+
+        if (!$isQa) {
+            $activeQuery->where(function ($q) use ($user, $officeId) {
+                $q->where('r.created_by_user_id', $user->id)
+                  ->orWhereExists(function ($sub) use ($officeId) {
+                      $sub->select(DB::raw(1))
+                          ->from('document_request_recipients as rr')
+                          ->whereColumn('rr.request_id', 'r.id')
+                          ->where('rr.office_id', $officeId);
+                  });
+            });
+        }
+
+        $activeCount = $activeQuery->count();
+
+        // Action Required:
+        // 1. Incoming: My office is a recipient and status is pending or rejected
+        $incomingAction = 0;
+        if ($officeId > 0) {
+            $incomingActionQuery = DB::table('document_request_recipients as rr')
+                ->join('document_requests as r', 'r.id', '=', 'rr.request_id')
+                ->where('r.status', 'open')
+                ->where('rr.office_id', $officeId)
+                ->whereIn('rr.status', ['pending', 'rejected']);
+            
+            if (!empty($params['date_from'])) $incomingActionQuery->whereDate('r.created_at', '>=', $params['date_from']);
+            if (!empty($params['date_to']))   $incomingActionQuery->whereDate('r.created_at', '<=', $params['date_to']);
+            
+            $incomingAction = $incomingActionQuery->count();
+        }
+
+        // 2. Outgoing: I am the creator and at least one recipient has a 'submitted' status
+        $outgoingActionQuery = DB::table('document_requests as r')
+            ->where('r.status', 'open')
+            ->where('r.created_by_user_id', $user->id)
+            ->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('document_request_recipients as rr')
+                    ->whereColumn('rr.request_id', 'r.id')
+                    ->where('rr.status', 'submitted');
+            });
+
+        if (!empty($params['date_from'])) $outgoingActionQuery->whereDate('r.created_at', '>=', $params['date_from']);
+        if (!empty($params['date_to']))   $outgoingActionQuery->whereDate('r.created_at', '<=', $params['date_to']);
+        
+        $outgoingAction = $outgoingActionQuery->count();
+
+        return response()->json([
+            'active' => $activeCount,
+            'action_required' => $incomingAction + $outgoingAction,
+            'incoming_action' => $incomingAction,
+            'outgoing_action' => $outgoingAction,
+        ]);
+    }
+
+
     // ── GET /api/document-requests (QA/Admin) ──────────────────────────────
     public function index(Request $request)
     {
@@ -52,6 +131,8 @@ class DocumentRequestController extends Controller
             'direction' => 'nullable|in:all,incoming,outgoing',
             'sort_by'   => 'nullable|string|in:id,title,created_at,due_at',
             'sort_dir'  => 'nullable|in:asc,desc',
+            'date_from' => 'nullable|date',
+            'date_to'   => 'nullable|date',
         ]);
 
         $perPage = (int) ($data['per_page'] ?? 25);
@@ -92,6 +173,8 @@ class DocumentRequestController extends Controller
 
             if (!empty($data['status'])) $q->where('r.status', $data['status']);
             if (!empty($data['mode']))   $q->where('r.mode', $data['mode']);
+            if (!empty($data['date_from'])) $q->whereDate('r.created_at', '>=', $data['date_from']);
+            if (!empty($data['date_to']))   $q->whereDate('r.created_at', '<=', $data['date_to']);
             if (!empty($data['office_id'])) {
                 $q->whereExists(function ($sub) use ($data) {
                     $sub->select(DB::raw(1))

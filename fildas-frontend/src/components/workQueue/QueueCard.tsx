@@ -1,6 +1,6 @@
 import React from "react";
 import type { WorkQueueItem } from "../../services/documents";
-import { StatusBadge, TypePill } from "../ui/Badge";
+import { StatusBadge } from "../ui/Badge";
 
 interface QueueCardProps {
   item: WorkQueueItem;
@@ -23,16 +23,6 @@ const QueueCard: React.FC<QueueCardProps> = ({ item, onClick }) => {
           {doc.title}
         </p>
         <div className="flex items-center gap-2 mt-1">
-          {item.can_act ? (
-            <span className="text-[10px] sm:text-[11px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">
-              Action needed
-            </span>
-          ) : (
-            <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider">
-              Monitoring
-            </span>
-          )}
-          <span className="text-slate-200 dark:text-surface-400 font-light">•</span>
           <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-mono">
             v{ver.version_number}
           </span>
@@ -40,13 +30,18 @@ const QueueCard: React.FC<QueueCardProps> = ({ item, onClick }) => {
         </div>
       </div>
 
-      <div className="shrink-0 scale-90 sm:scale-100 origin-right">
+      <div className="shrink-0 text-right">
         {item.can_act ? (
-          <TypePill label="Action needed" />
+          <span className="text-[10px] sm:text-[11px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider block">
+            Action needed
+          </span>
         ) : (
-          <TypePill label="Monitoring" />
+          <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider block">
+            Monitoring
+          </span>
         )}
       </div>
+
     </button>
   );
 };

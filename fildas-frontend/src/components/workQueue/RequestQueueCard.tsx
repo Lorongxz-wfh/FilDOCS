@@ -1,5 +1,5 @@
 import React from "react";
-import { StatusBadge, TypePill } from "../ui/Badge";
+import { StatusBadge } from "../ui/Badge";
 import { Users, FileStack } from "lucide-react";
 
 interface RequestQueueCardProps {
@@ -32,11 +32,14 @@ const RequestQueueCard: React.FC<RequestQueueCardProps> = ({ item, onClick }) =>
         </div>
       </div>
 
-      <div className="shrink-0">
-        <TypePill 
-           label={status.toLowerCase() === "pending" ? "Action needed" : "Ongoing"} 
-        />
+      <div className="shrink-0 text-right">
+        <span className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider block ${
+          status.toLowerCase() === "pending" ? "text-rose-500 dark:text-rose-400" : "text-slate-400 dark:text-slate-500"
+        }`}>
+          {status.toLowerCase() === "pending" ? "Action needed" : "Ongoing"}
+        </span>
       </div>
+
     </button>
   );
 };

@@ -133,10 +133,13 @@ export async function getDocumentStats(params?: {
   }
 }
 
-export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
+export async function getAdminDashboardStats(params?: {
+  date_from?: string;
+  date_to?: string;
+}): Promise<AdminDashboardStats> {
   try {
     const api = await getApi();
-    const res = await api.get("/admin/dashboard-stats");
+    const res = await api.get("/admin/dashboard-stats", { params });
     return res.data as AdminDashboardStats;
   } catch (e: any) {
     const status = e?.response?.status;
