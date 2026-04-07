@@ -1,5 +1,5 @@
 import React from "react";
-import InlineSpinner from "../ui/loader/InlineSpinner";
+import Skeleton from "../ui/loader/Skeleton";
 
 interface StatCardProps {
   label: string;
@@ -12,8 +12,8 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, loading }) => (
     <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
       {label}
     </p>
-    <div className="mt-1.5 sm:mt-2 text-xl sm:text-2xl font-display font-bold tabular-nums text-slate-900 dark:text-slate-100 leading-none">
-      {loading ? <InlineSpinner className="h-5 w-5 border-2" /> : (value ?? 0)}
+    <div className="mt-1.5 sm:mt-2 text-xl sm:text-2xl font-display font-bold tabular-nums text-slate-900 dark:text-slate-100 leading-none h-6 sm:h-7 flex items-center">
+      {loading ? <Skeleton className="h-5 w-10 sm:h-6 sm:w-14" /> : (value ?? 0)}
     </div>
   </div>
 );

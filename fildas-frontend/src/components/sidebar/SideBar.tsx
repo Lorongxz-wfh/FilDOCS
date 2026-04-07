@@ -5,7 +5,7 @@ import { navGroups } from "./navConfig";
 import { useSidebarCollapsed } from "../../hooks/useSidebarCollapsed";
 import { useVisibleNewActions } from "../../hooks/useVisibleNewActions";
 import { useSidebarUI } from "../../hooks/useSidebarUI";
-import { useGlobalNavStats } from "../../hooks/useGlobalNavStats";
+import type { NavStats } from "../../hooks/useGlobalNavStats";
 
 // Sub-components
 import SidebarBrand from "./SidebarBrand";
@@ -21,6 +21,7 @@ type SidebarProps = {
   onMobileClose?: () => void;
   theme?: "light" | "dark";
   onThemeToggle?: () => void;
+  stats: NavStats;
 };
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -29,6 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onMobileClose,
   theme = "light",
   onThemeToggle,
+  stats,
 }) => {
   const location = useLocation();
   const role = getUserRole();
@@ -46,10 +48,9 @@ const Sidebar: React.FC<SidebarProps> = ({
     newRef,
     profileRef,
   } = useSidebarUI();
-  const stats = useGlobalNavStats();
-
-  // Expose for SidebarNavItem sub-items to pick up without prop drilling deep
+  const statsRef = React.useRef(stats);
   React.useEffect(() => {
+    statsRef.current = stats;
     (window as any).__NAV_STATS__ = stats;
   }, [stats]);
 

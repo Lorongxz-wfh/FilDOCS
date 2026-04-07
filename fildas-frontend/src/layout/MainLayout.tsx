@@ -42,6 +42,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         ].join(" ")}
       >
         <Sidebar
+          stats={stats}
           onLogout={onLogout}
           mobileOpen={mobileOpen}
           onMobileClose={() => setMobileOpen(false)}

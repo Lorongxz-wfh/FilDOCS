@@ -27,23 +27,6 @@ function TypeText({ type }: { type: string }) {
   );
 }
 
-function DocumentCodeWithTags({ code, tags }: { code?: string; tags?: string[] }) {
-  return (
-    <div className="flex flex-col gap-1 items-start min-w-0">
-      <span className="font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate w-full">
-        {code || "—"}
-      </span>
-      {tags && tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 max-w-full">
-          {tags.map((tag) => (
-            <TagBadge key={tag} name={tag} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Column builders ───────────────────────────────────────────────────────────
 
 export function buildCreatedColumns(onDelete?: (id: number) => void): TableColumn<Document>[] {
@@ -88,11 +71,18 @@ export function buildCreatedColumns(onDelete?: (id: number) => void): TableColum
       skeletonShape: "text",
       sortKey: "title",
       render: (doc) => (
-        <div className="min-w-0 pr-4">
+        <div className="min-w-0 pr-4 flex flex-col items-start">
           <MiddleTruncate 
             text={doc.title}
             className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
           />
+          {doc.tags && doc.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {doc.tags.map((tag) => (
+                <TagBadge key={tag} name={tag} />
+              ))}
+            </div>
+          )}
         </div>
       ),
     },
@@ -101,7 +91,7 @@ export function buildCreatedColumns(onDelete?: (id: number) => void): TableColum
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
-      render: (doc) => <DocumentCodeWithTags code={doc.code ?? undefined} tags={doc.tags} />,
+      render: (doc) => <NormalText secondary>{doc.code}</NormalText>,
     },
     {
       key: "type",
@@ -207,11 +197,18 @@ export function buildSharedColumns(onDelete?: (id: number) => void): TableColumn
       skeletonShape: "text",
       sortKey: "title",
       render: (doc) => (
-        <div className="min-w-0 pr-4">
+        <div className="min-w-0 pr-4 flex flex-col items-start">
           <MiddleTruncate 
             text={doc.title}
             className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
           />
+          {doc.tags && doc.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {doc.tags.map((tag) => (
+                <TagBadge key={tag} name={tag} />
+              ))}
+            </div>
+          )}
         </div>
       ),
     },
@@ -220,7 +217,7 @@ export function buildSharedColumns(onDelete?: (id: number) => void): TableColumn
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
-      render: (doc) => <DocumentCodeWithTags code={doc.code ?? undefined} tags={doc.tags} />,
+      render: (doc) => <NormalText secondary>{doc.code}</NormalText>,
     },
     {
       key: "type",
@@ -414,7 +411,7 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
       skeletonShape: "text",
       sortKey: "title",
       render: (item) => (
-        <div className="min-w-0 pr-4">
+        <div className="min-w-0 pr-4 flex flex-col items-start">
           <MiddleTruncate 
             text={item.title}
             className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
@@ -425,6 +422,13 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
                 className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5"
               />
           )}
+          {item.tags && item.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {item.tags.map((tag: string) => (
+                <TagBadge key={tag} name={tag} />
+              ))}
+            </div>
+          )}
         </div>
       ),
     },
@@ -433,7 +437,7 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
-      render: (item: any) => <DocumentCodeWithTags code={item.code ?? undefined} tags={item.tags} />,
+      render: (item: any) => <NormalText secondary>{item.code}</NormalText>,
     },
     {
       key: "source",
@@ -539,12 +543,19 @@ export function buildArchiveColumns(onDelete?: (id: number) => void): TableColum
       header: "Document Title",
       skeletonShape: "text",
       sortKey: "title",
-      render: (doc) => (
-        <div className="min-w-0 pr-4">
+      render: (doc: any) => (
+        <div className="min-w-0 pr-4 flex flex-col items-start">
           <MiddleTruncate 
             text={doc.title}
             className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
           />
+          {doc.tags && doc.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {doc.tags.map((tag: any) => (
+                <TagBadge key={tag} name={tag} />
+              ))}
+            </div>
+          )}
         </div>
       ),
     },
@@ -553,7 +564,7 @@ export function buildArchiveColumns(onDelete?: (id: number) => void): TableColum
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
-      render: (doc) => <DocumentCodeWithTags code={doc.code ?? undefined} tags={doc.tags} />,
+      render: (doc) => <NormalText secondary>{doc.code}</NormalText>,
     },
     {
       key: "type",

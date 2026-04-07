@@ -42,6 +42,7 @@ export type LibraryItem = {
   reqId?: number;
   recipId?: number;
   itemId?: number;
+  tags?: string[];
 };
 
 export function docToLibraryItem(
@@ -63,6 +64,7 @@ export function docToLibraryItem(
     dateShared: source === "shared" ? doc.created_at : undefined,
     effectiveDate: doc.effective_date ?? undefined,
     docId: doc.id,
+    tags: doc.tags,
   };
 }
 
@@ -81,5 +83,6 @@ export function reqToLibraryItem(row: any): LibraryItem {
     reqId: row.request_id,
     recipId: row.recipient_id,
     itemId: row.item_id ?? undefined,
+    tags: row.tags ?? row.document?.tags ?? undefined,
   };
 }

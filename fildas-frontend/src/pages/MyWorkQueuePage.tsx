@@ -73,13 +73,13 @@ const MyWorkQueuePage: React.FC = () => {
       const [alf_actions, q, r, r_stats] = await Promise.all([
         listActivityLogs({
           scope: isAdmin ? "all" : "office",
-          per_page: 8,
+          per_page: 20,
           category: "actions",
         }).catch(() => ({ data: [] })),
         getWorkQueue().catch(() => ({ assigned: [], monitoring: [] })),
         (isQaAdmin 
-          ? listDocumentRequestIndividual({ per_page: 5, request_status: "open" }) 
-          : listDocumentRequestInbox({ per_page: 5 })
+          ? listDocumentRequestIndividual({ per_page: 15, request_status: "open" }) 
+          : listDocumentRequestInbox({ per_page: 15 })
         ).catch(() => ({ data: [], total: 0 })),
         getDocumentRequestStats().catch(() => null),
       ]);
@@ -216,8 +216,8 @@ const MyWorkQueuePage: React.FC = () => {
                   <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">No active document workflows found.</p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-1.5">
-                  {sortedItems.slice(0, window.innerWidth < 1024 ? 3 : 5).map((item: WorkQueueItem) => (
+                <div className="flex flex-col gap-1.5 focus-within:z-20">
+                  {sortedItems.map((item: WorkQueueItem) => (
                     <QueueCard
                       key={`${item.document.id}-${item.version.id}`}
                       item={item}
@@ -229,8 +229,8 @@ const MyWorkQueuePage: React.FC = () => {
             </div>
 
             {/* Fading Edge Mask */}
-            {!loading && sortedItems.length > 3 && (
-              <div className="absolute bottom-16 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-surface-500 via-white/80 dark:via-surface-500/80 to-transparent pointer-events-none z-10" />
+            {!loading && sortedItems.length > 2 && (
+              <div className="absolute bottom-16 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-surface-500 via-white/90 dark:via-surface-500/90 to-transparent pointer-events-none z-10" />
             )}
 
             {/* Bottom View All Button */}
@@ -284,8 +284,8 @@ const MyWorkQueuePage: React.FC = () => {
                   <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">No open document requests found.</p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-1.5">
-                  {requestItems.slice(0, window.innerWidth < 1024 ? 3 : 5).map((item: any) => (
+                <div className="flex flex-col gap-1.5 focus-within:z-20">
+                  {requestItems.map((item: any) => (
                     <RequestQueueCard
                       key={item.id || item.request_id}
                       item={item}
@@ -297,8 +297,8 @@ const MyWorkQueuePage: React.FC = () => {
             </div>
 
             {/* Fading Edge Mask */}
-            {!loading && requestItems.length > 3 && (
-              <div className="absolute bottom-16 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-surface-500 via-white/80 dark:via-surface-500/80 to-transparent pointer-events-none z-10" />
+            {!loading && requestItems.length > 2 && (
+              <div className="absolute bottom-16 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-surface-500 via-white/90 dark:via-surface-500/90 to-transparent pointer-events-none z-10" />
             )}
 
             {/* Bottom View All Button */}
@@ -343,8 +343,8 @@ const MyWorkQueuePage: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-0.5">
-                  {recentActivity.slice(0, window.innerWidth < 1024 ? 6 : 8).map((l: any) => (
+                <div className="space-y-0.5 focus-within:z-20">
+                  {recentActivity.map((l: any) => (
                     <button
                       key={l.id}
                       type="button"
@@ -369,8 +369,8 @@ const MyWorkQueuePage: React.FC = () => {
             </div>
 
             {/* Fading Edge Mask */}
-            {!loadingActivity && recentActivity.length > 5 && (
-              <div className="absolute bottom-16 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-surface-500 via-white/80 dark:via-surface-500/80 to-transparent pointer-events-none z-10" />
+            {!loadingActivity && recentActivity.length > 4 && (
+              <div className="absolute bottom-16 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-surface-500 via-white/90 dark:via-surface-500/90 to-transparent pointer-events-none z-10" />
             )}
 
             {/* Bottom View All Button */}

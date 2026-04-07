@@ -1,4 +1,4 @@
-import InlineSpinner from "./loader/InlineSpinner";
+import Skeleton from "./loader/Skeleton";
 
 type Props = {
   label: string;
@@ -16,11 +16,11 @@ export default function StatCard({
   return (
     <div className="flex flex-col items-center justify-center py-5 px-4">
       <div
-        className={["text-3xl font-semibold tabular-nums", valueClassName].join(
+        className={["text-3xl font-semibold tabular-nums h-9 flex items-center", valueClassName].join(
           " ",
         )}
       >
-        {loading ? <InlineSpinner className="h-5 w-5 border-2" /> : value}
+        {loading ? <Skeleton className="h-8 w-14" /> : value}
       </div>
       <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
         {label}

@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Sun, Moon, Menu, PanelLeftClose, Ghost } from "lucide-react";
 import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
+import logoUrl from "../../assets/FCU Logo.png";
 
 interface SidebarBrandProps {
   collapsed: boolean;
@@ -29,29 +30,31 @@ const SidebarBrand: React.FC<SidebarBrandProps> = ({
         className="flex items-center gap-2.5 min-w-0 overflow-hidden cursor-pointer"
         onClick={(collapsed && !mobileOpen) ? toggle : () => navigate("/dashboard")}
       >
-        {(!collapsed || mobileOpen) ? (
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[17px] font-bold tracking-tight text-neutral-900 dark:text-surface-50 truncate">
-              FilDAS
-            </span>
-            {debugMode && (
-              <div 
-                className="flex items-center justify-center h-5 w-5 rounded-full bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 animate-pulse shrink-0" 
-                title="Admin: Debug Mode"
-              >
-                <Ghost className="h-3 w-3" strokeWidth={2.5} />
-              </div>
-            )}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="h-7 w-7 overflow-hidden rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-white/10 shrink-0 shadow-xs">
+            <img
+              src={logoUrl}
+              alt="FCU Logo"
+              className="h-full w-full object-contain p-0.5"
+            />
           </div>
-        ) : (
-          <div className="flex items-center justify-center h-7 w-7 shrink-0">
-            {debugMode ? (
-              <Ghost className="h-4.5 w-4.5 text-brand-500 animate-pulse" strokeWidth={2.5} />
-            ) : (
-              <span className="text-xl font-bold text-brand-500">F</span>
-            )}
-          </div>
-        )}
+          
+          {(!collapsed || mobileOpen) && (
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-[17px] font-bold tracking-tight text-neutral-900 dark:text-surface-50 truncate">
+                FilDAS
+              </span>
+              {debugMode && (
+                <div 
+                  className="flex items-center justify-center h-5 w-5 rounded-full bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 animate-pulse shrink-0" 
+                  title="Admin: Debug Mode"
+                >
+                  <Ghost className="h-3 w-3" strokeWidth={2.5} />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-1.5">

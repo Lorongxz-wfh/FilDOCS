@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import InlineSpinner from "../components/ui/loader/InlineSpinner";
+import Skeleton from "../components/ui/loader/Skeleton";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
 import Button from "../components/ui/Button";
 
@@ -474,7 +474,9 @@ const AuditorDashboard: React.FC<
                 Distributed Documents
               </p>
               {loading && stats && (
-                <InlineSpinner size="xs" variant="neutral" />
+                <div className="h-4 w-8 flex items-center">
+                  <Skeleton className="h-3 w-full" />
+                </div>
               )}
             </div>
             <span className="shrink-0 text-emerald-400 dark:text-emerald-400">

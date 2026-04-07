@@ -26,10 +26,16 @@ export function useGlobalNavStats() {
 
   const role = getUserRole();
   const location = useLocation();
-  const lastFetchRef = useRef(0);
-
+  const isFetchingRef = useRef(false);
+  const lastFetchTimeRef = useRef(0);
 
   const fetchStats = useCallback(async () => {
+    // Prevent overlapping fetches or extreme bursts (min 2s between fetches)
+    if (isFetchingRef.current) return;
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < 2000) return;
+
+    isFetchingRef.current = true;
     try {
       const [notifCount, queueRes, reqRes] = await Promise.all([
         getUnreadNotificationCount(),
@@ -42,7 +48,6 @@ export function useGlobalNavStats() {
       const workflows = queueRes?.assigned?.length ?? 0;
       const requests = reqRes?.meta?.total ?? 0;
       
-      // Get last read counts from storage
       const readWorkflows = Number(localStorage.getItem("nav_read_workflows") || 0);
       const readRequests = Number(localStorage.getItem("nav_read_requests") || 0);
 
@@ -59,9 +64,11 @@ export function useGlobalNavStats() {
       };
 
       setStats(newStats);
-      lastFetchRef.current = Date.now();
+      lastFetchTimeRef.current = Date.now();
     } catch (err) {
       console.error("Failed to fetch global nav stats:", err);
+    } finally {
+      isFetchingRef.current = false;
     }
   }, [role]);
 
