@@ -1,14 +1,11 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
-  History,
-  Settings,
   Megaphone,
   AlertCircle,
   HelpCircle,
   LogOut,
   ChevronsUpDown,
-  Archive,
   User,
   Loader2
 } from "lucide-react";
@@ -57,9 +54,7 @@ const SidebarProfile: React.FC<SidebarProfileProps> = ({
       </div>
       <div className="py-1">
         {[
-          { label: "My Activity", icon: History, to: "/my-activity" },
-          { label: "Archive", icon: Archive, to: "/archive" },
-          { label: "Settings", icon: Settings, to: "/settings" },
+          { label: "Profile & Settings", icon: User, to: "/profile" },
         ].map((item) => (
           <NavLink
             key={item.label}

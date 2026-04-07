@@ -1,0 +1,489 @@
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import PageFrame from "../components/layout/PageFrame";
+import { useAuthUser } from "../hooks/useAuthUser";
+import { 
+  History, 
+  Settings as SettingsIcon, 
+  KeyRound, 
+  Bell, 
+  Volume2, 
+  PenLine, 
+  Wrench,
+} from "lucide-react";
+import { 
+  listActivityLogs 
+} from "../services/documents";
+import { 
+  updateProfile, 
+  changePassword, 
+  uploadProfilePhoto, 
+  uploadSignature, 
+  updateNotificationPreferences,
+  type ProfileUpdatePayload 
+} from "../services/profile";
+import { ActivityTimeline, type ActivityLogRow } from "../components/profile/ActivityTimeline";
+import { ProfileInfoCard } from "../components/profile/ProfileInfoCard";
+import { Tabs } from "../components/ui/Tabs";
+import Button from "../components/ui/Button";
+import Modal from "../components/ui/Modal";
+import SelectDropdown from "../components/ui/SelectDropdown";
+import { PageActions, RefreshAction } from "../components/ui/PageActions";
+import { inputCls } from "../utils/formStyles";
+import { useToast } from "../components/ui/toast/ToastContext";
+import { normalizeError } from "../lib/normalizeError";
+import { getUserRole, isSysAdmin, isAuditor } from "../lib/roleFilters";
+
+const ProfileSettingsPage: React.FC = () => {
+  const user = useAuthUser();
+  const { push } = useToast();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("activity");
+
+  // ── States ────────────────────────────────────────────────────────────────
+  const [logs, setLogs] = useState<ActivityLogRow[]>([]);
+  const [logsLoading, setLogsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Filters
+  const [category, setCategory] = useState<string | number | null>("all");
+  const [timeFilter, setTimeFilter] = useState<string | number | null>("all");
+
+  const [profileForm, setProfileForm] = useState<ProfileUpdatePayload>({
+    first_name: "",
+    middle_name: "",
+    last_name: "",
+    suffix: "",
+    email: "",
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // ── Date Calculation ──────────────────────────────────────────────────────
+  const getTimeParams = () => {
+    const today = new Date();
+    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+
+    if (timeFilter === "yesterday") {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      return { from: formatDate(d), to: formatDate(d) };
+    }
+    if (timeFilter === "week") {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      return { from: formatDate(d), to: formatDate(today) };
+    }
+    if (timeFilter === "month") {
+      const d = new Date();
+      d.setDate(1);
+      return { from: formatDate(d), to: formatDate(today) };
+    }
+    return { from: undefined, to: undefined };
+  };
+
+  // ── Load Activity ────────────────────────────────────────────────────────
+  const fetchLogs = async () => {
+    if (activeTab !== "activity") return;
+    setLogsLoading(true);
+    const { from, to } = getTimeParams();
+    try {
+      const res = await listActivityLogs({ 
+        scope: "mine", 
+        per_page: 50,
+        category: category === "all" ? undefined : (category as any),
+        date_from: from,
+        date_to: to
+      });
+      setLogs(res.data || []);
+    } catch {
+      push({ type: "error", title: "Error", message: "Failed to load activity log." });
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+  }, [activeTab, category, timeFilter]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchLogs();
+    setRefreshing(false);
+    return "Activity log updated.";
+  };
+
+  // ── Sync Profile Form ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        first_name: (user as any).first_name || "",
+        middle_name: (user as any).middle_name || "",
+        last_name: (user as any).last_name || "",
+        suffix: (user as any).suffix || "",
+        email: (user as any).email || "",
+      });
+    }
+  }, [user]);
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      const updated = await updateProfile(profileForm);
+      localStorage.setItem("auth_user", JSON.stringify({ ...JSON.parse(localStorage.getItem("auth_user") || "{}"), ...updated }));
+      window.dispatchEvent(new Event("auth_user_updated"));
+      push({ type: "success", title: "Updated", message: "Profile information updated." });
+      setIsEditModalOpen(false);
+    } catch (err) {
+      push({ type: "error", title: "Update Failed", message: normalizeError(err) });
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const updated = await uploadProfilePhoto(file);
+      localStorage.setItem("auth_user", JSON.stringify({ ...JSON.parse(localStorage.getItem("auth_user") || "{}"), ...updated }));
+      window.dispatchEvent(new Event("auth_user_updated"));
+      push({ type: "success", title: "Photo Updated", message: "Your profile photo has been updated." });
+    } catch (err) {
+      push({ type: "error", title: "Upload Failed", message: normalizeError(err) });
+    }
+  };
+
+  const tabs = [
+    { key: "activity", label: "My Activity", icon: <History className="h-4 w-4" /> },
+    { key: "settings", label: "Account Settings", icon: <SettingsIcon className="h-4 w-4" /> },
+  ];
+
+  const categories = [
+    { value: "all", label: "All Activity" },
+    { value: "workflow", label: "Workflows" },
+    { value: "request", label: "Requests" },
+    { value: "document", label: "Documents" },
+    { value: "profile", label: "Profile" }
+  ];
+
+  const timeOptions = [
+    { value: "all", label: "All Time" },
+    { value: "yesterday", label: "Yesterday" },
+    { value: "week", label: "This Week" },
+    { value: "month", label: "This Month" }
+  ];
+
+  return (
+    <PageFrame
+      title="Profile & Settings"
+      fullHeight
+      onBack={() => navigate(-1)}
+      right={
+        <PageActions>
+          <RefreshAction
+            onRefresh={handleRefresh}
+            loading={refreshing}
+            title="Refresh activity logs"
+          />
+        </PageActions>
+      }
+      contentClassName="flex flex-col min-h-0 h-full overflow-hidden bg-slate-50/50 dark:bg-black/10"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 h-full max-h-full min-h-0 p-6 md:p-8 overflow-hidden">
+        
+        {/* Left Side: Profile Card (Detached) */}
+        <aside className="md:col-span-4 lg:col-span-3 h-full min-h-0">
+          <ProfileInfoCard 
+            user={user} 
+            onEdit={() => setIsEditModalOpen(true)}
+            onPhotoClick={() => document.getElementById("profile-photo-upload")?.click()}
+          />
+          <input 
+            id="profile-photo-upload" 
+            type="file" 
+            accept="image/*" 
+            className="hidden" 
+            onChange={handlePhotoUpload} 
+          />
+        </aside>
+
+        {/* Right Side: Shared Content Area */}
+        <main className="md:col-span-8 lg:col-span-9 flex flex-col min-w-0 h-full min-h-0">
+           {/* Navigation Tabs (Above Card) */}
+           <div className="mb-4">
+             <Tabs
+                id="profile-tabs"
+                tabs={tabs}
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                className="border-none bg-transparent"
+              />
+           </div>
+
+           {/* Content Card with Integrated Header */}
+           <div className="flex-1 flex flex-col min-h-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-sm overflow-hidden">
+             
+             {/* Card Header (Title + Filters) */}
+             <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-surface-400">
+                <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                   {activeTab === "activity" ? "Recent Activity" : "Account Settings"}
+                </h2>
+
+                {activeTab === "activity" && (
+                   <div className="flex flex-col sm:flex-row items-center gap-4">
+                      {/* Activity Category Dropdown */}
+                      <SelectDropdown 
+                        value={category}
+                        onChange={setCategory}
+                        options={categories}
+                        placeholder="All Activity"
+                        className="w-full sm:w-48"
+                        clearable={false}
+                      />
+
+                      {/* Time Period Filter */}
+                      <SelectDropdown 
+                        value={timeFilter}
+                        onChange={setTimeFilter}
+                        options={timeOptions}
+                        placeholder="All Time"
+                        className="w-full sm:w-48"
+                        clearable={false}
+                      />
+                   </div>
+                )}
+             </div>
+
+             <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 custom-scrollbar">
+                {activeTab === "activity" ? (
+                  <div className="max-w-4xl mx-auto py-8 px-6">
+                     <ActivityTimeline items={logs} loading={logsLoading} />
+                  </div>
+                ) : (
+                  <div className="max-w-4xl mx-auto py-8 px-6 space-y-12">
+                     <SettingsLayout user={user} push={push} />
+                  </div>
+                )}
+             </div>
+           </div>
+        </main>
+      </div>
+
+      <Modal
+        open={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Personal Information"
+        widthClassName="max-w-xl"
+        footer={
+          <div className="flex justify-end gap-3">
+             <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+             <Button loading={savingProfile} onClick={handleProfileSubmit}>Save Changes</Button>
+          </div>
+        }
+      >
+        <form onSubmit={handleProfileSubmit} className="space-y-4">
+           <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400">First Name</label>
+                 <input className={inputCls} value={profileForm.first_name} onChange={e => setProfileForm(p => ({ ...p, first_name: e.target.value }))} required />
+              </div>
+              <div className="space-y-1.5">
+                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Last Name</label>
+                 <input className={inputCls} value={profileForm.last_name} onChange={e => setProfileForm(p => ({ ...p, last_name: e.target.value }))} required />
+              </div>
+           </div>
+           <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Middle Name</label>
+                 <input className={inputCls} value={profileForm.middle_name || ""} onChange={e => setProfileForm(p => ({ ...p, middle_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Suffix</label>
+                 <input className={inputCls} placeholder="Jr., III, etc." value={profileForm.suffix || ""} onChange={e => setProfileForm(p => ({ ...p, suffix: e.target.value }))} />
+              </div>
+           </div>
+           <div className="space-y-1.5 pt-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Email Address</label>
+              <input type="email" className={inputCls} value={profileForm.email} onChange={e => setProfileForm(p => ({ ...p, email: e.target.value }))} required />
+           </div>
+        </form>
+      </Modal>
+    </PageFrame>
+  );
+};
+
+// ── Internal Settings Sections ─────────────────────────────────────────────
+
+const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
+  const [pw, setPw] = useState({ current_password: "", password: "", password_confirmation: "" });
+  const [pwLoading, setPwLoading] = useState(false);
+  const sigInputRef = useRef<HTMLInputElement>(null);
+  const [sigUrl, setSigUrl] = useState(user?.signature_url);
+
+  // Notifications
+  const [prefs, setPrefs] = useState({
+    email_doc_updates: user?.email_doc_updates,
+    email_approvals: user?.email_approvals,
+    email_requests: user?.email_requests,
+    sound_notif: localStorage.getItem(`pref_sound_notif_${user?.id}`) !== "false"
+  });
+
+  const handleToggle = async (key: string, val: boolean) => {
+    if (key === "sound_notif") {
+      setPrefs(p => ({ ...p, [key]: val }));
+      localStorage.setItem(`pref_sound_notif_${user?.id}`, String(val));
+      return;
+    }
+
+    try {
+      const newPrefs = { ...prefs, [key]: val };
+      setPrefs(newPrefs);
+      const updated = await updateNotificationPreferences({
+        email_doc_updates: newPrefs.email_doc_updates,
+        email_approvals: newPrefs.email_approvals,
+        email_requests: newPrefs.email_requests
+      });
+      localStorage.setItem("auth_user", JSON.stringify({ ...JSON.parse(localStorage.getItem("auth_user") || "{}"), ...updated }));
+    } catch {
+      push({ type: "error", title: "Error", message: "Failed to update preference." });
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pw.password !== pw.password_confirmation) return push({ type: "error", message: "Passwords do not match." });
+    setPwLoading(true);
+    try {
+      await changePassword(pw);
+      push({ type: "success", title: "Success", message: "Password updated." });
+      setPw({ current_password: "", password: "", password_confirmation: "" });
+    } catch (err) {
+      push({ type: "error", message: normalizeError(err) });
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
+  const handleSigUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const updated = await uploadSignature(file);
+      setSigUrl(updated.signature_url);
+      push({ type: "success", message: "Signature updated." });
+    } catch (err) { push({ type: "error", message: normalizeError(err) }); }
+  };
+
+  const isAdmin = isSysAdmin(getUserRole());
+
+  return (
+    <div className="space-y-12">
+      {/* Password section */}
+      <Section title="Security & Authentication" icon={<KeyRound className="h-4 w-4" />} description="Protect your account by using a strong password for verification.">
+         <form onSubmit={handlePasswordSubmit} className="space-y-5">
+            <div className="space-y-1.5 max-w-sm">
+               <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Current Password</label>
+               <input type="password" className={inputCls} value={pw.current_password} onChange={e => setPw(p => ({ ...p, current_password: e.target.value }))} required />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">New Password</label>
+                  <input type="password" className={inputCls} value={pw.password} onChange={e => setPw(p => ({ ...p, password: e.target.value }))} required />
+               </div>
+               <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Confirm New Password</label>
+                  <input type="password" className={inputCls} value={pw.password_confirmation} onChange={e => setPw(p => ({ ...p, password_confirmation: e.target.value }))} required />
+               </div>
+            </div>
+            <div className="flex justify-start">
+               <Button loading={pwLoading} size="sm" className="font-bold">Update Password</Button>
+            </div>
+         </form>
+      </Section>
+
+      {/* Signature section */}
+      {!isAuditor(getUserRole()) && (
+        <Section title="E-Signature" icon={<PenLine className="h-4 w-4" />} description="Use your uploaded signature to sign documents and evidence requests.">
+           <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-md border border-slate-100 bg-slate-50/50">
+               <div className="h-20 w-48 border border-dashed border-slate-300 rounded flex items-center justify-center bg-white overflow-hidden">
+                  {sigUrl ? <img src={sigUrl} className="max-h-full object-contain" alt="Sig" /> : <p className="text-xs text-slate-400 italic">No signature uploaded</p>}
+               </div>
+               <div className="flex flex-col gap-2">
+                   <p className="text-xs text-slate-500">Supported formats: PNG, JPG (transparent recommended). Max size 1MB.</p>
+                   <div className="flex items-center gap-3">
+                      <Button variant="outline" size="sm" onClick={() => sigInputRef.current?.click()}>Upload Signature</Button>
+                      <input ref={sigInputRef} type="file" className="hidden" accept="image/*" onChange={handleSigUpload} />
+                   </div>
+               </div>
+           </div>
+        </Section>
+      )}
+
+      {/* Notifications section */}
+      <Section title="Notifications & Sound" icon={<Bell className="h-4 w-4" />} description="Manage how and when you want to be notified about workflow events.">
+          <div className="divide-y divide-slate-100 border border-slate-100 rounded-md bg-white">
+             <ToggleRow label="Document Updates" desc="Notify when documents are distributed or renamed." checked={prefs.email_doc_updates} onChange={v => handleToggle("email_doc_updates", v)} />
+             <ToggleRow label="Action Required" desc="Notify about new tasks and workflow returns." checked={prefs.email_approvals} onChange={v => handleToggle("email_approvals", v)} />
+             <ToggleRow label="In-App Notification Sound" desc="Play a subtle chime when new notifications arrive." icon={<Volume2 className="h-3.5 w-3.5" />} checked={prefs.sound_notif} onChange={v => handleToggle("sound_notif", v)} />
+          </div>
+      </Section>
+
+      {/* Admin section */}
+      {isAdmin && (
+        <Section title="Developer Tools" icon={<Wrench className="h-4 w-4" />} description="Administrative settings for debugging and enterprise testing.">
+           <ToggleRow 
+              label="Developer Debug Mode" 
+              desc="Allow acting on behalf of other offices for testing workflows." 
+              checked={localStorage.getItem(`pref_debug_mode_${user?.id}`) === "1"} 
+              onChange={v => {
+                localStorage.setItem(`pref_debug_mode_${user?.id}`, v ? "1" : "0");
+                window.dispatchEvent(new CustomEvent("admin_debug_mode_changed"));
+                push({ type: "success", title: "Debug Mode", message: v ? "Enabled" : "Disabled" });
+              }} 
+            />
+        </Section>
+      )}
+    </div>
+  );
+};
+
+const Section: React.FC<{ icon: any; title: string; description: string; children: any }> = ({ icon, title, description, children }) => (
+  <div className="space-y-4">
+    <div className="flex items-center gap-3">
+       <div className="h-8 w-8 rounded bg-slate-100 dark:bg-surface-400 flex items-center justify-center text-slate-500">
+          {icon}
+       </div>
+       <div>
+          <h4 className="text-[14.5px] font-bold text-slate-800 dark:text-slate-100">{title}</h4>
+          <p className="text-[12px] text-slate-500 dark:text-slate-400">{description}</p>
+       </div>
+    </div>
+    <div className="pl-11">
+      {children}
+    </div>
+  </div>
+);
+
+const ToggleRow: React.FC<{ label: string; desc: string; checked: boolean; onChange: (v: boolean) => void; icon?: any }> = ({ label, desc, checked, onChange, icon }) => (
+  <div className="flex items-center justify-between p-4 px-5 group">
+     <div className="flex items-center gap-3">
+        {icon && <div className="text-slate-400 group-hover:text-brand-500 transition-colors">{icon}</div>}
+        <div>
+           <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{label}</p>
+           <p className="text-xs text-slate-500 dark:text-slate-400">{desc}</p>
+        </div>
+     </div>
+     <button 
+        onClick={() => onChange(!checked)}
+        className={`w-9 h-5 rounded-full transition-colors relative ${checked ? "bg-brand-500" : "bg-slate-200 dark:bg-surface-300"}`}
+      >
+        <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-all ${checked ? "translate-x-4" : ""}`} />
+     </button>
+  </div>
+);
+
+export default ProfileSettingsPage;

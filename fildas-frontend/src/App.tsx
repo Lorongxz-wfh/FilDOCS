@@ -59,8 +59,7 @@ const InboxPage = React.lazy(() => import("./pages/InboxPage"));
 const ReportsPage = React.lazy(() => import("./pages/ReportsPage"));
 const AdminReportsPage = React.lazy(() => import("./pages/AdminReportsPage"));
 const ReportExportPage = React.lazy(() => import("./pages/ReportExportPage"));
-const SettingsPage = React.lazy(() => import("./pages/SettingsPage"));
-const MyActivityPage = React.lazy(() => import("./pages/MyActivityPage"));
+const ProfileSettingsPage = React.lazy(() => import("./pages/ProfileSettingsPage"));
 const UserManagerPage = React.lazy(() => import("./pages/UserManagerPage"));
 const OfficeManagerPage = React.lazy(() => import("./pages/OfficeManagerPage"));
 const ActivityLogsPage = React.lazy(() => import("./pages/ActivityLogsPage"));
@@ -254,7 +253,9 @@ export default function App() {
               <Route path="/reports/export" element={<ReportExportPage />} />
             </Route>
 
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/profile" element={<ProfileSettingsPage />} />
+            <Route path="/settings" element={<Navigate to="/profile" replace />} />
+            <Route path="/my-activity" element={<Navigate to="/profile" replace />} />
 
             <Route
               element={
@@ -282,7 +283,6 @@ export default function App() {
 
 
             <Route path="/announcements" element={<AnnouncementsPage />} />
-            <Route path="/my-activity" element={<MyActivityPage />} />
             <Route path="/help" element={<HelpPage />} />
             <Route path="/help/:topic" element={<HelpTopicPage />} />
             <Route path="/whats-new" element={<WhatsNewPage />} />
