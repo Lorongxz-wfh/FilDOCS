@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\ActivityLog;
 use App\Models\Tag;
 use App\Services\WorkflowSteps;
+use Illuminate\Support\Str;
 
 class DocumentController extends Controller
 {
@@ -1152,7 +1153,12 @@ class DocumentController extends Controller
             return response()->json(['message' => 'File not found on server.'], 404);
         }
 
-        $downloadName = $version->original_filename ?? 'document';
+        $user = $request->user();
+        
+        // Use document title + version number for formal naming
+        $document = $version->document;
+        $extension = pathinfo($version->original_filename, PATHINFO_EXTENSION);
+        $downloadName = Str::slug($document->title) . "_v{$version->version_number}" . ($extension ? '.' . $extension : '');
 
         $this->logActivity('version.downloaded', 'Downloaded a document file', $request->user()?->id, $request->user()?->office_id, [
             'status' => $version->status,

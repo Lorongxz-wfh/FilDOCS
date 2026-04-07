@@ -18,7 +18,7 @@ const SkeletonList: React.FC<Props> = ({
 }) => {
   const finalCount = count ?? rows ?? 3;
   return (
-    <div className={["animate-pulse", className].join(" ")}>
+    <div className={className}>
       {Array.from({ length: finalCount }).map((_, i) => {
         if (variant === "card") {
           return (

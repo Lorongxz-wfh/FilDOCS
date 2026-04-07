@@ -222,7 +222,6 @@ const NotificationBell: React.FC = () => {
                 </h3>
               </div>
               <div className="flex items-center gap-2">
-                {annLoading && <InlineSpinner className="h-3 w-3 border-2" />}
                 <button
                   type="button"
                   className="text-[11px] font-medium text-brand-500 hover:text-brand-400 dark:text-brand-400 transition-colors"
@@ -290,7 +289,6 @@ const NotificationBell: React.FC = () => {
               Inbox
             </h3>
             <div className="flex items-center gap-2">
-              {notifLoading && <InlineSpinner className="h-3 w-3 border-2" />}
               <button
                 type="button"
                 className="text-[11px] font-medium text-brand-500 hover:text-brand-400 dark:text-brand-400 transition-colors"

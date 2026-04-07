@@ -97,7 +97,8 @@ const StageDelayChart: React.FC<{
   loading?: boolean;
 }> = ({ data, height = 200, loading = false }) => {
   if (loading) return <ChartSkeleton height={height} />;
-  if (!data?.length) return <EmptyChart height={height} />;
+  const hasValues = data?.some(d => (d.median_hours ?? d.avg_hours) > 0);
+  if (!data?.length || !hasValues) return <EmptyChart height={height} />;
 
   // Use median_hours if present, fall back to avg_hours
   const chartData = data.map((d) => ({

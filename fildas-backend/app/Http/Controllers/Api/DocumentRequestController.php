@@ -511,6 +511,15 @@ class DocumentRequestController extends Controller
             $requestPayload            = (array) $row;
             $requestPayload['progress'] = $this->progress->buildProgress($requestId, $row->mode);
 
+            if ($row->template_id) {
+                $requestPayload['template'] = DB::table('document_templates')
+                    ->where('id', $row->template_id)
+                    ->select(['id', 'name', 'original_filename', 'file_path'])
+                    ->first();
+            } else {
+                $requestPayload['template'] = null;
+            }
+
             return response()->json([
                 'request'    => $requestPayload,
                 'recipients' => $recipientsPayload,
@@ -530,6 +539,15 @@ class DocumentRequestController extends Controller
         $requestPayload['office_name'] = $recipient->office_name ?? null;
         $requestPayload['office_code'] = $recipient->office_code ?? null;
         $requestPayload['progress']    = $this->progress->buildProgress($requestId, $row->mode);
+
+        if ($row->template_id) {
+            $requestPayload['template'] = DB::table('document_templates')
+                ->where('id', $row->template_id)
+                ->select(['id', 'name', 'original_filename', 'file_path'])
+                ->first();
+        } else {
+            $requestPayload['template'] = null;
+        }
 
         // Items for multi_doc mode
         $itemsPayload = [];
@@ -572,6 +590,11 @@ class DocumentRequestController extends Controller
                     'example_original_filename' => $item->example_original_filename,
                     'example_file_path'        => $item->example_file_path,
                     'example_preview_path'     => $item->example_preview_path,
+                    'template_id'              => $item->template_id,
+                    'template'                 => $item->template_id ? DB::table('document_templates')
+                                                    ->where('id', $item->template_id)
+                                                    ->select(['id', 'name', 'original_filename', 'file_path'])
+                                                    ->first() : null,
                     'sort_order'               => (int) $item->sort_order,
                     'latest_submission'        => $latest ? [
                         'id'                    => (int) $latest->id,
@@ -669,11 +692,13 @@ class DocumentRequestController extends Controller
             'office_ids'   => 'required_if:mode,multi_office|array|min:1|max:50',
             'office_ids.*' => 'integer|exists:offices,id',
             'example_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
+            'template_id'  => 'nullable|integer|exists:document_templates,id',
 
             'office_id'    => 'required_if:mode,multi_doc|integer|exists:offices,id',
             'items'        => 'required_if:mode,multi_doc|array|min:1|max:10',
             'items.*.title'       => 'required|string|max:180',
             'items.*.description' => 'nullable|string',
+            'items.*.template_id' => 'nullable|integer|exists:document_templates,id',
         ]);
 
         $user = $request->user();

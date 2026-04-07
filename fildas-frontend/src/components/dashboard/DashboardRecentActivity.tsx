@@ -1,3 +1,4 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import SkeletonList from "../ui/loader/SkeletonList";
 import type { ActivityLogItem } from "../../services/documents";
@@ -72,6 +73,29 @@ const getEventMeta = (event: string): EventMeta => {
 
 const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) => {
   const navigate = useNavigate();
+  const [newLogIds, setNewLogIds] = React.useState<Set<number>>(new Set());
+
+  // Track new arrivals for animation
+  React.useEffect(() => {
+    if (logs.length > 0) {
+      const ids = logs.map(l => l.id);
+      setNewLogIds(prev => {
+        const next = new Set(prev);
+        ids.forEach(id => {
+          if (!prev.has(id)) next.add(id);
+        });
+        return next;
+      });
+
+      // Cleanup animation classes after 400ms
+      const timer = setTimeout(() => {
+        setNewLogIds(new Set(ids));
+      }, 400); 
+      return () => clearTimeout(timer);
+    }
+  }, [logs]);
+
+  const isRecentlyAdded = (id: number) => !newLogIds.has(id);
 
   return (
     <div className="relative h-[240px] overflow-hidden">
@@ -94,7 +118,10 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
           logs.slice(0, 5).map((log) => {
             const meta = getEventMeta(log.event);
             return (
-              <div key={log.id} className="flex items-start gap-2.5 sm:gap-3 py-2.5 sm:py-2.5 px-0.5 sm:px-0">
+              <div 
+                key={log.id} 
+                className={`flex items-start gap-2.5 sm:gap-3 py-2.5 sm:py-2.5 px-0.5 sm:px-0 ${isRecentlyAdded(log.id) ? "animate-live-entry" : ""}`}
+              >
                 {/* Event icon */}
                 <div
                   className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded ${meta.bg} ${meta.text} sm:scale-100 scale-90`}

@@ -188,9 +188,12 @@ class DocumentTemplateController extends Controller
         /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
         $storage = Storage::disk($disk);
 
+        $extension = pathinfo($template->original_filename, PATHINFO_EXTENSION);
+        $downloadName = Str::slug($template->name) . ($extension ? '.' . $extension : '');
+
         return $storage->download(
             $template->file_path,
-            $template->original_filename
+            $downloadName
         );
     }
 

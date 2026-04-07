@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { getAuthUser } from "../lib/auth";
 import { createDocumentRequest, uploadDocumentRequestItemExample } from "../services/documentRequests";
 import type { RequestMode } from "../services/documentRequests";
+import { listTemplates, type DocumentTemplate } from "../services/templates";
 import { isAdmin } from "../lib/roleFilters";
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import {
@@ -11,7 +12,7 @@ import {
   type TempPreview,
 } from "../services/previews";
 import PageFrame from "../components/layout/PageFrame";
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2, Search, X, FileCheck } from "lucide-react";
 
 import { inputCls } from "../utils/formStyles";
 
@@ -36,6 +37,8 @@ type DocItem = {
   title: string;
   description: string;
   file: File | null;
+  templateId: number | null;
+  templateName: string | null;
   tempPreview: TempPreview | null;
   previewLoading: boolean;
   previewError: string | null;
@@ -60,6 +63,66 @@ type MultiDocState = {
 };
 
 type LocationState = MultiOfficeState | MultiDocState | null;
+
+const TemplatePicker: React.FC<{
+  templates: DocumentTemplate[];
+  onSelect: (t: DocumentTemplate) => void;
+  onClose: () => void;
+}> = ({ templates, onSelect, onClose }) => {
+  const [q, setQ] = useState("");
+  const filtered = templates.filter(t => 
+    t.name.toLowerCase().includes(q.toLowerCase()) ||
+    t.tags.some(tag => tag.toLowerCase().includes(q.toLowerCase()))
+  );
+
+  return (
+    <div className="flex flex-col gap-3 min-h-0 bg-white dark:bg-surface-500 rounded-xl border border-slate-200 dark:border-surface-400 overflow-hidden shadow-xl animate-in fade-in zoom-in duration-200">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/50">
+        <Search className="w-4 h-4 text-slate-400" />
+        <input 
+          autoFocus
+          type="text" 
+          placeholder="Search templates..."
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-400 dark:text-slate-100"
+        />
+        <button onClick={onClose} className="p-1 hover:bg-slate-100 dark:hover:bg-surface-400 rounded-md transition">
+          <X className="w-4 h-4 text-slate-400" />
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto max-h-[300px] p-2 space-y-1">
+        {filtered.length > 0 ? (
+          filtered.map(t => (
+            <button
+              key={t.id}
+              onClick={() => onSelect(t)}
+              className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-surface-400 transition group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded bg-sky-50 dark:bg-sky-950/30 flex items-center justify-center text-sky-600 dark:text-sky-400">
+                  <FileCheck size={16} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate group-hover:text-brand-600 dark:group-hover:text-brand-400">
+                    {t.name}
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                    {t.original_filename}
+                  </p>
+                </div>
+              </div>
+            </button>
+          ))
+        ) : (
+          <div className="py-8 text-center">
+            <p className="text-xs text-slate-400 dark:text-slate-500 italic">No templates found</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function CreateDocumentRequestPage() {
   const navigate = useNavigate();
@@ -93,6 +156,8 @@ export default function CreateDocumentRequestPage() {
 
   // ── Multi-office: single example file + preview ────────────────────────────
   const [exFile, setExFile] = useState<File | null>(null);
+  const [exTemplateId, setExTemplateId] = useState<number | null>(null);
+  const [exTemplateName, setExTemplateName] = useState<string | null>(null);
   const [exTempPreview, setExTempPreview] = useState<TempPreview | null>(null);
   const [exPreviewLoading, setExPreviewLoading] = useState(false);
   const [exPreviewError, setExPreviewError] = useState<string | null>(null);
@@ -104,6 +169,8 @@ export default function CreateDocumentRequestPage() {
       title: "",
       description: "",
       file: null,
+      templateId: null,
+      templateName: null,
       tempPreview: null,
       previewLoading: false,
       previewError: null,
@@ -111,6 +178,15 @@ export default function CreateDocumentRequestPage() {
   ]);
   const [expandedIdx, setExpandedIdx] = useState<number>(0);
   const itemPreviewSeqRefs = React.useRef<number[]>([0]);
+
+  // Template Picker State
+  const [allTemplates, setAllTemplates] = useState<DocumentTemplate[]>([]);
+  const [pickingForIdx, setPickingForIdx] = useState<number | "office" | null>(null);
+
+  // Fetch templates
+  useEffect(() => {
+    listTemplates().then(setAllTemplates).catch(console.error);
+  }, []);
 
   // Active preview for right panel
   // multi_office: exTempPreview
@@ -226,6 +302,8 @@ export default function CreateDocumentRequestPage() {
         title: "",
         description: "",
         file: null,
+        templateId: null,
+        templateName: null,
         tempPreview: null,
         previewLoading: false,
         previewError: null,
@@ -276,13 +354,14 @@ export default function CreateDocumentRequestPage() {
 
       if (mode === "multi_office") {
         const s = state as MultiOfficeState;
-        result = await createDocumentRequest({
+         result = await createDocumentRequest({
           mode: "multi_office",
           title,
           description: description.trim() || null,
           due_at: dueAt || null,
           office_ids: s.officeIds,
           example_file: exFile,
+          template_id: exTemplateId ?? undefined,
         });
         cleanupPreview(exTempPreview);
       } else {
@@ -293,9 +372,10 @@ export default function CreateDocumentRequestPage() {
           description: description.trim() || null,
           due_at: dueAt || null,
           office_id: s.officeId,
-          items: items.map((it) => ({
+           items: items.map((it) => ({
             title: it.title.trim(),
             description: it.description.trim() || null,
+            template_id: it.templateId,
           })),
         });
         const itemIds: number[] = (result as any).item_ids ?? [];
@@ -442,19 +522,79 @@ export default function CreateDocumentRequestPage() {
                   />
                 </Field>
 
-                {/* Multi-office: single example file */}
+                 {/* Multi-office: single example file */}
                 {mode === "multi_office" && (
                   <Field
-                    label="Example file"
-                    hint="Optional reference file for all recipient offices. (max 10 MB)"
+                    label="Example reference"
+                    hint="Choose a system template OR upload your own example file."
                   >
-                    <input
-                      type="file"
-                      disabled={loading}
-                      onChange={(e) => setExFile(e.target.files?.[0] ?? null)}
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-                      className="w-full text-sm text-slate-700 dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-50 dark:file:bg-sky-950/40 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-sky-700 dark:file:text-sky-400 hover:file:bg-sky-100 disabled:opacity-60"
-                    />
+                    <div className="flex flex-col gap-3">
+                      {/* Template Selector */}
+                      {!exFile && (
+                        <div className="flex flex-col gap-2">
+                          {exTemplateId ? (
+                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800">
+                              <FileCheck className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
+                              <span className="text-sm font-medium text-sky-700 dark:text-sky-300 flex-1 truncate">
+                                Using Template: {exTemplateName}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setExTemplateId(null);
+                                  setExTemplateName(null);
+                                }}
+                                className="p-1 hover:bg-sky-100 dark:hover:bg-sky-900/50 rounded-md transition"
+                              >
+                                <X className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setPickingForIdx("office")}
+                              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border-2 border-dashed border-slate-200 dark:border-surface-400 hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400 transition group bg-slate-50/30 dark:bg-transparent"
+                            >
+                              <Search className="w-4 h-4 text-slate-400 group-hover:text-brand-500" />
+                              <span className="text-xs font-medium text-slate-500 dark:text-slate-400 group-hover:text-brand-600">
+                                Select System Template as Example
+                              </span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* File Upload (Hidden if template selected) */}
+                      {!exTemplateId && (
+                        <div className="flex flex-col gap-1">
+                          {exFile && (
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Or upload manually:</span>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            disabled={loading}
+                            onChange={(e) => setExFile(e.target.files?.[0] ?? null)}
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                            className="w-full text-sm text-slate-700 dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 dark:file:bg-surface-400 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-200 disabled:opacity-60"
+                          />
+                        </div>
+                      )}
+
+                      {pickingForIdx === "office" && (
+                        <TemplatePicker 
+                          templates={allTemplates}
+                          onSelect={(t) => {
+                            setExTemplateId(t.id);
+                            setExTemplateName(t.name);
+                            setExFile(null); // Clear file if template selected
+                            setPickingForIdx(null);
+                          }}
+                          onClose={() => setPickingForIdx(null)}
+                        />
+                      )}
+                    </div>
                   </Field>
                 )}
 
@@ -555,22 +695,87 @@ export default function CreateDocumentRequestPage() {
                                     className={inputCls}
                                   />
                                 </Field>
-                                <Field
-                                  label="Example file"
-                                  hint="Optional reference file for this document. (max 10 MB)"
+                                 <Field
+                                  label="Example reference"
+                                  hint="Choose a system template OR upload your own example file."
                                 >
-                                  <input
-                                    type="file"
-                                    disabled={loading}
-                                    onChange={(e) =>
-                                      handleItemFileChange(
-                                        idx,
-                                        e.target.files?.[0] ?? null,
-                                      )
-                                    }
-                                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-                                    className="w-full text-sm text-slate-700 dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-50 dark:file:bg-sky-950/40 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-sky-700 dark:file:text-sky-400 hover:file:bg-sky-100 disabled:opacity-60"
-                                  />
+                                  <div className="flex flex-col gap-3">
+                                    {/* Template Selector */}
+                                    {!item.file && (
+                                      <div className="flex flex-col gap-2">
+                                        {item.templateId ? (
+                                          <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+                                            <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300 flex-1 truncate">
+                                              Using Template: {item.templateName}
+                                            </span>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setItems(prev => {
+                                                  const next = [...prev];
+                                                  next[idx] = { ...next[idx], templateId: null, templateName: null };
+                                                  return next;
+                                                });
+                                              }}
+                                              className="p-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-md transition"
+                                            >
+                                              <X className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            onClick={() => setPickingForIdx(idx)}
+                                            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border-2 border-dashed border-slate-200 dark:border-surface-400 hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400 transition group bg-white/50 dark:bg-transparent"
+                                          >
+                                            <Search className="w-4 h-4 text-slate-400 group-hover:text-brand-500" />
+                                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 group-hover:text-brand-600">
+                                              Select System Template as Example
+                                            </span>
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {/* File Upload */}
+                                    {!item.templateId && (
+                                      <div className="flex flex-col gap-1">
+                                        <input
+                                          type="file"
+                                          disabled={loading}
+                                          onChange={(e) => {
+                                            handleItemFileChange(idx, e.target.files?.[0] ?? null);
+                                            // Reset template if file chosen
+                                            if (e.target.files?.[0]) {
+                                              setItems(prev => {
+                                                const next = [...prev];
+                                                next[idx] = { ...next[idx], templateId: null, templateName: null };
+                                                return next;
+                                              });
+                                            }
+                                          }}
+                                          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                                          className="w-full text-sm text-slate-700 dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 dark:file:bg-surface-400 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-200 disabled:opacity-60"
+                                        />
+                                      </div>
+                                    )}
+
+                                    {pickingForIdx === idx && (
+                                      <TemplatePicker 
+                                        templates={allTemplates}
+                                        onSelect={(t) => {
+                                          setItems(prev => {
+                                            const next = [...prev];
+                                            next[idx] = { ...next[idx], templateId: t.id, templateName: t.name, file: null };
+                                            return next;
+                                          });
+                                          setPickingForIdx(null);
+                                        }}
+                                        onClose={() => setPickingForIdx(null)}
+                                      />
+                                    )}
+                                  </div>
                                 </Field>
                               </div>
                             )}

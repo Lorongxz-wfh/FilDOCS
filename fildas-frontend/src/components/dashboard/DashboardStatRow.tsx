@@ -31,6 +31,9 @@ const DashboardStatRow: React.FC<Props> = ({
   loading,
   onStatClick,
 }) => {
+  const [pulseIndices, setPulseIndices] = React.useState<Set<number>>(new Set());
+  const prevValues = React.useRef<(number | null)[]>([]);
+
   const qaItems: StatItem[] = [
     {
       label: "Action needed",
@@ -135,32 +138,48 @@ const DashboardStatRow: React.FC<Props> = ({
 
   const items = isQA(role) ? qaItems : officeItems;
 
+  // Pulse effect on value change
+  React.useEffect(() => {
+    const currentValues = items.map(i => i.value);
+    const indicesToPulse = new Set<number>();
+
+    currentValues.forEach((val, idx) => {
+      const prev = prevValues.current[idx];
+      if (prev !== undefined && prev !== null && prev !== val) {
+        indicesToPulse.add(idx);
+      }
+    });
+
+    if (indicesToPulse.size > 0) {
+      setPulseIndices(indicesToPulse);
+      const timer = setTimeout(() => setPulseIndices(new Set()), 300);
+      return () => clearTimeout(timer);
+    }
+
+    prevValues.current = currentValues;
+  }, [items]);
+
   return (
     <div
       className="grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
     >
       {items.map((item, idx) => {
         const isActionNeeded = item.label === "Action needed";
-        
-        // If we have an EVEN total number of items (like Office = 4), 
-        // the last one should span 2 to fill the last row (since Action Needed already took Row 1).
-        // If we have an ODD total (like QA = 5), all secondary items should be span 1 to pair up.
         const isLastAndNeedsSpan = (idx === items.length - 1) && (items.length % 2 === 0);
-        
         const mobileColSpan = (isActionNeeded || isLastAndNeedsSpan) ? "col-span-2" : "col-span-1";
         const clickable = !!item.onClick;
+        const isPulsing = pulseIndices.has(idx);
 
         return (
           <div
             key={item.label}
-            onClick={item.onClick}
-            className={`min-w-0 rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 transition-all shadow-sm ${mobileColSpan} sm:col-span-1 ${
+            className={`min-w-0 rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 transition-all ${mobileColSpan} sm:col-span-1 ${
               clickable ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-surface-400" : ""
             } ${
               isActionNeeded && item.value > 0 
                 ? "ring-1 ring-rose-500/20 bg-rose-50/15 dark:ring-rose-500/40 dark:bg-rose-500/5 p-2.5 sm:p-3.5" 
                 : "p-2 sm:p-3.5"
-            }`}
+            } ${isPulsing ? "animate-pulse-highlight" : ""}`}
           >
             {/* Action Needed - Horizontal Banner for Mobile, Vertical for Desktop */}
             {isActionNeeded ? (
@@ -178,7 +197,7 @@ const DashboardStatRow: React.FC<Props> = ({
                     {loading ? (
                       <Skeleton className="mt-1 h-6 w-10 sm:h-7 sm:w-14" />
                     ) : (
-                      <p className={`text-xl sm:text-2xl font-display font-black tabular-nums leading-none sm:mt-1.5 ${item.valueColor}`}>
+                      <p className={`text-xl sm:text-2xl font-display font-black tabular-nums leading-none sm:mt-1.5 transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
                         {item.value}
                       </p>
                     )}
@@ -203,7 +222,7 @@ const DashboardStatRow: React.FC<Props> = ({
                   {loading ? (
                     <Skeleton className="mt-1 sm:mt-1.5 h-5 sm:h-7 w-10 sm:w-14" />
                   ) : (
-                    <p className={`text-lg sm:text-2xl font-display font-bold tabular-nums leading-none sm:mt-1 ${item.valueColor}`}>
+                    <p className={`text-lg sm:text-2xl font-display font-bold tabular-nums leading-none sm:mt-1 transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
                       {item.value || 0}
                     </p>
                   )}

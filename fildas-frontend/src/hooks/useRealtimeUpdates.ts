@@ -54,18 +54,43 @@ export function useRealtimeUpdates({
   }, [userId, onNotification, onWorkflowUpdate]);
 
   // ── Presence announcements channel ────────────────────────────────────
+  const announcementBuffer = React.useRef<Announcement[]>([]);
+  const announcementTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const processAnnouncementBuffer = React.useCallback(() => {
+    if (!onAnnouncement || announcementBuffer.current.length === 0) return;
+
+    const items = [...announcementBuffer.current];
+    announcementBuffer.current = [];
+    announcementTimeout.current = null;
+
+    // Staggered delivery: 20ms delay between each item for a "waterfall" effect
+    items.forEach((ann, index) => {
+      setTimeout(() => {
+        onAnnouncement(ann);
+      }, index * 20);
+    });
+  }, [onAnnouncement]);
+
   React.useEffect(() => {
     if (!onAnnouncement) return;
 
     const channel = echo.join("announcements");
     channel.listen(".announcement.created", (data: Announcement) => {
-      onAnnouncement(data);
+      announcementBuffer.current.push(data);
+      
+      // If we already have a timeout, we are buffering
+      if (announcementTimeout.current) return;
+
+      // Start a 100ms throttle window
+      announcementTimeout.current = setTimeout(processAnnouncementBuffer, 100);
     });
 
     return () => {
+      if (announcementTimeout.current) clearTimeout(announcementTimeout.current);
       echo.leave("announcements");
     };
-  }, [onAnnouncement]);
+  }, [onAnnouncement, processAnnouncementBuffer]);
 
   // ── Private request channel — messages ────────────────────────────────
   React.useEffect(() => {

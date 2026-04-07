@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import InlineSpinner from "../components/ui/loader/InlineSpinner";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
 import Button from "../components/ui/Button";
@@ -89,6 +90,8 @@ const QADashboard: React.FC<
   ReturnType<typeof useDashboardData> & {
     navigate: ReturnType<typeof useNavigate>;
     announcements: AnnouncementsHook;
+    onCarouselScroll?: React.UIEventHandler<HTMLDivElement>;
+    activeIndex?: number;
   }
 > = ({
   stats,
@@ -100,7 +103,11 @@ const QADashboard: React.FC<
   loading,
   navigate,
   announcements,
+  onCarouselScroll,
+  activeIndex = 0,
 }) => {
+  const chartCount = 3; // Document volume, Pipeline state, Stage delay (mobile)
+  
   return (
     <div className="space-y-4">
       <AnnouncementsBanner
@@ -122,9 +129,11 @@ const QADashboard: React.FC<
         }}
       />
 
-      {/* Charts Carousel/Grid */}
       <div className="relative group">
-        <div className="flex sm:grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0">
+        <div 
+          onScroll={onCarouselScroll}
+          className="flex sm:grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0"
+        >
           <Card
             title="Document volume"
             sub="Created vs distributed trend"
@@ -180,6 +189,18 @@ const QADashboard: React.FC<
             />
           </Card>
         </div>
+
+        {/* Carousel Indicators */}
+        <div className="flex sm:hidden justify-center gap-1.5 mt-2">
+          {[...Array(chartCount)].map((_, i) => (
+            <div 
+              key={i} 
+              className={`h-1 rounded-full transition-all duration-300 ${
+                i === activeIndex ? "w-4 bg-sky-500" : "w-1.5 bg-slate-200 dark:bg-surface-400"
+              }`}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Desktop-only Stage Delay if not in carousel-span above */}
@@ -226,6 +247,8 @@ const OfficeDashboard: React.FC<
     navigate: ReturnType<typeof useNavigate>;
     role: ReturnType<typeof getUserRole>;
     announcements: AnnouncementsHook;
+    onCarouselScroll?: React.UIEventHandler<HTMLDivElement>;
+    activeIndex?: number;
   }
 > = ({
   stats,
@@ -237,7 +260,10 @@ const OfficeDashboard: React.FC<
   announcements,
   pendingRequestsInboxCount,
   pending,
+  onCarouselScroll,
+  activeIndex = 0,
 }) => {
+    const chartCount = 1; // Just one donut chart for office currently, but let's keep it consistent
     const inboxCount = pendingRequestsInboxCount ?? 0;
 
     const donutSegments = [
@@ -276,24 +302,43 @@ const OfficeDashboard: React.FC<
 
         {/* Document summary + pending work queue */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Card
-            title="My document summary"
-            sub="Status of documents created by your office."
-            action={{
-              label: "Open library",
-              onClick: () => navigate("/documents"),
-            }}
-            loading={loading}
-            hasData={!!stats}
-          >
-            <StatusDonutChart
-              segments={donutSegments}
-              centerValue={stats?.total ?? 0}
-              centerLabel="total"
-              size={160}
-              loading={loading}
-            />
-          </Card>
+          <div className="relative group">
+            <div 
+              onScroll={onCarouselScroll}
+              className="flex sm:grid grid-cols-1 gap-4 lg:grid-cols-1 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0"
+            >
+              <Card
+                title="My document summary"
+                sub="Status of documents created by your office."
+                action={{
+                  label: "Open library",
+                  onClick: () => navigate("/documents"),
+                }}
+                className="min-w-[88vw] sm:min-w-0 snap-center"
+                loading={loading}
+                hasData={!!stats}
+              >
+                <StatusDonutChart
+                  segments={donutSegments}
+                  centerValue={stats?.total ?? 0}
+                  centerLabel="total"
+                  size={160}
+                  loading={loading}
+                />
+              </Card>
+            </div>
+            
+            <div className="flex sm:hidden justify-center gap-1.5 mt-2">
+              {[...Array(chartCount)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`h-1 rounded-full transition-all duration-300 ${
+                    i === activeIndex ? "w-4 bg-sky-500" : "w-1.5 bg-slate-200 dark:bg-surface-400"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
 
           <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
         </div>
@@ -421,7 +466,7 @@ const AuditorDashboard: React.FC<
         <button
           type="button"
           onClick={() => navigate("/documents")}
-          className={`min-w-0 rounded-md border border-slate-200 bg-white px-4 py-3.5 text-left transition-all hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:hover:bg-surface-400 shadow-sm ${loading && stats ? "opacity-60" : "opacity-100"}`}
+          className={`min-w-0 rounded-md border border-slate-200 bg-white px-4 py-3.5 text-left transition-all hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:hover:bg-surface-400 ${loading && stats ? "opacity-60" : "opacity-100"}`}
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
@@ -530,6 +575,16 @@ const DashboardPage: React.FC = () => {
     day: "numeric",
   });
 
+  const [activeChartIndex, setActiveChartIndex] = React.useState(0);
+  const handleCarouselScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const scrollLeft = container.scrollLeft;
+    const width = container.clientWidth;
+    if (width > 0) {
+      setActiveChartIndex(Math.round(scrollLeft / width));
+    }
+  };
+
   return (
     <div className="min-h-0 flex flex-1 flex-col overflow-hidden">
       {/* ── Page header ── */}
@@ -540,59 +595,80 @@ const DashboardPage: React.FC = () => {
               {today}
             </p>
             <h1 className="mt-1 text-sm sm:text-base font-display font-extrabold text-slate-900 dark:text-slate-100 leading-tight truncate">
-              {greeting}, {firstName}
+              {greeting}<span className="hidden sm:inline">, {firstName}</span>
             </h1>
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
             {/* Period Toggle */}
-            <div className="flex items-center rounded-sm border border-slate-200 bg-white p-0.5 dark:border-surface-400 dark:bg-surface-500 shadow-sm">
+            <div className="flex items-center rounded-sm border border-slate-200 bg-white p-0.5 dark:border-surface-400 dark:bg-surface-500 relative">
               <button
                 type="button"
                 onClick={() => setPeriod("today")}
-                className={`px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-all rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 ${
+                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${
                   period === "today"
-                    ? "bg-sky-50 text-sky-600 dark:bg-sky-950/30 dark:text-sky-400 shadow-xs"
+                    ? "text-sky-600 dark:text-sky-400 shadow-xs"
                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                 }`}
                 title="Today"
               >
-                <div className="md:hidden relative flex items-center justify-center">
+                {period === "today" && (
+                  <motion.div
+                    layoutId="active-period"
+                    className="absolute inset-0 bg-sky-50 dark:bg-sky-950/30 rounded-xs -z-10"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                  />
+                )}
+                <div className="md:hidden relative flex items-center justify-center z-10">
                   <Calendar className="h-4 w-4 stroke-[2.5]" />
                   <span className="absolute text-[7px] font-black pt-1.5 leading-none">1</span>
                 </div>
-                <span className="hidden md:inline">Today</span>
+                <span className="hidden md:inline z-10">Today</span>
               </button>
               
               <button
                 type="button"
                 onClick={() => setPeriod("this_week")}
-                className={`px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-all rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 ${
+                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${
                   period === "this_week"
-                    ? "bg-sky-50 text-sky-600 dark:bg-sky-950/30 dark:text-sky-400 shadow-xs"
+                    ? "text-sky-600 dark:text-sky-400 shadow-xs"
                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                 }`}
                 title="This Week"
               >
-                <div className="md:hidden relative flex items-center justify-center">
+                {period === "this_week" && (
+                  <motion.div
+                    layoutId="active-period"
+                    className="absolute inset-0 bg-sky-50 dark:bg-sky-950/30 rounded-xs -z-10"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                  />
+                )}
+                <div className="md:hidden relative flex items-center justify-center z-10">
                   <Calendar className="h-4 w-4 stroke-[2.5]" />
                   <span className="absolute text-[7px] font-black pt-1.5 leading-none">7</span>
                 </div>
-                <span className="hidden md:inline">Week</span>
+                <span className="hidden md:inline z-10">Week</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setPeriod("all")}
-                className={`px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-all rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 ${
+                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${
                   period === "all"
-                    ? "bg-sky-50 text-sky-600 dark:bg-sky-950/30 dark:text-sky-400 shadow-xs"
+                    ? "text-sky-600 dark:text-sky-400 shadow-xs"
                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                 }`}
                 title="All Time"
               >
-                <CalendarDays className="h-4 w-4 md:hidden stroke-[2.5]" />
-                <span className="hidden md:inline">All</span>
+                {period === "all" && (
+                  <motion.div
+                    layoutId="active-period"
+                    className="absolute inset-0 bg-sky-50 dark:bg-sky-950/30 rounded-xs -z-10"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                  />
+                )}
+                <CalendarDays className="h-4 w-4 md:hidden stroke-[2.5] z-10" />
+                <span className="hidden md:inline z-10">All</span>
               </button>
             </div>
 
@@ -612,7 +688,13 @@ const DashboardPage: React.FC = () => {
           ) : isAuditor(role) ? (
             <AuditorDashboard {...dashData} navigate={navigate} announcements={announcements} />
           ) : isQA(role) ? (
-            <QADashboard {...dashData} navigate={navigate} announcements={announcements} />
+            <QADashboard 
+              {...dashData} 
+              navigate={navigate} 
+              announcements={announcements} 
+              onCarouselScroll={handleCarouselScroll} 
+              activeIndex={activeChartIndex}
+            />
           ) : (
             <OfficeDashboard {...dashData} navigate={navigate} role={role} announcements={announcements} />
           )}

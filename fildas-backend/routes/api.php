@@ -90,6 +90,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     });
     Route::get('/work-queue', [WorkflowController::class, 'workQueue']);
 
+    Route::get('/documents',                  [DocumentController::class, 'index']);
     Route::get('/documents/work-queue',      [WorkflowController::class, 'workQueue']);
     Route::get('/documents/stats',           [DocumentController::class, 'stats']);
     Route::get('/documents/library',         [DocumentController::class, 'library']);

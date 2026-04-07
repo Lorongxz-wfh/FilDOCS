@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Sun, Moon, Menu, PanelLeftClose, Ghost, Terminal } from "lucide-react";
+import { Sun, Moon, Menu, PanelLeftClose, Ghost } from "lucide-react";
 import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
 
 interface SidebarBrandProps {
@@ -26,35 +26,30 @@ const SidebarBrand: React.FC<SidebarBrandProps> = ({
   return (
     <div className="shrink-0 flex items-center justify-between border-b border-neutral-200 dark:border-surface-400 px-3 h-13.5">
       <div
-        className="flex items-center gap-2 min-w-0 overflow-hidden cursor-pointer"
+        className="flex items-center gap-2.5 min-w-0 overflow-hidden cursor-pointer"
         onClick={(collapsed && !mobileOpen) ? toggle : () => navigate("/dashboard")}
       >
-        <div className="h-7 w-7 shrink-0 overflow-hidden rounded bg-neutral-100 dark:bg-surface-400/50 p-1 flex items-center justify-center">
-          <img src="/favicon.png" alt="FilDAS" className="h-full w-full object-contain" />
-        </div>
-        {(!collapsed || mobileOpen) && (
-          <div className="flex items-center gap-1.5 min-w-0">
+        {(!collapsed || mobileOpen) ? (
+          <div className="flex items-center gap-2 min-w-0">
             <span className="text-[17px] font-bold tracking-tight text-neutral-900 dark:text-surface-50 truncate">
               FilDAS
             </span>
-            <div className="flex items-center gap-1">
-              {import.meta.env.DEV && (
-                <div 
-                  className="flex items-center justify-center h-4.5 w-4.5 rounded bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0" 
-                  title="Environment: DEV"
-                >
-                  <Terminal className="h-2.5 w-2.5" strokeWidth={3} />
-                </div>
-              )}
-              {debugMode && (
-                <div 
-                  className="flex items-center justify-center h-5 w-5 rounded-full bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 animate-pulse shrink-0" 
-                  title="Admin: Debug Mode"
-                >
-                  <Ghost className="h-3 w-3" strokeWidth={2.5} />
-                </div>
-              )}
-            </div>
+            {debugMode && (
+              <div 
+                className="flex items-center justify-center h-5 w-5 rounded-full bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 animate-pulse shrink-0" 
+                title="Admin: Debug Mode"
+              >
+                <Ghost className="h-3 w-3" strokeWidth={2.5} />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-7 w-7 shrink-0">
+            {debugMode ? (
+              <Ghost className="h-4.5 w-4.5 text-brand-500 animate-pulse" strokeWidth={2.5} />
+            ) : (
+              <span className="text-xl font-bold text-brand-500">F</span>
+            )}
           </div>
         )}
       </div>

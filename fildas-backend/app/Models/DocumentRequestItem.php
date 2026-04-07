@@ -18,6 +18,7 @@ class DocumentRequestItem extends Model
         'example_original_filename',
         'example_file_path',
         'example_preview_path',
+        'template_id',
         'sort_order',
     ];
 
@@ -33,6 +34,11 @@ class DocumentRequestItem extends Model
     public function submissions(): HasMany
     {
         return $this->hasMany(DocumentRequestSubmission::class, 'item_id');
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(DocumentTemplate::class, 'template_id');
     }
 
     public function latestSubmissionForRecipient(int $recipientId): ?DocumentRequestSubmission

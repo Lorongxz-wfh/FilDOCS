@@ -21,6 +21,7 @@ class DocumentRequest extends Model
         'example_original_filename',
         'example_file_path',
         'example_preview_path',
+        'template_id',
         'created_by_user_id',
         'meta',
     ];
@@ -38,6 +39,16 @@ class DocumentRequest extends Model
     public function items(): HasMany
     {
         return $this->hasMany(DocumentRequestItem::class, 'request_id')->orderBy('sort_order');
+    }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(DocumentRequestSubmission::class, 'request_id');
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(DocumentTemplate::class, 'template_id');
     }
 
     public function isMultiOffice(): bool

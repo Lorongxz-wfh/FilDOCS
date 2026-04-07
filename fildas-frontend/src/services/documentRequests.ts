@@ -23,9 +23,16 @@ export type DocumentRequestRow = {
   due_at: string | null;
   status: "open" | "closed" | "cancelled";
   mode: RequestMode;
-  example_original_filename?: string | null;
+   example_original_filename?: string | null;
   example_file_path?: string | null;
   example_preview_path?: string | null;
+  template_id?: number | null;
+  template?: {
+    id: number;
+    name: string;
+    original_filename: string;
+    file_path: string;
+  } | null;
   created_by_user_id?: number | null;
   created_at?: string;
   updated_at?: string;
@@ -50,9 +57,16 @@ export type DocumentRequestItemRow = {
   request_id: number;
   title: string;
   description: string | null;
-  example_original_filename: string | null;
+   example_original_filename: string | null;
   example_file_path: string | null;
   example_preview_path: string | null;
+  template_id?: number | null;
+  template?: {
+    id: number;
+    name: string;
+    original_filename: string;
+    file_path: string;
+  } | null;
   sort_order: number;
   latest_submission?: DocumentRequestSubmissionRow | null;
 };
@@ -196,18 +210,19 @@ export type CreateMultiOfficeInput = {
   mode: "multi_office";
   title: string;
   description?: string | null;
-  due_at?: string | null;
+   due_at?: string | null;
   office_ids: number[];
   example_file?: File | null;
+  template_id?: number | null;
 };
 
 export type CreateMultiDocInput = {
   mode: "multi_doc";
   title: string;
   description?: string | null;
-  due_at?: string | null;
+   due_at?: string | null;
   office_id: number;
-  items: { title: string; description?: string | null }[];
+  items: { title: string; description?: string | null; template_id?: number | null }[];
 };
 
 export async function createDocumentRequest(
@@ -219,9 +234,10 @@ export async function createDocumentRequest(
   if (input.description != null) form.append("description", input.description);
   if (input.due_at != null) form.append("due_at", input.due_at);
 
-  if (input.mode === "multi_office") {
+   if (input.mode === "multi_office") {
     for (const id of input.office_ids) form.append("office_ids[]", String(id));
     if (input.example_file) form.append("example_file", input.example_file);
+    if (input.template_id) form.append("template_id", String(input.template_id));
   } else {
     form.append("office_id", String(input.office_id));
     for (let i = 0; i < input.items.length; i++) {
@@ -231,6 +247,9 @@ export async function createDocumentRequest(
           `items[${i}][description]`,
           input.items[i].description ?? "",
         );
+      }
+      if (input.items[i].template_id) {
+        form.append(`items[${i}][template_id]`, String(input.items[i].template_id));
       }
     }
   }
