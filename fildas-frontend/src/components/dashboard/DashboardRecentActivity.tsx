@@ -13,6 +13,7 @@ import {
   History,
 } from "lucide-react";
 import { formatRelative } from "../../utils/formatters";
+import EmptyState from "../ui/EmptyState";
 
 type Props = {
   logs: ActivityLogItem[];
@@ -103,17 +104,11 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
         {loading && !hasData ? (
           <SkeletonList variant="activity" rows={4} className="divide-y divide-slate-100 dark:divide-surface-400" />
         ) : logs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-            <div className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-950/40">
-              <Activity className="h-4.5 w-4.5 text-indigo-500" />
-            </div>
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              No activity yet
-            </p>
-            <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-              Latest actions will appear here.
-            </p>
-          </div>
+          <EmptyState 
+            label="No recent activity" 
+            description="Latest actions will appear here when they occur."
+            className="py-10"
+          />
         ) : (
           logs.slice(0, 5).map((log) => {
             const meta = getEventMeta(log.event);

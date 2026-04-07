@@ -10,6 +10,7 @@ import {
   Legend,
 } from "recharts";
 import type { ActivityTrendDatum } from "../../services/types";
+import ChartSkeleton from "../ui/loader/ChartSkeleton";
 
 const formatDate = (dateStr: string, options: Intl.DateTimeFormatOptions) => {
   try {
@@ -26,13 +27,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   Others: "#94a3b8",    // slate-400
 };
 
-const ChartSkeleton = ({ height = 220 }: { height?: number }) => (
-  <div style={{ height }} className="flex items-end gap-2 px-2 pb-5 pt-2">
-    {[40, 65, 50, 80, 55, 70, 45, 90, 60, 75, 40, 85].map((h, i) => (
-      <div key={i} className="flex-1 animate-pulse rounded-t-sm bg-slate-100 dark:bg-surface-400" style={{ height: `${h}%` }} />
-    ))}
-  </div>
-);
+
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;

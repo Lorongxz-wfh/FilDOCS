@@ -29,6 +29,7 @@ import StatCard from "../components/workQueue/StatCard";
 import QueueCard from "../components/workQueue/QueueCard";
 import RequestQueueCard from "../components/workQueue/RequestQueueCard";
 import SkeletonList from "../components/ui/loader/SkeletonList";
+import EmptyState from "../components/ui/EmptyState";
 
 // ── Main page ──────────────────────────────────────────────────────────────
 
@@ -178,7 +179,7 @@ const MyWorkQueuePage: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 pb-2 overflow-y-auto lg:overflow-hidden">
         
         {/* Column 1: Workflows */}
-        <div className="flex flex-col gap-4 min-h-0 lg:flex-[3.5] shrink-0">
+        <div className="flex flex-col gap-4 min-w-0 lg:flex-[3.5]">
           <div className="flex flex-col gap-1.5 shrink-0">
             <div className="grid grid-cols-2 gap-2">
               <StatCard label="Active Flows" value={allItems.length} loading={loading} />
@@ -212,9 +213,11 @@ const MyWorkQueuePage: React.FC = () => {
               {loading ? (
                 <SkeletonList variant="card" rows={3} />
               ) : sortedItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">No active document workflows found.</p>
-                </div>
+                <EmptyState 
+                  label="No active document workflows" 
+                  description="All your document tasks have been resolved or forwarded."
+                  className="py-10"
+                />
               ) : (
                 <div className="flex flex-col gap-1.5 focus-within:z-20">
                   {sortedItems.map((item: WorkQueueItem) => (
@@ -247,7 +250,7 @@ const MyWorkQueuePage: React.FC = () => {
         </div>
 
         {/* Column 2: Requests */}
-        <div className="flex flex-col gap-4 min-h-0 lg:flex-[3.5] shrink-0">
+        <div className="flex flex-col gap-4 min-w-0 lg:flex-[3.5]">
           <div className="flex flex-col gap-1.5 shrink-0">
             <div className="grid grid-cols-2 gap-2">
               <StatCard label="Active Requests" value={requestStats?.active ?? 0} loading={loading} />
@@ -280,9 +283,11 @@ const MyWorkQueuePage: React.FC = () => {
               {loading ? (
                 <SkeletonList variant="card" rows={3} />
               ) : requestItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">No open document requests found.</p>
-                </div>
+                <EmptyState 
+                  label="No open document requests" 
+                  description="No pending requests found in your queue."
+                  className="py-10"
+                />
               ) : (
                 <div className="flex flex-col gap-1.5 focus-within:z-20">
                   {requestItems.map((item: any) => (
@@ -315,7 +320,7 @@ const MyWorkQueuePage: React.FC = () => {
         </div>
 
         {/* Column 3: Activity */}
-        <div className="flex flex-col gap-4 min-h-0 lg:flex-[2] shrink-0">
+        <div className="flex flex-col gap-4 min-w-0 lg:flex-[2]">
           <div className="flex flex-col gap-1.5 shrink-0">
             <div className="flex flex-col">
               <StatCard label="Ongoing Progress" value={allItems.length + (requestStats?.active ?? 0)} loading={loading} />
@@ -337,11 +342,11 @@ const MyWorkQueuePage: React.FC = () => {
               {loadingActivity ? (
                 <SkeletonList variant="activity" rows={6} />
               ) : recentActivity.length === 0 ? (
-                <div className="flex h-full min-h-30 items-center justify-center">
-                  <p className="text-xs text-slate-400 dark:text-slate-500">
-                    No recent creation/request activity found.
-                  </p>
-                </div>
+                <EmptyState 
+                  label="No recent activity" 
+                  description="No creation or request activity found for your office."
+                  className="py-10"
+                />
               ) : (
                 <div className="space-y-0.5 focus-within:z-20">
                   {recentActivity.map((l: any) => (

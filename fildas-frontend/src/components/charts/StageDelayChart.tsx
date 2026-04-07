@@ -32,16 +32,7 @@ const phaseColor = (stage: string) => PHASE_COLORS[stage] ?? FALLBACK_COLOR;
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
-const ChartSkeleton = ({ height = 200 }: { height?: number }) => (
-  <div style={{ height }} className="flex flex-col justify-center gap-4 px-4 py-3">
-    {[70, 50, 85].map((w, i) => (
-      <div key={i} className="flex items-center gap-3">
-        <div className="w-20 h-2.5 animate-pulse rounded bg-slate-100 dark:bg-surface-400 shrink-0" />
-        <div className="animate-pulse rounded-r-sm bg-slate-100 dark:bg-surface-400 h-5" style={{ width: `${w}%` }} />
-      </div>
-    ))}
-  </div>
-);
+import ChartSkeleton from "../ui/loader/ChartSkeleton";
 
 // ── Empty ─────────────────────────────────────────────────────────────────────
 

@@ -6,6 +6,7 @@ import VolumeTrendChart from "../../charts/VolumeTrendChart";
 import DocumentTypeChart from "../../charts/DocumentTypeChart";
 import OfficeCreationChart from "../../charts/OfficeCreationChart";
 import WorkflowFunnelChart from "../../charts/WorkflowFunnelChart";
+import ReturnByStageChart from "../../charts/ReturnByStageChart";
 import Skeleton from "../../ui/loader/Skeleton";
 import { type Bucket } from "../ReportFilters";
 
@@ -109,15 +110,21 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
         <div className="grid grid-flow-col lg:grid-flow-row lg:grid-cols-2 gap-4 lg:gap-6 overflow-x-auto lg:overflow-visible snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
           <div className="min-w-[85vw] lg:min-w-0 snap-center">
             <ReportChartCard
-              title="Documents created by office"
+              title="Documents by office"
               subtitle="Ranked by creation volume"
               loading={loading}
             >
-              <OfficeCreationChart data={creationByOffice} loading={loading} />
+              <OfficeCreationChart data={creationByOffice} height={220} loading={loading} />
             </ReportChartCard>
           </div>
-          <div className="min-w-[85vw] lg:min-w-0 snap-center flex items-center justify-center rounded-lg border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/20 text-slate-400 dark:text-slate-500 text-xs p-10">
-            companion chart TBD
+          <div className="min-w-[85vw] lg:min-w-0 snap-center">
+            <ReportChartCard
+              title="Return rate by stage"
+              subtitle="Where documents get sent back most"
+              loading={loading}
+            >
+              <ReturnByStageChart data={revisionStats.by_stage ?? []} variant="horizontal" height={220} loading={loading} />
+            </ReportChartCard>
           </div>
         </div>
       </div>

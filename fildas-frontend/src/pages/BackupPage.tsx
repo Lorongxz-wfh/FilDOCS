@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import PageFrame from "../components/layout/PageFrame";
 import Skeleton from "../components/ui/loader/Skeleton";
 import DateRangeInput from "../components/ui/DateRangeInput";
@@ -284,21 +285,31 @@ export default function BackupPage() {
             <Calendar className="h-3.5 w-3.5" />
           </div>
           
-          <div className="flex-1 overflow-hidden rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-black/20 p-1 flex items-center">
-            {PRESETS.map((p) => (
-              <button
-                key={p.value}
-                type="button"
-                onClick={() => setPreset(p.value)}
-                className={`flex-1 py-1.5 px-0.5 text-[10px] sm:text-xs font-bold transition-all rounded-lg ${
-                  preset === p.value
-                    ? "bg-brand-500 text-white shadow-sm active:scale-95"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/5"
-                }`}
-              >
-                {p.value === "custom" ? "Custom" : p.label}
-              </button>
-            ))}
+          <div className="flex shrink-0 items-center gap-3">
+             <div className="flex items-center rounded-sm border border-slate-200 bg-white p-0.5 dark:border-surface-400 dark:bg-surface-500 relative">
+              {PRESETS.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setPreset(p.value)}
+                  className={`relative px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[40px] z-0 ${
+                    preset === p.value
+                      ? "text-sky-600 dark:text-sky-400 shadow-xs"
+                      : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  }`}
+                  title={p.label}
+                >
+                  {preset === p.value && (
+                    <motion.div
+                      layoutId="active-period-backup"
+                      className="absolute inset-0 bg-sky-50 dark:bg-sky-950/30 rounded-xs -z-10"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                    />
+                  )}
+                  <span className="z-10">{p.value === "custom" ? "Custom" : p.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {preset === "custom" && (

@@ -397,7 +397,7 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
     } catch (err) { push({ type: "error", message: normalizeError(err) }); }
   };
 
-  const isAdmin = isSysAdmin(getUserRole());
+  const isAdmin = ["ADMIN", "SYSADMIN"].includes(String(getUserRole()).toUpperCase());
 
   return (
     <div className="space-y-12">
@@ -434,8 +434,8 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
       {/* Signature section */}
       {!isAuditor(getUserRole()) && (
         <Section title="E-Signature" icon={<PenLine className="h-4 w-4" />} description="Use your uploaded signature to sign documents and evidence requests.">
-           <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-md border border-slate-100 bg-slate-50/50">
-               <div className="h-20 w-48 border border-dashed border-slate-300 rounded flex items-center justify-center bg-white overflow-hidden">
+           <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-md border border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/50">
+               <div className="h-20 w-48 border border-dashed border-slate-300 dark:border-surface-400 rounded flex items-center justify-center bg-white dark:bg-surface-600 overflow-hidden">
                   {sigUrl ? <img src={sigUrl} className="max-h-full object-contain" alt="Sig" /> : <p className="text-xs text-slate-400 italic">No signature uploaded</p>}
                </div>
                <div className="flex flex-col gap-2">
@@ -451,7 +451,7 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
 
       {/* Notifications section */}
       <Section title="Notifications & Sound" icon={<Bell className="h-4 w-4" />} description="Manage how and when you want to be notified about workflow events.">
-          <div className="divide-y divide-slate-100 border border-slate-100 rounded-md bg-white">
+          <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-slate-100 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500">
              <ToggleRow label="Document Updates" desc="Notify when documents are distributed or renamed." checked={prefs.email_doc_updates} onChange={v => handleToggle("email_doc_updates", v)} />
              <ToggleRow label="Action Required" desc="Notify about new tasks and workflow returns." checked={prefs.email_approvals} onChange={v => handleToggle("email_approvals", v)} />
              <ToggleRow label="In-App Notification Sound" desc="Play a subtle chime when new notifications arrive." icon={<Volume2 className="h-3.5 w-3.5" />} checked={prefs.sound_notif} onChange={v => handleToggle("sound_notif", v)} />
@@ -461,16 +461,18 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
       {/* Admin section */}
       {isAdmin && (
         <Section title="Developer Tools" icon={<Wrench className="h-4 w-4" />} description="Administrative settings for debugging and enterprise testing.">
-           <ToggleRow 
-              label="Developer Debug Mode" 
-              desc="Allow acting on behalf of other offices for testing workflows." 
-              checked={localStorage.getItem(`pref_debug_mode_${user?.id}`) === "1"} 
-              onChange={v => {
-                localStorage.setItem(`pref_debug_mode_${user?.id}`, v ? "1" : "0");
-                window.dispatchEvent(new CustomEvent("admin_debug_mode_changed"));
-                push({ type: "success", title: "Debug Mode", message: v ? "Enabled" : "Disabled" });
-              }} 
-            />
+           <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-slate-100 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500">
+             <ToggleRow 
+                label="Developer Debug Mode" 
+                desc="Allow acting on behalf of other offices for testing workflows." 
+                checked={localStorage.getItem(`pref_debug_mode_${user?.id}`) === "1"} 
+                onChange={v => {
+                  localStorage.setItem(`pref_debug_mode_${user?.id}`, v ? "1" : "0");
+                  window.dispatchEvent(new CustomEvent("admin_debug_mode_changed"));
+                  push({ type: "success", title: "Debug Mode", message: v ? "Enabled" : "Disabled" });
+                }} 
+              />
+           </div>
         </Section>
       )}
     </div>

@@ -8,7 +8,7 @@ import ReportFilters from "../components/reports/ReportFilters";
 import { useReportsData } from "../hooks/useReportsData";
 import { useReportFilters } from "../hooks/useReportFilters";
 import { getOffices } from "../services/reportsApi";
-import { SlidersHorizontal, BarChart3, LayoutDashboard, BarChart2, FileQuestion, Activity, Users } from "lucide-react";
+import { SlidersHorizontal, BarChart3, LayoutDashboard, BarChart2, FileQuestion, Activity, Users, CheckCircle2, ShieldCheck, HeartPulse } from "lucide-react";
 import { Tabs, TabContent } from "../components/ui/Tabs";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
 
@@ -18,8 +18,11 @@ import WorkflowTab from "../components/reports/tabs/WorkflowTab";
 import RequestsTab from "../components/reports/tabs/RequestsTab";
 import ActivityTab from "../components/reports/tabs/ActivityTab";
 import UsersTab from "../components/reports/tabs/UsersTab";
+import ClusterTab from "../components/reports/tabs/ClusterTab";
+import ExecutiveTab from "../components/reports/tabs/ExecutiveTab";
+import SystemHealthTab from "../components/reports/tabs/SystemHealthTab";
 
-type Tab = "overview" | "workflow" | "requests" | "activity" | "users";
+type Tab = "overview" | "workflow" | "requests" | "activity" | "users" | "compliance" | "executive" | "cluster" | "health";
 
 const TABS_QA: { key: Tab; label: string; icon: React.ReactNode }[] = [
   { key: "overview", label: "Overview", icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
@@ -29,16 +32,34 @@ const TABS_QA: { key: Tab; label: string; icon: React.ReactNode }[] = [
 ];
 
 const TABS_OFFICE_HEAD: { key: Tab; label: string; icon: React.ReactNode }[] = [
-  { key: "overview", label: "Overview", icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
-  { key: "workflow", label: "Workflow", icon: <BarChart2 className="h-3.5 w-3.5" /> },
-  { key: "requests", label: "Requests", icon: <FileQuestion className="h-3.5 w-3.5" /> },
+  { key: "overview", label: "Dashboard", icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
+  { key: "workflow", label: "Workflow Efficiency", icon: <BarChart2 className="h-3.5 w-3.5" /> },
+  { key: "requests", label: "Request History", icon: <FileQuestion className="h-3.5 w-3.5" /> },
+];
+
+const TABS_OFFICE_STAFF: { key: Tab; label: string; icon: React.ReactNode }[] = [
+  { key: "overview", label: "My Stats", icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
+  { key: "requests", label: "My Requests", icon: <FileQuestion className="h-3.5 w-3.5" /> },
+];
+
+const TABS_VP: { key: Tab; label: string; icon: React.ReactNode }[] = [
+  { key: "overview", label: "Executive Info", icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
+  { key: "cluster", label: "Cluster View", icon: <Users className="h-3.5 w-3.5" /> },
+  { key: "workflow", label: "Cluster Workflow", icon: <BarChart2 className="h-3.5 w-3.5" /> },
+];
+
+const TABS_PRESIDENT: { key: Tab; label: string; icon: React.ReactNode }[] = [
+  { key: "executive", label: "Executive Summary", icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
+  { key: "overview", label: "System Health", icon: <BarChart2 className="h-3.5 w-3.5" /> },
+  { key: "compliance", label: "Global Compliance", icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
 ];
 
 const TABS_ADMIN: { key: Tab; label: string; icon: React.ReactNode }[] = [
-  { key: "overview", label: "Overview", icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
-  { key: "users", label: "Users", icon: <Users className="h-3.5 w-3.5" /> },
+  { key: "health", label: "System Health", icon: <HeartPulse className="h-3.5 w-3.5" /> },
+  { key: "users", label: "User Insights", icon: <Users className="h-3.5 w-3.5" /> },
+  { key: "workflow", label: "Workflows", icon: <BarChart2 className="h-3.5 w-3.5" /> },
   { key: "requests", label: "Requests", icon: <FileQuestion className="h-3.5 w-3.5" /> },
-  { key: "activity", label: "Activity", icon: <Activity className="h-3.5 w-3.5" /> },
+  { key: "compliance", label: "Cluster & Docs", icon: <ShieldCheck className="h-3.5 w-3.5" /> },
 ];
 
 const ReportsPage: React.FC = () => {
@@ -47,12 +68,28 @@ const ReportsPage: React.FC = () => {
   const role = getUserRole();
   const qaMode = isQA(role);
   const isOfficeHead = role === "OFFICE_HEAD";
-  const TABS = qaMode ? TABS_QA : isOfficeHead ? TABS_OFFICE_HEAD : TABS_ADMIN;
+  const isOfficeStaff = role === "OFFICE_STAFF";
+  const isVP = role?.startsWith("VP");
+  const isPresident = role === "PRESIDENT";
+  const isAdmin = role === "ADMIN" || role === "SYSADMIN";
+
+  const getTabs = () => {
+    if (qaMode) return TABS_QA;
+    if (isPresident) return TABS_PRESIDENT;
+    if (isVP) return TABS_VP;
+    if (isOfficeHead) return TABS_OFFICE_HEAD;
+    if (isOfficeStaff) return TABS_OFFICE_STAFF;
+    return TABS_ADMIN;
+  };
+
+  const TABS = getTabs();
+  const initialTab = TABS[0].key;
+
 
   const tabContentRef = React.useRef<HTMLDivElement>(null);
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<Tab>("overview");
+  const [activeTab, setActiveTab] = React.useState<Tab>(initialTab);
   const [officesList, setOfficesList] = React.useState<{ id: number; name: string; code: string }[]>([]);
 
   // ── Filter state hook ────────────────────────────────────────────────────────
@@ -73,6 +110,13 @@ const ReportsPage: React.FC = () => {
       .then(setOfficesList)
       .catch(() => {});
   }, []);
+
+  // Ensure active tab is valid when TABS change (e.g. role switch)
+  React.useEffect(() => {
+    if (!TABS.find((t) => t.key === activeTab)) {
+      setActiveTab(TABS[0].key);
+    }
+  }, [TABS, activeTab]);
 
   // ── Data hook ────────────────────────────────────────────────────────────────
   const {
@@ -172,21 +216,57 @@ const ReportsPage: React.FC = () => {
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div ref={tabContentRef} className="flex-1 min-w-0 overflow-y-auto">
           <div className="flex flex-col gap-6 p-4 sm:p-5">
-            <TabContent activeKey={activeTab} currentKey="overview">
-              <OverviewTab
+            <TabContent activeKey={activeTab} currentKey="health">
+              <SystemHealthTab 
                 loading={loading}
-                activityLoading={activityLoading}
-                qaMode={qaMode}
-                role={role}
-                bucket={bucket}
-                stats={stats}
-                ongoingCount={ongoingCount}
                 activityReport={activityReport}
               />
             </TabContent>
 
+            <TabContent activeKey={activeTab} currentKey="overview">
+              {!isAdmin && (
+                <OverviewTab
+                  loading={loading}
+                  activityLoading={activityLoading}
+                  qaMode={qaMode}
+                  role={role}
+                  bucket={bucket}
+                  stats={stats}
+                  ongoingCount={ongoingCount}
+                  activityReport={activityReport}
+                />
+              )}
+            </TabContent>
+
+            <TabContent activeKey={activeTab} currentKey="cluster">
+              {(isPresident || isVP || isAdmin) && (
+                <ClusterTab 
+                  loading={loading}
+                  stats={stats}
+                  parent={parent}
+                />
+              )}
+            </TabContent>
+
+            <TabContent activeKey={activeTab} currentKey="compliance">
+              {isAdmin && (
+                 <ClusterTab 
+                    loading={loading}
+                    stats={stats}
+                    parent={parent}
+                 />
+              )}
+            </TabContent>
+
+            <TabContent activeKey={activeTab} currentKey="executive">
+              <ExecutiveTab 
+                loading={loading}
+                stats={stats}
+              />
+            </TabContent>
+
             <TabContent activeKey={activeTab} currentKey="workflow">
-              {(qaMode || isOfficeHead) && (
+              {(qaMode || isOfficeHead || isAdmin) && (
                 <WorkflowTab
                   loading={loading}
                   bucket={bucket}
@@ -212,12 +292,10 @@ const ReportsPage: React.FC = () => {
             </TabContent>
 
             <TabContent activeKey={activeTab} currentKey="users">
-              {(role === "ADMIN" || role === "SYSADMIN") && (
-                <UsersTab
-                  adminUserLoading={adminUserLoading}
-                  adminUserStats={adminUserStats}
-                />
-              )}
+              <UsersTab
+                adminUserLoading={adminUserLoading}
+                adminUserStats={adminUserStats}
+              />
             </TabContent>
           </div>
         </div>

@@ -43,14 +43,17 @@ const SkeletonList: React.FC<Props> = ({
 
         if (variant === "activity") {
           return (
-            <div key={i} className="w-full flex flex-col gap-1.5 px-3 py-2.5">
-              <Skeleton 
-                className="h-3 w-3/4" 
-                style={{ width: `${65 + (i % 3) * 10}%` }}
-              />
-              <div className="flex items-center justify-between gap-4">
-                <Skeleton className="h-2.5 w-20 opacity-50" />
-                <Skeleton className="h-2 w-12 opacity-30 shrink-0" />
+            <div key={i} className="w-full flex items-start gap-3 px-3 py-2.5">
+              <Skeleton className="h-6 w-6 rounded shrink-0 opacity-40" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <Skeleton 
+                  className="h-3 w-3/4" 
+                  style={{ width: `${65 + (i % 3) * 10}%` }}
+                />
+                <div className="flex items-center justify-between gap-4">
+                  <Skeleton className="h-2.5 w-20 opacity-40" />
+                  <Skeleton className="h-2 w-12 opacity-20 shrink-0" />
+                </div>
               </div>
             </div>
           );

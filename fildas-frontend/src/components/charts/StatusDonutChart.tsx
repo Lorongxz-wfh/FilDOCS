@@ -1,5 +1,6 @@
 import React from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import ChartSkeleton from "../ui/loader/ChartSkeleton";
 import Skeleton from "../ui/loader/Skeleton";
 
 type Segment = {
@@ -46,10 +47,9 @@ const StatusDonutChart: React.FC<FullProps> = ({
   if (loading) {
     return (
       <div className="flex items-center gap-6">
-        <Skeleton
-          className="shrink-0 rounded-full"
-          style={{ width: size, height: size }}
-        />
+        <div style={{ width: size, height: size }} className="shrink-0">
+          <ChartSkeleton type="donut" height={size} showTitle={false} showLegend={false} />
+        </div>
         <div className="flex-1 space-y-3">
           {[70, 55, 40].map((w, i) => (
             <div key={i} className="space-y-1.5">

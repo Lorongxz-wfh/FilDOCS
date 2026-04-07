@@ -74,6 +74,10 @@ Route::get('/document-request-submission-files/{file}/download', [DocumentReques
     ->name('document-request-submission-files.download')
     ->middleware('signed');
 
+Route::get('/templates/{template}/preview', [DocumentTemplateController::class, 'preview'])
+    ->name('templates.preview')
+    ->middleware('signed');
+
 // ── Authenticated ──────────────────────────────────────────────────────────
 Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class])->group(function () {
 
@@ -262,6 +266,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         Route::patch('/{template}/tags',   [DocumentTemplateController::class, 'updateTags']);
         Route::delete('/{template}',       [DocumentTemplateController::class, 'destroy']);
         Route::get('/{template}/download', [DocumentTemplateController::class, 'download']);
+        Route::get('/{template}/preview-link', [DocumentTemplateController::class, 'previewLink']);
     });
 
     Route::get('/system/maintenance', [SystemHealthController::class, 'maintenance']);

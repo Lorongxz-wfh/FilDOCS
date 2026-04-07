@@ -50,21 +50,21 @@ export const newActions: NewAction[] = [
     label: "New Document",
     to: "/documents/create",
     icon: FilePlus,
-    roles: ["QA", "SYSADMIN", "OFFICE_STAFF", "OFFICE_HEAD"],
+    roles: ["QA", "SYSADMIN", "OFFICE_STAFF", "OFFICE_HEAD", "VPAA", "VPAD", "VPF", "VPR", "PRESIDENT"],
     state: { fromLibrary: true },
   },
   {
     label: "New Request",
     to: "/document-requests",
     icon: FileInput,
-    roles: ["QA", "SYSADMIN", "OFFICE_STAFF", "OFFICE_HEAD"],
+    roles: ["QA", "SYSADMIN", "OFFICE_STAFF", "OFFICE_HEAD", "VPAA", "VPAD", "VPF", "VPR", "PRESIDENT"],
     state: { openModal: true },
   },
   {
     label: "New Template",
     to: "/templates",
     icon: LayoutTemplate,
-    roles: ["QA", "SYSADMIN", "OFFICE_STAFF", "OFFICE_HEAD"],
+    roles: ["QA", "SYSADMIN", "OFFICE_STAFF", "OFFICE_HEAD", "VPAA", "VPAD", "VPF", "VPR", "PRESIDENT"],
     state: { openModal: true },
   },
   {
@@ -176,6 +176,7 @@ export const navGroups: NavGroup[] = [
           "VPF",
           "VPR",
           "OFFICE_HEAD",
+          "OFFICE_STAFF",
         ],
       },
       {

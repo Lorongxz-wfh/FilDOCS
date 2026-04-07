@@ -1,6 +1,6 @@
 import React from "react";
 import { BarChart2 } from "lucide-react";
-import Skeleton from "../ui/loader/Skeleton";
+import ChartSkeleton from "../ui/loader/ChartSkeleton";
 
 const EmptyChart = ({ height = 220 }: { height?: number }) => (
   <div
@@ -257,29 +257,7 @@ const VerticalBar: React.FC<{
   );
 };
 
-// ── Main export ────────────────────────────────────────────────────────────────
 
-const ChartSkeleton = ({ height = 220 }: { height?: number }) => (
-  <div style={{ height }} className="relative flex flex-col items-center justify-center pt-2 animate-pulse">
-    {/* Donut Shape Skeleton */}
-    <div className="relative flex items-center justify-center h-40 w-40 rounded-full border-[18px] border-slate-100 dark:border-surface-400">
-      <div className="flex flex-col items-center gap-1">
-        <Skeleton className="h-5 w-8 rounded-sm" />
-        <Skeleton className="h-2 w-10 rounded-sm opacity-60" />
-      </div>
-    </div>
-
-    {/* Legend Skeleton area */}
-    <div className="mt-8 flex flex-wrap justify-center gap-x-4 gap-y-2 px-4">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="flex items-center gap-1.5 line-clamp-1">
-          <Skeleton className="h-2 w-2 rounded-full" />
-          <Skeleton className="h-2 w-12 rounded-sm opacity-70" />
-        </div>
-      ))}
-    </div>
-  </div>
-);
 
 const PhaseDistributionChart: React.FC<{
   data: PhaseDistributionDatum[];

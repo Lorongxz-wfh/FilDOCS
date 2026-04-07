@@ -186,3 +186,7 @@ export function templateFileTypeColor(mimeType: string): string {
   }
   return "bg-slate-50 text-slate-700 border-slate-200 dark:bg-surface-400 dark:text-slate-300 dark:border-surface-400";
 }
+export async function getTemplatePreviewLink(id: number) {
+  const res = await api.get(`/templates/${id}/preview-link`);
+  return res.data as { url: string; expires_in_minutes: number };
+}

@@ -45,6 +45,7 @@ import RequestPreviewModal from "../components/documentRequests/RequestPreviewMo
 
 import { inputCls } from "../utils/formStyles";
 import { useToast } from "../components/ui/toast/ToastContext";
+import { downloadTemplate, getTemplatePreviewLink } from "../services/templates";
 
 export default function DocumentRequestPage() {
   const navigate = useNavigate();
@@ -459,26 +460,41 @@ export default function DocumentRequestPage() {
 
   // ── Example preview ────────────────────────────────────────────────────────
   const loadExamplePreview = React.useCallback(async () => {
-    if (!req?.example_preview_path) {
+    // If no specific preview path AND no template, we can't show anything
+    if (!req?.example_preview_path && !req?.template) {
       setExamplePreviewUrl("");
       return;
     }
+
     setExamplePreviewLoading(true);
     setExamplePreviewError(null);
+
     try {
-      const url =
-        isItemView && itemId
-          ? (await getDocumentRequestItemExamplePreviewLink(itemId)).url
-          : (await getDocumentRequestExamplePreviewLink(requestId)).url;
+      let url = "";
+
+      // Case A: Specific example file has a preview path
+      if (req?.example_preview_path) {
+        const res = isItemView && itemId
+          ? await getDocumentRequestItemExamplePreviewLink(itemId)
+          : await getDocumentRequestExamplePreviewLink(requestId);
+        url = res.url;
+      } 
+      // Case B: No example file, but a system template is used
+      else if (req?.template?.id) {
+        const res = await getTemplatePreviewLink(req.template.id);
+        url = res.url;
+      }
+
       setExamplePreviewUrl(url);
-    } catch (e: any) {
+    } catch (err: any) {
+      console.error("Failed to load example preview link", err);
       setExamplePreviewError(
-        e?.response?.data?.message ?? "Failed to load preview.",
+        err?.response?.data?.message ?? "Failed to load preview."
       );
     } finally {
       setExamplePreviewLoading(false);
     }
-  }, [req?.example_preview_path, requestId, itemId, isItemView]);
+  }, [req?.example_preview_path, req?.template, requestId, itemId, isItemView]);
 
   React.useEffect(() => {
     loadExamplePreview().catch(() => { });
@@ -904,10 +920,26 @@ export default function DocumentRequestPage() {
                   canReview={canReview}
                   onQaNoteChange={setQaNote}
                   onQaReview={qaReview}
-                  hasExample={!!(isItemView ? req.item_example_file_path : req.example_file_path)}
+                  hasExample={!!(isItemView ? (req.item_example_file_path || req.template) : (req.example_file_path || req.template))}
                   onDownloadExample={async () => {
                     const win = window.open("about:blank", "_blank");
                     try {
+                      // If it's a template, use the template download service
+                      if (req.template?.id) {
+                        const templateId = req.template.id;
+                        const templateName = req.template.original_filename;
+                        try {
+                          await downloadTemplate(templateId, templateName);
+                          if (win) win.close();
+                          return;
+                        } catch (err) {
+                           console.error("Template download failed", err);
+                           if (win) win.close();
+                           return;
+                        }
+                      }
+
+                      // Otherwise, use the example file download logic
                       const res =
                         isItemView && itemId
                           ? await getDocumentRequestItemExampleDownloadLink(

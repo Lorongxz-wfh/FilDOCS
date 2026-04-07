@@ -1,6 +1,6 @@
 import React from "react";
 import { Building2 } from "lucide-react";
-import Skeleton from "../ui/loader/Skeleton";
+import ChartSkeleton from "../ui/loader/ChartSkeleton";
 
 export type OfficeCreationDatum = {
   office_code: string;
@@ -12,23 +12,6 @@ export type OfficeCreationDatum = {
 };
 
 const BAR_COLOR = "#38bdf8";
-
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
-const ChartSkeleton = () => (
-  <div className="flex flex-col divide-y divide-slate-100 dark:divide-surface-400">
-    {[80, 60, 90, 45, 70, 55].map((w, i) => (
-      <div key={i} className="flex items-center gap-3 py-2.5 px-3">
-        <Skeleton className="h-2.5 w-4 shrink-0" />
-        <Skeleton className="h-2.5 w-8 shrink-0" />
-        <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-surface-400 overflow-hidden">
-          <div className="animate-pulse h-full rounded-full bg-slate-200 dark:bg-surface-300" style={{ width: `${w}%` }} />
-        </div>
-        <Skeleton className="h-2.5 w-5 shrink-0" />
-      </div>
-    ))}
-  </div>
-);
 
 // ── Empty ─────────────────────────────────────────────────────────────────────
 
@@ -45,8 +28,9 @@ const OfficeCreationChart: React.FC<{
   data: OfficeCreationDatum[];
   loading?: boolean;
   maxRows?: number;
-}> = ({ data, loading = false, maxRows = 10 }) => {
-  if (loading) return <ChartSkeleton />;
+  height?: number | string;
+}> = ({ data, loading = false, maxRows = 10, height }) => {
+  if (loading) return <ChartSkeleton type="bar" height={height} />;
   if (!data?.length) return <EmptyChart />;
 
   const sorted = [...data].sort((a, b) => b.total - a.total).slice(0, maxRows);

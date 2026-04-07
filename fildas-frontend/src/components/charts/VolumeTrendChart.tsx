@@ -1,42 +1,6 @@
 import React from "react";
 import { BarChart2 } from "lucide-react";
-import Skeleton from "../ui/loader/Skeleton";
-
-const ChartSkeleton = ({ height = 200 }: { height?: number }) => (
-  <div style={{ height }} className="relative flex flex-col justify-end px-2 pt-2 animate-pulse">
-    {/* Minimal Axis Lines */}
-    <div className="absolute inset-x-0 top-[20%] border-t border-slate-100/50 dark:border-surface-400/20" />
-    <div className="absolute inset-x-0 top-[50%] border-t border-slate-100/50 dark:border-surface-400/20" />
-    <div className="absolute inset-x-0 top-[80%] border-t border-slate-100/50 dark:border-surface-400/20" />
-    
-    <div className="flex items-end gap-3 px-1 h-full pb-8">
-      {[45, 70, 35, 90, 55, 80, 40, 65].map((h, i) => (
-        <div key={i} className="flex-1 flex gap-1.5 items-end h-full">
-          <Skeleton 
-            className="flex-1 rounded-t-sm" 
-            style={{ height: `${h}%` }} 
-          />
-          <Skeleton 
-            className="flex-1 rounded-t-sm opacity-40" 
-            style={{ height: `${h * 0.7}%` }} 
-          />
-        </div>
-      ))}
-    </div>
-
-    {/* Legend Skeleton Area */}
-    <div className="flex justify-center gap-6 pb-2">
-      <div className="flex items-center gap-2">
-        <Skeleton className="h-2 w-2 rounded-full" />
-        <Skeleton className="h-2 w-12 rounded-sm" />
-      </div>
-      <div className="flex items-center gap-2">
-        <Skeleton className="h-2 w-2 rounded-full opacity-60" />
-        <Skeleton className="h-2 w-12 rounded-sm opacity-60" />
-      </div>
-    </div>
-  </div>
-);
+import ChartSkeleton from "../ui/loader/ChartSkeleton";
 
 const EmptyChart = ({ height = 200 }: { height?: number }) => (
   <div

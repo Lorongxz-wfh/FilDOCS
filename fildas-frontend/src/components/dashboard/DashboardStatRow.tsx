@@ -194,13 +194,15 @@ const DashboardStatRow: React.FC<Props> = ({
                       </p>
                     </div>
                     
-                    {loading ? (
-                      <Skeleton className="mt-1 h-6 w-10 sm:h-7 sm:w-14" />
-                    ) : (
-                      <p className={`text-xl sm:text-2xl font-display font-bold tabular-nums leading-none sm:mt-1.5 transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
-                        {item.value}
-                      </p>
-                    )}
+                    <div className="h-7 sm:h-8 flex items-center sm:mt-1.5">
+                      {loading ? (
+                        <Skeleton className="h-6 w-10 sm:h-7 sm:w-14" />
+                      ) : (
+                        <p className={`text-xl sm:text-2xl font-display font-bold tabular-nums leading-none transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
+                          {item.value}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 {item.sub && (
                   <p className={`hidden sm:block mt-2 text-[11px] text-slate-400 dark:text-slate-500 italic truncate transition-opacity duration-200 ${loading && stats ? "opacity-60" : "opacity-100"}`}>
@@ -219,13 +221,15 @@ const DashboardStatRow: React.FC<Props> = ({
                     </p>
                   </div>
 
-                  {loading ? (
-                    <Skeleton className="mt-1 sm:mt-1.5 h-5 sm:h-7 w-10 sm:w-14" />
-                  ) : (
-                    <p className={`text-lg sm:text-2xl font-display font-bold tabular-nums leading-none sm:mt-1 transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
-                      {item.value || 0}
-                    </p>
-                  )}
+                  <div className="h-5 sm:h-7 flex items-center mt-1 sm:mt-1.5">
+                    {loading ? (
+                      <Skeleton className="h-4 sm:h-6 w-10 sm:w-14" />
+                    ) : (
+                      <p className={`text-lg sm:text-2xl font-display font-bold tabular-nums leading-none transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
+                        {item.value || 0}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <p className={`hidden sm:block mt-1.5 text-[11px] text-slate-400 dark:text-slate-500 italic truncate transition-opacity duration-200 ${loading && stats ? "opacity-60" : "opacity-100"}`}>

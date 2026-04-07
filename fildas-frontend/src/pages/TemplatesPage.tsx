@@ -209,8 +209,8 @@ const TemplatesPage: React.FC = () => {
     <>
       <PageFrame
         title="Templates"
-        onBack={() => navigate("/work-queue")}
-        breadcrumbs={[{ label: "Work Queue", to: "/work-queue" }]}
+        onBack={() => navigate("/dashboard")}
+        breadcrumbs={[]}
         contentClassName="flex flex-col min-h-0 gap-0 h-full overflow-hidden"
         right={
           <PageActions>

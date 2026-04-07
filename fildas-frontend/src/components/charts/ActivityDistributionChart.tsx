@@ -2,6 +2,7 @@ import React from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import type { ActivityDistributionDatum } from "../../services/types";
 import { BarChart2 } from "lucide-react";
+import ChartSkeleton from "../ui/loader/ChartSkeleton";
 
 const CATEGORY_COLORS: Record<string, string> = {
   Workflows: "#6366f1", // indigo-500
@@ -19,12 +20,6 @@ const EmptyChart = ({ height = 220 }: { height?: number }) => (
   >
     <BarChart2 className="h-5 w-5 opacity-40" />
     <span className="text-xs font-medium">No activity data</span>
-  </div>
-);
-
-const ChartSkeleton = ({ height = 220 }: { height?: number }) => (
-  <div style={{ height }} className="flex items-center justify-center">
-    <div className="h-32 w-32 animate-pulse rounded-full bg-slate-100 dark:bg-surface-400" />
   </div>
 );
 

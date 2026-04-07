@@ -218,7 +218,16 @@ export default function App() {
 
             <Route
               element={
-                <RequireRole allow={["QA", "OFFICE_STAFF", "OFFICE_HEAD"]} />
+                <RequireRole allow={[
+                  "QA", 
+                  "OFFICE_STAFF", 
+                  "OFFICE_HEAD", 
+                  "VPAA", 
+                  "VPAD", 
+                  "VPF", 
+                  "VPR", 
+                  "PRESIDENT"
+                ]} />
               }
             >
               <Route
@@ -245,6 +254,7 @@ export default function App() {
                     "VPF",
                     "VPR",
                     "OFFICE_HEAD",
+                    "OFFICE_STAFF",
                   ]}
                 />
               }

@@ -874,6 +874,15 @@ class DocumentRequestController extends Controller
         $requestPayload['office_name'] = $recipient->office_name ?? null;
         $requestPayload['office_code'] = $recipient->office_code ?? null;
 
+        if ($row->template_id) {
+            $requestPayload['template'] = DB::table('document_templates')
+                ->where('id', $row->template_id)
+                ->select(['id', 'name', 'original_filename', 'file_path'])
+                ->first();
+        } else {
+            $requestPayload['template'] = null;
+        }
+
         // Submissions for this recipient (multi_office only)
         $submissions = DB::table('document_request_submissions as s')
             ->where('s.recipient_id', $recipientId)
@@ -981,6 +990,24 @@ class DocumentRequestController extends Controller
         $requestPayload['example_preview_path']      = $item->example_preview_path;
         $requestPayload['item_title']                = $item->title;
         $requestPayload['item_description']          = $item->description;
+
+        // Load root request template if any
+        if ($row->template_id) {
+            $requestPayload['template'] = DB::table('document_templates')
+                ->where('id', $row->template_id)
+                ->select(['id', 'name', 'original_filename', 'file_path'])
+                ->first();
+        } else {
+            $requestPayload['template'] = null;
+        }
+
+        // Override with item template if specific template is set for this items
+        if ($item->template_id) {
+            $requestPayload['template'] = DB::table('document_templates')
+                ->where('id', $item->template_id)
+                ->select(['id', 'name', 'original_filename', 'file_path'])
+                ->first();
+        }
 
         // Submissions for this recipient + item
         $submissions = DB::table('document_request_submissions as s')

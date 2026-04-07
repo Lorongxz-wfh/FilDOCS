@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\User;
 use App\Models\DocumentTemplate;
 use App\Traits\RoleNameTrait;
 use App\Traits\LogsActivityTrait;
@@ -11,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 use App\Services\ThumbnailService;
 
 class DocumentTemplateController extends Controller
@@ -29,12 +31,12 @@ class DocumentTemplateController extends Controller
         $sortDir = $request->query('sort_dir') === 'asc' ? 'asc' : 'desc';
 
         $role = $this->roleNameOf($user);
-        $isAdmin = in_array($role, ['admin', 'sysadmin']);
+        $isMgmt = in_array($role, ['admin', 'sysadmin', 'qa'], true);
 
         $query = DocumentTemplate::with(['uploader:id,first_name,last_name', 'office:id,name,code', 'tags'])
-            ->where(function ($q) use ($user, $isAdmin) {
-                if ($isAdmin) {
-                    return; // Admin sees all
+            ->where(function ($q) use ($user, $isMgmt) {
+                if ($isMgmt) {
+                    return; // Management (QA/Admin/SysAdmin) sees all
                 }
 
                 $q->whereNull('office_id');
@@ -250,6 +252,64 @@ class DocumentTemplateController extends Controller
         }, 200, [
             'Content-Type'  => 'image/png', // Thumbnails are generated as PNG by ThumbnailService
             'Cache-Control' => 'private, max-age=86400, must-revalidate',
+        ]);
+    }
+
+    /**
+     * Generate a signed link for template preview.
+     */
+    public function previewLink(Request $request, DocumentTemplate $template)
+    {
+        $this->authorize('download', $template);
+
+        $url = URL::temporarySignedRoute(
+            'templates.preview',
+            now()->addMinutes(60),
+            ['template' => $template->id, 'uid' => $request->user()->id]
+        );
+
+        return response()->json(['url' => $url, 'expires_in_minutes' => 60]);
+    }
+
+    /**
+     * Stream template file for inline preview (signed).
+     */
+    public function preview(Request $request, DocumentTemplate $template)
+    {
+        $uid = (int) $request->query('uid');
+        if ($uid <= 0) abort(422, 'Missing uid.');
+
+        $user = User::find($uid);
+        if (!$user) abort(404, 'User not found.');
+
+        // Authorization check: User can see if global OR from the same office.
+        // This matches the logic in DocumentTemplatePolicy@canSee and @download.
+        $isGlobal = (int) ($template->office_id ?? 0) <= 0;
+        $isSameOffice = (int) ($template->office_id ?? 0) === (int) ($user->office_id ?? 0);
+
+        // Simple role check for admin/sysadmin/qa
+        $role = strtolower((string) ($user->role?->name ?? $user->role ?? ''));
+        $isManagement = in_array($role, ['admin', 'sysadmin', 'qa']);
+
+        if (!$isGlobal && !$isSameOffice && !$isManagement) {
+            abort(403, 'Unauthorized access to this template.');
+        }
+
+        $disk = config('filesystems.default');
+        if (!Storage::disk($disk)->exists($template->file_path)) {
+            abort(404, 'File not found on server.');
+        }
+
+        $mime = $template->mime_type ?? 'application/pdf';
+
+        return response()->stream(function () use ($template, $disk) {
+            $stream = Storage::disk($disk)->readStream($template->file_path);
+            fpassthru($stream);
+            if (is_resource($stream)) fclose($stream);
+        }, 200, [
+            'Content-Type'        => $mime,
+            'Content-Disposition' => 'inline; filename="' . $template->original_filename . '"',
+            'Cache-Control'       => 'private, max-age=3600',
         ]);
     }
 

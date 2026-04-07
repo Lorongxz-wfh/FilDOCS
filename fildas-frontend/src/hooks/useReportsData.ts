@@ -146,7 +146,7 @@ export const useReportsData = ({
   // ── Activity report ──────────────────────────────────────────────────────────
   React.useEffect(() => {
     if (!me) return;
-    const needsActivity = activeTab === "activity" || activeTab === "overview";
+    const needsActivity = activeTab === "activity" || activeTab === "overview" || activeTab === "health";
     if (!needsActivity || (!qaMode && role !== "ADMIN" && role !== "SYSADMIN")) return;
 
     let alive = true;
