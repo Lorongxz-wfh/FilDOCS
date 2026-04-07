@@ -7,6 +7,7 @@ import SignDocumentModal from "./SignDocumentModal";
 import WorkflowHeaderPanel from "./documentFlow/WorkflowHeaderPanel";
 import { RegisterDocumentModal } from "./documentFlow/RegisterDocumentModal";
 import { DistributeDocumentModal } from "./documentFlow/DistributeDocumentModal";
+import TemplatesBrowserPanel from "../templates/TemplatesBrowserPanel";
 import { setDocumentShares } from "../../services/documents";
 
 import {
@@ -65,12 +66,14 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
   const { push } = useToast();
   const me = React.useMemo(() => getAuthUser(), []);
   const currentUserSignatureUrl = me?.signature_url ?? null;
+  const [templatesPanelOpen, setTemplatesPanelOpen] = React.useState(false);
 
   const { state, actions } = useDocumentFlowUI({
     document,
     version,
     onChanged,
     onAfterActionClose,
+    onBrowseTemplates: () => setTemplatesPanelOpen(true),
     adminDebugMode,
   });
 
@@ -178,6 +181,8 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
           documentCode={document?.code ?? "N/A"}
           versionNumber={Number(state.localVersion?.version_number ?? 0)}
           status={state.localVersion?.status ?? "Loading..."}
+          isDraft={state.localVersion?.status === "Draft" || state.localVersion?.status === "Office Draft"}
+          hasFile={!!state.localVersion?.file_path}
           canAct={state.canAct}
           headerActions={state.headerActions}
           approverNeedsSignedUpload={state.isActiveApprover && (!state.approverHasDownloaded || !state.approverHasUploaded)}
@@ -438,6 +443,11 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
           }}
         />
       )}
+
+      <TemplatesBrowserPanel
+        open={templatesPanelOpen}
+        onClose={() => setTemplatesPanelOpen(false)}
+      />
     </>
   );
 };

@@ -299,6 +299,12 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         Route::get('/system/logs',                [SystemHealthController::class, 'logs']);
         Route::post('/system/diagnostics',        [SystemHealthController::class, 'diagnostics']);
         Route::post('/system/test-email',         [SystemHealthController::class, 'sendTestMail']);
+
+        // Trash & Security
+        Route::get('/trash/{type}',               [\App\Http\Controllers\Api\Admin\TrashController::class, 'index']);
+        Route::post('/trash/verify',              [\App\Http\Controllers\Api\Admin\TrashController::class, 'verify']);
+        Route::post('/trash/{type}/{id}/restore', [\App\Http\Controllers\Api\Admin\TrashController::class, 'restore']);
+        Route::delete('/trash/{type}/{id}/purge', [\App\Http\Controllers\Api\Admin\TrashController::class, 'purge']);
     });
 
     // ── Support ────────────────────────────────────────────────────────────

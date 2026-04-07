@@ -19,8 +19,8 @@ export function useAnnouncements(): UseAnnouncementsReturn {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
-  const load = React.useCallback(async () => {
-    setLoading(true);
+  const load = React.useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const data = await listActiveAnnouncements();
@@ -46,7 +46,7 @@ export function useAnnouncements(): UseAnnouncementsReturn {
 
   // Burst poll every 30s
   React.useEffect(() => {
-    const id = setInterval(load, POLL_INTERVAL);
+    const id = setInterval(() => load(true), POLL_INTERVAL);
     return () => clearInterval(id);
   }, [load]);
 

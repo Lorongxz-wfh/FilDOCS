@@ -45,6 +45,8 @@ export const useReportsData = ({
   filters
 }: UseReportsDataProps) => {
   const { dateFrom, dateTo, bucket, parent, officeId, dateField, scope } = filters;
+  const filterSummary = JSON.stringify(filters) + activeTab;
+  const prevFilterSummaryRef = React.useRef(filterSummary);
 
   const [kpis, setKpis] = React.useState<ComplianceKpis>({
     total_created: 0,
@@ -85,7 +87,12 @@ export const useReportsData = ({
     if (!me) return;
     let alive = true;
     (async () => {
-      setLoading(true);
+      const filtersChanged = prevFilterSummaryRef.current !== filterSummary;
+      const isInitial = (!volumeSeries.length && !phaseDist.length) || filtersChanged;
+      
+      if (isInitial) setLoading(true);
+      if (filtersChanged) prevFilterSummaryRef.current = filterSummary;
+
       try {
         const effectiveScope = isOfficeHead ? "offices" : scope;
         const effectiveOfficeId = isOfficeHead
@@ -125,7 +132,8 @@ export const useReportsData = ({
     if (!me || activeTab !== "requests") return;
     let alive = true;
     (async () => {
-      setRequestsLoading(true);
+      const filtersChanged = prevFilterSummaryRef.current !== filterSummary;
+      if (!requestsReport || filtersChanged) setRequestsLoading(true);
       try {
         const data = await getRequestsReport({
           date_from: dateFrom || undefined,
@@ -151,7 +159,8 @@ export const useReportsData = ({
 
     let alive = true;
     (async () => {
-      setActivityLoading(true);
+      const filtersChanged = prevFilterSummaryRef.current !== filterSummary;
+      if (!activityReport || filtersChanged) setActivityLoading(true);
       try {
         const effectiveOfficeId = isOfficeHead
           ? (me?.office_id ?? undefined)
@@ -180,7 +189,8 @@ export const useReportsData = ({
     if (role !== "ADMIN" && role !== "SYSADMIN") return;
     let alive = true;
     (async () => {
-      setAdminUserLoading(true);
+      const filtersChanged = prevFilterSummaryRef.current !== filterSummary;
+      if (!adminUserStats || filtersChanged) setAdminUserLoading(true);
       try {
         const data = await getAdminDashboardStats();
         if (!alive) return;

@@ -232,10 +232,6 @@ export default function CreateDocumentPage() {
     setError(null);
     setFieldErrors(null);
     try {
-      if (!file) {
-        setError("Please attach a file.");
-        return;
-      }
       if (isAdminUser && !actingOfficeId) {
         setError("Please select an office to create this document on behalf of.");
         return;
@@ -518,13 +514,11 @@ export default function CreateDocumentPage() {
 
                     <Field
                       label="Attach file"
-                      required
-                      hint="Word, Excel, PowerPoint, or PDF (max 10 MB)."
+                      hint="Word, Excel, PowerPoint, or PDF (max 10 MB). You can also upload this later during the draft phase."
                     >
                       <div className="flex items-center gap-3">
                         <input
                           type="file"
-                          required
                           disabled={loading || previewLoading}
                           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                           className="block w-full text-sm text-slate-700 dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 dark:file:bg-surface-400 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-600 dark:file:text-slate-300 hover:file:bg-slate-200 dark:hover:file:bg-surface-300 disabled:opacity-60"

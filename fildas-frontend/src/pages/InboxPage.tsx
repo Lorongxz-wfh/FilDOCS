@@ -199,6 +199,7 @@ const InboxPage: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
   const [loadingMore, setLoadingMore] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [reloadTick, setReloadTick] = React.useState(0);
   const [markingAll, setMarkingAll] = React.useState(false);
   const [confirmClearAll, setConfirmClearAll] = React.useState(false);
@@ -208,10 +209,11 @@ const InboxPage: React.FC = () => {
 
   React.useEffect(() => {
     let alive = true;
-    async function load() {
+    async function load(silent = false) {
       try {
-        if (page === 1) setLoading(true);
-        else setLoadingMore(true);
+        if (page === 1 && !silent) setLoading(true);
+        else if (page > 1) setLoadingMore(true);
+        if (silent) setIsRefreshing(true);
         setError(null);
         const res = await listNotifications({ page, perPage: 50 });
         if (!alive) return;
@@ -220,7 +222,11 @@ const InboxPage: React.FC = () => {
       } catch (e: any) {
         if (alive) setError(e?.message ?? "Failed to load feed.");
       } finally {
-        if (alive) { setLoading(false); setLoadingMore(false); }
+        if (alive) { 
+          setLoading(false); 
+          setLoadingMore(false); 
+          setIsRefreshing(false);
+        }
       }
     }
     load();
@@ -332,7 +338,22 @@ const InboxPage: React.FC = () => {
       }
       right={
         <PageActions>
-          <RefreshAction onRefresh={() => { setItems([]); setPage(1); setReloadTick((t) => t + 1); }} loading={loading} />
+          <RefreshAction 
+            onRefresh={async () => { 
+                setPage(1); 
+                setReloadTick((t) => t + 1);
+                // Return promise for button feedback
+                return new Promise<void>((resolve) => {
+                    const check = setInterval(() => {
+                        if (!loading && !isRefreshing) {
+                            clearInterval(check);
+                            resolve();
+                        }
+                    }, 100);
+                });
+            }} 
+            loading={isRefreshing || loading} 
+          />
           <Button
             variant="outline"
             size="sm"

@@ -21,6 +21,9 @@ interface Props {
   needsFileReplacement: boolean;
   isActiveApprover?: boolean;
   approverHasUploaded?: boolean;
+  // Action states
+  isDraft: boolean;
+  hasFile: boolean;
   
   // Actions
   onDownload: () => Promise<void>;
@@ -35,6 +38,8 @@ interface Props {
   removingSignature: boolean;
 }
 
+import { FileSearch } from "lucide-react";
+
 /**
  * WorkflowHeaderPanel handles the actionable banners (Alerts) for the document flow.
  */
@@ -48,6 +53,8 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
   needsFileReplacement,
   isActiveApprover,
   canAct,
+  isDraft,
+  hasFile,
   
   onDownload,
   onTriggerSign,
@@ -62,6 +69,30 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
   return (
     <>
       {/* ───── Action-Required Banners ─────────────────────────────────────────── */}
+
+      {/* 0. Drafting - No Document Attached Banner */}
+      {isDraft && !hasFile && (
+        <Alert
+          variant="primary"
+          icon={<FileSearch className="h-4 w-4" />}
+          title="Drafting: No document attached"
+          action={
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={onTriggerUpload}
+                disabled={isUploading || isChangingStatus || !canAct}
+              >
+                {isUploading ? "Uploading…" : "Upload document"}
+              </Button>
+            </div>
+          }
+        >
+          This workflow is currently a draft. You must attach a document before you can forward it to the next office.
+        </Alert>
+      )}
       
       {/* 1. Approver Signing Banner (Uniform Orange) */}
       {approverNeedsSignedUpload && !hasSignedFile && (

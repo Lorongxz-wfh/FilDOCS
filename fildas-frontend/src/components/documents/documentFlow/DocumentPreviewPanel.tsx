@@ -208,7 +208,7 @@ const DocumentPreviewPanel: React.FC<Props> = ({
                 }}
                 className="cursor-pointer flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400"
               >
-                Replace
+                {filePath ? "Replace" : "Upload"}
               </button>
             )}
           </div>

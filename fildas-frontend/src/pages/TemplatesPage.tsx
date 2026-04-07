@@ -15,6 +15,9 @@ import SearchFilterBar from "../components/ui/SearchFilterBar";
 import SelectDropdown from "../components/ui/SelectDropdown";
 import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { motion, AnimatePresence } from "framer-motion";
+import { TabBar } from "../components/documentRequests/shared";
+import DeletedItemsView from "../components/admin/DeletedItemsView";
+import { Layers, Trash2 } from "lucide-react";
 
 import {
   listTemplates,
@@ -75,6 +78,10 @@ const TemplatesPage: React.FC = () => {
   const tagDropdownRef = React.useRef<HTMLDivElement>(null);
   const [sortBy, setSortBy] = useState("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
+
+  const me = getAuthUser();
+  const isSysAdmin = me?.role === "SYSADMIN" || me?.role === "ADMIN";
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim().toLowerCase()), 300);
@@ -157,6 +164,13 @@ const TemplatesPage: React.FC = () => {
 
   const handleDeleteClick = (id: number) => {
     setDeletingId(id);
+    if (adminDebugMode) {
+      // Immediate deletion for power users in debug mode
+      // We still use a small timeout to ensure state is set, 
+      // or we can just call the logic since confirmDelete uses deletingId.
+      setTimeout(() => confirmDelete(), 0);
+      return;
+    }
     setConfirmDeleteModalOpen(true);
   };
 
@@ -227,7 +241,26 @@ const TemplatesPage: React.FC = () => {
           </PageActions>
         }
       >
-        <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
+        {isSysAdmin && adminDebugMode && (
+          <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px">
+            <TabBar
+              tabs={[
+                { value: "active", label: "Active Templates", icon: <Layers size={12} /> },
+                { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
+              ]}
+              active={activeTab}
+              onChange={(val: any) => setActiveTab(val)}
+            />
+          </div>
+        )}
+
+        {activeTab === "deleted" ? (
+          <div className="flex-1 min-h-0">
+            <DeletedItemsView type="templates" onRestored={() => setActiveTab("active")} />
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
           <Tabs 
             tabs={VIEW_TABS} 
             activeTab={viewMode} 
@@ -463,6 +496,8 @@ const TemplatesPage: React.FC = () => {
             </motion.div>
           </AnimatePresence>
         </div>
+        </>
+        )}
       </PageFrame>
 
       <TemplateDetailPanel

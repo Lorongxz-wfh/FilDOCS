@@ -94,8 +94,7 @@ export default function MyWorkQueueListPage() {
         hasMoreRef.current = true;
     }
     if (!hasMoreRef.current && isNextPage) return;
-
-    setLoading(true);
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const res = await listDocumentsPage({

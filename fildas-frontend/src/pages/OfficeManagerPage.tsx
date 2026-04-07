@@ -13,6 +13,11 @@ import { StatusBadge } from "../components/ui/Badge";
 import { PageActions, CreateAction, RefreshAction } from "../components/ui/PageActions";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
 import { useSmartRefresh } from "../hooks/useSmartRefresh";
+import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
+import { getUserRole } from "../lib/roleFilters";
+import { TabBar } from "../components/documentRequests/shared";
+import DeletedItemsView from "../components/admin/DeletedItemsView";
+import { Building2, Trash2 } from "lucide-react";
 
 const OFFICE_TYPES = ["office", "vp", "president", "committee", "unit"];
 
@@ -23,6 +28,11 @@ export function OfficeManagerPage() {
   const [typeFilter, setTypeFilter] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "code" | "type" | "created_at">("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
+
+  const role = getUserRole();
+  const isAdmin = role === "ADMIN" || role === "SYSADMIN";
+  const adminDebugMode = useAdminDebugMode();
 
   const _oc = pageCache.get<AdminOffice>("offices", '{"q":"","status":"active","type":""}', 10 * 60_000);
   const [items, setItems] = useState<AdminOffice[]>(_oc?.rows ?? []);
@@ -182,7 +192,26 @@ export function OfficeManagerPage() {
         </PageActions>
       }
     >
-      <SearchFilterBar
+      {isAdmin && adminDebugMode && (
+        <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px">
+          <TabBar
+            tabs={[
+              { value: "active", label: "Active Offices", icon: <Building2 size={12} /> },
+              { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
+            ]}
+            active={activeTab}
+            onChange={(val: any) => setActiveTab(val)}
+          />
+        </div>
+      )}
+
+      {activeTab === "deleted" ? (
+        <div className="flex-1 min-h-0">
+          <DeletedItemsView type="offices" onRestored={() => setActiveTab("active")} />
+        </div>
+      ) : (
+        <>
+          <SearchFilterBar
         search={q}
         setSearch={(val) => { setQ(val); setPage(1); }}
         placeholder="Search name or code…"
@@ -246,6 +275,8 @@ export function OfficeManagerPage() {
           onSortChange={(key, dir) => { setSortBy(key as typeof sortBy); setSortDir(dir); }}
         />
       </div>
+      </>
+      )}
 
       <OfficeEditModal
         open={modalOpen}

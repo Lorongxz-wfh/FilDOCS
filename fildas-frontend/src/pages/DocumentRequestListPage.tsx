@@ -1,5 +1,4 @@
 import React from "react";
-import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import PageFrame from "../components/layout/PageFrame.tsx";
 import Table, { type TableColumn } from "../components/ui/Table";
 import {
@@ -11,6 +10,8 @@ import {
 } from "../services/documentRequests";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getAuthUser } from "../lib/auth.ts";
+import { getUserRole } from "../lib/roleFilters";
+import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import CreateDocumentRequestModal from "../components/documentRequests/CreateDocumentRequestModal";
 import api from "../services/api";
 import {
@@ -19,8 +20,11 @@ import {
   Users,
   FileStack,
   Trash2,
+  FileSearch,
 } from "lucide-react";
 import { Tabs } from "../components/ui/Tabs";
+import { TabBar as SubTabBar } from "../components/documentRequests/shared";
+import DeletedItemsView from "../components/admin/DeletedItemsView";
 import { PageActions, CreateAction, RefreshAction } from "../components/ui/PageActions";
 import { formatDate } from "../utils/formatters";
 import MiddleTruncate from "../components/ui/MiddleTruncate";
@@ -33,7 +37,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "../components/ui/toast/ToastContext";
 import Modal from "../components/ui/Modal";
 import Button from "../components/ui/Button";
-
 
 type ViewTab = "batches" | "all";
 
@@ -54,7 +57,6 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
-// ── 3-layer progress bar ───────────────────────────────────────────────────
 const ProgressBar: React.FC<{ progress: DocumentRequestProgress | undefined | null }> = ({
   progress,
 }) => {
@@ -82,7 +84,6 @@ const ProgressBar: React.FC<{ progress: DocumentRequestProgress | undefined | nu
   );
 };
 
-// ── Mode badge ─────────────────────────────────────────────────────────────
 function ModeBadge({ mode }: { mode: string }) {
   const isMultiDoc = mode === "multi_doc";
   return (
@@ -98,8 +99,6 @@ function ModeBadge({ mode }: { mode: string }) {
     />
   );
 }
-
-// ── Reusable Cells ────────────────────────────────────────────────────────────
 
 function NormalText({ children, secondary = false }: { children: React.ReactNode; secondary?: boolean }) {
   return (
@@ -117,12 +116,15 @@ function TypeText({ type }: { type: string }) {
   );
 }
 
-// ── Main page ──────────────────────────────────────────────────────────────
 export default function DocumentRequestListPage() {
   const me = getAuthUser();
   const role = roleLower(me);
   const adminDebugMode = useAdminDebugMode();
   const { push } = useToast();
+  
+  const isAdminUser = getUserRole() === "ADMIN" || getUserRole() === "SYSADMIN";
+  const [activeTab, setActiveTab] = React.useState<"active" | "deleted">("active");
+
   const isQaAdmin =
     ["qa", "sysadmin"].includes(role) || (role === "admin" && adminDebugMode);
   
@@ -185,8 +187,10 @@ export default function DocumentRequestListPage() {
   };
 
   const loadData = React.useCallback(async (pageNum: number, silent = false) => {
-    if (!silent) setInitialLoading(true);
-    setLoading(true);
+    if (!silent) {
+      setInitialLoading(true);
+      setLoading(true);
+    }
     setError(null);
     try {
       const baseParams = {
@@ -257,8 +261,10 @@ export default function DocumentRequestListPage() {
   }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter]);
 
   React.useEffect(() => {
-    loadData(page, rows.length > 0);
-  }, [page, tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter]);
+    if (activeTab === "active") {
+      loadData(page, rows.length > 0);
+    }
+  }, [page, tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter, activeTab]);
 
   React.useEffect(() => {
     if (isQaAdmin) {
@@ -273,16 +279,6 @@ export default function DocumentRequestListPage() {
       navigate(`/document-requests/${row.id}`);
     } else {
       navigate(`/document-requests/${row.id}/recipients/${row.recipient_id}`);
-    }
-  }
-
-  function handleRecipientRowClick(row: any) {
-    if (row.row_type === "item") {
-      navigate(`/document-requests/${row.request_id}/items/${row.item_id}`);
-    } else {
-      navigate(
-        `/document-requests/${row.request_id}/recipients/${row.recipient_id}`,
-      );
     }
   }
 
@@ -420,9 +416,10 @@ export default function DocumentRequestListPage() {
     return cols;
   }, [isQaAdmin, adminDebugMode]);
 
-  const batchGrid = adminDebugMode 
-    ? "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px 50px"
-    : "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px";
+  const REQ_TABS = [
+    { key: "batches", label: "Request Batches", icon: <LayoutList className="h-3.5 w-3.5" /> },
+    { key: "all", label: "All Requests", icon: <TableProperties className="h-3.5 w-3.5" /> },
+  ];
 
   const allColumns: TableColumn<any>[] = React.useMemo(() => {
     return [
@@ -509,27 +506,8 @@ export default function DocumentRequestListPage() {
           </NormalText>
         ),
       },
-      {
-        key: "batch_due",
-        header: "Batch Deadline",
-        sortKey: "batch_due_at",
-        skeletonShape: "narrow",
-        align: "right",
-        render: (r) => (
-          <NormalText secondary>
-            {r.batch_due_at ? formatDate(r.batch_due_at) : "—"}
-          </NormalText>
-        ),
-      },
     ];
   }, []);
-
-  const gridCols = "50px 90px minmax(150px, 1fr) 90px 90px 110px 130px 130px";
-
-  const REQ_TABS = [
-    { key: "batches", label: "Request Batches", icon: <LayoutList className="h-3.5 w-3.5" /> },
-    { key: "all", label: "All Requests", icon: <TableProperties className="h-3.5 w-3.5" /> },
-  ];
 
   return (
     <PageFrame
@@ -552,322 +530,199 @@ export default function DocumentRequestListPage() {
       }
       contentClassName="flex flex-col min-h-0 gap-0 h-full overflow-hidden"
     >
-      <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
-        <Tabs 
-          tabs={REQ_TABS} 
-          activeTab={tab} 
-          onChange={(key) => {
-            if (key === "batches") {
-              setTab("batches");
+      {isAdminUser && adminDebugMode && (
+        <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px">
+          <SubTabBar
+            tabs={[
+              { value: "active", label: "Active Requests", icon: <FileSearch size={12} /> },
+              { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
+            ]}
+            active={activeTab}
+            onChange={(val: any) => setActiveTab(val)}
+          />
+        </div>
+      )}
+
+      {activeTab === "deleted" ? (
+        <div className="flex-1 min-h-0">
+          <DeletedItemsView type="requests" onRestored={() => setActiveTab("active")} />
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
+            <Tabs 
+              tabs={REQ_TABS} 
+              activeTab={tab} 
+              onChange={(key) => {
+                if (key === "batches") {
+                  setTab("batches");
+                  setQ("");
+                  setStatus("");
+                  setRecipientStatus("");
+                  setDirection("all");
+                  setOfficeFilter("");
+                } else {
+                  setTab("all");
+                  setStatus("");
+                }
+              }} 
+              id="requests" 
+              className="border-none"
+            />
+          </div>
+
+          <SearchFilterBar
+            search={q}
+            setSearch={(val) => {
+              setQ(val);
+              setPage(1);
+            }}
+            placeholder="Search title/description…"
+            activeFiltersCount={activeFiltersCount}
+            onClear={() => {
               setQ("");
               setStatus("");
               setRecipientStatus("");
               setDirection("all");
               setOfficeFilter("");
-            } else {
-              setTab("all");
-              setStatus("");
-            }
-          }} 
-          id="requests" 
-          className="border-none"
-        />
-      </div>
+              setPage(1);
+            }}
+            mobileFilters={
+              <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1.5 col-span-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Direction</label>
+                    <SelectDropdown
+                      value={direction}
+                      onChange={(val) => {
+                        setDirection(val as any);
+                        setPage(1);
+                      }}
+                      className="w-full"
+                      options={[
+                        { value: "all", label: "All directions" },
+                        { value: "incoming", label: "Incoming" },
+                        { value: "outgoing", label: "Outgoing" },
+                      ]}
+                    />
+                  </div>
 
-      <SearchFilterBar
-        search={q}
-        setSearch={(val) => {
-          setQ(val);
-          setPage(1);
-        }}
-        placeholder="Search title/description…"
-        activeFiltersCount={activeFiltersCount}
-        onClear={() => {
-          setQ("");
-          setStatus("");
-          setRecipientStatus("");
-          setDirection("all");
-          setOfficeFilter("");
-          setPage(1);
-        }}
-        mobileFilters={
-          <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-1.5 col-span-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Direction</label>
-                <SelectDropdown
-                  value={direction}
-                  onChange={(val) => {
-                    setDirection(val as any);
-                    setPage(1);
-                  }}
-                  className="w-full"
-                  options={[
-                    { value: "all", label: "All directions" },
-                    { value: "incoming", label: "Incoming" },
-                    { value: "outgoing", label: "Outgoing" },
-                  ]}
-                />
+                  {isQaAdmin && (
+                    <div className="flex flex-col gap-1.5 col-span-2">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Office</label>
+                      <SelectDropdown
+                        value={officeFilter}
+                        onChange={(val) => {
+                          setOfficeFilter(val as any);
+                          setPage(1);
+                        }}
+                        placeholder="All offices"
+                        className="w-full"
+                        options={[
+                          { value: "", label: "All offices" },
+                          ...offices.map((o) => ({ value: o.id, label: `${o.code} - ${o.name}` })),
+                        ]}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-
-              {isQaAdmin && (
-                <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Office</label>
-                  <SelectDropdown
-                    value={officeFilter}
-                    onChange={(val) => {
-                      setOfficeFilter(val as any);
-                      setPage(1);
-                    }}
-                    placeholder="All offices"
-                    className="w-full"
-                    options={[
-                      { value: "", label: "All offices" },
-                      ...offices.map((o) => ({ value: o.id, label: `${o.code} - ${o.name}` })),
-                    ]}
-                  />
-                </div>
-              )}
-
-              {tab === "batches" && isQaAdmin && (
-                <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Batch Progress</label>
-                  <SelectDropdown
-                    value={status}
-                    onChange={(val) => {
-                      setStatus(val as any);
-                      setPage(1);
-                    }}
-                    className="w-full"
-                    options={[
-                      { value: "", label: "All statuses" },
-                      { value: "open", label: "Open" },
-                      { value: "closed", label: "Closed" },
-                      { value: "cancelled", label: "Cancelled" },
-                    ]}
-                  />
-                </div>
-              )}
-              
-              {tab === "all" && (
-                <div className="flex flex-col gap-1.5 col-span-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Item Progress</label>
-                  <SelectDropdown
-                    value={recipientStatus}
-                    onChange={(val) => {
-                      setRecipientStatus(val as any);
-                      setPage(1);
-                    }}
-                    className="w-full"
-                    options={[
-                      { value: "", label: "All progress" },
-                      { value: "pending", label: "Pending" },
-                      { value: "submitted", label: "Submitted" },
-                      { value: "accepted", label: "Accepted" },
-                      { value: "rejected", label: "Rejected" },
-                      { value: "cancelled", label: "Cancelled" },
-                    ]}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        }
-      >
-        <SelectDropdown
-          value={direction}
-          onChange={(val) => {
-            setDirection(val as any);
-            setPage(1);
-          }}
-          className="w-40"
-          options={[
-            { value: "all", label: "All directions" },
-            { value: "incoming", label: "Incoming" },
-            { value: "outgoing", label: "Outgoing" },
-          ]}
-        />
-
-        {isQaAdmin && (
-          <SelectDropdown
-            value={officeFilter}
-            onChange={(val) => {
-              setOfficeFilter(val as any);
-              setPage(1);
-            }}
-            placeholder="All Offices"
-            className="w-48"
-            options={[
-              { value: "", label: "All Offices" },
-              ...offices.map((o) => ({ value: o.id, label: o.code })),
-            ]}
-          />
-        )}
-
-        {tab === "batches" && isQaAdmin && (
-          <SelectDropdown
-            value={status}
-            onChange={(val) => {
-              setStatus(val as any);
-              setPage(1);
-            }}
-            className="w-32"
-            options={[
-              { value: "", label: "All statuses" },
-              { value: "open", label: "Open" },
-              { value: "closed", label: "Closed" },
-              { value: "cancelled", label: "Cancelled" },
-            ]}
-          />
-        )}
-
-        {tab === "all" && (
-          <SelectDropdown
-            value={recipientStatus}
-            onChange={(val) => {
-              setRecipientStatus(val as any);
-              setPage(1);
-            }}
-            className="w-32"
-            options={[
-              { value: "", label: "All progress" },
-              { value: "pending", label: "Pending" },
-              { value: "submitted", label: "Submitted" },
-              { value: "accepted", label: "Accepted" },
-              { value: "rejected", label: "Rejected" },
-              { value: "cancelled", label: "Cancelled" },
-            ]}
-          />
-        )}
-      </SearchFilterBar>
-
-      {error && !loading && <Alert variant="danger" className="mt-4 mx-4">{error}</Alert>}
-
-      <div className="flex-1 min-h-0 min-w-0 flex flex-col">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={tab + qDebounced + status + recipientStatus}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-            className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden"
+            }
           >
-            {tab === "batches" && (
-              <Table<any>
-                bare
-                className="h-full"
-                columns={batchColumns}
-                rows={rows}
-                rowKey={(r: any, idx) => r.id || `batch-${idx}`}
-                onRowClick={handleBatchRowClick}
-                loading={loading}
-                initialLoading={initialLoading}
-                emptyMessage={q || status ? "No requests match your filters." : "No requests found."}
-                hasMore={hasMore}
-                onLoadMore={() => setPage((p) => p + 1)}
-                mobileRender={(r) => (
-                  <div className="px-4 py-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex gap-1">
-                        <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300">
-                          {r.mode || r.batch_mode || "REQUEST"}
-                        </span>
-                        <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
-                          r.direction === 'outgoing' 
-                            ? "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400" 
-                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                        }`}>
-                          {r.direction || 'outgoing'}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 tabular-nums">
-                        {formatDate(r.due_at || r.created_at)}
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-0.5">
-                      {r.title || r.item_title || r.batch_title}
-                    </p>
-                    <div className="flex items-center justify-between gap-2 overflow-hidden">
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                        {r.office_code || r.office_name || "—"}
-                      </span>
-                      <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 shrink-0">
-                        {r.status || r.item_status || "Open"}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                gridTemplateColumns={batchGrid}
-                sortBy={sortBy}
-                sortDir={sortDir as any}
-                onSortChange={(key, dir) => {
-                  setSortBy(key);
-                  setSortDir(dir);
-                }}
-              />
-            )}
+            <SelectDropdown
+              value={direction}
+              onChange={(val) => {
+                setDirection(val as any);
+                setPage(1);
+              }}
+              className="w-40"
+              options={[
+                { value: "all", label: "All directions" },
+                { value: "incoming", label: "Incoming" },
+                { value: "outgoing", label: "Outgoing" },
+              ]}
+            />
 
-            {tab === "all" && (
-              <Table<any>
-                bare
-                className="h-full"
-                columns={allColumns}
-                rows={rows}
-                rowKey={(r: any, idx) => `${r.row_type}-${r.row_id}-${idx}`}
-                onRowClick={handleRecipientRowClick}
-                loading={loading}
-                initialLoading={initialLoading}
-                emptyMessage={q || status || recipientStatus ? "No matches found." : "No requests found."}
-                hasMore={hasMore}
-                onLoadMore={() => setPage((p) => p + 1)}
-                mobileRender={(r) => (
-                  <div className="px-4 py-3 bg-white dark:bg-surface-500 border-b border-slate-100 dark:border-surface-400">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex gap-1">
-                        <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400">
-                          {r.batch_mode || "REQUEST"}
-                        </span>
-                        <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
-                          r.direction === 'outgoing' 
-                            ? "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400" 
-                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                        }`}>
-                          {r.direction || 'outgoing'}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 tabular-nums">
-                        {formatDate(r.due_at || r.created_at)}
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-0.5">
-                      {r.item_title ?? r.batch_title}
-                    </p>
-                    <div className="flex items-center justify-between gap-2 overflow-hidden">
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                        {r.office_code || r.office_name || "—"}
-                      </span>
-                      <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 shrink-0">
-                        {r.item_status || "Pending"}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                gridTemplateColumns={gridCols}
-                sortBy={sortBy}
-                sortDir={sortDir as any}
-                onSortChange={(key, dir) => {
-                  setSortBy(key);
-                  setSortDir(dir);
+            {isQaAdmin && (
+              <SelectDropdown
+                value={officeFilter}
+                onChange={(val) => {
+                  setOfficeFilter(val as any);
+                  setPage(1);
                 }}
+                placeholder="All Offices"
+                className="w-48"
+                options={[
+                  { value: "", label: "All Offices" },
+                  ...offices.map((o) => ({ value: o.id, label: o.code })),
+                ]}
               />
             )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+          </SearchFilterBar>
+
+          {error && !loading && <Alert variant="danger" className="mt-4 mx-4">{error}</Alert>}
+
+          <div className="flex-1 min-h-0 min-w-0 flex flex-col">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab + qDebounced + status + recipientStatus}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15 }}
+                className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden"
+              >
+                {tab === "batches" ? (
+                  <Table<any>
+                    bare
+                    className="h-full"
+                    columns={batchColumns}
+                    rows={rows}
+                    rowKey={(r: any, idx) => r.id || `batch-${idx}`}
+                    onRowClick={handleBatchRowClick}
+                    loading={loading}
+                    initialLoading={initialLoading}
+                    emptyMessage={q || status ? "No requests match your filters." : "No requests found."}
+                    hasMore={hasMore}
+                    onLoadMore={() => setPage((p) => p + 1)}
+                    gridTemplateColumns={adminDebugMode ? "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px 50px" : "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px"}
+                  />
+                ) : (
+                  <Table<any>
+                    bare
+                    className="h-full"
+                    columns={allColumns}
+                    rows={rows}
+                    rowKey={(r: any, idx) => r.recipient_id || r.item_id || `indiv-${idx}`}
+                    onRowClick={(r) => {
+                      if (r.row_type === "item") {
+                        navigate(`/document-requests/${r.request_id}/items/${r.item_id}`);
+                      } else {
+                        navigate(`/document-requests/${r.request_id}/recipients/${r.recipient_id}`);
+                      }
+                    }}
+                    loading={loading}
+                    initialLoading={initialLoading}
+                    emptyMessage="No individual requests found."
+                    hasMore={hasMore}
+                    onLoadMore={() => setPage((p) => p + 1)}
+                    gridTemplateColumns="50px 90px minmax(150px, 1fr) 90px 90px 110px 130px 130px"
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </>
+      )}
+
+      <CreateDocumentRequestModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={() => refreshRequests()}
+      />
 
       <Modal
-        open={!!deletingId}
+        open={deletingId !== null}
         onClose={() => setDeletingId(null)}
         title="Confirm Deletion"
         footer={
@@ -878,14 +733,9 @@ export default function DocumentRequestListPage() {
         }
       >
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Are you sure you want to delete this document request? This action is reversible by system administrators but will remove the item from all active workspaces.
+          Are you sure you want to delete this request batch? This action is reversible by admins in dev mode.
         </p>
       </Modal>
-
-      <CreateDocumentRequestModal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-      />
     </PageFrame>
   );
 }

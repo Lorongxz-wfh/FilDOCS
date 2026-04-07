@@ -18,6 +18,7 @@ class WorkflowValidationService
         WorkflowTask $task,
         string $action,
     ): void {
+        $this->assertDraftHasFile($version, $task, $action);
         $this->assertSigningRequirement($version, $task, $action);
         $this->assertRevisionHasNewFile($version, $task, $action);
     }
@@ -25,6 +26,28 @@ class WorkflowValidationService
     // ──────────────────────────────────────────────────────────────────────
     // GUARDS
     // ──────────────────────────────────────────────────────────────────────
+
+    /**
+     * Document workflows must have at least one file uploaded before forwarding from draft.
+     */
+    private function assertDraftHasFile(DocumentVersion $version, WorkflowTask $task, string $action): void
+    {
+        $draftForwardActions = [
+            \App\Services\WorkflowSteps::ACTION_QA_SEND_TO_OFFICE_REVIEW,
+            \App\Services\WorkflowSteps::ACTION_OFFICE_SEND_TO_HEAD,
+            \App\Services\WorkflowSteps::ACTION_CUSTOM_FORWARD,
+        ];
+
+        if (
+            \App\Services\WorkflowSteps::isDraftStep($task->step) &&
+            in_array($action, $draftForwardActions, true) &&
+            empty($version->file_path)
+        ) {
+            throw new \InvalidArgumentException(
+                'A document file must be uploaded before this workflow can be forwarded to the next phase.'
+            );
+        }
+    }
 
     /**
      * During approval phase, a forward action requires a signed file.

@@ -27,6 +27,7 @@ const apiMsg = (e: any, fallback: string) =>
   e?.response?.data?.message ?? e?.message ?? fallback;
 import { getAuthUser, AUTH_USER_KEY } from "../../lib/auth";
 import { User as UserIcon, ShieldOff } from "lucide-react";
+import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
 
 type Props = {
   open: boolean;
@@ -52,6 +53,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
     null,
   );
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const adminDebugMode = useAdminDebugMode();
 
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -245,7 +247,8 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
   };
 
   const handleDisable = async () => {
-    if (!user || !confirm(`Disable ${user.full_name}?`)) return;
+    if (!user) return;
+    if (!adminDebugMode && !confirm(`Disable ${user.full_name}?`)) return;
     try {
       setActing("disable");
       setError(null);
@@ -260,7 +263,14 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
   };
 
   const handleReset2FA = async () => {
-    if (!user || !confirm(`Reset Two-Factor Authentication for ${user.full_name}?\n\nThis will allow them to log in with just their password.`)) return;
+    if (!user) return;
+    if (
+      !adminDebugMode &&
+      !confirm(
+        `Reset Two-Factor Authentication for ${user.full_name}?\n\nThis will allow them to log in with just their password.`,
+      )
+    )
+      return;
     try {
       setActing("disable" as any); // Reuse disable state for loading
       setError(null);
@@ -275,7 +285,8 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
   };
 
   const handleEnable = async () => {
-    if (!user || !confirm(`Enable ${user.full_name}?`)) return;
+    if (!user) return;
+    if (!adminDebugMode && !confirm(`Enable ${user.full_name}?`)) return;
     try {
       setActing("enable");
       setError(null);
@@ -292,6 +303,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
   const handleDelete = async () => {
     if (!user) return;
     if (
+      !adminDebugMode &&
       !confirm(
         `Soft delete ${user.full_name}?\n\nThis hides the account and blocks access.`,
       )

@@ -20,10 +20,16 @@ import { StatusBadge } from "../components/ui/Badge";
 import RoleBadge from "../components/ui/RoleBadge";
 import { PageActions, CreateAction, RefreshAction } from "../components/ui/PageActions";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
+import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
+import DeletedItemsView from "../components/admin/DeletedItemsView";
+import { TabBar } from "../components/documentRequests/shared";
+import { Users, Trash2 } from "lucide-react";
 
 const UserManagerPage: React.FC = () => {
   const role = getUserRole();
   const isAdmin = role === "ADMIN" || role === "SYSADMIN";
+  const adminDebugMode = useAdminDebugMode();
+  const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
 
   const _uc = pageCache.get<AdminUser>(
     "users",
@@ -252,7 +258,26 @@ const UserManagerPage: React.FC = () => {
         </PageActions>
       }
     >
-      <SearchFilterBar
+      {isAdmin && adminDebugMode && (
+        <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px">
+          <TabBar
+            tabs={[
+              { value: "active", label: "Active Users", icon: <Users size={12} /> },
+              { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
+            ]}
+            active={activeTab}
+            onChange={(val: any) => setActiveTab(val)}
+          />
+        </div>
+      )}
+
+      {activeTab === "deleted" ? (
+        <div className="flex-1 min-h-0">
+          <DeletedItemsView type="users" onRestored={() => setActiveTab("active")} />
+        </div>
+      ) : (
+        <>
+          <SearchFilterBar
         search={search}
         setSearch={(val) => { setSearch(val); setPage(1); }}
         placeholder="Search name / email…"
@@ -316,6 +341,8 @@ const UserManagerPage: React.FC = () => {
           onSortChange={(key, dir) => { setSortBy(key as typeof sortBy); setSortDir(dir); }}
         />
       </div>
+      </>
+      )}
 
       <UserEditModal
         open={isEditOpen}

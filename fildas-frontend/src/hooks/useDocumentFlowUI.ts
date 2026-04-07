@@ -36,6 +36,7 @@ interface Options {
   version: DocumentVersion | null;
   onChanged?: () => Promise<void> | void;
   onAfterActionClose?: () => void;
+  onBrowseTemplates?: () => void;
   adminDebugMode: boolean;
 }
 
@@ -44,6 +45,7 @@ export function useDocumentFlowUI({
   version,
   onChanged,
   onAfterActionClose,
+  onBrowseTemplates,
   adminDebugMode,
 }: Options) {
   const { push } = useToast();
@@ -486,6 +488,7 @@ export function useDocumentFlowUI({
           workflow.isChangingStatus ||
           fileUpload.isUploading ||
           (code !== "CANCEL_DOCUMENT" && !canAct) ||
+          (isDraftStatus && ["QA_SEND_TO_OFFICE_REVIEW", "OFFICE_SEND_TO_HEAD", "CUSTOM_FORWARD"].includes(code) && !localVersion?.file_path && !adminDebugMode) ||
           (needsFileReplacement && !["REJECT", "CANCEL_DOCUMENT"].includes(code)) ||
           (!adminDebugMode && isPreApprovalCreatorCheck && PRE_APPROVAL_START_ACTIONS.includes(code) && !hasSignedFile) ||
           (!adminDebugMode && isInApprovalPhase && canAct && !isPreFinalizeCheck && !approverHasUploaded && !["REJECT", "CANCEL_DOCUMENT"].includes(code)),
@@ -592,8 +595,21 @@ export function useDocumentFlowUI({
           ]
         : [];
 
+    const templatesBtn = isDraftStatus
+      ? [
+          {
+            key: "BROWSE_TEMPLATES",
+            label: "Templates",
+            variant: "outline" as const,
+            onClick: async () => {
+              if (onBrowseTemplates) onBrowseTemplates();
+            },
+          },
+        ]
+      : [];
+
     const finalResult = replaceAction ? [replaceAction, ...finalButtons] : finalButtons;
-    return [...finalResult, ...archiveBtn, ...restoreBtn];
+    return [...finalResult, ...templatesBtn, ...archiveBtn, ...restoreBtn];
   }, [
     workflow.availableActions,
     workflow.isChangingStatus,

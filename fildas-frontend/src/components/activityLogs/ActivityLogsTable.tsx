@@ -150,7 +150,7 @@ const ActivityLogsTable: React.FC<Props> = ({
             </div>
           </div>
         )}
-        gridTemplateColumns="50px 150px minmax(140px, 1.2fr) minmax(120px, 1fr) minmax(160px, 1.2fr) minmax(100px, 1fr)"
+        gridTemplateColumns="45px 145px minmax(140px, 1.1fr) minmax(130px, 1fr) minmax(200px, 1.4fr) minmax(130px, 1fr)"
         sortBy={sortBy}
         sortDir={sortDir}
         onSortChange={onSortChange}

@@ -15,10 +15,12 @@ import DateRangeInput from "../components/ui/DateRangeInput";
 import { PageActions, CreateAction, RefreshAction } from "../components/ui/PageActions";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
-import { LayoutGrid, List, Share2, ClipboardList, Archive } from "lucide-react";
+import { LayoutGrid, List, Share2, ClipboardList, Archive, Library, Trash2 } from "lucide-react";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
 import { formatDate } from "../utils/formatters";
 import { Tabs } from "../components/ui/Tabs";
+import { TabBar as SubTabBar } from "../components/documentRequests/shared";
+import DeletedItemsView from "../components/admin/DeletedItemsView";
 import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -69,6 +71,7 @@ export default function DocumentLibraryPage() {
     getUserRole() === "OFFICE_HEAD" ||
     (isAdmin && adminDebugMode);
 
+  const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
   const [tab, setTab] = useState<LibTab>("all");
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
@@ -132,7 +135,7 @@ export default function DocumentLibraryPage() {
       setInitialLoading(true);
       setRows([]);
     }
-    setLoading(true);
+    if (!silent) setLoading(true);
     setError(null);
 
     try {
@@ -245,8 +248,10 @@ export default function DocumentLibraryPage() {
   });
 
   useEffect(() => {
-    loadData(false);
-  }, [tab, qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, loadData]);
+    if (activeTab === "active") {
+      loadData(false);
+    }
+  }, [tab, qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, loadData, activeTab]);
 
   const { refreshing: remoteRefreshing } = usePageBurstRefresh(() => loadData(false, true));
 
@@ -263,7 +268,6 @@ export default function DocumentLibraryPage() {
   const availableOffices = useMemo(() => {
     const map = new Map<number, string>();
     rows.forEach((row: any) => {
-        // Doc items have ownerOffice or office. Req items have office_id/office_code.
         const offId = row.owner_office_id || row.office_id || row.ownerOffice?.id || row.office?.id;
         const offCode = row.office_code || row.ownerOffice?.code || row.office?.code || row.ownerOffice?.name;
         
@@ -359,149 +363,135 @@ export default function DocumentLibraryPage() {
       }
       contentClassName="flex flex-col min-h-0 gap-0 h-full overflow-hidden"
     >
-      <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
-        <Tabs 
-          tabs={TABS} 
-          activeTab={tab} 
-          onChange={(key) => setTab(key as LibTab)} 
-          id="library" 
-          className="border-none"
-        />
-      </div>
-
-      <SearchFilterBar
-        search={q}
-        setSearch={(val) => { setQ(val); setPage(1); }}
-        placeholder="Search library..."
-        activeFiltersCount={activeFiltersCount}
-        onClear={() => { setQ(""); setTypeFilter("all"); setDateFrom(""); setDateTo(""); setPage(1); }}
-        mobileFilters={
-          <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
-                <SelectDropdown
-                  value={typeFilter}
-                  onChange={(val) => setTypeFilter((val as string) || "all")}
-                  className="w-full"
-                  options={[{ value: "all", label: "All Types" }, { value: "internal", label: "Internal" }, { value: "external", label: "External" }, { value: "forms", label: "Forms" }]}
-                />
-              </div>
-            </div>
-            <DateRangeInput from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
-          </div>
-        }
-      >
-        {tab !== "requested" && (
-          <SelectDropdown
-            value={typeFilter}
-            onChange={(val) => setTypeFilter((val as string) || "all")}
-            className="w-32"
-            options={[{ value: "all", label: "All Types" }, { value: "internal", label: "Internal" }, { value: "external", label: "External" }, { value: "forms", label: "Forms" }]}
+      {isAdmin && adminDebugMode && (
+        <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px">
+          <SubTabBar
+            tabs={[
+              { value: "active", label: "Active Library", icon: <Library size={12} /> },
+              { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
+            ]}
+            active={activeTab}
+            onChange={(val: any) => setActiveTab(val)}
           />
-        )}
-        {(tab === "all" || tab === "created" || tab === "shared" || (tab === "requested" && (isAdmin || isQA(role)))) && (
-          <SelectDropdown
-            searchable
-            value={officeFilter}
-            onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
-            className="w-40"
-            placeholder="Office"
-            options={[{ value: "", label: "All Offices" }, ...availableOffices]}
-          />
-        )}
-        {tab === "requested" && (
-          <SelectDropdown
-            searchable
-            value={batchFilter}
-            onChange={(val) => { setBatchFilter(val as string); setPage(1); }}
-            className="w-40"
-            placeholder="Batch"
-            options={[{ value: "", label: "All Batches" }, ...availableBatches]}
-          />
-        )}
-        <DateRangeInput from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
-      </SearchFilterBar>
+        </div>
+      )}
 
-      {error && <Alert variant="danger" className="mb-4 mx-4">{error}</Alert>}
-
-      <div className="flex-1 min-h-0 min-w-0 flex flex-col">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={tab + qDebounced + typeFilter + dateFrom + dateTo + officeFilter + batchFilter}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-            className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden"
-          >
-            <Table<any>
-              bare
-              className="h-full"
-              columns={columns}
-              rows={rows}
-              rowKey={(r: any, idx) => {
-                if (tab === "all") return r._key || `item-${idx}-${r.id || r.docId || r.reqId}`;
-                if (tab === "requested") return `req-${r.request_id || r.batch_id || "raw"}-${r.id || r.recipient_id || r.row_id || idx}`;
-                return `doc-${r.id || idx}`;
-              }}
-              loading={loading}
-              initialLoading={initialLoading}
-              onRowClick={handleRowClick}
-              hasMore={hasMore}
-              onLoadMore={() => loadData(true)}
-              gridTemplateColumns={
-                (tab === "created" 
-                  ? "50px 90px 95px minmax(200px, 1fr) 90px 80px 80px 50px 100px" 
-                  : tab === "shared" 
-                    ? "50px 90px 95px minmax(200px, 1fr) 90px 80px 80px 50px 100px" 
-                    : tab === "requested" 
-                      ? (isAdmin || isQA(role) ? "50px minmax(250px, 1fr) 110px 110px" : "50px minmax(250px, 1fr) 110px")
-                      : "50px 90px 95px minmax(180px, 1fr) 90px 80px 80px 80px 90px 100px") 
-                + (adminDebugMode ? " 50px" : "")
-              }
-              sortBy={sortBy}
-              sortDir={sortDir}
-              onSortChange={(key, dir) => { setSortBy(key as any); setSortDir(dir); }}
-              mobileRender={(r) => {
-                const isAllTab = tab === "all";
-                const isReqTab = tab === "requested";
-                const title = isAllTab ? r.title : (isReqTab ? (r.item_title ?? r.batch_title) : r.title);
-                const code = isAllTab ? r.code : (!isReqTab ? r.code : null);
-                const office = isAllTab ? (typeof r.office === "object" ? r.office?.code : r.office) : (isReqTab ? r.office_code : (r.office?.code || r.ownerOffice?.code));
-                const date = isAllTab ? (r.dateDistributed || r.date) : (isReqTab ? r.created_at : (r.effective_date || r.created_at));
-                const type = isAllTab ? (r.doctype || r.mode) : (isReqTab ? (r.batch_mode || "REQUEST") : r.doctype);
-                const version = !isReqTab ? r.version_number : null;
-                return (
-                  <div className="px-4 py-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300">{type}</span>
-                        {version && <span className="text-[10px] font-medium text-slate-400">v{version}</span>}
-                      </div>
-                      <span className="text-[10px] text-slate-400 tabular-nums">{formatDate(date)}</span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-0.5">{title}</p>
-                    <div className="flex items-center justify-between gap-2 overflow-hidden">
-                      <div className="flex items-center gap-2 truncate">
-                        <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-                          {code && <span className="text-[10px] font-mono text-slate-400 shrink-0">{code}</span>}
-                          {r.tags && r.tags.length > 0 && r.tags.map((tag: string) => (
-                            <TagBadge key={tag} name={tag} />
-                          ))}
-                        </div>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{office || "—"}</span>
-                      </div>
-                      {isAllTab && r.source && <span className="text-[9px] font-bold uppercase text-brand-600 dark:text-brand-400 shrink-0">{r.source}</span>}
-                    </div>
-                  </div>
-                );
-              }}
-              emptyMessage={tab === "requested" ? "No accepted requests found." : "No documents found in this section."}
+      {activeTab === "deleted" ? (
+        <div className="flex-1 min-h-0">
+          <DeletedItemsView type="documents" onRestored={() => setActiveTab("active")} />
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
+            <Tabs 
+              tabs={TABS} 
+              activeTab={tab} 
+              onChange={(key) => setTab(key as LibTab)} 
+              id="library" 
+              className="border-none"
             />
-          </motion.div>
-        </AnimatePresence>
-      </div>
+          </div>
+
+          <SearchFilterBar
+            search={q}
+            setSearch={(val) => { setQ(val); setPage(1); }}
+            placeholder="Search library..."
+            activeFiltersCount={activeFiltersCount}
+            onClear={() => { setQ(""); setTypeFilter("all"); setDateFrom(""); setDateTo(""); setPage(1); }}
+            mobileFilters={
+              <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
+                    <SelectDropdown
+                      value={typeFilter}
+                      onChange={(val) => setTypeFilter((val as string) || "all")}
+                      className="w-full"
+                      options={[{ value: "all", label: "All Types" }, { value: "internal", label: "Internal" }, { value: "external", label: "External" }, { value: "forms", label: "Forms" }]}
+                    />
+                  </div>
+                </div>
+                <DateRangeInput from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
+              </div>
+            }
+          >
+            {tab !== "requested" && (
+              <SelectDropdown
+                value={typeFilter}
+                onChange={(val) => setTypeFilter((val as string) || "all")}
+                className="w-32"
+                options={[{ value: "all", label: "All Types" }, { value: "internal", label: "Internal" }, { value: "external", label: "External" }, { value: "forms", label: "Forms" }]}
+              />
+            )}
+            {(tab === "all" || tab === "created" || tab === "shared" || (tab === "requested" && (isAdmin || isQA(role)))) && (
+              <SelectDropdown
+                searchable
+                value={officeFilter}
+                onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
+                className="w-40"
+                placeholder="Office"
+                options={[{ value: "", label: "All Offices" }, ...availableOffices]}
+              />
+            )}
+            {tab === "requested" && (
+              <SelectDropdown
+                searchable
+                value={batchFilter}
+                onChange={(val) => { setBatchFilter(val as string); setPage(1); }}
+                className="w-40"
+                placeholder="Batch"
+                options={[{ value: "", label: "All Batches" }, ...availableBatches]}
+              />
+            )}
+            <DateRangeInput from={dateFrom} to={dateTo} onFromChange={setDateFrom} onToChange={setDateTo} />
+          </SearchFilterBar>
+
+          {error && <Alert variant="danger" className="mb-4 mx-4">{error}</Alert>}
+
+          <div className="flex-1 min-h-0 min-w-0 flex flex-col">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab + qDebounced + typeFilter + dateFrom + dateTo + officeFilter + batchFilter}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15 }}
+                className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden"
+              >
+                <Table<any>
+                  bare
+                  className="h-full"
+                  columns={columns}
+                  rows={rows}
+                  rowKey={(r: any, idx) => {
+                    if (tab === "all") return r._key || `item-${idx}-${r.id || r.docId || r.reqId}`;
+                    if (tab === "requested") return `req-${r.request_id || r.batch_id || "raw"}-${r.id || r.recipient_id || r.row_id || idx}`;
+                    return `doc-${r.id || idx}`;
+                  }}
+                  loading={loading}
+                  initialLoading={initialLoading}
+                  onRowClick={handleRowClick}
+                  hasMore={hasMore}
+                  onLoadMore={() => loadData(true)}
+                  gridTemplateColumns={
+                    (tab === "created" 
+                      ? "50px 90px 95px minmax(200px, 1fr) 90px 80px 80px 50px 100px" 
+                      : tab === "shared" 
+                        ? "50px 90px 95px minmax(200px, 1fr) 90px 80px 80px 50px 100px" 
+                        : tab === "requested" 
+                          ? (isAdmin || isQA(role) ? "50px minmax(250px, 1fr) 110px 110px" : "50px minmax(250px, 1fr) 110px")
+                          : "50px 90px 95px minmax(180px, 1fr) 90px 80px 80px 80px 90px 100px") 
+                    + (adminDebugMode ? " 50px" : "")
+                  }
+                  sortBy={sortBy}
+                  sortDir={sortDir}
+                  onSortChange={(key, dir) => { setSortBy(key as any); setSortDir(dir); }}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </>
+      )}
 
       <Modal
         open={!!deletingId}
