@@ -66,7 +66,7 @@ export function StatusBadge({
   
   return (
     <span
-      className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] sm:text-[11px] font-semibold leading-tight transition-colors ${cls} ${className}`}
+      className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-bold leading-tight transition-colors ${cls} ${className}`}
     >
       {status}
     </span>
@@ -86,7 +86,7 @@ export function TypePill({
   className?: string;
 }) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-medium text-neutral-600 dark:bg-surface-400 dark:text-neutral-400 ${className}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-bold text-neutral-600 dark:bg-surface-400 dark:text-neutral-400 ${className}`}>
       {icon}
       {label}
     </span>
@@ -111,7 +111,7 @@ export function AnnouncementTypePill({ type, className = "" }: { type: string, c
   const label = t.charAt(0).toUpperCase() + t.slice(1);
   return (
     <span
-      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${cls} ${className}`}
+      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-bold ${cls} ${className}`}
     >
       {label}
     </span>

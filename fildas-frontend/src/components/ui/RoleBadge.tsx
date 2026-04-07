@@ -75,7 +75,7 @@ export const RoleBadge: React.FC<RoleBadgeProps> = ({ role, className = "", dot 
   };
 
   return (
-    <div className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${config.classes} ${className}`}>
+    <div className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${config.classes} ${className}`}>
       {dot && (
         <span className="h-1 w-1 rounded-full bg-current opacity-60" />
       )}

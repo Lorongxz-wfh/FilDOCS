@@ -105,23 +105,23 @@ const VolumeTrendChart: React.FC<{ data: VolumeSeries[]; height?: number; loadin
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.12)" vertical={false} />
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 11, fill: "currentColor" }}
+            tick={{ fontSize: 11, fontWeight: 500, fill: "currentColor" }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             allowDecimals={false}
-            tick={{ fontSize: 11, fill: "currentColor" }}
+            tick={{ fontSize: 11, fontWeight: 500, fill: "currentColor" }}
             axisLine={false}
             tickLine={false}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.07)" }} />
           <Legend 
-            verticalAlign="bottom" 
-            align="center"
+            verticalAlign="top" 
+            align="right"
             iconType="circle"
             iconSize={8}
-            wrapperStyle={{ fontSize: 11, paddingTop: 15 }}
+            wrapperStyle={{ fontSize: 11, fontWeight: 500, paddingTop: 15 }}
           />
           <Bar dataKey="created" name="Created" fill="#38bdf8" radius={[4, 4, 0, 0]} maxBarSize={32} />
           <Bar dataKey="approved_final" name="Approved" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={32} />

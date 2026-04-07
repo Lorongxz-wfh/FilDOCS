@@ -5,15 +5,12 @@ export type BreadcrumbItem = { label: string; to?: string };
 
 export default function Breadcrumb({
   items,
-  size = "sm",
 }: {
   items: BreadcrumbItem[];
-  size?: "sm" | "md";
 }) {
   if (!items.length) return null;
-  const textSize = size === "md" ? "text-sm" : "text-xs";
   return (
-    <nav className={`flex items-center gap-0.5 ${textSize} leading-none`} aria-label="Breadcrumb">
+    <nav className={`flex items-center gap-0.5 text-[11px] font-medium leading-none`} aria-label="Breadcrumb">
       {items.map((item, i) => {
         const isLast = i === items.length - 1;
         return (
@@ -22,7 +19,7 @@ export default function Breadcrumb({
               <span className="mx-1 text-slate-300 dark:text-slate-600 select-none">›</span>
             )}
             {isLast || !item.to ? (
-              <span className={`text-slate-700 dark:text-slate-200 font-semibold truncate max-w-60`}>
+              <span className={`text-slate-700 dark:text-slate-200 font-bold truncate max-w-60`}>
                 {item.label}
               </span>
             ) : (

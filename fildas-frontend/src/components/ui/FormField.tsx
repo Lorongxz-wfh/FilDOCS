@@ -72,7 +72,7 @@ const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
         {label && (
           <label
             htmlFor={id}
-            className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5"
+            className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5"
           >
             {label}
             {isRequired && <span className="ml-0.5 text-rose-500">*</span>}
@@ -126,7 +126,7 @@ const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
         {error && (
           <p
             id={`${id}-error`}
-            className="mt-1.5 flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400"
+            className="mt-1.5 flex items-center gap-1 text-xs font-medium text-rose-600 dark:text-rose-400"
           >
             {error}
           </p>
@@ -136,7 +136,7 @@ const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
         {hint && !error && (
           <p
             id={`${id}-hint`}
-            className="mt-1.5 text-xs text-slate-400 dark:text-slate-500"
+            className="mt-1.5 text-xs font-medium text-slate-400 dark:text-slate-500"
           >
             {hint}
           </p>

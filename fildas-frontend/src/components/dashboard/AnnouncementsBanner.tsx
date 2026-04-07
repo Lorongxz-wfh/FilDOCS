@@ -109,9 +109,9 @@ const AnnouncementsBanner: React.FC<Props> = ({ announcements, loading }) => {
       <div className="flex items-center justify-between gap-4 border-b border-slate-100 dark:border-surface-400 px-4 py-2 sm:py-2.5">
         <div className="flex items-center gap-2">
           <Megaphone className="h-4 w-4 text-brand-500 dark:text-brand-400 fill-brand-500/10" />
-          <h3 className="text-[11px] font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+          <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
             Announcements
-          </h3>
+          </h2>
         </div>
         <div className="flex items-center gap-3">
           {regular.length > 0 && (

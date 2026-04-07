@@ -197,13 +197,13 @@ const DashboardStatRow: React.FC<Props> = ({
                     {loading ? (
                       <Skeleton className="mt-1 h-6 w-10 sm:h-7 sm:w-14" />
                     ) : (
-                      <p className={`text-xl sm:text-2xl font-display font-black tabular-nums leading-none sm:mt-1.5 transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
+                      <p className={`text-xl sm:text-2xl font-display font-bold tabular-nums leading-none sm:mt-1.5 transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
                         {item.value}
                       </p>
                     )}
                   </div>
                 {item.sub && (
-                  <p className={`hidden sm:block mt-2 text-xs text-slate-400 dark:text-slate-500 italic truncate transition-opacity duration-200 ${loading && stats ? "opacity-60" : "opacity-100"}`}>
+                  <p className={`hidden sm:block mt-2 text-[11px] text-slate-400 dark:text-slate-500 italic truncate transition-opacity duration-200 ${loading && stats ? "opacity-60" : "opacity-100"}`}>
                     {item.sub}
                   </p>
                 )}
@@ -214,7 +214,7 @@ const DashboardStatRow: React.FC<Props> = ({
                 <div className={`flex items-center justify-between sm:justify-start sm:flex-col sm:items-start gap-1 sm:gap-2`}>
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className={`shrink-0 ${item.iconColor} sm:scale-100 scale-90`}>{item.icon}</span>
-                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
                       {item.label}
                     </p>
                   </div>
@@ -228,7 +228,7 @@ const DashboardStatRow: React.FC<Props> = ({
                   )}
                 </div>
 
-                <p className={`hidden sm:block mt-1.5 text-xs text-slate-400 dark:text-slate-500 italic truncate transition-opacity duration-200 ${loading && stats ? "opacity-60" : "opacity-100"}`}>
+                <p className={`hidden sm:block mt-1.5 text-[11px] text-slate-400 dark:text-slate-500 italic truncate transition-opacity duration-200 ${loading && stats ? "opacity-60" : "opacity-100"}`}>
                   {item.sub}
                 </p>
               </div>

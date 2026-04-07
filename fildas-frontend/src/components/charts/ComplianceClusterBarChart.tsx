@@ -80,15 +80,15 @@ export default function ComplianceClusterBarChart(props: {
           margin={{ top: 10, right: 16, left: 0, bottom: 0 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" />
-          <XAxis dataKey="cluster" tick={{ fontSize: 11 }} />
-          <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+          <XAxis dataKey="cluster" tick={{ fontSize: 11, fontWeight: 500 }} />
+          <YAxis allowDecimals={false} tick={{ fontSize: 11, fontWeight: 500 }} />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.07)" }} />
           <Legend 
             verticalAlign="bottom" 
             align="center"
             iconType="circle"
             iconSize={8}
-            wrapperStyle={{ fontSize: 11, paddingTop: 15 }}
+            wrapperStyle={{ fontSize: 11, fontWeight: 500, paddingTop: 15 }}
           />
           <Bar dataKey="in_review" fill="#0ea5e9" name="In review" radius={[3, 3, 0, 0] as any} />
           <Bar dataKey="sent_to_qa" fill="#a855f7" name="Sent to QA" radius={[3, 3, 0, 0] as any} />

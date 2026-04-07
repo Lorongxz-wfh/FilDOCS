@@ -27,8 +27,8 @@ const AdminActivityBarChart: React.FC<Props> = ({ data, height = 180, loading = 
       <ResponsiveContainer width="100%" height="100%" debounce={1}>
         <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" />
-          <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-          <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+          <XAxis dataKey="label" tick={{ fontSize: 11, fontWeight: 500 }} />
+          <YAxis allowDecimals={false} tick={{ fontSize: 11, fontWeight: 500 }} />
           <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
           <Bar dataKey="count" radius={[4, 4, 0, 0]}>
             {data.map((_, i) => (

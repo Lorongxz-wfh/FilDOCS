@@ -67,10 +67,10 @@ const AdminUsersByRoleChart: React.FC<Props> = ({ active, inactive, loading = fa
         </ResponsiveContainer>
         {/* Center label */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-lg font-bold leading-none text-slate-900 dark:text-slate-100">
+          <span className="text-lg font-bold font-display leading-none text-slate-900 dark:text-slate-100">
             {total}
           </span>
-          <span className="mt-0.5 text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <span className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             total
           </span>
         </div>

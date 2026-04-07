@@ -9,6 +9,7 @@ import {
   Tooltip,
   Cell,
   LabelList,
+  Legend,
 } from "recharts";
 
 export type StageDelay = {
@@ -126,7 +127,7 @@ const StageDelayChart: React.FC<{
             />
             <span className="text-[11px] text-slate-500 dark:text-slate-400">{d.stage}</span>
             {d.stage === bottleneckStage && d.display_hours > 0 && (
-              <span className="rounded-full bg-rose-100 dark:bg-rose-900/30 px-1.5 py-px text-[10px] font-semibold text-rose-600 dark:text-rose-400 leading-none">
+              <span className="rounded-full bg-rose-100 dark:bg-rose-900/30 px-1.5 py-px text-[11px] font-bold text-rose-600 dark:text-rose-400 leading-none">
                 slowest
               </span>
             )}
@@ -143,10 +144,17 @@ const StageDelayChart: React.FC<{
             margin={{ top: 0, right: 52, left: 4, bottom: 0 }}
             barCategoryGap="28%"
           >
+            <Legend
+              verticalAlign="top"
+              align="right"
+              iconType="circle"
+              iconSize={8}
+              wrapperStyle={{ fontSize: 11, fontWeight: 500, paddingTop: 15 }}
+            />
             <XAxis
               type="number"
               domain={[0, maxVal * 1.15]}
-              tick={{ fontSize: 10 }}
+              tick={{ fontSize: 11, fontWeight: 500, fill: "currentColor" }}
               unit="h"
               axisLine={false}
               tickLine={false}
@@ -154,7 +162,7 @@ const StageDelayChart: React.FC<{
             <YAxis
               type="category"
               dataKey="stage"
-              tick={{ fontSize: 12, fontWeight: 500 }}
+              tick={{ fontSize: 11, fontWeight: 500, fill: "currentColor" }}
               width={88}
               axisLine={false}
               tickLine={false}
@@ -183,7 +191,7 @@ const StageDelayChart: React.FC<{
       </div>
 
       {/* Footnote */}
-      <p className="text-[10px] text-slate-400 dark:text-slate-500 px-1">
+      <p className="text-[11px] text-slate-400 dark:text-slate-500 px-1 italic">
         Median task hold time · completed documents only · all routing modes
       </p>
     </div>

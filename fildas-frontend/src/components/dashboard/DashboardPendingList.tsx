@@ -21,7 +21,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-4 py-3">
         <div className="flex items-center gap-2">
           <div>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-tight">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
               Pending actions
             </p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">

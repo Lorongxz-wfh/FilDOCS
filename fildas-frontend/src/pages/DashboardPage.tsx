@@ -56,12 +56,12 @@ const Card: React.FC<{
       <div className={`flex items-start justify-between gap-3 border-b border-slate-100 dark:border-surface-400 p-3 sm:px-4 sm:py-3`}>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-[13px] sm:text-sm font-display font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
               {title}
             </p>
           </div>
           {sub && (
-            <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
               {sub}
             </p>
           )}
@@ -470,7 +470,7 @@ const AuditorDashboard: React.FC<
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
                 Distributed Documents
               </p>
               {loading && stats && (
@@ -591,10 +591,10 @@ const DashboardPage: React.FC = () => {
       <div className="shrink-0 border-b border-slate-200 bg-slate-50 dark:border-surface-400 dark:bg-surface-600 px-4 sm:px-5 py-3 sm:py-3.5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col min-w-0">
-            <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 leading-none">
+            <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 leading-none">
               {today}
             </p>
-            <h1 className="mt-1 text-sm sm:text-base font-display font-extrabold text-slate-900 dark:text-slate-100 leading-tight truncate">
+            <h1 className="mt-1 text-sm sm:text-base font-display font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
               {greeting}<span className="hidden sm:inline">, {firstName}</span>
             </h1>
           </div>
