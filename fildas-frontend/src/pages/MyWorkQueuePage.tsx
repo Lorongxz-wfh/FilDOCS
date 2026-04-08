@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getWorkQueue,
@@ -66,18 +66,19 @@ const MyWorkQueuePage: React.FC = () => {
   const isQaAdmin = isQA(userRole) || isAdmin;
 
   // ── Load queue + stats + activity ─────────────────────────────────────────
+  const lastIdsRef = useRef<string>("");
+  const lastActivityIdRef = useRef<number | string>(0);
+
+  // ── Load queue + stats + activity ─────────────────────────────────────────
   const loadAll = useCallback(async (silent = false) => {
     try {
       if (!silent) setLoading(true);
       setError(null);
 
-      const prevIds = assignedItems.map(i => `${i.document.id}-${i.version.id}`).join(',');
-      const prevActivityId = recentActivity[0]?.id;
-
       const [alf_actions, q, r, r_stats] = await Promise.all([
         listActivityLogs({
           scope: isAdmin ? "all" : "office",
-          per_page: 20,
+          per_page: 10, // Decreased to reduce payload size
           category: "actions",
         }).catch(() => ({ data: [] })),
         getWorkQueue().catch(() => ({ assigned: [], monitoring: [] })),
@@ -97,11 +98,16 @@ const MyWorkQueuePage: React.FC = () => {
       setRequestItems((r as any)?.data ?? []);
       setRequestStats(r_stats as any);
 
-      // Detect if data actually changed
+      // Detect if data actually changed using refs to avoid loop
       const nextIds = newAssigned.map((i: any) => `${i.document.id}-${i.version.id}`).join(',');
       const nextActivityId = newActivity[0]?.id;
       
-      return prevIds !== nextIds || prevActivityId !== nextActivityId;
+      const changed = lastIdsRef.current !== nextIds || lastActivityIdRef.current !== nextActivityId;
+      
+      lastIdsRef.current = nextIds;
+      lastActivityIdRef.current = nextActivityId;
+
+      return changed;
 
     } catch (e: any) {
       setError(e?.message ?? "Failed to load dashboard data");
@@ -110,7 +116,7 @@ const MyWorkQueuePage: React.FC = () => {
       setLoading(false);
       setLoadingActivity(false);
     }
-  }, [isAdmin, isQaAdmin, assignedItems, recentActivity]);
+  }, [isAdmin, isQaAdmin]);
 
   useEffect(() => {
     loadAll();

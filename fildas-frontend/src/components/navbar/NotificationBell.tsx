@@ -86,7 +86,7 @@ const NotificationBell: React.FC = () => {
         prevUnreadRef.current = count;
         setUnseenCount(count);
       }
-    }, 15000);
+    }, 30000);
   }
 
   React.useEffect(() => {
@@ -178,7 +178,7 @@ const NotificationBell: React.FC = () => {
                  </button>
                </div>
 
-               {visibleItems.length === 0 && notifLoading ? (
+               {notifItems.length === 0 && notifLoading ? (
                  <SkeletonList rows={2} rowClassName="h-10 rounded-md" />
                ) : visibleItems.length === 0 ? (
                  <p className="py-4 text-center text-xs text-slate-400">Inbox is empty.</p>
@@ -223,7 +223,7 @@ const NotificationBell: React.FC = () => {
 
           <div className="border-t border-slate-100 dark:border-surface-400 px-3.5 py-3">
               <button
-                disabled={isMarkingRead}
+                disabled={isMarkingRead || visibleItems.length === 0}
                 onClick={async () => {
                   try {
                     setIsMarkingRead(true);
@@ -233,7 +233,7 @@ const NotificationBell: React.FC = () => {
                     setIsMarkingRead(false);
                   }
                 }}
-                className={`w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${isMarkingRead ? "bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-surface-600 dark:text-slate-600" : "bg-brand-600 text-white hover:bg-brand-700 shadow-sm shadow-brand-500/20 active:scale-[0.98]"}`}
+                className={`w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${isMarkingRead || visibleItems.length === 0 ? "bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-surface-600 dark:text-slate-600" : "bg-brand-600 text-white hover:bg-brand-700 shadow-sm shadow-brand-500/20 active:scale-[0.98]"}`}
               >
                 {isMarkingRead ? <InlineSpinner className="h-3 w-3 border-2 border-white/30 border-t-white" /> : <CheckCircle className="h-3 w-3" />}
                 Mark all as read
