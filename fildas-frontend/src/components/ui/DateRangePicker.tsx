@@ -40,6 +40,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(from ? new Date(from) : new Date());
   const [tempRange, setTempRange] = useState<DateRange>({ from, to });
+  const [openUp, setOpenUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,7 +53,17 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         setIsOpen(false);
       }
     };
-    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      
+      // Smart positioning check
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        // If less than 400px below (avg height of picker), open up
+        setOpenUp(spaceBelow < 420);
+      }
+    }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
@@ -185,8 +196,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         <CalendarIcon size={14} className="text-slate-400" />
         {tempRange.from ? (
           <span className="tabular-nums">
-            {format(new Date(tempRange.from), "MMM d, yyyy")}
-            {tempRange.to && ` — ${format(new Date(tempRange.to), "MMM d, yyyy")}`}
+            {format(new Date(tempRange.from), "MMMM d, yyyy")}
+            {tempRange.to && ` — ${format(new Date(tempRange.to), "MMMM d, yyyy")}`}
           </span>
         ) : (
           <span>Select Range</span>
@@ -200,7 +211,9 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className={`absolute z-50 mt-2 bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-xl shadow-2xl overflow-hidden flex flex-col sm:flex-row min-w-[320px] sm:min-w-[480px] ${
+            className={`absolute z-50 bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-xl shadow-2xl overflow-hidden flex flex-col sm:flex-row min-w-[320px] sm:min-w-[480px] ${
+              openUp ? "bottom-full mb-2" : "top-full mt-2"
+            } ${
               align === "right" ? "right-0" : "left-0"
             }`}
           >
@@ -227,7 +240,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                     placeholder="YYYY-MM-DD"
                     value={tempRange.from}
                     onChange={(e) => setTempRange({...tempRange, from: e.target.value})}
-                    className="w-full h-8 px-2 bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-md text-xs font-mono font-bold focus:ring-2 focus:ring-brand-500/20 outline-none"
+                    className="w-full h-8 px-2 bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-md text-xs font-mono font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/20 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -237,7 +250,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                     placeholder="Open Range"
                     value={tempRange.to}
                     onChange={(e) => setTempRange({...tempRange, to: e.target.value})}
-                    className="w-full h-8 px-2 bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-md text-xs font-mono font-bold focus:ring-2 focus:ring-brand-500/20 outline-none"
+                    className="w-full h-8 px-2 bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-md text-xs font-mono font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/20 outline-none"
                   />
                 </div>
               </div>

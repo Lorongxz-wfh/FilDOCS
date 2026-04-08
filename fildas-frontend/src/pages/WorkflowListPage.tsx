@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { useNavigate } from "react-router-dom";
-import { listDocumentsPage, deleteDocument, type Document } from "../services/documents";
+import { listDocumentsPage, deleteDocument, listOffices, type Document } from "../services/documents";
 import { getUserRole, isQA, isSysAdmin } from "../lib/roleFilters";
+import type { Office } from "../services/types";
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import { useToast } from "../components/ui/toast/ToastContext";
 import { CheckSquare, Download, Trash2, LayoutList, Activity, CheckCircle2 } from "lucide-react";
@@ -60,6 +61,7 @@ export default function WorkflowListPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [allOffices, setAllOffices] = useState<Office[]>([]);
   const hasMoreRef = useRef(true);
   const firstDocIdRef = useRef<number | null>(null);
 
@@ -136,6 +138,10 @@ export default function WorkflowListPage() {
   };
 
   useEffect(() => {
+    listOffices().then(setAllOffices).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     const t = window.setTimeout(() => setQDebounced(q), 300);
     return () => window.clearTimeout(t);
   }, [q]);
@@ -144,13 +150,18 @@ export default function WorkflowListPage() {
 
   const loadData = useCallback(async (isNextPage = false, silent = false) => {
     const targetPage = isNextPage ? page + 1 : 1;
+    
+    // If we're resetting to page 1, clear state
     if (!isNextPage && !silent) {
       setInitialLoading(true);
       hasMoreRef.current = true;
+      setRows([]);
     }
+
     if (!hasMoreRef.current && isNextPage) return;
     if (!silent) setLoading(true);
     setError(null);
+
     try {
       const res = await listDocumentsPage({
         page: targetPage,
@@ -178,8 +189,6 @@ export default function WorkflowListPage() {
       setHasMore(more);
       setPage(targetPage);
       return { data: incoming };
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to load documents.");
     } finally {
       setLoading(false);
       setInitialLoading(false);
@@ -192,10 +201,11 @@ export default function WorkflowListPage() {
     const newFirstId = result?.data?.[0]?.id ?? null;
     return { changed: newFirstId !== prevFirstId };
   });
-
   useEffect(() => {
     loadData(false);
-  }, [tab, qDebounced, phaseFilter, officeFilter, dateFrom, dateTo, sortBy, sortDir, loadData]);
+    // Explicitly exclude page to prevent reload loop on pagination
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, qDebounced, phaseFilter, officeFilter, dateFrom, dateTo, sortBy, sortDir]);
 
   const displayRows = useMemo(() => {
     if (tab === "active") {
@@ -211,14 +221,9 @@ export default function WorkflowListPage() {
     return count;
   }, [phaseFilter, officeFilter, dateFrom, dateTo]);
 
-  const availableOffices = useMemo(() => {
-    const map = new Map<number, string>();
-    rows.forEach((row: any) => {
-      const off = row.office || row.ownerOffice;
-      if (off?.id && (off?.code || off?.name)) map.set(off.id, off.code || off.name);
-    });
-    return Array.from(map.entries()).map(([id, label]) => ({ value: id, label }));
-  }, [rows]);
+  const officeOptions = useMemo(() => {
+    return allOffices.map(off => ({ value: off.id, label: off.code || off.name }));
+  }, [allOffices]);
 
   const columns: TableColumn<Document>[] = useMemo(() => {
     const isDistributed = tab === "distributed";
@@ -311,8 +316,8 @@ export default function WorkflowListPage() {
   }, [showOffice, tab, adminDebugMode]);
 
   const gridTemplateColumns = showOffice
-    ? (adminDebugMode ? "50px 100px minmax(200px, 1fr) 100px 100px 90px 50px 100px 40px" : "50px 100px minmax(200px, 1fr) 100px 100px 90px 50px 100px")
-    : (adminDebugMode ? "50px 110px minmax(200px, 1fr) 110px 120px 60px 110px 40px" : "50px 110px minmax(200px, 1fr) 110px 120px 60px 110px");
+    ? (adminDebugMode ? "50px 110px minmax(200px, 1fr) 110px 140px 100px 50px 120px 40px" : "50px 110px minmax(200px, 1fr) 110px 140px 100px 50px 120px")
+    : (adminDebugMode ? "50px 120px minmax(200px, 1fr) 120px 160px 60px 120px 40px" : "50px 120px minmax(200px, 1fr) 120px 160px 60px 120px");
 
   return (
     <PageFrame
@@ -373,7 +378,7 @@ export default function WorkflowListPage() {
               <SelectDropdown
                 value={officeFilter}
                 onChange={(val) => { setOfficeFilter((val as string) || ""); setPage(1); }}
-                options={[{ value: "", label: "All Offices" }, ...availableOffices]}
+                options={[{ value: "", label: "All Offices" }, ...officeOptions]}
               />
             </div>
             <DateRangePicker from={dateFrom} to={dateTo} onSelect={(r: any) => { setDateFrom(r.from); setDateTo(r.to); setPage(1); }} />
@@ -381,7 +386,7 @@ export default function WorkflowListPage() {
         }
       >
         <SelectDropdown value={phaseFilter} onChange={(val) => { setPhaseFilter((val as string) || ""); setPage(1); }} className="w-32" options={[{ value: "", label: "All Phases" }, { value: "draft", label: "Draft" }, { value: "review", label: "Review" }, { value: "approval", label: "Approval" }, { value: "finalization", label: "Finalization" }, { value: "distributed", label: "Distributed" }]} />
-        <SelectDropdown value={officeFilter} onChange={(val) => { setOfficeFilter((val as string) || ""); setPage(1); }} className="w-40" options={[{ value: "", label: "All Offices" }, ...availableOffices]} />
+        <SelectDropdown value={officeFilter} onChange={(val) => { setOfficeFilter((val as string) || ""); setPage(1); }} className="w-40" options={[{ value: "", label: "All Offices" }, ...officeOptions]} />
         <DateRangePicker from={dateFrom} to={dateTo} onSelect={(r: any) => { setDateFrom(r.from); setDateTo(r.to); setPage(1); }} />
       </SearchFilterBar>
 
@@ -405,7 +410,13 @@ export default function WorkflowListPage() {
               initialLoading={initialLoading}
               loading={loading}
               gridTemplateColumns={gridTemplateColumns}
-              onRowClick={(doc) => navigate(`/documents/${doc.id}`, { state: { from: "/documents/all" } })}
+              onRowClick={(doc) => {
+                if (isSelectMode) {
+                  toggleRow(doc.id);
+                  return;
+                }
+                navigate(`/documents/${doc.id}`, { state: { from: "/workflows" } });
+              }}
               hasMore={tab !== "active" && hasMore}
               onLoadMore={() => loadData(true)}
               sortBy={sortBy}
