@@ -5,7 +5,7 @@ import api from "../services/api";
 
 (window as any).Pusher = Pusher;
 
-let authQueue: Promise<any> = Promise.resolve();
+const authPromiseCache = new Map<string, { promise: Promise<any>; timestamp: number }>();
 
 const echo = new Echo({
   broadcaster: "pusher",
@@ -14,25 +14,30 @@ const echo = new Echo({
   forceTLS: true,
   authorizer: (channel: any) => ({
     authorize: (socketId: string, callback: any) => {
-      // Chain auth requests to prevent parallel connection collision
-      authQueue = authQueue.then(() => 
-        new Promise((resolve) => {
-          api
-            .post("/broadcasting/auth", {
-              socket_id: socketId,
-              channel_name: channel.name,
-            })
-            .then((res) => {
-              callback(false, res.data);
-              // Small stagger between auth calls to clear the pipe
-              setTimeout(resolve, 50);
-            })
-            .catch((err) => {
-              callback(true, err);
-              resolve(null);
-            });
+      const cacheKey = `${socketId}:${channel.name}`;
+      const cached = authPromiseCache.get(cacheKey);
+      const now = Date.now();
+
+      // Cache auth responses for 1 second to prevent bursts during multi-channel join
+      if (cached && now - cached.timestamp < 1000) {
+        cached.promise
+          .then((data) => callback(false, data))
+          .catch((err) => callback(true, err));
+        return;
+      }
+
+      const promise = api
+        .post("/broadcasting/auth", {
+          socket_id: socketId,
+          channel_name: channel.name,
         })
-      );
+        .then((res) => res.data);
+
+      authPromiseCache.set(cacheKey, { promise, timestamp: now });
+
+      promise
+        .then((data) => callback(false, data))
+        .catch((err) => callback(true, err));
     },
   }),
 });

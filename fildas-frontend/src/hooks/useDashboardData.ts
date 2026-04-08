@@ -113,7 +113,7 @@ export function useDashboardData(role: UserRole): DashboardData {
                 date_to: dateTo
               });
               setRecentActivity(activityRes.data ?? []);
-            }, 800);
+            }, 3000);
           }
         } else if (isQA(role)) {
           // Priority 1: Instant feedback
@@ -181,13 +181,13 @@ export function useDashboardData(role: UserRole): DashboardData {
             setTimeout(async () => {
               const res = await listActivityLogs({ 
                 scope: "all", 
-                per_page: 3, // Even fewer items for QA dashboard
+                per_page: 3, 
                 category: "workflow",
                 date_from: dateFrom,
                 date_to: dateTo
               });
               setRecentActivity(res.data ?? []);
-            }, 1200);
+            }, 3000);
           }
 
         } else if (isAuditor(role)) {
@@ -198,7 +198,7 @@ export function useDashboardData(role: UserRole): DashboardData {
             setTimeout(async () => {
               const res = await listActivityLogs({ scope: "all", per_page: 5, date_from: dateFrom, date_to: dateTo });
               setRecentActivity(res.data ?? []);
-            }, 800);
+            }, 3000);
           }
         } else {
           // Priority 1: Core queue
@@ -262,7 +262,7 @@ export function useDashboardData(role: UserRole): DashboardData {
                 date_to: dateTo
               });
               setRecentActivity(res.data ?? []);
-            }, 1000);
+            }, 3000);
           }
         }
       } catch (e: unknown) {

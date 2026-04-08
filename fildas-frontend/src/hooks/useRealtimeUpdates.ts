@@ -90,23 +90,20 @@ export function useRealtimeUpdates({
   }, []); // Stable dep
 
   React.useEffect(() => {
-    // Note: Since we want to join the channel based on whether a callback exists,
-    // we still listen to the presence of 'onAnnouncement' to establish connection,
-    // but the inner logic remains stable.
     if (!onAnnouncement) return;
 
-    const channel = echo.join("announcements");
-    channel.listen(".announcement.created", (data: Announcement) => {
-      announcementBuffer.current.push(data);
-      
-      // If we already have a timeout, we are buffering
-      if (announcementTimeout.current) return;
-
-      // Start a 100ms throttle window
-      announcementTimeout.current = setTimeout(processAnnouncementBuffer, 100);
-    });
+    // Staggered join to prevent auth burst
+    const timer = setTimeout(() => {
+      const channel = echo.join("announcements");
+      channel.listen(".announcement.created", (data: Announcement) => {
+        announcementBuffer.current.push(data);
+        if (announcementTimeout.current) return;
+        announcementTimeout.current = setTimeout(processAnnouncementBuffer, 100);
+      });
+    }, 800);
 
     return () => {
+      clearTimeout(timer);
       if (announcementTimeout.current) clearTimeout(announcementTimeout.current);
       echo.leave("announcements");
     };
@@ -128,15 +125,18 @@ export function useRealtimeUpdates({
 
   // ── Private workspace channel — stats refresh ────────────────────────
   React.useEffect(() => {
-    // Workspace is universal, we join it if we care about change at all
     if (!onWorkspaceChange) return;
 
-    const channel = echo.private("workspace");
-    channel.listen(".workspace.changed", (data: any) => {
-      if (onWorkspaceChangeRef.current) onWorkspaceChangeRef.current(data);
-    });
+    // Staggered join (Priority 2)
+    const timer = setTimeout(() => {
+      const channel = echo.private("workspace");
+      channel.listen(".workspace.changed", (data: any) => {
+        if (onWorkspaceChangeRef.current) onWorkspaceChangeRef.current(data);
+      });
+    }, 1600);
 
     return () => {
+      clearTimeout(timer);
       echo.leave("workspace");
     };
   }, [!!onWorkspaceChange]);

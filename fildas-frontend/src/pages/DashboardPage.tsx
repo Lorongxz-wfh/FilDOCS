@@ -25,7 +25,6 @@ import DailyActivityStackedBarChart from "../components/charts/DailyActivityStac
 import { useDashboardData } from "../hooks/useDashboardData";
 import { useAnnouncements } from "../hooks/useAnnouncements";
 import AnnouncementsBanner from "../components/dashboard/AnnouncementsBanner";
-import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
 import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { getUserRole, isQA, isAuditor } from "../lib/roleFilters";
 import { getAuthUser } from "../lib/auth";
@@ -543,9 +542,7 @@ const DashboardPage: React.FC = () => {
 
   const announcements = useAnnouncements();
 
-  usePageBurstRefresh(() => {
-    dashData.reload();
-  });
+  // Page burst refresh deprecated in favor of clean single WebSocket updates.
 
   const { refresh, isRefreshing } = useSmartRefresh(async () => {
     const result = await dashData.reload();
