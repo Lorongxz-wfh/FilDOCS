@@ -15,8 +15,12 @@ import {
   Trash2 as TrashIcon, 
   Search as SearchIcon, 
   History as HistoryIcon, 
-  RefreshCcw as RefreshIcon 
+  RefreshCcw as RefreshIcon,
+  CheckSquare
 } from "lucide-react";
+import { useBulkActions } from "../../hooks/useBulkActions";
+import BulkActionBar from "../ui/BulkActionBar";
+import axios from "../../services/api";
 
 interface DeletedItemsViewProps {
   type: TrashType;
@@ -38,10 +42,26 @@ const DeletedItemsView: React.FC<DeletedItemsViewProps> = ({ type, onRestored })
   // Security Verification State
   const [securityModal, setSecurityModal] = useState<{
     open: boolean;
-    action: "restore" | "purge";
-    itemId: number;
-    itemName: string;
+    action: "restore" | "purge" | "bulk-restore" | "bulk-purge";
+    itemId?: number;
+    itemName?: string;
   } | null>(null);
+
+  const {
+    selectedIds,
+    isSelectMode,
+    setIsSelectMode,
+    toggleRow,
+    toggleAll,
+    clearSelection,
+    selectionCount,
+  } = useBulkActions<TrashItem>(
+    rows,
+    (r) => r.id,
+    () => true // All items in trash are actionable by an admin
+  );
+
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
   // Debounce search
   useEffect(() => {
@@ -75,18 +95,34 @@ const DeletedItemsView: React.FC<DeletedItemsViewProps> = ({ type, onRestored })
     const { action, itemId } = securityModal;
     
     try {
-      if (action === "restore") {
+      if (action === "restore" && itemId) {
         await restoreTrashItem(type, itemId);
         toast.push({ type: "success", message: "Item restored successfully." });
         onRestored?.();
-      } else {
+      } else if (action === "purge" && itemId) {
         await purgeTrashItem(type, itemId);
         toast.push({ type: "success", message: "Item permanently deleted." });
+      } else if (action === "bulk-restore") {
+        setIsBulkProcessing(true);
+        const res = await axios.post(`/bulk/trash/${type}/restore`, { ids: Array.from(selectedIds) });
+        toast.push({ type: "success", message: res.data.message });
+        clearSelection();
+        setIsSelectMode(false);
+        onRestored?.();
+      } else if (action === "bulk-purge") {
+        setIsBulkProcessing(true);
+        const res = await axios.post(`/bulk/trash/${type}/purge`, { ids: Array.from(selectedIds) });
+        toast.push({ type: "success", message: res.data.message });
+        clearSelection();
+        setIsSelectMode(false);
       }
       // Reload the list
       load(true);
     } catch (err: any) {
       toast.push({ type: "error", message: err?.response?.data?.message ?? "Action failed." });
+    } finally {
+      setIsBulkProcessing(false);
+      setSecurityModal(null);
     }
   };
 
@@ -191,10 +227,28 @@ const DeletedItemsView: React.FC<DeletedItemsViewProps> = ({ type, onRestored })
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
           />
         </div>
-        <Button variant="ghost" size="sm" onClick={() => load(true)} loading={loading}>
-          <RefreshIcon size={14} className="mr-2" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          {rows.length > 0 && (
+            <button
+               onClick={() => {
+                 setIsSelectMode(!isSelectMode);
+                 if (isSelectMode) clearSelection();
+               }}
+               className={`flex items-center gap-2 px-3 h-9 rounded-lg border text-xs font-bold transition-all shadow-xs ${
+                 isSelectMode 
+                   ? "bg-brand-600 border-brand-600 text-white" 
+                   : "bg-white dark:bg-surface-500 border-slate-200 dark:border-surface-400 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+               }`}
+             >
+               <CheckSquare size={16} className={isSelectMode ? "text-white" : "text-brand-600"} />
+               {isSelectMode ? "Cancel Select" : "Select"}
+             </button>
+          )}
+          <Button variant="ghost" size="sm" onClick={() => load(true)} loading={loading}>
+            <RefreshIcon size={14} className="mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {error && <Alert variant="danger" className="m-3">{error}</Alert>}
@@ -211,6 +265,10 @@ const DeletedItemsView: React.FC<DeletedItemsViewProps> = ({ type, onRestored })
           hasMore={hasMore}
           onLoadMore={() => setPage((p) => p + 1)}
           gridTemplateColumns="4rem minmax(200px, 1fr) 10rem 14rem"
+          selectable={isSelectMode}
+          selectedIds={selectedIds}
+          onToggleRow={toggleRow}
+          onToggleAll={toggleAll}
         />
       </div>
 
@@ -219,15 +277,46 @@ const DeletedItemsView: React.FC<DeletedItemsViewProps> = ({ type, onRestored })
           open={securityModal.open}
           onClose={() => setSecurityModal(null)}
           onVerified={handleAction}
-          title={securityModal.action === "restore" ? "Confirm Restoration" : "Confirm Permanent Deletion"}
+          title={
+            securityModal.action.includes("restore") 
+              ? "Confirm Restoration" 
+              : "Confirm Permanent Deletion"
+          }
           description={
             securityModal.action === "restore"
               ? `Are you sure you want to restore "${securityModal.itemName}"? It will be immediately visible in all active workspaces.`
-              : `CAUTION: You are about to permanently delete "${securityModal.itemName}". This action cannot be undone.`
+              : securityModal.action === "purge"
+              ? `CAUTION: You are about to permanently delete "${securityModal.itemName}". This action cannot be undone.`
+              : securityModal.action === "bulk-restore"
+              ? `Are you sure you want to restore ${selectionCount} items? They will be immediately visible in active workspaces.`
+              : `CAUTION: You are about to permanently delete ${selectionCount} items. This action is IRREVERSIBLE.`
           }
-          actionLabel={securityModal.action === "restore" ? "Restore Item" : "Permanently Purge"}
+          actionLabel={securityModal.action.includes("restore") ? "Restore Item(s)" : "Permanently Purge"}
         />
       )}
+
+      <BulkActionBar 
+        selectedCount={selectionCount}
+        onClear={clearSelection}
+        actions={[
+          {
+            label: "Restore",
+            icon: <RotateCw size={14} />,
+            onClick: () => setSecurityModal({ open: true, action: "bulk-restore" }),
+            variant: "secondary",
+            count: selectionCount,
+            loading: isBulkProcessing
+          },
+          {
+            label: "Purge",
+            icon: <TrashIcon size={14} />,
+            onClick: () => setSecurityModal({ open: true, action: "bulk-purge" }),
+            variant: "danger",
+            count: selectionCount,
+            loading: isBulkProcessing
+          }
+        ]}
+      />
     </div>
   );
 };

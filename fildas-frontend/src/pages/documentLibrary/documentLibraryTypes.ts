@@ -43,6 +43,8 @@ export type LibraryItem = {
   recipId?: number;
   itemId?: number;
   tags?: string[];
+  can_archive?: boolean;
+  can_delete?: boolean;
 };
 
 export function docToLibraryItem(
@@ -65,6 +67,8 @@ export function docToLibraryItem(
     effectiveDate: doc.effective_date ?? undefined,
     docId: doc.id,
     tags: doc.tags,
+    can_archive: (doc as any).can_archive ?? true, // Default to true if in library
+    can_delete: (doc as any).can_delete ?? false,
   };
 }
 

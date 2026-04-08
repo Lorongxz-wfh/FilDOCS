@@ -23,6 +23,10 @@ type Props = {
   sortDir?: SortDir;
   onSortChange?: (key: string, dir: SortDir) => void;
   adminDebugMode?: boolean;
+  selectable?: boolean;
+  selectedIds?: Set<string | number>;
+  onToggleRow?: (id: string | number) => void;
+  onToggleAll?: () => void;
 };
 
 // ── Action cell — isolated so download state is per-row ───────────────────
@@ -104,6 +108,10 @@ const TemplateList: React.FC<Props> = ({
   sortDir,
   onSortChange,
   adminDebugMode,
+  selectable,
+  selectedIds,
+  onToggleRow,
+  onToggleAll,
 }) => {
   const columns: TableColumn<DocumentTemplate>[] = React.useMemo(
     () => [
@@ -268,6 +276,10 @@ const TemplateList: React.FC<Props> = ({
       sortBy={sortBy}
       sortDir={sortDir}
       onSortChange={onSortChange}
+      selectable={selectable}
+      selectedIds={selectedIds}
+      onToggleRow={onToggleRow}
+      onToggleAll={onToggleAll}
     />
   );
 };

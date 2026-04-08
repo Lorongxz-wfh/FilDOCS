@@ -17,11 +17,17 @@ import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import { getUserRole } from "../lib/roleFilters";
 import { TabBar } from "../components/documentRequests/shared";
 import DeletedItemsView from "../components/admin/DeletedItemsView";
-import { Building2, Trash2 } from "lucide-react";
+import { Building2, Trash2, CheckSquare } from "lucide-react";
+import { useBulkActions } from "../hooks/useBulkActions";
+import BulkActionBar from "../components/ui/BulkActionBar";
+import axios from "../services/api";
+import Button from "../components/ui/Button";
+import { useToast } from "../components/ui/toast/ToastContext";
 
 const OFFICE_TYPES = ["office", "vp", "president", "committee", "unit"];
 
 export function OfficeManagerPage() {
+  const { push } = useToast();
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
   const [statusFilter, setStatusFilter] = useState<"active" | "disabled" | "all">("active");
@@ -131,6 +137,41 @@ export function OfficeManagerPage() {
     setTypeFilter("");
   };
 
+  const {
+    selectedIds,
+    isSelectMode,
+    setIsSelectMode,
+    toggleRow,
+    toggleAll,
+    clearSelection,
+    selectionCount,
+  } = useBulkActions<AdminOffice>(
+    items,
+    (o) => o.id,
+    () => true
+  );
+
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${ids.length} offices?`)) return;
+
+    setIsBulkProcessing(true);
+    try {
+      const res = await axios.post("/bulk/offices/delete", { ids });
+      push({ type: "success", title: "Bulk Delete", message: res.data.message });
+      setItems(prev => prev.filter(o => !ids.includes(o.id)));
+      clearSelection();
+      setIsSelectMode(false);
+    } catch (e: any) {
+      push({ type: "error", title: "Action Failed", message: e.message });
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
   const columns: TableColumn<AdminOffice>[] = useMemo(() => [
     {
       key: "code",
@@ -192,18 +233,34 @@ export function OfficeManagerPage() {
         </PageActions>
       }
     >
-      {isAdmin && adminDebugMode && (
-        <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px">
-          <TabBar
-            tabs={[
-              { value: "active", label: "Active Offices", icon: <Building2 size={12} /> },
-              { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
-            ]}
-            active={activeTab}
-            onChange={(val: any) => setActiveTab(val)}
-          />
+      <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px pr-4">
+        <div className="flex items-center">
+          {isAdmin && adminDebugMode && (
+            <TabBar
+              tabs={[
+                { value: "active", label: "Active Offices", icon: <Building2 size={12} /> },
+                { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
+              ]}
+              active={activeTab}
+              onChange={(val: any) => setActiveTab(val)}
+            />
+          )}
         </div>
-      )}
+        {activeTab === "active" && (
+          <Button
+            variant={isSelectMode ? "primary" : "ghost"}
+            size="sm"
+            onClick={() => {
+              setIsSelectMode(!isSelectMode);
+              if (isSelectMode) clearSelection();
+            }}
+            className="flex items-center gap-2 h-8"
+          >
+            <CheckSquare size={14} />
+            <span>{isSelectMode ? "Cancel" : "Select"}</span>
+          </Button>
+        )}
+      </div>
 
       {activeTab === "deleted" ? (
         <div className="flex-1 min-h-0">
@@ -273,8 +330,27 @@ export function OfficeManagerPage() {
           sortBy={sortBy}
           sortDir={sortDir}
           onSortChange={(key, dir) => { setSortBy(key as typeof sortBy); setSortDir(dir); }}
+          selectable={isSelectMode}
+          selectedIds={selectedIds}
+          onToggleRow={toggleRow}
+          onToggleAll={toggleAll}
         />
       </div>
+
+      <BulkActionBar 
+        selectedCount={selectionCount}
+        onClear={clearSelection}
+        actions={[
+          {
+            label: "Delete",
+            icon: <Trash2 size={14} />,
+            onClick: handleBulkDelete,
+            variant: "danger",
+            count: selectionCount,
+            loading: isBulkProcessing
+          }
+        ]}
+      />
       </>
       )}
 

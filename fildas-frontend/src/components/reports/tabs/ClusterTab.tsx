@@ -2,7 +2,7 @@ import React from "react";
 import { Users, TrendingUp, Award, BarChart3 } from "lucide-react";
 import KpiCard from "../../ui/KpiCard";
 import ReportChartCard from "../ReportChartCard";
-import OfficeCreationChart from "../../charts/OfficeCreationChart";
+import OfficeComplianceTable from "../../charts/OfficeComplianceTable";
 import ComplianceClusterBarChart from "../../charts/ComplianceClusterBarChart";
 
 interface ClusterTabProps {
@@ -12,7 +12,7 @@ interface ClusterTabProps {
 }
 
 const ClusterTab: React.FC<ClusterTabProps> = ({ loading, stats, parent }) => {
-  const { creationByOffice } = stats;
+  const { offices, clusters } = stats;
 
   return (
     <div className="flex flex-col gap-6">
@@ -28,11 +28,11 @@ const ClusterTab: React.FC<ClusterTabProps> = ({ loading, stats, parent }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
          <ReportChartCard
-            title="Production by Department"
-            subtitle="Volume created vs distributed by office within cluster"
+            title="Office document breakdown"
+            subtitle="Documents in review, approved, and returned per office."
             loading={loading}
          >
-            <OfficeCreationChart data={creationByOffice} height={300} loading={loading} />
+            <OfficeComplianceTable data={offices} loading={loading} />
          </ReportChartCard>
 
          <ReportChartCard
@@ -40,7 +40,7 @@ const ClusterTab: React.FC<ClusterTabProps> = ({ loading, stats, parent }) => {
             subtitle="Institutional requirement adherence per office"
             loading={loading}
          >
-            <ComplianceClusterBarChart data={[]} loading={loading} height={300} />
+            <ComplianceClusterBarChart data={clusters} loading={loading} height={350} />
          </ReportChartCard>
       </div>
 
@@ -64,7 +64,7 @@ const ClusterTab: React.FC<ClusterTabProps> = ({ loading, stats, parent }) => {
           <KpiCard
             loading={loading}
             label="Total Offices"
-            value={creationByOffice.length}
+            value={offices?.length ?? 0}
             sub="Reporting departments"
             icon={<BarChart3 size={16} className="text-amber-500" />}
             iconBg="bg-amber-50 dark:bg-amber-900/20"

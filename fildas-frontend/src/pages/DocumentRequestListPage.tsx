@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import PageFrame from "../components/layout/PageFrame.tsx";
 import Table, { type TableColumn } from "../components/ui/Table";
 import {
@@ -14,6 +14,7 @@ import { getUserRole } from "../lib/roleFilters";
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import CreateDocumentRequestModal from "../components/documentRequests/CreateDocumentRequestModal";
 import api from "../services/api";
+import axios from "../services/api";
 import {
   LayoutList,
   TableProperties,
@@ -21,6 +22,8 @@ import {
   FileStack,
   Trash2,
   FileSearch,
+  CheckSquare,
+  Download,
 } from "lucide-react";
 import { Tabs } from "../components/ui/Tabs";
 import { TabBar as SubTabBar } from "../components/documentRequests/shared";
@@ -37,6 +40,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "../components/ui/toast/ToastContext";
 import Modal from "../components/ui/Modal";
 import Button from "../components/ui/Button";
+import { useBulkActions } from "../hooks/useBulkActions";
+import BulkActionBar from "../components/ui/BulkActionBar";
+import BulkDownloadModal from "../components/ui/BulkDownloadModal";
 
 type ViewTab = "batches" | "all";
 
@@ -147,8 +153,8 @@ export default function DocumentRequestListPage() {
     () => (location.state as any)?.openModal === true,
   );
   const [direction, setDirection] = React.useState<"all" | "incoming" | "outgoing">("all");
-  const [sortBy, setSortBy] = React.useState<string>("created_at");
-  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("desc");
+  const [sortBy] = React.useState<string>("created_at");
+  const [sortDir] = React.useState<"asc" | "desc">("desc");
   const [deletingId, setDeletingId] = React.useState<number | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
 
@@ -183,6 +189,68 @@ export default function DocumentRequestListPage() {
       push({ type: "error", title: "Delete failed", message: e.message });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const {
+    selectedIds,
+    isSelectMode,
+    setIsSelectMode,
+    toggleRow,
+    toggleAll,
+    clearSelection,
+    selectionCount,
+    getActionableCount,
+  } = useBulkActions<any>(
+    rows,
+    (r) => r.request_id || r.id || r.recipient_id,
+    (_r, action) => {
+      if (action === "delete") return isAdminUser || adminDebugMode;
+      return true;
+    }
+  );
+
+  const [bulkDownloadOpen, setBulkDownloadOpen] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${ids.length} requests?`)) return;
+
+    setIsBulkProcessing(true);
+    try {
+      const res = await axios.post("/bulk/documents/delete", { ids, type: 'requests' });
+      push({ type: "success", title: "Bulk Delete", message: res.data.message });
+      setRows(prev => prev.filter(r => !ids.includes(r.request_id || r.id)));
+      clearSelection();
+      setIsSelectMode(false);
+    } catch (e: any) {
+      push({ type: "error", title: "Bulk Delete Failed", message: e.message });
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkDownload = async (filename: string) => {
+    const ids = Array.from(selectedIds).join(",");
+    try {
+      const res = await axios.get(`/bulk/documents/download?ids=${ids}&type=requests&filename=${filename}`, {
+        responseType: "blob"
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename.endsWith('.zip') ? filename : `${filename}.zip`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      push({ type: "success", title: "Download Started", message: "Your batch export is being prepared." });
+      setBulkDownloadOpen(false);
+      clearSelection();
+      setIsSelectMode(false);
+    } catch (e: any) {
+      push({ type: "error", title: "Download Failed", message: e.message });
     }
   };
 
@@ -341,7 +409,7 @@ export default function DocumentRequestListPage() {
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
                 {isOutgoing ? "To" : "From"}
               </span>
-              <span className="text-xs font-bold text-brand-600 dark:text-brand-400 truncate max-w-[140px]">
+              <span className="text-xs font-bold text-brand-600 dark:text-brand-400 truncate max-w-35">
                 {isMulti ? "Multiple Offices" : r.office_code}
               </span>
               {isMulti && (
@@ -488,7 +556,7 @@ export default function DocumentRequestListPage() {
             <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
               {r.office_code}
             </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-500 truncate max-w-[120px]">
+            <span className="text-[10px] text-slate-500 dark:text-slate-500 truncate max-w-30]">
               {r.office_name}
             </span>
           </div>
@@ -549,7 +617,7 @@ export default function DocumentRequestListPage() {
         </div>
       ) : (
         <>
-          <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 pr-4">
             <Tabs 
               tabs={REQ_TABS} 
               activeTab={tab} 
@@ -569,6 +637,20 @@ export default function DocumentRequestListPage() {
               id="requests" 
               className="border-none"
             />
+            {activeTab === "active" && (
+              <Button
+                variant={isSelectMode ? "primary" : "ghost"}
+                size="sm"
+                onClick={() => {
+                  setIsSelectMode(!isSelectMode);
+                  if (isSelectMode) clearSelection();
+                }}
+                className="flex items-center gap-2 h-8"
+              >
+                <CheckSquare size={14} />
+                <span>{isSelectMode ? "Cancel" : "Select"}</span>
+              </Button>
+            )}
           </div>
 
           <SearchFilterBar
@@ -685,30 +767,38 @@ export default function DocumentRequestListPage() {
                     emptyMessage={q || status ? "No requests match your filters." : "No requests found."}
                     hasMore={hasMore}
                     onLoadMore={() => setPage((p) => p + 1)}
-                    gridTemplateColumns={adminDebugMode ? "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px 50px" : "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px"}
-                  />
-                ) : (
-                  <Table<any>
-                    bare
-                    className="h-full"
-                    columns={allColumns}
-                    rows={rows}
-                    rowKey={(r: any, idx) => r.recipient_id || r.item_id || `indiv-${idx}`}
-                    onRowClick={(r) => {
-                      if (r.row_type === "item") {
-                        navigate(`/document-requests/${r.request_id}/items/${r.item_id}`);
-                      } else {
-                        navigate(`/document-requests/${r.request_id}/recipients/${r.recipient_id}`);
-                      }
-                    }}
-                    loading={loading}
-                    initialLoading={initialLoading}
-                    emptyMessage="No individual requests found."
-                    hasMore={hasMore}
-                    onLoadMore={() => setPage((p) => p + 1)}
-                    gridTemplateColumns="50px 90px minmax(150px, 1fr) 90px 90px 110px 130px 130px"
-                  />
-                )}
+                      gridTemplateColumns={adminDebugMode ? "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px 50px" : "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px"}
+                      selectable={isSelectMode}
+                      selectedIds={selectedIds}
+                      onToggleRow={toggleRow}
+                      onToggleAll={toggleAll}
+                    />
+                  ) : (
+                    <Table<any>
+                      bare
+                      className="h-full"
+                      columns={allColumns}
+                      rows={rows}
+                      rowKey={(r: any, idx) => r.recipient_id || r.item_id || `indiv-${idx}`}
+                      onRowClick={(r) => {
+                        if (r.row_type === "item") {
+                          navigate(`/document-requests/${r.request_id}/items/${r.item_id}`);
+                        } else {
+                          navigate(`/document-requests/${r.request_id}/recipients/${r.recipient_id}`);
+                        }
+                      }}
+                      loading={loading}
+                      initialLoading={initialLoading}
+                      emptyMessage="No individual requests found."
+                      hasMore={hasMore}
+                      onLoadMore={() => setPage((p) => p + 1)}
+                      gridTemplateColumns="50px 90px minmax(150px, 1fr) 90px 90px 110px 130px 130px"
+                      selectable={isSelectMode}
+                      selectedIds={selectedIds}
+                      onToggleRow={toggleRow}
+                      onToggleAll={toggleAll}
+                    />
+                  )}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -718,7 +808,7 @@ export default function DocumentRequestListPage() {
       <CreateDocumentRequestModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        onCreated={() => refreshRequests()}
+        // onCreated={() => refreshRequests()}
       />
 
       <Modal
@@ -735,7 +825,37 @@ export default function DocumentRequestListPage() {
         <p className="text-sm text-slate-600 dark:text-slate-400">
           Are you sure you want to delete this request batch? This action is reversible by admins in dev mode.
         </p>
-      </Modal>
-    </PageFrame>
-  );
-}
+        </Modal>
+
+        <BulkActionBar 
+          selectedCount={selectionCount}
+          onClear={clearSelection}
+          actions={[
+            {
+              label: "Download",
+              icon: <Download size={14} />,
+              onClick: () => setBulkDownloadOpen(true),
+              variant: "secondary",
+              count: selectionCount 
+            },
+            {
+              label: "Delete",
+              icon: <Trash2 size={14} />,
+              onClick: handleBulkDelete,
+              variant: "danger",
+              count: getActionableCount("delete"),
+              loading: isBulkProcessing
+            }
+          ]}
+        />
+
+        <BulkDownloadModal 
+          open={bulkDownloadOpen}
+          onClose={() => setBulkDownloadOpen(false)}
+          selectedCount={selectionCount}
+          onConfirm={handleBulkDownload}
+          defaultPrefix="Request_Exports"
+        />
+      </PageFrame>
+    );
+  }

@@ -33,7 +33,7 @@ import { PageActions, RefreshAction } from "../components/ui/PageActions";
 import { inputCls } from "../utils/formStyles";
 import { useToast } from "../components/ui/toast/ToastContext";
 import { normalizeError } from "../lib/normalizeError";
-import { getUserRole, isSysAdmin, isAuditor } from "../lib/roleFilters";
+import { getUserRole, isAuditor } from "../lib/roleFilters";
 
 const ProfileSettingsPage: React.FC = () => {
   const user = useAuthUser();

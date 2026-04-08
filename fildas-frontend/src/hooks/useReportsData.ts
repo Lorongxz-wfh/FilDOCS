@@ -13,7 +13,9 @@ import {
 import type { 
   RequestsReport, 
   ActivityReportResponse, 
-  AdminDashboardStats 
+  AdminDashboardStats,
+  ComplianceOfficeDatum,
+  ComplianceClusterDatum
 } from "../services/types";
 import type { Bucket, Parent, DateField, Scope } from "../components/reports/ReportFilters";
 
@@ -57,6 +59,8 @@ export const useReportsData = ({
   });
   const [volumeSeries, setVolumeSeries] = React.useState<ComplianceVolumeSeriesDatum[]>([]);
   const [phaseDist, setPhaseDist] = React.useState<{ phase: string; count: number }[]>([]);
+  const [offices, setOffices] = React.useState<ComplianceOfficeDatum[]>([]);
+  const [clusters, setClusters] = React.useState<ComplianceClusterDatum[]>([]);
   const [stageDelaysByPhase, setStageDelaysByPhase] = React.useState<ComplianceStageDelayDatum[]>([]);
   const [doctypeDist, setDoctypeDist] = React.useState<{ doctype: string; count: number }[]>([]);
   const [creationByOffice, setCreationByOffice] = React.useState<{ 
@@ -112,6 +116,8 @@ export const useReportsData = ({
         setKpis(report.kpis ?? kpis);
         setVolumeSeries(report.volume_series ?? []);
         setPhaseDist(report.phase_distribution ?? []);
+        setOffices(report.offices ?? []);
+        setClusters(report.clusters ?? []);
         setStageDelaysByPhase(report.stage_delays_by_phase ?? []);
         setDoctypeDist(report.doctype_distribution ?? []);
         setCreationByOffice(report.creation_by_office ?? []);
@@ -217,6 +223,8 @@ export const useReportsData = ({
       kpis,
       volumeSeries,
       phaseDist,
+      offices,
+      clusters,
       stageDelaysByPhase,
       doctypeDist,
       creationByOffice,

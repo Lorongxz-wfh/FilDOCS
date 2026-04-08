@@ -278,6 +278,7 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
               setIsPreviewLoading={() => { /* logic in hook already checks this via useEffect */ }}
               fileInputRef={actions.fileUpload.fileInputRef}
               onOpenPreview={async () => {
+                
                 const res = await getDocumentPreviewLink(state.localVersion!.id);
                 window.open(res.url, "_blank");
               }}

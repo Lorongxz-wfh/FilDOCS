@@ -84,8 +84,8 @@ const VolumeTrendChart: React.FC<{ data: VolumeSeries[]; height?: number; loadin
             verticalAlign="top" 
             align="right"
             iconType="circle"
-            iconSize={8}
-            wrapperStyle={{ fontSize: 11, fontWeight: 500, paddingTop: 15 }}
+            iconSize={6}
+            wrapperStyle={{ fontSize: 10, fontWeight: 700, paddingTop: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}
           />
           <Bar dataKey="created" name="Created" fill="#38bdf8" radius={[4, 4, 0, 0]} maxBarSize={32} />
           <Bar dataKey="approved_final" name="Approved" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={32} />

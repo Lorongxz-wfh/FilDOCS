@@ -17,12 +17,17 @@ import SearchFilterBar from "../components/ui/SearchFilterBar";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
 import { LayoutGrid, List, Share2, ClipboardList, Archive, Library, Trash2 } from "lucide-react";
 import { usePageBurstRefresh } from "../hooks/usePageBurstRefresh";
-import { formatDate } from "../utils/formatters";
+// import { formatDate } from "../utils/formatters";
 import { Tabs } from "../components/ui/Tabs";
 import { TabBar as SubTabBar } from "../components/documentRequests/shared";
 import DeletedItemsView from "../components/admin/DeletedItemsView";
 import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { motion, AnimatePresence } from "framer-motion";
+import { useBulkActions } from "../hooks/useBulkActions";
+import BulkActionBar from "../components/ui/BulkActionBar";
+import BulkDownloadModal from "../components/ui/BulkDownloadModal";
+import axios from "../services/api";
+import { CheckSquare, Download } from "lucide-react";
 
 import {
   type LibTab,
@@ -42,7 +47,7 @@ import { useToast } from "../components/ui/toast/ToastContext";
 import Modal from "../components/ui/Modal";
 import Button from "../components/ui/Button";
 import { buildCreatedColumns, buildSharedColumns, buildRequestedColumns, buildAllColumns } from "./documentLibrary/DocumentLibraryColumns";
-import TagBadge from "../components/documents/TagBadge";
+// import TagBadge from "../components/documents/TagBadge";
 
 const TAB_LABELS: Record<LibTab, string> = {
   all: "All Documents",
@@ -95,6 +100,37 @@ export default function DocumentLibraryPage() {
   const [deletingType, setDeletingType] = useState<"doc" | "req" | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const {
+    selectedIds,
+    isSelectMode,
+    setIsSelectMode,
+    toggleRow,
+    toggleAll,
+    clearSelection,
+    selectionCount,
+    getActionableCount,
+    getActionableItems,
+  } = useBulkActions<any>(
+    rows,
+    (r) => r.id || r.docId || r.reqId,
+    (r, _action) => {
+      // Logic for bulk action eligibility
+      // const isDoc = !!(r.docId || r.id);
+      if (_action === "download") return true; 
+      if (_action === "delete") return r.can_delete;
+      if (_action === "archive") return r.can_archive;
+      return true;
+    }
+  );
+
+  const [bulkDownloadOpen, setBulkDownloadOpen] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const [bulkConfirm, setBulkConfirm] = useState<{
+    type: "archive" | "delete";
+    actionableIds: (string | number)[];
+    skippedCount: number;
+  } | null>(null);
+
   const handleDelete = async () => {
     if (!deletingId || !deletingType) return;
     setIsDeleting(true);
@@ -114,6 +150,92 @@ export default function DocumentLibraryPage() {
       push({ type: "error", title: "Delete failed", message: e.message });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    const actionable = getActionableItems("delete");
+    const totalSelected = selectionCount;
+    const actionableIds = actionable.map(r => r.id || r.docId || r.reqId);
+    
+    if (actionableIds.length === 0) {
+      push({ type: "warning", title: "No Actionable Items", message: "None of the selected items can be deleted." });
+      return;
+    }
+
+    setBulkConfirm({
+      type: "delete",
+      actionableIds,
+      skippedCount: totalSelected - actionableIds.length
+    });
+  };
+
+  const handleBulkArchive = () => {
+    const actionable = getActionableItems("archive");
+    const totalSelected = selectionCount;
+    const actionableIds = actionable.map(r => r.id || r.docId || r.reqId);
+    
+    if (actionableIds.length === 0) {
+      push({ type: "warning", title: "No Actionable Items", message: "None of the selected items can be archived." });
+      return;
+    }
+
+    setBulkConfirm({
+      type: "archive",
+      actionableIds,
+      skippedCount: totalSelected - actionableIds.length
+    });
+  };
+
+  const executeBulkAction = async () => {
+    if (!bulkConfirm) return;
+    const { type, actionableIds } = bulkConfirm;
+    
+    setIsBulkProcessing(true);
+    setBulkConfirm(null);
+    try {
+      const endpoint = type === "archive" ? "/bulk/documents/archive" : "/bulk/documents/delete";
+      const res = await axios.post(endpoint, { ids: actionableIds });
+      
+      push({ 
+        type: "success", 
+        title: `Bulk ${type === "archive" ? "Archive" : "Delete"}`, 
+        message: res.data.message 
+      });
+      
+      setRows(prev => prev.filter(r => !actionableIds.includes(r.id || r.docId || r.reqId)));
+      clearSelection();
+      setIsSelectMode(false);
+    } catch (e: any) {
+      push({ 
+        type: "error", 
+        title: `Bulk ${type === "archive" ? "Archive" : "Delete"} Failed`, 
+        message: e.response?.data?.message || e.message 
+      });
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkDownload = async (filename: string) => {
+    const ids = Array.from(selectedIds).join(",");
+    setBulkDownloadOpen(false);
+    const url = `/api/bulk/documents/download?ids=${ids}&filename=${filename}`;
+    
+    try {
+      const res = await axios.get(url, { responseType: 'blob' });
+      const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', filename.endsWith('.zip') ? filename : `${filename}.zip`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      push({ type: "success", title: "Download Started", message: "Your ZIP archive is being downloaded." });
+      clearSelection();
+      setIsSelectMode(false);
+    } catch (e: any) {
+      push({ type: "error", title: "Download Failed", message: "Failed to generate ZIP archive." });
     }
   };
 
@@ -382,7 +504,7 @@ export default function DocumentLibraryPage() {
         </div>
       ) : (
         <>
-          <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 pr-4">
             <Tabs 
               tabs={TABS} 
               activeTab={tab} 
@@ -390,6 +512,20 @@ export default function DocumentLibraryPage() {
               id="library" 
               className="border-none"
             />
+            {activeTab === "active" && (
+              <Button
+                variant={isSelectMode ? "primary" : "ghost"}
+                size="sm"
+                onClick={() => {
+                  setIsSelectMode(!isSelectMode);
+                  if (isSelectMode) clearSelection();
+                }}
+                className="flex items-center gap-2 h-8"
+              >
+                <CheckSquare size={14} />
+                <span>{isSelectMode ? "Cancel" : "Select"}</span>
+              </Button>
+            )}
           </div>
 
           <SearchFilterBar
@@ -486,6 +622,10 @@ export default function DocumentLibraryPage() {
                   sortBy={sortBy}
                   sortDir={sortDir}
                   onSortChange={(key, dir) => { setSortBy(key as any); setSortDir(dir); }}
+                  selectable={isSelectMode}
+                  selectedIds={selectedIds}
+                  onToggleRow={toggleRow}
+                  onToggleAll={toggleAll}
                 />
               </motion.div>
             </AnimatePresence>
@@ -508,6 +648,85 @@ export default function DocumentLibraryPage() {
           Are you sure you want to delete this {deletingType === "doc" ? "document" : "document request"}? 
           This will soft-delete the record, removing it from the active library.
         </p>
+      </Modal>
+      <BulkActionBar 
+        selectedCount={selectionCount}
+        onClear={clearSelection}
+        actions={[
+          {
+            label: "Download",
+            icon: <Download size={14} />,
+            onClick: () => setBulkDownloadOpen(true),
+            variant: "secondary",
+            count: selectionCount
+          },
+          {
+            label: "Archive",
+            icon: <Archive size={14} />,
+            onClick: handleBulkArchive,
+            variant: "secondary",
+            count: getActionableCount("archive"),
+            loading: isBulkProcessing
+          },
+          {
+            label: "Delete",
+            icon: <Trash2 size={14} />,
+            onClick: handleBulkDelete,
+            variant: "danger",
+            count: getActionableCount("delete"),
+            loading: isBulkProcessing
+          }
+        ]}
+      />
+
+      <BulkDownloadModal 
+        open={bulkDownloadOpen}
+        onClose={() => setBulkDownloadOpen(false)}
+        selectedCount={selectionCount}
+        onConfirm={handleBulkDownload}
+        defaultPrefix="Document_Library_Export"
+      />
+
+      <Modal
+        open={!!bulkConfirm}
+        onClose={() => setBulkConfirm(null)}
+        title={bulkConfirm?.type === "archive" ? "Confirm Bulk Archive" : "Confirm Bulk Deletion"}
+        widthClassName="max-w-md"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setBulkConfirm(null)}>Cancel</Button>
+            <Button 
+              variant={bulkConfirm?.type === "delete" ? "danger" : "primary"} 
+              loading={isBulkProcessing} 
+              onClick={executeBulkAction}
+            >
+              Confirm {bulkConfirm?.type === "archive" ? "Archive" : "Delete"}
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div className={`p-4 rounded-xl border ${
+            bulkConfirm?.type === "delete" 
+              ? "bg-rose-50 border-rose-100 dark:bg-rose-900/10 dark:border-rose-900/20" 
+              : "bg-brand-50 border-brand-100 dark:bg-brand-900/10 dark:border-brand-900/20"
+          }`}>
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {bulkConfirm?.actionableIds.length} items will be {bulkConfirm?.type === "archive" ? "archived" : "deleted"}.
+            </p>
+            {bulkConfirm && bulkConfirm.skippedCount > 0 && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {bulkConfirm.skippedCount} items were skipped as they are not in a valid state for this action.
+              </p>
+            )}
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            {bulkConfirm?.type === "delete" 
+              ? "This will soft-delete the records. They will be removed from the active library but can be restored by an administrator."
+              : "Archived documents will be moved to the Archive section and will no longer be visible in the active library."
+            }
+          </p>
+        </div>
       </Modal>
     </PageFrame>
   );

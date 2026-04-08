@@ -23,9 +23,16 @@ import SearchFilterBar from "../components/ui/SearchFilterBar";
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import DeletedItemsView from "../components/admin/DeletedItemsView";
 import { TabBar } from "../components/documentRequests/shared";
-import { Users, Trash2 } from "lucide-react";
+import { Users, Trash2, CheckSquare, ShieldCheck, ShieldAlert } from "lucide-react";
+import { useBulkActions } from "../hooks/useBulkActions";
+import BulkActionBar from "../components/ui/BulkActionBar";
+import axios from "../services/api";
+import Button from "../components/ui/Button";
+import { getAuthUser } from "../lib/auth";
+import { useToast } from "../components/ui/toast/ToastContext";
 
 const UserManagerPage: React.FC = () => {
+  const { push } = useToast();
   const role = getUserRole();
   const isAdmin = role === "ADMIN" || role === "SYSADMIN";
   const adminDebugMode = useAdminDebugMode();
@@ -169,6 +176,62 @@ const UserManagerPage: React.FC = () => {
     loadRef(true); 
   };
 
+  const {
+    selectedIds,
+    isSelectMode,
+    setIsSelectMode,
+    toggleRow,
+    toggleAll,
+    clearSelection,
+    selectionCount,
+  } = useBulkActions<AdminUser>(
+    rows,
+    (u) => u.id,
+    (u, _action) => {
+      // Cannot bulk action yourself
+      if (u.id === getAuthUser()?.id) return false;
+      return true;
+    }
+  );
+
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  const handleBulkStatus = async (disabled: boolean) => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setIsBulkProcessing(true);
+    try {
+      const res = await axios.post("/bulk/users/toggle-status", { ids, disabled });
+      push({ type: "success", title: "Bulk Status Update", message: res.data.message });
+      setRows(prev => prev.map(u => ids.includes(u.id) ? { ...u, disabled_at: disabled ? new Date().toISOString() : null } : u));
+      clearSelection();
+      setIsSelectMode(false);
+    } catch (e: any) {
+      push({ type: "error", title: "Action Failed", message: e.message });
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${ids.length} users?`)) return;
+
+    setIsBulkProcessing(true);
+    try {
+      const res = await axios.post("/bulk/users/delete", { ids });
+      push({ type: "success", title: "Bulk Delete", message: res.data.message });
+      setRows(prev => prev.filter(u => !ids.includes(u.id)));
+      clearSelection();
+      setIsSelectMode(false);
+    } catch (e: any) {
+      push({ type: "error", title: "Action Failed", message: e.message });
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
   const clearFilters = () => {
     setSearch("");
     setStatusFilter("");
@@ -258,18 +321,34 @@ const UserManagerPage: React.FC = () => {
         </PageActions>
       }
     >
-      {isAdmin && adminDebugMode && (
-        <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px">
-          <TabBar
-            tabs={[
-              { value: "active", label: "Active Users", icon: <Users size={12} /> },
-              { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
-            ]}
-            active={activeTab}
-            onChange={(val: any) => setActiveTab(val)}
-          />
+      <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px pr-4">
+        <div className="flex items-center">
+          {isAdmin && adminDebugMode && (
+            <TabBar
+              tabs={[
+                { value: "active", label: "Active Users", icon: <Users size={12} /> },
+                { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
+              ]}
+              active={activeTab}
+              onChange={(val: any) => setActiveTab(val)}
+            />
+          )}
         </div>
-      )}
+        {activeTab === "active" && (
+          <Button
+            variant={isSelectMode ? "primary" : "ghost"}
+            size="sm"
+            onClick={() => {
+              setIsSelectMode(!isSelectMode);
+              if (isSelectMode) clearSelection();
+            }}
+            className="flex items-center gap-2 h-8"
+          >
+            <CheckSquare size={14} />
+            <span>{isSelectMode ? "Cancel" : "Select"}</span>
+          </Button>
+        )}
+      </div>
 
       {activeTab === "deleted" ? (
         <div className="flex-1 min-h-0">
@@ -339,8 +418,43 @@ const UserManagerPage: React.FC = () => {
           sortBy={sortBy}
           sortDir={sortDir}
           onSortChange={(key, dir) => { setSortBy(key as typeof sortBy); setSortDir(dir); }}
+          selectable={isSelectMode}
+          selectedIds={selectedIds}
+          onToggleRow={toggleRow}
+          onToggleAll={toggleAll}
         />
       </div>
+
+      <BulkActionBar 
+        selectedCount={selectionCount}
+        onClear={clearSelection}
+        actions={[
+          {
+            label: "Enable",
+            icon: <ShieldCheck size={14} />,
+            onClick: () => handleBulkStatus(false),
+            variant: "secondary",
+            count: selectionCount, 
+            loading: isBulkProcessing
+          },
+          {
+            label: "Disable",
+            icon: <ShieldAlert size={14} />,
+            onClick: () => handleBulkStatus(true),
+            variant: "warning",
+            count: selectionCount,
+            loading: isBulkProcessing
+          },
+          {
+            label: "Delete",
+            icon: <Trash2 size={14} />,
+            onClick: handleBulkDelete,
+            variant: "danger",
+            count: selectionCount,
+            loading: isBulkProcessing
+          }
+        ]}
+      />
       </>
       )}
 

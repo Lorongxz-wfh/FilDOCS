@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import EmptyState from "./EmptyState";
 import Skeleton from "./loader/Skeleton";
 
@@ -50,6 +50,12 @@ export type TableProps<T> = {
   onSortChange?: (key: string, dir: SortDir) => void;
   /** Optional custom renderer for mobile card view. If provided, table hides on mobile and shows these cards instead. */
   mobileRender?: (row: T) => React.ReactNode;
+
+  // Row selection
+  selectable?: boolean;
+  selectedIds?: Set<string | number>;
+  onToggleRow?: (id: string | number) => void;
+  onToggleAll?: () => void;
 };
 
 const alignClass = (align: Align | undefined) => {
@@ -99,6 +105,34 @@ const SortIcon = ({
   </span>
 );
 
+const Checkbox = ({
+  checked,
+  onChange,
+  indeterminate,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  indeterminate?: boolean;
+}) => {
+  const ref = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = !!indeterminate;
+    }
+  }, [indeterminate]);
+
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer dark:bg-surface-400 dark:border-surface-300 transition-all duration-200"
+    />
+  );
+};
+
 export default function Table<T>({
   columns,
   rows,
@@ -118,6 +152,10 @@ export default function Table<T>({
   sortDir = "desc" as SortDir,
   mobileRender,
   emptyState,
+  selectable,
+  selectedIds,
+  onToggleRow,
+  onToggleAll,
 }: TableProps<T>) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const sentinelRef = React.useRef<HTMLDivElement>(null);
@@ -141,6 +179,18 @@ export default function Table<T>({
   const colCount = columns.length;
   const colTemplate =
     gridTemplateColumns ?? `repeat(${colCount}, minmax(0, 1fr))`;
+  
+  const finalTemplate = selectable ? `44px ${colTemplate}` : colTemplate;
+
+  const isAllSelected = useMemo(() => {
+    if (!selectable || rows.length === 0) return false;
+    return rows.every(r => selectedIds?.has(rowKey(r, 0)));
+  }, [selectable, rows, selectedIds, rowKey]);
+
+  const isSomeSelected = useMemo(() => {
+    if (!selectable || rows.length === 0) return false;
+    return !isAllSelected && rows.some(r => selectedIds?.has(rowKey(r, 0)));
+  }, [selectable, rows, selectedIds, rowKey, isAllSelected]);
 
   const inner = (
     <>
@@ -149,8 +199,17 @@ export default function Table<T>({
         {/* Sticky header — hidden if mobileRender is active on small screen */}
         <div
           className={`sticky top-0 z-20 shrink-0 grid gap-3 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-surface-400 bg-neutral-50 dark:bg-surface-500 ${mobileRender ? "hidden sm:grid" : "grid"}`}
-          style={{ gridTemplateColumns: colTemplate }}
+          style={{ gridTemplateColumns: finalTemplate }}
         >
+          {selectable && (
+            <div className="flex items-center justify-center">
+              <Checkbox 
+                checked={isAllSelected}
+                indeterminate={isSomeSelected}
+                onChange={() => onToggleAll?.()}
+              />
+            </div>
+          )}
           {columns.map((c) => {
             const isSortable = !!c.sortKey && !!onSortChange;
             const isActive = isSortable && sortBy === c.sortKey;
@@ -199,8 +258,9 @@ export default function Table<T>({
               <div
                 key={r}
                 className={`grid gap-3 items-center px-4 py-3 sm:py-2 ${mobileRender ? "flex flex-col items-start sm:grid" : "grid"}`}
-                style={{ gridTemplateColumns: colTemplate }}
+                style={{ gridTemplateColumns: finalTemplate }}
               >
+                {selectable && <div className="hidden sm:block" />}
                 {columns.map((col, c) => {
                   const shape = col.skeletonShape ?? "text";
                   
@@ -327,9 +387,18 @@ export default function Table<T>({
                         clickable
                           ? "cursor-pointer hover:bg-neutral-50/80 dark:hover:bg-surface-400/40"
                           : "",
+                        selectedIds?.has(key) ? "bg-brand-50/40 dark:bg-brand-900/10" : ""
                       ].join(" ")}
-                      style={{ gridTemplateColumns: colTemplate }}
+                      style={{ gridTemplateColumns: finalTemplate }}
                     >
+                      {selectable && (
+                        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox 
+                            checked={selectedIds?.has(key) ?? false}
+                            onChange={() => onToggleRow?.(key)}
+                          />
+                        </div>
+                      )}
                       {columns.map((c) => (
                         <div
                           key={c.key}
@@ -342,6 +411,8 @@ export default function Table<T>({
                   </div>
                 );
               }
+
+              const isSelected = selectedIds?.has(key) ?? false;
 
               // Standard Table view
               return (
@@ -361,9 +432,18 @@ export default function Table<T>({
                     clickable
                       ? "cursor-pointer hover:bg-neutral-50/80 dark:hover:bg-surface-400/40"
                       : "",
+                    isSelected ? "bg-brand-50/40 dark:bg-brand-900/10" : ""
                   ].join(" ")}
-                  style={{ gridTemplateColumns: colTemplate }}
+                  style={{ gridTemplateColumns: finalTemplate }}
                 >
+                  {selectable && (
+                    <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox 
+                        checked={isSelected}
+                        onChange={() => onToggleRow?.(key)}
+                      />
+                    </div>
+                  )}
                   {columns.map((c) => (
                     <div
                       key={c.key}

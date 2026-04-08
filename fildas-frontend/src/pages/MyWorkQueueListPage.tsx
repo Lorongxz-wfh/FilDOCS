@@ -5,7 +5,7 @@ import { listDocumentsPage, deleteDocument, type Document } from "../services/do
 import { getUserRole, isQA, isSysAdmin } from "../lib/roleFilters";
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import { useToast } from "../components/ui/toast/ToastContext";
-import { Trash2, LayoutList, Activity, CheckCircle2 } from "lucide-react";
+import { CheckSquare, Download, Trash2, LayoutList, Activity, CheckCircle2 } from "lucide-react";
 import Modal from "../components/ui/Modal";
 import Button from "../components/ui/Button";
 import PageFrame from "../components/layout/PageFrame";
@@ -20,6 +20,10 @@ import { Tabs } from "../components/ui/Tabs";
 import { PageActions, CreateAction, RefreshAction } from "../components/ui/PageActions";
 import { StatusBadge } from "../components/ui/Badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { useBulkActions } from "../hooks/useBulkActions";
+import BulkActionBar from "../components/ui/BulkActionBar";
+import BulkDownloadModal from "../components/ui/BulkDownloadModal";
+import axios from "../services/api";
 
 type WFTab = "all" | "active" | "distributed";
 
@@ -65,6 +69,10 @@ export default function MyWorkQueueListPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [bulkDownloadOpen, setBulkDownloadOpen] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const [bulkConfirmDelete, setBulkConfirmDelete] = useState<number[] | null>(null);
+
   const handleDelete = async () => {
     if (!deletingId) return;
     setIsDeleting(true);
@@ -77,6 +85,55 @@ export default function MyWorkQueueListPage() {
       push({ type: "error", title: "Delete failed", message: e.message });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const {
+    selectedIds,
+    isSelectMode,
+    setIsSelectMode,
+    selectionCount,
+    toggleRow,
+    toggleAll,
+    clearSelection,
+  } = useBulkActions<Document>(rows, (r) => r.id);
+
+  const handleBulkDownload = async (filename: string) => {
+    try {
+      const ids = Array.from(selectedIds).join(",");
+      const response = await axios.get(`/bulk/documents/download?ids=${ids}&filename=${filename}`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename.endsWith(".zip") ? filename : `${filename}.zip`);
+      window.document.body.appendChild(link);
+      link.click();
+      link.remove();
+      push({ type: "success", title: "Download Started", message: "Batch export is processing." });
+      setBulkDownloadOpen(false);
+      clearSelection();
+      setIsSelectMode(false);
+    } catch (e: any) {
+      push({ type: "error", title: "Download Failed", message: e.message });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!bulkConfirmDelete) return;
+    setIsBulkProcessing(true);
+    try {
+      const res = await axios.post("/bulk/documents/delete", { ids: bulkConfirmDelete });
+      push({ type: "success", title: "Bulk Delete", message: res.data.message });
+      setRows(prev => prev.filter(r => !bulkConfirmDelete.includes(r.id)));
+      clearSelection();
+      setIsSelectMode(false);
+      setBulkConfirmDelete(null);
+    } catch (e: any) {
+      push({ type: "error", title: "Bulk Delete Failed", message: e.response?.data?.message || e.message });
+    } finally {
+      setIsBulkProcessing(false);
     }
   };
 
@@ -284,7 +341,7 @@ export default function MyWorkQueueListPage() {
       }
       contentClassName="flex flex-col min-h-0 gap-0 h-full overflow-hidden"
     >
-      <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 pr-4">
         <Tabs 
           tabs={TABS} 
           activeTab={tab} 
@@ -292,6 +349,18 @@ export default function MyWorkQueueListPage() {
           id="workflows" 
           className="border-none"
         />
+        <Button
+          variant={isSelectMode ? "primary" : "ghost"}
+          size="sm"
+          onClick={() => {
+            setIsSelectMode(!isSelectMode);
+            if (isSelectMode) clearSelection();
+          }}
+          className="flex items-center gap-2 h-8"
+        >
+          <CheckSquare size={14} />
+          <span>{isSelectMode ? "Cancel" : "Select"}</span>
+        </Button>
       </div>
 
       <SearchFilterBar
@@ -355,6 +424,10 @@ export default function MyWorkQueueListPage() {
               sortBy={sortBy}
               sortDir={sortDir}
               onSortChange={(key, dir) => { setSortBy(key as any); setSortDir(dir); }}
+              selectable={isSelectMode}
+              selectedIds={selectedIds}
+              onToggleRow={toggleRow}
+              onToggleAll={toggleAll}
             />
           </motion.div>
         </AnimatePresence>
@@ -373,6 +446,49 @@ export default function MyWorkQueueListPage() {
       >
         <p className="text-sm text-slate-600 dark:text-slate-400">
           Are you sure you want to delete this document workflow? This will soft-delete the record and remove it from active work queues across all offices.
+        </p>
+      </Modal>
+
+      <BulkActionBar 
+        selectedCount={selectionCount}
+        onClear={clearSelection}
+        actions={[
+          {
+            label: "Download",
+            icon: <Download className="h-4 w-4" />,
+            onClick: () => setBulkDownloadOpen(true),
+            variant: "primary"
+          },
+          ...(adminDebugMode ? [{
+            label: "Delete",
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: () => setBulkConfirmDelete(Array.from(selectedIds) as number[]),
+            variant: "danger" as const
+          }] : [])
+        ]}
+      />
+
+      <BulkDownloadModal 
+        open={bulkDownloadOpen}
+        onClose={() => setBulkDownloadOpen(false)}
+        selectedCount={selectionCount}
+        onConfirm={handleBulkDownload}
+        defaultPrefix="Workflow_Queue_Export"
+      />
+
+      <Modal
+        open={!!bulkConfirmDelete}
+        onClose={() => setBulkConfirmDelete(null)}
+        title="Confirm Bulk Deletion"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setBulkConfirmDelete(null)}>Cancel</Button>
+            <Button variant="danger" loading={isBulkProcessing} onClick={handleBulkDelete}>Delete Workflows</Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Are you sure you want to delete {bulkConfirmDelete?.length} selected workflows? This will soft-delete the records and remove them from active work queues.
         </p>
       </Modal>
     </PageFrame>

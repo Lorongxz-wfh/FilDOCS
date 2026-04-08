@@ -17,7 +17,11 @@ import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { motion, AnimatePresence } from "framer-motion";
 import { TabBar } from "../components/documentRequests/shared";
 import DeletedItemsView from "../components/admin/DeletedItemsView";
-import { Layers, Trash2 } from "lucide-react";
+import { Layers, Trash2, CheckSquare, Download } from "lucide-react";
+import { useBulkActions } from "../hooks/useBulkActions";
+import BulkActionBar from "../components/ui/BulkActionBar";
+import BulkDownloadModal from "../components/ui/BulkDownloadModal";
+import axios from "../services/api";
 
 import {
   listTemplates,
@@ -73,12 +77,13 @@ const TemplatesPage: React.FC = () => {
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [scope, setScope] = useState<ScopeFilter>("all");
-  const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
-  const tagDropdownRef = React.useRef<HTMLDivElement>(null);
   const [sortBy, setSortBy] = useState("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
+
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+  const tagDropdownRef = React.useRef<HTMLDivElement>(null);
 
   const me = getAuthUser();
   const isSysAdmin = me?.role === "SYSADMIN" || me?.role === "ADMIN";
@@ -127,6 +132,28 @@ const TemplatesPage: React.FC = () => {
     }
     return list;
   }, [templates, scope, activeTag, debouncedQ]);
+
+  const {
+    selectedIds,
+    isSelectMode,
+    setIsSelectMode,
+    toggleRow,
+    toggleAll,
+    clearSelection,
+    selectionCount,
+    getActionableCount,
+  } = useBulkActions<DocumentTemplate>(
+    filtered,
+    (t) => t.id,
+    (t, _action) => {
+      if (_action === "delete") return t.can_delete;
+      if (_action === "download") return true; 
+      return true;
+    }
+  );
+
+  const [bulkDownloadOpen, setBulkDownloadOpen] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
   const setView = (mode: ViewMode) => {
     setViewMode(mode);
@@ -218,6 +245,53 @@ const TemplatesPage: React.FC = () => {
     setUploadingName(null);
   };
 
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    const count = getActionableCount("delete");
+    if (count === 0) return;
+
+    if (!window.confirm(`Are you sure you want to delete ${count} templates?`)) return;
+
+    setIsBulkProcessing(true);
+    try {
+      const res = await axios.post("/bulk/templates/delete", { ids });
+      push({ type: "success", title: "Bulk Delete", message: res.data.message });
+      setTemplates((prev) => prev.filter((t) => !selectedIds.has(t.id)));
+      clearSelection();
+      setIsSelectMode(false);
+    } catch (e: any) {
+      push({ type: "error", title: "Bulk Delete Failed", message: e?.response?.data?.message || e.message });
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkDownload = async (filename: string) => {
+    const ids = Array.from(selectedIds).join(",");
+    setBulkDownloadOpen(false);
+    
+    // Trigger download via window.location for file responses
+    const url = `/api/bulk/templates/download?ids=${ids}&filename=${filename}`;
+    
+    // We can't easily use window.location with Auth headers, 
+    // but the backend uses signed routes or we can fetch as blob
+    try {
+      const res = await axios.get(url, { responseType: 'blob' });
+      const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', filename.endsWith('.zip') ? filename : `${filename}.zip`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      push({ type: "success", title: "Download Started", message: "Your ZIP archive is being downloaded." });
+      clearSelection();
+      setIsSelectMode(false);
+    } catch (e: any) {
+      push({ type: "error", title: "Download Failed", message: "Failed to generate ZIP archive." });
+    }
+  };
+
 
   return (
     <>
@@ -260,15 +334,29 @@ const TemplatesPage: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="flex items-center border-b border-slate-200 dark:border-surface-400 shrink-0 overflow-x-auto hide-scrollbar">
-          <Tabs 
-            tabs={VIEW_TABS} 
-            activeTab={viewMode} 
-            onChange={(key) => setView(key as ViewMode)} 
-            id="template-views" 
-            className="border-none"
-          />
-        </div>
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 pr-4">
+              <Tabs 
+                tabs={VIEW_TABS} 
+                activeTab={viewMode} 
+                onChange={(key) => setView(key as ViewMode)} 
+                id="template-views" 
+                className="border-none"
+              />
+              {activeTab === "active" && (
+                <Button
+                  variant={isSelectMode ? "primary" : "ghost"}
+                  size="sm"
+                  onClick={() => {
+                    setIsSelectMode(!isSelectMode);
+                    if (isSelectMode) clearSelection();
+                  }}
+                  className="flex items-center gap-2 h-8"
+                >
+                  <CheckSquare size={14} />
+                  <span>{isSelectMode ? "Cancel" : "Select"}</span>
+                </Button>
+              )}
+            </div>
 
         <SearchFilterBar
           search={q}
@@ -491,6 +579,10 @@ const TemplatesPage: React.FC = () => {
                   sortDir={sortDir}
                   onSortChange={handleSortChange}
                   adminDebugMode={adminDebugMode}
+                  selectable={isSelectMode}
+                  selectedIds={selectedIds}
+                  onToggleRow={toggleRow}
+                  onToggleAll={toggleAll}
                 />
               )}
             </motion.div>
@@ -498,6 +590,28 @@ const TemplatesPage: React.FC = () => {
         </div>
         </>
         )}
+
+        <BulkActionBar 
+          selectedCount={selectionCount}
+          onClear={clearSelection}
+          actions={[
+            {
+              label: "Download",
+              icon: <Download size={14} />,
+              onClick: () => setBulkDownloadOpen(true),
+              variant: "secondary",
+              count: selectionCount // Templates can always be downloaded if seen
+            },
+            {
+              label: "Delete",
+              icon: <Trash2 size={14} />,
+              onClick: handleBulkDelete,
+              variant: "danger",
+              count: getActionableCount("delete"),
+              loading: isBulkProcessing
+            }
+          ]}
+        />
       </PageFrame>
 
       <TemplateDetailPanel
@@ -537,6 +651,14 @@ const TemplatesPage: React.FC = () => {
           Are you sure you want to delete this template? This action will soft-delete the template, removing it from use across the system.
         </p>
       </Modal>
+
+      <BulkDownloadModal 
+        open={bulkDownloadOpen}
+        onClose={() => setBulkDownloadOpen(false)}
+        selectedCount={selectionCount}
+        onConfirm={handleBulkDownload}
+        defaultPrefix="Template_Exports"
+      />
     </>
   );
 };

@@ -18,7 +18,7 @@ const SystemHealthTab: React.FC<SystemHealthTabProps> = ({
   // Extract stats from activityReport
   const activityData = activityReport?.distribution ?? [];
   const trendData = activityReport?.daily_trend ?? [];
-  const failureRate = activityReport?.failure_rate ?? 0; // Assuming this exists or mocking for now
+  const alerts = activityReport?.alerts ?? [];
   
   return (
     <div className="flex flex-col gap-6">
@@ -28,7 +28,7 @@ const SystemHealthTab: React.FC<SystemHealthTabProps> = ({
           loading={loading}
           label="System Status"
           value="Operational"
-          sub="All services are healthy"
+          sub="Queue processing is active"
           icon={<ShieldCheck size={16} className="text-emerald-600 dark:text-emerald-400" />}
           iconBg="bg-emerald-50 dark:bg-emerald-900/30"
         />
@@ -42,9 +42,9 @@ const SystemHealthTab: React.FC<SystemHealthTabProps> = ({
         />
         <KpiCard
           loading={loading}
-          label="Health Index"
-          value={`${100 - failureRate}%`}
-          sub="System task success rate"
+          label="Top Contributor"
+          value={activityReport?.top_actors?.length ? activityReport.top_actors[0].office : "None"}
+          sub="Most active department"
           icon={<HeartPulse size={16} className="text-rose-600 dark:text-rose-400" />}
           iconBg="bg-rose-50 dark:bg-rose-900/30"
         />
@@ -70,7 +70,7 @@ const SystemHealthTab: React.FC<SystemHealthTabProps> = ({
         <div className="lg:col-span-2">
           <ReportChartCard
             title="System Traffic"
-            subtitle="Catergorized activity volume (14-day trend)"
+            subtitle="Categorized activity volume (14-day trend)"
             loading={loading}
             action={
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-surface-400 text-[10px] font-bold text-slate-500 uppercase">
@@ -105,25 +105,27 @@ const SystemHealthTab: React.FC<SystemHealthTabProps> = ({
         {/* Technical Alerts Summary */}
         <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-surface-400 dark:bg-surface-500">
           <div className="flex items-center gap-2 mb-4">
-             <AlertTriangle size={16} className="text-amber-500" />
-             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">Recent System Alerts</h3>
+             <AlertTriangle size={16} className="text-emerald-500" />
+             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">System Logs</h3>
           </div>
-          <div className="space-y-3">
-             {[
-               { id: 1, type: 'info', msg: 'System backup completed successfully.', time: '2h ago' },
-               { id: 2, type: 'warning', msg: 'Increased latency detected in Cluster VPAA.', time: '5h ago' },
-               { id: 3, type: 'info', msg: 'Maintenance window scheduled for Saturday.', time: '1d ago' },
-             ].map(alert => (
-               <div key={alert.id} className="flex items-start justify-between gap-3 group">
-                  <div className="flex items-start gap-3">
-                    <div className={`mt-1 h-1.5 w-1.5 rounded-full ${alert.type === 'warning' ? 'bg-amber-500' : 'bg-sky-500'}`} />
-                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">
-                      {alert.msg}
-                    </p>
-                  </div>
-                  <span className="text-[10px] whitespace-nowrap text-slate-400 font-medium">{alert.time}</span>
+          <div className="space-y-3 min-h-[100px] flex flex-col justify-center">
+             {!alerts.length ? (
+               <div className="text-center py-4">
+                  <p className="text-xs text-slate-400 font-medium">No critical system events detected in current period.</p>
                </div>
-             ))}
+             ) : (
+               alerts.map((alert: any) => (
+                <div key={alert.id} className="flex items-start justify-between gap-3 group">
+                   <div className="flex items-start gap-3">
+                     <div className={`mt-1 h-1.5 w-1.5 rounded-full ${alert.type === 'warning' ? 'bg-amber-500' : 'bg-sky-500'}`} />
+                     <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">
+                       {alert.msg}
+                     </p>
+                   </div>
+                   <span className="text-[10px] whitespace-nowrap text-slate-400 font-medium">{alert.time}</span>
+                </div>
+              ))
+             )}
           </div>
         </div>
       </div>

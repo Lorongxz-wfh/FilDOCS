@@ -27,7 +27,7 @@ const AdminUsersByRoleChart: React.FC<Props> = ({ active, inactive, loading = fa
   const pct = Math.round((active / total) * 100);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-6" style={{ height }}>
+    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6" style={{ height }}>
       {/* Donut Container */}
       <div className="relative shrink-0 flex items-center justify-center h-full aspect-square max-h-full">
         <ResponsiveContainer width="100%" height="100%" debounce={1}>
@@ -73,8 +73,8 @@ const AdminUsersByRoleChart: React.FC<Props> = ({ active, inactive, loading = fa
             <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100 truncate">
               {active}
             </p>
-            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate uppercase tracking-tight">
-              Enabled Accounts · {pct}%
+            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+              Enabled · {pct}%
             </p>
           </div>
         </div>
@@ -84,8 +84,8 @@ const AdminUsersByRoleChart: React.FC<Props> = ({ active, inactive, loading = fa
             <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100 truncate">
               {inactive}
             </p>
-            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate uppercase tracking-tight">
-              Disabled Accounts
+            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+              Disabled
             </p>
           </div>
         </div>

@@ -18,6 +18,11 @@ import SearchFilterBar from "../components/ui/SearchFilterBar";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
 import SelectDropdown from "../components/ui/SelectDropdown";
 import DateRangeInput from "../components/ui/DateRangeInput";
+import { useBulkActions } from "../hooks/useBulkActions";
+import BulkActionBar from "../components/ui/BulkActionBar";
+import BulkDownloadModal from "../components/ui/BulkDownloadModal";
+import axios from "../services/api";
+import { Trash2, Download, RotateCcw, CheckSquare } from "lucide-react";
 
 export default function ArchivePage() {
   const navigate = useNavigate();
@@ -26,6 +31,14 @@ export default function ArchivePage() {
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [bulkDownloadOpen, setBulkDownloadOpen] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const [bulkConfirm, setBulkConfirm] = useState<{
+    type: "restore" | "delete";
+    itemIds: (string | number)[];
+    skippedCount: number;
+  } | null>(null);
 
   const handleDelete = async () => {
     if (!deletingId) return;
@@ -53,6 +66,89 @@ export default function ArchivePage() {
   const [reasonFilter, setReasonFilter] = useState("");
 
   const [rows, setRows] = useState<any[]>([]);
+
+  const {
+    selectedIds,
+    selectionCount,
+    toggleRow,
+    toggleAll,
+    clearSelection,
+    getActionableItems,
+  } = useBulkActions<any>(rows, (r) => r.id, (r, action) => {
+    if (action === "restore") {
+      const status = r.latestVersion?.status;
+      return !["Cancelled", "Superseded"].includes(status);
+    }
+    return true;
+  });
+
+  const handleBulkRestore = () => {
+    const actionable = getActionableItems("restore");
+    const totalSelected = selectionCount;
+    const actionableIds = actionable.map(r => r.id);
+    
+    if (actionableIds.length === 0) {
+      push({ type: "warning", title: "No Actionable Items", message: "Cancelled or Superseded documents cannot be restored." });
+      return;
+    }
+
+    setBulkConfirm({ 
+      type: "restore", 
+      itemIds: actionableIds,
+      skippedCount: totalSelected - actionableIds.length
+    });
+  };
+
+  const handleBulkDelete = () => {
+    const itemIds = Array.from(selectedIds);
+    setBulkConfirm({ 
+      type: "delete", 
+      itemIds,
+      skippedCount: 0 
+    });
+  };
+
+  const executeBulkAction = async () => {
+    if (!bulkConfirm) return;
+    const { type, itemIds } = bulkConfirm;
+    setIsBulkProcessing(true);
+    try {
+      const endpoint = type === "restore" ? "/bulk/documents/unarchive" : "/bulk/documents/delete";
+      const res = await axios.post(endpoint, { ids: itemIds });
+      push({ type: "success", title: `Bulk ${type === "restore" ? "Restore" : "Delete"}`, message: res.data.message });
+      setRows(prev => prev.filter(r => !itemIds.includes(r.id)));
+      clearSelection();
+      setIsSelectMode(false);
+      setBulkConfirm(null);
+    } catch (e: any) {
+      push({ type: "error", title: `Bulk ${type === "restore" ? "Restore" : "Delete"} Failed`, message: e.response?.data?.message || e.message });
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkDownload = async (filename: string) => {
+    try {
+      const ids = Array.from(selectedIds).join(",");
+      const response = await axios.get(`/bulk/documents/download?ids=${ids}&filename=${filename}`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename.endsWith(".zip") ? filename : `${filename}.zip`);
+      window.document.body.appendChild(link);
+      link.click();
+      link.remove();
+      push({ type: "success", title: "Download Started", message: "Your batch export is being prepared." });
+      setBulkDownloadOpen(false);
+      clearSelection();
+      setIsSelectMode(false);
+    } catch (e: any) {
+      push({ type: "error", title: "Download Failed", message: e.message });
+    }
+  };
+
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -159,6 +255,21 @@ export default function ArchivePage() {
       }
       contentClassName="flex flex-col min-h-0 h-full"
     >
+      <div className="flex items-center justify-end border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 px-4 h-12">
+        <Button
+          variant={isSelectMode ? "primary" : "ghost"}
+          size="sm"
+          onClick={() => {
+            setIsSelectMode(!isSelectMode);
+            if (isSelectMode) clearSelection();
+          }}
+          className="flex items-center gap-2"
+        >
+          <CheckSquare size={14} />
+          <span>{isSelectMode ? "Cancel" : "Select"}</span>
+        </Button>
+      </div>
+
       <SearchFilterBar
         search={q}
         setSearch={(val) => {
@@ -287,6 +398,10 @@ export default function ArchivePage() {
             setSortBy(key as any);
             setSortDir(dir);
           }}
+          selectable={isSelectMode}
+          selectedIds={selectedIds}
+          onToggleRow={toggleRow}
+          onToggleAll={toggleAll}
           mobileRender={(r) => (
             <div className="px-4 py-3">
               <div className="flex items-center justify-between mb-1">
@@ -323,6 +438,81 @@ export default function ArchivePage() {
         <p className="text-sm text-slate-600 dark:text-slate-400">
           Are you sure you want to delete this archived document? This action is reversible by system administrators but will remove the item from the archive list.
         </p>
+      </Modal>
+
+      <BulkActionBar 
+        selectedCount={selectionCount}
+        onClear={clearSelection}
+        actions={[
+          {
+            label: `Restore (${selectionCount})`,
+            icon: <RotateCcw className="h-4 w-4" />,
+            onClick: handleBulkRestore,
+            variant: "primary"
+          },
+          {
+            label: "Download",
+            icon: <Download className="h-4 w-4" />,
+            onClick: () => setBulkDownloadOpen(true),
+            variant: "ghost"
+          },
+          {
+            label: "Delete",
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: handleBulkDelete,
+            variant: "danger"
+          }
+        ]}
+      />
+
+      <BulkDownloadModal 
+        open={bulkDownloadOpen}
+        onClose={() => setBulkDownloadOpen(false)}
+        selectedCount={selectionCount}
+        onConfirm={handleBulkDownload}
+        defaultPrefix="Archived_Documents_Export"
+      />
+
+      <Modal
+        open={!!bulkConfirm}
+        onClose={() => setBulkConfirm(null)}
+        title={bulkConfirm?.type === "restore" ? "Confirm Bulk Restore" : "Confirm Bulk Deletion"}
+        widthClassName="max-w-md"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setBulkConfirm(null)}>Cancel</Button>
+            <Button 
+              variant={bulkConfirm?.type === "delete" ? "danger" : "primary"} 
+              loading={isBulkProcessing} 
+              onClick={executeBulkAction}
+            >
+              Confirm {bulkConfirm?.type === "restore" ? "Restore" : "Delete"}
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div className={`p-4 rounded-xl border ${
+            bulkConfirm?.type === "delete" 
+              ? "bg-rose-50 border-rose-100 dark:bg-rose-900/10 dark:border-rose-900/20" 
+              : "bg-brand-50 border-brand-100 dark:bg-brand-900/10 dark:border-brand-900/20"
+          }`}>
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {bulkConfirm?.itemIds.length} items will be {bulkConfirm?.type === "restore" ? "restored to library" : "soft-deleted"}.
+            </p>
+            {bulkConfirm && bulkConfirm.skippedCount > 0 && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {bulkConfirm.skippedCount} items were skipped as they cannot be restored (Cancelled/Superseded).
+              </p>
+            )}
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            {bulkConfirm?.type === "restore" 
+              ? "Restored documents will move back from the archive to the active document library."
+              : "Deleted documents will move to the trash and can only be accessed by system administrators."
+            }
+          </p>
+        </div>
       </Modal>
     </PageFrame>
   );
