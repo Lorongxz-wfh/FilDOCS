@@ -116,7 +116,7 @@ const MyWorkQueuePage: React.FC = () => {
     loadAll();
   }, [loadAll]);
 
-  const { refreshing } = usePageBurstRefresh(loadAll);
+  const { refreshing } = usePageBurstRefresh(useCallback(async () => { await loadAll(); }, [loadAll]));
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const openByDocId = (docId: number) =>
