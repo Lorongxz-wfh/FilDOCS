@@ -216,7 +216,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
           <div className="overflow-hidden">
             <ul className={[
               "mt-1 mb-2 flex flex-col gap-1 relative",
-              !mobileOpen ? "ml-5" : "ml-4"
+              !mobileOpen ? "ml-[1.875rem]" : "ml-4"
             ].join(" ")}>
               {filteredChildren.map((child, idx) => {
                 const isLast = idx === filteredChildren.length - 1;
@@ -227,12 +227,12 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
                         {/* Vertical Connector Segment */}
                         <div className={[
                           "absolute -left-[1px] top-0",
-                          isLast ? "h-4.5" : "bottom-[-10px]", // Stop at junction for last, else continue to next gap
-                          "w-0.5 bg-slate-300 dark:bg-surface-300"
+                          isLast ? "h-4.5" : "bottom-[-10px]", 
+                          "w-0.5 bg-slate-200 dark:bg-surface-300"
                         ].join(" ")} />
                         
                         {/* Horizontal Branch */}
-                        <div className="absolute -left-[1px] top-4.5 w-5 h-0.5 bg-slate-300 dark:bg-surface-300" />
+                        <div className="absolute -left-[1px] top-4.5 w-3.5 h-0.5 bg-slate-200 dark:bg-surface-300" />
                       </>
                     )}
                     <NavLink
@@ -243,9 +243,9 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
                       className={({ isActive }) => [
                         "group relative flex items-center gap-3 px-3 py-1.5 rounded-md transition-all cursor-pointer",
                         "text-[13px] font-medium leading-tight",
-                        !mobileOpen ? "ml-4.5" : "",
+                        !mobileOpen ? "ml-3" : "",
                         isActive
-                          ? "text-slate-900 dark:text-slate-100"
+                          ? "text-brand-600 dark:text-brand-400"
                           : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200",
                       ].join(" ")}
                     >
@@ -254,7 +254,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
                           {isActive && (
                             <motion.div
                               layoutId="sub-active-bg"
-                              className="absolute inset-0 bg-slate-50/80 dark:bg-white/10 rounded-md border-l-2 border-slate-400 dark:border-slate-500"
+                              className="absolute inset-0 bg-slate-100/60 dark:bg-white/5 rounded-md"
                               transition={{ type: "spring", bounce: 0, duration: 0.2 }}
                             />
                           )}
