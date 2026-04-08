@@ -87,9 +87,7 @@ export function useGlobalNavStats() {
 
   useEffect(() => {
     fetchStats();
-    // Aggressive polling: 30 seconds
-    const interval = setInterval(fetchStats, 30_000);
-    return () => clearInterval(interval);
+    // Aggressive polling deprecated. WebSockets handle all pushes.
   }, [fetchStats]);
 
   // Real-time updates — Memoized to prevent re-join loops

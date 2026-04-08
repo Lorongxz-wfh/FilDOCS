@@ -278,9 +278,7 @@ export function useDashboardData(role: UserRole): DashboardData {
 
   useEffect(() => {
     loadRef();
-    // Keep 60s fallback polling, but real-time will handle most cases
-    const interval = window.setInterval(() => loadRef(true), 60_000);
-    return () => window.clearInterval(interval);
+    // Aggressive polling deprecated. WebSockets (useRealtimeUpdates) now handle all refreshes.
   }, [loadRef]);
 
   // ── Real-time Integration ──────────────────────────────────────────────

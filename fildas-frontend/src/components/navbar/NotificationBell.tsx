@@ -78,15 +78,7 @@ const NotificationBell: React.FC = () => {
 
   function startPolling() {
     stopPolling();
-    notifPollRef.current = window.setInterval(async () => {
-      if (isOpenRef.current) await loadDropdown(seenAtRef.current).catch(() => {});
-      else {
-        const count = await getUnreadNotificationCount().catch(() => 0);
-        if (count > prevUnreadRef.current) playNotificationChime();
-        prevUnreadRef.current = count;
-        setUnseenCount(count);
-      }
-    }, 30000);
+    // Aggressive polling deprecated. WebSockets (useRealtimeUpdates) now handle updates.
   }
 
   React.useEffect(() => {
