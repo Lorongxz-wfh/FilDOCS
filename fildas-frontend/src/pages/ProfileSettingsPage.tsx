@@ -12,6 +12,8 @@ import {
   Wrench,
   Monitor,
   Layout,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { 
   listActivityLogs 
