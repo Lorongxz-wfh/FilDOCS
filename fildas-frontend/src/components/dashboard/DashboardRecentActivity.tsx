@@ -91,7 +91,7 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
       // Cleanup animation classes after 400ms
       const timer = setTimeout(() => {
         setNewLogIds(new Set(ids));
-      }, 400); 
+      }, 400);
       return () => clearTimeout(timer);
     }
   }, [logs]);
@@ -104,8 +104,8 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
         {loading && !hasData ? (
           <SkeletonList variant="activity" rows={4} className="divide-y divide-slate-100 dark:divide-surface-400" />
         ) : logs.length === 0 ? (
-          <EmptyState 
-            label="No recent activity" 
+          <EmptyState
+            label="No recent activity"
             description="Latest actions will appear here when they occur."
             className="py-10"
           />
@@ -113,8 +113,8 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
           logs.slice(0, 5).map((log) => {
             const meta = getEventMeta(log.event);
             return (
-              <div 
-                key={log.id} 
+              <div
+                key={log.id}
                 className={`flex items-start gap-2.5 sm:gap-3 py-2.5 sm:py-2.5 px-0.5 sm:px-0 ${isRecentlyAdded(log.id) ? "animate-live-entry" : ""}`}
               >
                 {/* Event icon */}

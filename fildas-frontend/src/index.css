@@ -196,4 +196,4 @@
   .animate-pulse-highlight {
     animation: var(--animate-pulse-highlight);
   }
-}
+}@layer utilities { .font-display { font-family: 'Plus Jakarta Sans', sans-serif !important; } .font-body { font-family: 'Inter', sans-serif !important; } }

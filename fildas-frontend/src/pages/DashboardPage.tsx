@@ -106,71 +106,105 @@ const QADashboard: React.FC<
   onCarouselScroll,
   activeIndex = 0,
 }) => {
-  const chartCount = 3; // Document volume, Pipeline state, Stage delay (mobile)
-  
-  return (
-    <div className="space-y-4">
-      <AnnouncementsBanner
-        announcements={announcements.announcements}
-        loading={announcements.loading}
-        onDeleted={() => announcements.reload()}
-      />
+    const chartCount = 3; // Document volume, Pipeline state, Stage delay (mobile)
 
-      <DashboardStatRow
-        role="QA"
-        stats={stats}
-        pendingCount={pending.length}
-        pendingRequestsCount={pendingRequestsCount}
-        loading={loading}
-        onStatClick={(label) => {
-          if (label === "Action needed" || label === "In progress") navigate("/work-queue");
-          if (label === "Total documents" || label === "Distributed") navigate("/documents");
-          if (label === "Pending requests") navigate("/document-requests");
-        }}
-      />
+    return (
+      <div className="space-y-4">
+        <AnnouncementsBanner
+          announcements={announcements.announcements}
+          loading={announcements.loading}
+          onDeleted={() => announcements.reload()}
+        />
 
-      <div className="relative group">
-        <div 
-          onScroll={onCarouselScroll}
-          className="flex sm:grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0"
-        >
-          <Card
-            title="Document volume"
-            sub="Created vs distributed trend"
-            action={{
-              label: "View reports",
-              onClick: () => navigate("/reports"),
-            }}
-            className="min-w-[88vw] sm:min-w-0 snap-center lg:col-span-2"
-            loading={loading}
-            hasData={!!report.volume_series?.length}
+        <DashboardStatRow
+          role="QA"
+          stats={stats}
+          pendingCount={pending.length}
+          pendingRequestsCount={pendingRequestsCount}
+          loading={loading}
+          onStatClick={(label) => {
+            if (label === "Action needed" || label === "In progress") navigate("/work-queue");
+            if (label === "Total documents" || label === "Distributed") navigate("/documents");
+            if (label === "Pending requests") navigate("/document-requests");
+          }}
+        />
+
+        <div className="relative group">
+          <div
+            onScroll={onCarouselScroll}
+            className="flex sm:grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0"
           >
-            <VolumeTrendChart
-              data={report.volume_series}
-              height={window.innerWidth < 640 ? 150 : 200}
+            <Card
+              title="Document volume"
+              sub="Created vs distributed trend"
+              action={{
+                label: "View reports",
+                onClick: () => navigate("/reports"),
+              }}
+              className="min-w-[88vw] sm:min-w-0 snap-center lg:col-span-2"
               loading={loading}
-            />
-          </Card>
+              hasData={!!report.volume_series?.length}
+            >
+              <VolumeTrendChart
+                data={report.volume_series}
+                height={window.innerWidth < 640 ? 150 : 200}
+                loading={loading}
+              />
+            </Card>
 
-          <Card
-            title="Pipeline state"
-            sub="Docs by current phase"
-            action={{
-              label: "View library",
-              onClick: () => navigate("/documents"),
-            }}
-            className="min-w-[88vw] sm:min-w-0 snap-center"
-            loading={loading}
-            hasData={!!report.phase_distribution?.length}
-          >
-            <PhaseDistributionChart
-              data={report.phase_distribution ?? []}
-              variant="donut"
-              height={window.innerWidth < 640 ? 150 : 200}
+            <Card
+              title="Pipeline state"
+              sub="Docs by current phase"
+              action={{
+                label: "View library",
+                onClick: () => navigate("/documents"),
+              }}
+              className="min-w-[88vw] sm:min-w-0 snap-center"
               loading={loading}
-            />
-          </Card>
+              hasData={!!report.phase_distribution?.length}
+            >
+              <PhaseDistributionChart
+                data={report.phase_distribution ?? []}
+                variant="donut"
+                height={window.innerWidth < 640 ? 150 : 200}
+                loading={loading}
+              />
+            </Card>
 
+            <Card
+              title="Stage delay"
+              sub="Median hold time per workflow phase"
+              action={{
+                label: "View reports",
+                onClick: () => navigate("/reports"),
+              }}
+              className="min-w-[88vw] sm:min-w-0 snap-center lg:hidden"
+              loading={loading}
+              hasData={!!report.stage_delays_by_phase?.length}
+            >
+              <StageDelayChart
+                data={report.stage_delays_by_phase ?? []}
+                height={150}
+                loading={loading}
+              />
+            </Card>
+          </div>
+
+          {/* Carousel Indicators */}
+          <div className="flex sm:hidden justify-center gap-1.5 mt-2">
+            {[...Array(chartCount)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-1 rounded-full transition-all duration-300 ${i === activeIndex ? "w-4 bg-sky-500" : "w-1.5 bg-slate-200 dark:bg-surface-400"
+                  }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop-only Stage Delay if not in carousel-span above */}
+        <div className="hidden lg:grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
           <Card
             title="Stage delay"
             sub="Median hold time per workflow phase"
@@ -178,68 +212,33 @@ const QADashboard: React.FC<
               label: "View reports",
               onClick: () => navigate("/reports"),
             }}
-            className="min-w-[88vw] sm:min-w-0 snap-center lg:hidden"
             loading={loading}
             hasData={!!report.stage_delays_by_phase?.length}
           >
             <StageDelayChart
               data={report.stage_delays_by_phase ?? []}
-              height={150}
+              height={200}
               loading={loading}
             />
           </Card>
         </div>
 
-        {/* Carousel Indicators */}
-        <div className="flex sm:hidden justify-center gap-1.5 mt-2">
-          {[...Array(chartCount)].map((_, i) => (
-            <div 
-              key={i} 
-              className={`h-1 rounded-full transition-all duration-300 ${
-                i === activeIndex ? "w-4 bg-sky-500" : "w-1.5 bg-slate-200 dark:bg-surface-400"
-              }`}
-            />
-          ))}
+        {/* Mobile-only Pending list */}
+        <div className="lg:hidden mt-1">
+          <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
         </div>
-      </div>
 
-      {/* Desktop-only Stage Delay if not in carousel-span above */}
-      <div className="hidden lg:grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
         <Card
-          title="Stage delay"
-          sub="Median hold time per workflow phase"
-          action={{
-            label: "View reports",
-            onClick: () => navigate("/reports"),
-          }}
+          title="Recent activity"
+          sub="Latest actions in the system."
           loading={loading}
-          hasData={!!report.stage_delays_by_phase?.length}
+          hasData={!!recentActivity?.length}
         >
-          <StageDelayChart
-            data={report.stage_delays_by_phase ?? []}
-            height={200}
-            loading={loading}
-          />
+          <DashboardRecentActivity logs={recentActivity} loading={loading} />
         </Card>
       </div>
-
-      {/* Mobile-only Pending list */}
-      <div className="lg:hidden mt-1">
-        <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
-      </div>
-
-      <Card
-        title="Recent activity"
-        sub="Latest actions in the system."
-        loading={loading}
-        hasData={!!recentActivity?.length}
-      >
-        <DashboardRecentActivity logs={recentActivity} loading={loading} />
-      </Card>
-    </div>
-  );
-};
+    );
+  };
 
 // ─── Office Dashboard ──────────────────────────────────────────────────────
 const OfficeDashboard: React.FC<
@@ -303,7 +302,7 @@ const OfficeDashboard: React.FC<
         {/* Document summary + pending work queue */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="relative group">
-            <div 
+            <div
               onScroll={onCarouselScroll}
               className="flex sm:grid grid-cols-1 gap-4 lg:grid-cols-1 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0"
             >
@@ -327,14 +326,13 @@ const OfficeDashboard: React.FC<
                 />
               </Card>
             </div>
-            
+
             <div className="flex sm:hidden justify-center gap-1.5 mt-2">
               {[...Array(chartCount)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`h-1 rounded-full transition-all duration-300 ${
-                    i === activeIndex ? "w-4 bg-sky-500" : "w-1.5 bg-slate-200 dark:bg-surface-400"
-                  }`}
+                <div
+                  key={i}
+                  className={`h-1 rounded-full transition-all duration-300 ${i === activeIndex ? "w-4 bg-sky-500" : "w-1.5 bg-slate-200 dark:bg-surface-400"
+                    }`}
                 />
               ))}
             </div>
@@ -607,11 +605,10 @@ const DashboardPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPeriod("today")}
-                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${
-                  period === "today"
+                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${period === "today"
                     ? "text-sky-600 dark:text-sky-400 shadow-xs"
                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                }`}
+                  }`}
                 title="Today"
               >
                 {period === "today" && (
@@ -627,15 +624,14 @@ const DashboardPage: React.FC = () => {
                 </div>
                 <span className="hidden md:inline z-10">Today</span>
               </button>
-              
+
               <button
                 type="button"
                 onClick={() => setPeriod("this_week")}
-                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${
-                  period === "this_week"
+                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${period === "this_week"
                     ? "text-sky-600 dark:text-sky-400 shadow-xs"
                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                }`}
+                  }`}
                 title="This Week"
               >
                 {period === "this_week" && (
@@ -655,11 +651,10 @@ const DashboardPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPeriod("all")}
-                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${
-                  period === "all"
+                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${period === "all"
                     ? "text-sky-600 dark:text-sky-400 shadow-xs"
                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                }`}
+                  }`}
                 title="All Time"
               >
                 {period === "all" && (
@@ -690,11 +685,11 @@ const DashboardPage: React.FC = () => {
           ) : isAuditor(role) ? (
             <AuditorDashboard {...dashData} navigate={navigate} announcements={announcements} />
           ) : isQA(role) ? (
-            <QADashboard 
-              {...dashData} 
-              navigate={navigate} 
-              announcements={announcements} 
-              onCarouselScroll={handleCarouselScroll} 
+            <QADashboard
+              {...dashData}
+              navigate={navigate}
+              announcements={announcements}
+              onCarouselScroll={handleCarouselScroll}
               activeIndex={activeChartIndex}
             />
           ) : (

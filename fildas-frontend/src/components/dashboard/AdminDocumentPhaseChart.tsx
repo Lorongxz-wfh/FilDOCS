@@ -29,11 +29,11 @@ const ChartSkeleton = ({ height = 180 }: { height?: number }) => (
 );
 
 const PHASES = [
-  { key: "draft",        label: "Draft",        color: "#94a3b8" },
-  { key: "review",       label: "Review",        color: "#f59e0b" },
-  { key: "approval",     label: "Approval",      color: "#6366f1" },
-  { key: "finalization", label: "Finalization",  color: "#8b5cf6" },
-  { key: "distributed",  label: "Distributed",   color: "#10b981" },
+  { key: "draft", label: "Draft", color: "#94a3b8" },
+  { key: "review", label: "Review", color: "#f59e0b" },
+  { key: "approval", label: "Approval", color: "#6366f1" },
+  { key: "finalization", label: "Finalization", color: "#8b5cf6" },
+  { key: "distributed", label: "Distributed", color: "#10b981" },
 ];
 
 const AdminDocumentPhaseChart: React.FC<Props> = ({ byPhase, height = 180, loading = false }) => {

@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\SupportController;
 use App\Http\Controllers\Api\Admin\SystemHealthController;
 use App\Http\Controllers\Api\Admin\SystemBackupController;
+use App\Http\Controllers\Api\BulkActionController;
 
 
 // ── Public ─────────────────────────────────────────────────────────────────
@@ -305,6 +306,24 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         Route::post('/trash/verify',              [\App\Http\Controllers\Api\Admin\TrashController::class, 'verify']);
         Route::post('/trash/{type}/{id}/restore', [\App\Http\Controllers\Api\Admin\TrashController::class, 'restore']);
         Route::delete('/trash/{type}/{id}/purge', [\App\Http\Controllers\Api\Admin\TrashController::class, 'purge']);
+    });
+
+    // ── Bulk Actions ──────────────────────────────────────────────────────────
+    Route::prefix('bulk')->group(function () {
+        Route::post('/documents/archive', [BulkActionController::class, 'archiveDocuments']);
+        Route::post('/documents/unarchive', [BulkActionController::class, 'unarchiveDocuments']);
+        Route::post('/documents/delete',  [BulkActionController::class, 'deleteDocuments']);
+        Route::get('/documents/download', [BulkActionController::class, 'downloadDocuments']);
+        
+        Route::post('/templates/delete',  [BulkActionController::class, 'deleteTemplates']);
+        Route::get('/templates/download', [BulkActionController::class, 'downloadTemplates']);
+        
+        Route::post('/trash/{type}/restore', [BulkActionController::class, 'restoreTrash']);
+        Route::post('/trash/{type}/purge',   [BulkActionController::class, 'purgeTrash']);
+
+        Route::post('/users/delete', [BulkActionController::class, 'deleteUsers']);
+        Route::post('/users/toggle-status', [BulkActionController::class, 'toggleUsersStatus']);
+        Route::post('/offices/delete', [BulkActionController::class, 'deleteOffices']);
     });
 
     // ── Support ────────────────────────────────────────────────────────────

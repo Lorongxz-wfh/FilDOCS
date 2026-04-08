@@ -28,8 +28,8 @@ import axios from "../services/api";
 type WFTab = "all" | "active" | "distributed";
 
 const TABS: { key: WFTab; label: string; icon: React.ReactNode }[] = [
-  { key: "all",         label: "All", icon: <LayoutList className="h-3.5 w-3.5" /> },
-  { key: "active",      label: "Active", icon: <Activity className="h-3.5 w-3.5" /> },
+  { key: "all", label: "All", icon: <LayoutList className="h-3.5 w-3.5" /> },
+  { key: "active", label: "Active", icon: <Activity className="h-3.5 w-3.5" /> },
   { key: "distributed", label: "Distributed", icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
 ];
 
@@ -147,8 +147,8 @@ export default function MyWorkQueueListPage() {
   const loadData = useCallback(async (isNextPage = false, silent = false) => {
     const targetPage = isNextPage ? page + 1 : 1;
     if (!isNextPage && !silent) {
-        setInitialLoading(true);
-        hasMoreRef.current = true;
+      setInitialLoading(true);
+      hasMoreRef.current = true;
     }
     if (!hasMoreRef.current && isNextPage) return;
     if (!silent) setLoading(true);
@@ -175,7 +175,7 @@ export default function MyWorkQueueListPage() {
       } else {
         setRows((prev) => [...prev, ...incoming]);
       }
-      
+
       const more = res.meta?.current_page < res.meta?.last_page;
       hasMoreRef.current = more;
       setHasMore(more);
@@ -342,11 +342,11 @@ export default function MyWorkQueueListPage() {
       contentClassName="flex flex-col min-h-0 gap-0 h-full overflow-hidden"
     >
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 pr-4">
-        <Tabs 
-          tabs={TABS} 
-          activeTab={tab} 
-          onChange={(key) => { setTab(key as WFTab); setPage(1); }} 
-          id="workflows" 
+        <Tabs
+          tabs={TABS}
+          activeTab={tab}
+          onChange={(key) => { setTab(key as WFTab); setPage(1); }}
+          id="workflows"
           className="border-none"
         />
         <Button
@@ -449,7 +449,7 @@ export default function MyWorkQueueListPage() {
         </p>
       </Modal>
 
-      <BulkActionBar 
+      <BulkActionBar
         selectedCount={selectionCount}
         onClear={clearSelection}
         actions={[
@@ -468,7 +468,7 @@ export default function MyWorkQueueListPage() {
         ]}
       />
 
-      <BulkDownloadModal 
+      <BulkDownloadModal
         open={bulkDownloadOpen}
         onClose={() => setBulkDownloadOpen(false)}
         selectedCount={selectionCount}

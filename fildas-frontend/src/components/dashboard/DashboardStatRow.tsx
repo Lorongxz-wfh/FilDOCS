@@ -173,37 +173,35 @@ const DashboardStatRow: React.FC<Props> = ({
         return (
           <div
             key={item.label}
-            className={`min-w-0 rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 transition-all ${mobileColSpan} sm:col-span-1 ${
-              clickable ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-surface-400" : ""
-            } ${
-              isActionNeeded && item.value > 0 
-                ? "ring-1 ring-rose-500/20 bg-rose-50/15 dark:ring-rose-500/40 dark:bg-rose-500/5 p-2.5 sm:p-3.5" 
+            className={`min-w-0 rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 transition-all ${mobileColSpan} sm:col-span-1 ${clickable ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-surface-400" : ""
+              } ${isActionNeeded && item.value > 0
+                ? "ring-1 ring-rose-500/20 bg-rose-50/15 dark:ring-rose-500/40 dark:bg-rose-500/5 p-2.5 sm:p-3.5"
                 : "p-2 sm:p-3.5"
-            } ${isPulsing ? "animate-pulse-highlight" : ""}`}
+              } ${isPulsing ? "animate-pulse-highlight" : ""}`}
           >
             {/* Action Needed - Horizontal Banner for Mobile, Vertical for Desktop */}
             {isActionNeeded ? (
               <div className="flex flex-col h-full">
-                  <div className={`flex items-center justify-between sm:flex-col sm:items-start w-full h-full gap-2`}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={`shrink-0 ${item.iconColor} sm:scale-110 scale-100`}>
-                        {item.icon}
-                      </span>
-                      <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
-                        {item.label}
-                      </p>
-                    </div>
-                    
-                    <div className="h-7 sm:h-8 flex items-center sm:mt-1.5">
-                      {loading ? (
-                        <Skeleton className="h-6 w-10 sm:h-7 sm:w-14" />
-                      ) : (
-                        <p className={`text-xl sm:text-2xl font-display font-bold tabular-nums leading-none transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
-                          {item.value}
-                        </p>
-                      )}
-                    </div>
+                <div className={`flex items-center justify-between sm:flex-col sm:items-start w-full h-full gap-2`}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`shrink-0 ${item.iconColor} sm:scale-110 scale-100`}>
+                      {item.icon}
+                    </span>
+                    <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
+                      {item.label}
+                    </p>
                   </div>
+
+                  <div className="h-7 sm:h-8 flex items-center sm:mt-1.5">
+                    {loading ? (
+                      <Skeleton className="h-6 w-10 sm:h-7 sm:w-14" />
+                    ) : (
+                      <p className={`text-xl sm:text-2xl font-display font-bold tabular-nums leading-none transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
+                        {item.value}
+                      </p>
+                    )}
+                  </div>
+                </div>
                 {item.sub && (
                   <p className={`hidden sm:block mt-2 text-[11px] text-slate-400 dark:text-slate-500 italic truncate transition-opacity duration-200 ${loading && stats ? "opacity-60" : "opacity-100"}`}>
                     {item.sub}

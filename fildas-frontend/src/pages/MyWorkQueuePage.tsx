@@ -66,11 +66,14 @@ const MyWorkQueuePage: React.FC = () => {
   const isQaAdmin = isQA(userRole) || isAdmin;
 
   // ── Load queue + stats + activity ─────────────────────────────────────────
-  const loadAll = useCallback(async () => {
+  const loadAll = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
-      
+
+      const prevIds = assignedItems.map(i => `${i.document.id}-${i.version.id}`).join(',');
+      const prevActivityId = recentActivity[0]?.id;
+
       const [alf_actions, q, r, r_stats] = await Promise.all([
         listActivityLogs({
           scope: isAdmin ? "all" : "office",
@@ -78,26 +81,36 @@ const MyWorkQueuePage: React.FC = () => {
           category: "actions",
         }).catch(() => ({ data: [] })),
         getWorkQueue().catch(() => ({ assigned: [], monitoring: [] })),
-        (isQaAdmin 
-          ? listDocumentRequestIndividual({ per_page: 15, request_status: "open" }) 
+        (isQaAdmin
+          ? listDocumentRequestIndividual({ per_page: 15, request_status: "open" })
           : listDocumentRequestInbox({ per_page: 15 })
         ).catch(() => ({ data: [], total: 0 })),
         getDocumentRequestStats().catch(() => null),
       ]);
 
-      setRecentActivity((alf_actions as any)?.data ?? []);
-      setAssignedItems((q as any)?.assigned ?? []);
+      const newAssigned = (q as any)?.assigned ?? [];
+      const newActivity = (alf_actions as any)?.data ?? [];
+
+      setRecentActivity(newActivity);
+      setAssignedItems(newAssigned);
       setMonitoringItems((q as any)?.monitoring ?? []);
       setRequestItems((r as any)?.data ?? []);
       setRequestStats(r_stats as any);
 
+      // Detect if data actually changed
+      const nextIds = newAssigned.map((i: any) => `${i.document.id}-${i.version.id}`).join(',');
+      const nextActivityId = newActivity[0]?.id;
+      
+      return prevIds !== nextIds || prevActivityId !== nextActivityId;
+
     } catch (e: any) {
       setError(e?.message ?? "Failed to load dashboard data");
+      return false;
     } finally {
       setLoading(false);
       setLoadingActivity(false);
     }
-  }, [isAdmin, isQaAdmin]);
+  }, [isAdmin, isQaAdmin, assignedItems, recentActivity]);
 
   useEffect(() => {
     loadAll();
@@ -160,8 +173,8 @@ const MyWorkQueuePage: React.FC = () => {
         <PageActions>
           <RefreshAction
             onRefresh={async () => {
-              await loadAll();
-              return "Hub updated.";
+              const changed = await loadAll(true);
+              return changed ? "New updates found." : "Work queue is up to date.";
             }}
             loading={refreshing || loading}
           />
@@ -177,7 +190,7 @@ const MyWorkQueuePage: React.FC = () => {
 
       {/* Main Grid Layout (Proportional Columns on LG, Single Column on Mobile) */}
       <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 pb-2 overflow-y-auto lg:overflow-hidden">
-        
+
         {/* Column 1: Workflows */}
         <div className="flex flex-col gap-4 min-w-0 lg:flex-[3.5]">
           <div className="flex flex-col gap-1.5 shrink-0">
@@ -187,7 +200,7 @@ const MyWorkQueuePage: React.FC = () => {
             </div>
           </div>
 
-          
+
           <div className="relative flex flex-col flex-1 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden min-h-0 shadow-sm">
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 sm:py-3.5">
               <div className="flex items-center gap-2">
@@ -213,8 +226,8 @@ const MyWorkQueuePage: React.FC = () => {
               {loading ? (
                 <SkeletonList variant="card" rows={3} />
               ) : sortedItems.length === 0 ? (
-                <EmptyState 
-                  label="No active document workflows" 
+                <EmptyState
+                  label="No active document workflows"
                   description="All your document tasks have been resolved or forwarded."
                   className="py-10"
                 />
@@ -238,7 +251,7 @@ const MyWorkQueuePage: React.FC = () => {
 
             {/* Bottom View All Button */}
             <div className="shrink-0 flex justify-center p-4 border-t border-slate-50/50 dark:border-surface-400/30">
-              <button 
+              <button
                 onClick={() => navigate("/documents/all")}
                 className="flex items-center gap-2 px-4 py-2 rounded-md border border-slate-200 dark:border-surface-400 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors uppercase tracking-wider"
               >
@@ -283,8 +296,8 @@ const MyWorkQueuePage: React.FC = () => {
               {loading ? (
                 <SkeletonList variant="card" rows={3} />
               ) : requestItems.length === 0 ? (
-                <EmptyState 
-                  label="No open document requests" 
+                <EmptyState
+                  label="No open document requests"
                   description="No pending requests found in your queue."
                   className="py-10"
                 />
@@ -308,7 +321,7 @@ const MyWorkQueuePage: React.FC = () => {
 
             {/* Bottom View All Button */}
             <div className="shrink-0 flex justify-center p-4 border-t border-slate-50/50 dark:border-surface-400/30">
-              <button 
+              <button
                 onClick={() => navigate("/document-requests")}
                 className="flex items-center gap-2 px-4 py-2 rounded-md border border-slate-200 dark:border-surface-400 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors uppercase tracking-wider"
               >
@@ -342,8 +355,8 @@ const MyWorkQueuePage: React.FC = () => {
               {loadingActivity ? (
                 <SkeletonList variant="activity" rows={6} />
               ) : recentActivity.length === 0 ? (
-                <EmptyState 
-                  label="No recent activity" 
+                <EmptyState
+                  label="No recent activity"
                   description="No creation or request activity found for your office."
                   className="py-10"
                 />
@@ -356,7 +369,7 @@ const MyWorkQueuePage: React.FC = () => {
                       onClick={() => openActivity(l)}
                       className="w-full text-left rounded-md px-3 py-2.5 transition hover:bg-slate-50 dark:hover:bg-surface-400"
                     >
-                      <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate uppercase tracking-wider">
+                      <p className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 truncate uppercase tracking-wider">
                         {l.label || l.event}
                       </p>
                       <div className="flex items-center justify-between mt-0.5 gap-2">
@@ -380,7 +393,7 @@ const MyWorkQueuePage: React.FC = () => {
 
             {/* Bottom View All Button */}
             <div className="shrink-0 flex justify-center p-4 border-t border-slate-50/50 dark:border-surface-400/30">
-              <button 
+              <button
                 onClick={() => navigate("/my-activity")}
                 className="flex items-center gap-2 px-4 py-2 rounded-md border border-slate-200 dark:border-surface-400 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors uppercase tracking-wider"
               >
