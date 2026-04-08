@@ -51,8 +51,8 @@ export default function MaintenanceBanner() {
       setTimeLeft("");
     });
 
-    // Fallback polling (every 60s)
-    const interval = setInterval(fetchStatus, 60000);
+    // Fallback polling (every 5 minutes)
+    const interval = setInterval(fetchStatus, 300000);
 
     return () => {
       channel.stopListening(".maintenance.scheduled");

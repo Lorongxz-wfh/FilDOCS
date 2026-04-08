@@ -1,4 +1,4 @@
-import { getApi } from "./_base";
+import { getApi, dedupeFetch } from "./_base";
 import type {
   ComplianceReportParams,
   ComplianceReportResponse,
@@ -120,36 +120,42 @@ export async function getDocumentStats(params?: {
   date_from?: string;
   date_to?: string;
 }): Promise<DocumentStats> {
-  try {
-    const api = await getApi();
-    const res = await api.get("/documents/stats", { params });
-    return res.data as DocumentStats;
-  } catch (e: any) {
-    const status = e?.response?.status;
-    const msg =
-      e?.response?.data?.message ||
-      (status ? `Failed to load stats (${status})` : "Failed to load stats");
-    throw new Error(msg);
-  }
+  const key = `doc-stats:${params?.date_from || "all"}:${params?.date_to || "all"}`;
+  return dedupeFetch(key, async () => {
+    try {
+      const api = await getApi();
+      const res = await api.get("/documents/stats", { params });
+      return res.data as DocumentStats;
+    } catch (e: any) {
+      const status = e?.response?.status;
+      const msg =
+        e?.response?.data?.message ||
+        (status ? `Failed to load stats (${status})` : "Failed to load stats");
+      throw new Error(msg);
+    }
+  });
 }
 
 export async function getAdminDashboardStats(params?: {
   date_from?: string;
   date_to?: string;
 }): Promise<AdminDashboardStats> {
-  try {
-    const api = await getApi();
-    const res = await api.get("/admin/dashboard-stats", { params });
-    return res.data as AdminDashboardStats;
-  } catch (e: any) {
-    const status = e?.response?.status;
-    const msg =
-      e?.response?.data?.message ||
-      (status
-        ? `Failed to load admin stats (${status})`
-        : "Failed to load admin stats");
-    throw new Error(msg);
-  }
+  const key = `admin-dash-stats:${params?.date_from || "all"}:${params?.date_to || "all"}`;
+  return dedupeFetch(key, async () => {
+    try {
+      const api = await getApi();
+      const res = await api.get("/admin/dashboard-stats", { params });
+      return res.data as AdminDashboardStats;
+    } catch (e: any) {
+      const status = e?.response?.status;
+      const msg =
+        e?.response?.data?.message ||
+        (status
+          ? `Failed to load admin stats (${status})`
+          : "Failed to load admin stats");
+      throw new Error(msg);
+    }
+  });
 }
 
 export async function listFinishedDocuments(params?: {

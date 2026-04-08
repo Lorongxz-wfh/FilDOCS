@@ -1,4 +1,5 @@
 import api from "./api";
+import { dedupeFetch } from "./_base";
 
 export interface SystemHealthStatus {
   status: {
@@ -56,8 +57,10 @@ export interface SystemDiagnostics {
  * Fetch maintenance status only. Safe for all authenticated users.
  */
 export async function getMaintenanceStatus(): Promise<{ maintenance: SystemHealthStatus['maintenance'] }> {
-  const { data } = await api.get("/system/maintenance");
-  return data;
+  return dedupeFetch("maintenance", async () => {
+    const { data } = await api.get("/system/maintenance");
+    return data;
+  });
 }
 
 /**

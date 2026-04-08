@@ -1,4 +1,4 @@
-import { getApi, normalizePaginated, notifCache, clearNotifCache, notifCacheKey } from "./_base";
+import { getApi, normalizePaginated, notifCache, clearNotifCache, notifCacheKey, dedupeFetch } from "./_base";
 import type { Paginated, NotificationItem, UnreadCountResponse } from "./types";
 
 export async function listNotifications(params?: {
@@ -51,14 +51,16 @@ export async function listNotifications(params?: {
 }
 
 export async function getUnreadNotificationCount(): Promise<number> {
-  try {
-    const api = await getApi();
-    const res = await api.get("/notifications/unread-count");
-    const data = res.data as UnreadCountResponse;
-    return Number(data?.unread ?? 0);
-  } catch {
-    return 0; // don't break UX
-  }
+  return dedupeFetch("unread-count", async () => {
+    try {
+      const api = await getApi();
+      const res = await api.get("/notifications/unread-count");
+      const data = res.data as UnreadCountResponse;
+      return Number(data?.unread ?? 0);
+    } catch {
+      return 0; // don't break UX
+    }
+  });
 }
 
 export async function markNotificationRead(

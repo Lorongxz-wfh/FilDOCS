@@ -55,6 +55,24 @@ export function clearNotifCache() {
   notifCache.clear();
 }
 
-export function notifCacheKey(page: number, perPage: number) {
-  return `notifications:p${page}:pp${perPage}`;
+export const notifCacheKey = (page: number, perPage: number) => `notifications:p${page}:pp${perPage}`;
+
+/**
+ * Simple in-flight request de-duplicator. 
+ * Prevents "waterfall floods" when multiple components (Sidebar, Dashboard, Mobile nav) 
+ * all fire the same stats/queue request within the same 500ms window.
+ */
+const inFlight = new Map<string, Promise<any>>();
+
+export async function dedupeFetch<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  const existing = inFlight.get(key);
+  if (existing) return existing;
+
+  const promise = fetcher().finally(() => {
+    // Keep the dedupe window open for a tiny bit to catch rapid re-renders
+    setTimeout(() => inFlight.delete(key), 500);
+  });
+  
+  inFlight.set(key, promise);
+  return promise;
 }
