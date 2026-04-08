@@ -65,17 +65,22 @@ const LoginPage: React.FC = () => {
   };
 
   const handleLoginSuccess = (data: any) => {
+    // 1. Save keys
     localStorage.setItem("auth_token", data.token);
     setAuthUser(data.user);
 
-    // Sync theme if user has a preference
+    // 2. Force theme sync immediately (Syncs to account default)
     if (data.user?.theme_preference) {
       setTheme(data.user.theme_preference);
     }
 
-    // Preload the dashboard chunk while the splash is animating
+    // 3. UI Feedback
     import("./DashboardPage").catch(() => {});
     window.dispatchEvent(new Event("show_splash"));
+    
+    // 4. Update the global listener so everything knows auth is finished
+    window.dispatchEvent(new Event("auth_user_updated"));
+    
     navigate("/dashboard", { replace: true });
   };
 

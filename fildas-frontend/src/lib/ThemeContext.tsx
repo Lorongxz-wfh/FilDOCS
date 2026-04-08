@@ -14,9 +14,25 @@ const ThemeContext = React.createContext<ThemeCtx>({
 });
 
 import { useTheme } from "../hooks/useTheme";
+import { getAuthUser } from "./auth";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { theme, toggle, setTheme } = useTheme();
+
+  // Listen for user state changes (login/sync) to force theme updates
+  React.useEffect(() => {
+    const syncTheme = () => {
+      const user = getAuthUser();
+      if (user?.theme_preference) {
+        setTheme(user.theme_preference);
+      }
+    };
+
+    window.addEventListener("auth_user_updated", syncTheme);
+    syncTheme(); // Initial check
+
+    return () => window.removeEventListener("auth_user_updated", syncTheme);
+  }, [setTheme]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggle, setTheme }}>

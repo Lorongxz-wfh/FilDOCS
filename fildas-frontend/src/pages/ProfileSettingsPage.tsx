@@ -419,7 +419,11 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
   return (
     <div className="space-y-12 pb-10">
       {/* Theme section */}
-      <Section title="Appearance" icon={<Layout className="h-4 w-4" />} description="Choose how FilDAS looks to you. Select System to follow your device settings.">
+      <Section 
+        title="Default Theme" 
+        icon={<Layout className="h-4 w-4" />} 
+        description="Choose your account's default appearance. This will be applied regardless of which device you use."
+      >
          <div className="flex p-1 bg-slate-100 dark:bg-surface-400 rounded-lg max-w-sm">
             {[
               { id: "light", label: "Light", icon: <Sun className="h-3.5 w-3.5" /> },

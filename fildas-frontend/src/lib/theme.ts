@@ -2,20 +2,16 @@ const THEME_KEY = "fildas-theme";
 
 export type ThemePreference = "light" | "dark" | "system";
 
-/**
- * Gets the raw stored preference (light, dark, or system)
- */
 export function getStoredTheme(): ThemePreference {
   try {
-    const v = localStorage.getItem(THEME_KEY);
+    const v = localStorage.getItem(THEMES_KEY_PERSISTENT) || localStorage.getItem(THEME_KEY);
     if (v === "dark" || v === "light" || v === "system") return v as ThemePreference;
   } catch {}
   return "system";
 }
 
-/**
- * Determines the actual visible theme based on preference and OS
- */
+const THEMES_KEY_PERSISTENT = "fildas-pref-theme";
+
 export function resolveTheme(theme: ThemePreference): "light" | "dark" {
   if (theme === "system") {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -23,14 +19,11 @@ export function resolveTheme(theme: ThemePreference): "light" | "dark" {
   return theme;
 }
 
-/**
- * Applies the theme to the DOM and saves the preference
- */
 export function applyTheme(theme: ThemePreference) {
   const root = document.documentElement;
   const resolved = resolveTheme(theme);
 
-  // Kill all transitions before the class swap so colors change atomically
+  // Atomic class swap
   root.classList.add("theme-switching");
   
   if (resolved === "dark") {
@@ -41,12 +34,11 @@ export function applyTheme(theme: ThemePreference) {
 
   try {
     localStorage.setItem(THEME_KEY, theme);
+    localStorage.setItem(THEMES_KEY_PERSISTENT, theme);
   } catch {}
 
-  // Re-enable transitions after the browser has painted the new theme
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      root.classList.remove("theme-switching");
-    });
-  });
+  // Cleanup switching state
+  setTimeout(() => {
+    root.classList.remove("theme-switching");
+  }, 50);
 }
