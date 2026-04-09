@@ -136,10 +136,40 @@ class TwoFactorController extends Controller
 
         $request->validate([
             'password' => 'required|string',
+            'code' => 'nullable|string|size:6',
+            'recovery_code' => 'nullable|string',
         ]);
 
         if (!Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Incorrect password.'], 422);
+        }
+
+        // Must provide 2FA code if it's already confirmed
+        if ($user->two_factor_confirmed_at) {
+            $valid = false;
+            
+            if ($request->recovery_code) {
+                // Check recovery codes
+                $codes = json_decode(decrypt($user->two_factor_recovery_codes), true);
+                foreach ($codes as $index => $code) {
+                    if ($code === $request->recovery_code) {
+                        unset($codes[$index]);
+                        $user->two_factor_recovery_codes = encrypt(json_encode(array_values($codes)));
+                        // We don't save yet, we'll save at the end when resetting everything
+                        $valid = true;
+                        break;
+                    }
+                }
+            } else if ($request->code) {
+                // Check TOTP code
+                $valid = $this->google2fa->verifyKey($user->two_factor_secret, $request->code);
+            } else {
+                return response()->json(['message' => 'Verification code is required to disable 2FA.'], 422);
+            }
+
+            if (!$valid) {
+                return response()->json(['message' => 'Invalid verification code.'], 422);
+            }
         }
 
         $user->two_factor_secret = null;

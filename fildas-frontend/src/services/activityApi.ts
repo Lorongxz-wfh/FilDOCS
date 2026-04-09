@@ -22,7 +22,8 @@ export async function listActivityLogs(params: {
     | "user"
     | "template"
     | "profile"
-    | "actions";
+    | "actions"
+    | "security";
 
 
   // sorting
@@ -83,7 +84,8 @@ export async function exportActivityLogs(params: {
     | "user"
     | "template"
     | "profile"
-    | "actions";
+    | "actions"
+    | "security";
 
   sort_by?: "created_at" | "event" | "label";
   sort_dir?: "asc" | "desc";

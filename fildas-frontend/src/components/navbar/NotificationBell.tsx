@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { BellRing, Megaphone, Bell, CheckCircle, ArrowRight } from "lucide-react";
+import { BellRing, Megaphone, Bell, CheckCircle, ArrowRight, ShieldAlert } from "lucide-react";
 import InlineSpinner from "../ui/loader/InlineSpinner";
 import SkeletonList from "../ui/loader/SkeletonList";
 import {
@@ -26,7 +26,7 @@ const NotificationBell: React.FC = () => {
   const [notifItems, setNotifItems] = React.useState<NotificationItem[]>([]);
   const [notifLoading, setNotifLoading] = React.useState(false);
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
-  const [, setAnnLoading] = React.useState(false);
+  const [isAnnLoading, setAnnLoading] = React.useState(false);
   const [isMarkingRead, setIsMarkingRead] = React.useState(false);
 
   const [seenAt, setSeenAt] = React.useState<number>(() =>
@@ -103,8 +103,6 @@ const NotificationBell: React.FC = () => {
     return notifItems.filter((n) => !n.read_at).slice(0, 5);
   }, [notifItems]);
 
-
-
   return (
     <>
       <button
@@ -149,15 +147,24 @@ const NotificationBell: React.FC = () => {
 
           <div className="px-3.5 py-4 space-y-4">
              {/* Announcement Area on top - Preserved regardless of mark-all-read */}
-             {announcements.length > 0 && (
+             {(announcements.length > 0 || isAnnLoading) && (
                <button
                  onClick={() => { setIsOpen(false); navigate("/announcements"); }}
                  className="w-full text-left group flex items-stretch rounded-lg border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-600 overflow-hidden hover:border-brand-500 dark:hover:border-brand-400 transition-all shadow-sm"
                >
                  <div className="w-1 bg-brand-500" />
                  <div className="flex-1 px-3 py-2.5 min-w-0">
-                    <p className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">{announcements[0].title}</p>
-                    <p className="mt-1 line-clamp-1 text-[11px] text-slate-500 dark:text-slate-400 leading-tight" dangerouslySetInnerHTML={{ __html: announcements[0].body }} />
+                    {announcements.length > 0 ? (
+                      <>
+                        <p className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">{announcements[0].title}</p>
+                        <p className="mt-1 line-clamp-1 text-[11px] text-slate-500 dark:text-slate-400 leading-tight" dangerouslySetInnerHTML={{ __html: announcements[0].body }} />
+                      </>
+                    ) : (
+                      <div className="space-y-2 py-1">
+                        <div className="h-2 w-2/3 bg-slate-100 dark:bg-surface-400 rounded animate-pulse" />
+                        <div className="h-1.5 w-full bg-slate-50 dark:bg-surface-400/50 rounded animate-pulse" />
+                      </div>
+                    )}
                  </div>
                </button>
              )}
@@ -178,8 +185,9 @@ const NotificationBell: React.FC = () => {
                  <div className="space-y-2">
                    {visibleItems.map((n) => {
                      const isUnseen = !n.read_at && new Date(n.created_at).getTime() > seenAt;
-                     const isAnnouncement = n.title.toLowerCase().includes("announcement");
-                     const cleanTitle = n.title.replace(/^[🔵 announcement:\s]+/gi, "Announcement: ").trim();
+                     const isSecurity = (n.event?.startsWith("auth.") || n.title.toLowerCase().includes("factor") || n.event === 'admin.2fa_reset') === true;
+                     const isAnnouncement = (n.event?.startsWith("announcement.") || n.title.toLowerCase().includes("announcement")) === true;
+                     const cleanTitle = n.title.replace(/^[🔵\s]+/g, "").trim();
 
                      return (
                        <button
@@ -196,12 +204,20 @@ const NotificationBell: React.FC = () => {
                          className={`w-full group relative flex items-start gap-3 rounded-lg border px-3 py-2.5 transition-all text-left ${isUnseen ? "bg-brand-50/10 border-brand-100 dark:border-brand-900/30" : "bg-white border-slate-100 hover:bg-slate-50 dark:bg-surface-600 dark:border-surface-400 dark:hover:bg-surface-400"}`}
                        >
                          <div className="mt-1 shrink-0">
-                           {isAnnouncement ? <Megaphone className="h-3 w-3 text-brand-500" strokeWidth={1.5} /> : <Bell className="h-3 w-3 text-slate-400" strokeWidth={1.5} />}
+                           {isSecurity ? (
+                             <ShieldAlert className="h-3.5 w-3.5 text-rose-500" strokeWidth={1.5} />
+                           ) : isAnnouncement ? (
+                             <Megaphone className="h-3.5 w-3.5 text-brand-500" strokeWidth={1.5} />
+                           ) : (
+                             <Bell className="h-3.5 w-3.5 text-slate-400" strokeWidth={1.5} />
+                           )}
                          </div>
                          <div className="min-w-0 flex-1">
-                           <p className={`truncate text-xs font-semibold ${isUnseen ? "text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-400"}`}>
+                           <div className={`text-xs leading-tight font-semibold ${isUnseen ? "text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-400"}`}>
+                             {isSecurity && <span className="text-rose-600 dark:text-rose-400 font-bold mr-1">Security:</span>}
+                             {isAnnouncement && !cleanTitle.toLowerCase().startsWith("announcement") && <span className="text-brand-600 dark:text-brand-400 font-bold mr-1">Announcement:</span>}
                              {cleanTitle}
-                           </p>
+                           </div>
                            <p className="mt-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{formatRelative(n.created_at)}</p>
                          </div>
                          {isUnseen && <div className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-500" />}

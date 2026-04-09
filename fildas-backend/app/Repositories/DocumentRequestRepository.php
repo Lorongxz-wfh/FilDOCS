@@ -71,15 +71,21 @@ class DocumentRequestRepository
             }
         });
         if ($fOfficeId) {
-            $q1->where(function($qq) use ($fOfficeId, $userId) {
-                // If I am the creator, filter by recipient. If I am the recipient, filter by creator office.
-                $qq->where(function($sub) use ($fOfficeId, $userId) {
-                    $sub->where('r.created_by_user_id', $userId)
-                        ->where('rr.office_id', $fOfficeId);
-                })->orWhere(function($sub) use ($fOfficeId, $userId) {
-                    $sub->where('r.created_by_user_id', '!=', $userId)
-                        ->where('u_cre.office_id', $fOfficeId);
-                });
+            $q1->where(function($qq) use ($fOfficeId, $userId, $isQa) {
+                if ($isQa) {
+                    // Privileged: see everything related to this office
+                    $qq->where('rr.office_id', $fOfficeId)
+                       ->orWhere('u_cre.office_id', $fOfficeId);
+                } else {
+                    // Regular: directional logic relative to current user
+                    $qq->where(function($sub) use ($fOfficeId, $userId) {
+                        $sub->where('r.created_by_user_id', $userId)
+                            ->where('rr.office_id', $fOfficeId);
+                    })->orWhere(function($sub) use ($fOfficeId, $userId) {
+                        $sub->where('r.created_by_user_id', '!=', $userId)
+                            ->where('u_cre.office_id', $fOfficeId);
+                    });
+                }
             });
         }
         if ($reqSt) $q1->where('r.status', $reqSt);
@@ -133,14 +139,19 @@ class DocumentRequestRepository
         }
 
         if ($fOfficeId) {
-            $q2->where(function($qq) use ($fOfficeId, $userId) {
-                $qq->where(function($sub) use ($fOfficeId, $userId) {
-                    $sub->where('r.created_by_user_id', $userId)
-                        ->where('rr.office_id', $fOfficeId);
-                })->orWhere(function($sub) use ($fOfficeId, $userId) {
-                    $sub->where('r.created_by_user_id', '!=', $userId)
-                        ->where('u_cre.office_id', $fOfficeId);
-                });
+            $q2->where(function($qq) use ($fOfficeId, $userId, $isQa) {
+                if ($isQa) {
+                    $qq->where('rr.office_id', $fOfficeId)
+                       ->orWhere('u_cre.office_id', $fOfficeId);
+                } else {
+                    $qq->where(function($sub) use ($fOfficeId, $userId) {
+                        $sub->where('r.created_by_user_id', $userId)
+                            ->where('rr.office_id', $fOfficeId);
+                    })->orWhere(function($sub) use ($fOfficeId, $userId) {
+                        $sub->where('r.created_by_user_id', '!=', $userId)
+                            ->where('u_cre.office_id', $fOfficeId);
+                    });
+                }
             });
         }
 

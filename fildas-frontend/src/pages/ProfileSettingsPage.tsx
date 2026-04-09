@@ -14,6 +14,7 @@ import {
   Layout,
   Sun,
   Moon,
+  Laptop,
 } from "lucide-react";
 import { 
   listActivityLogs 
@@ -30,6 +31,7 @@ import {
 import { ActivityTimeline, type ActivityLogRow } from "../components/profile/ActivityTimeline";
 import { TwoFactorManager } from "../components/profile/TwoFactorManager";
 import { ProfileInfoCard } from "../components/profile/ProfileInfoCard";
+import { SessionManager } from "../components/profile/SessionManager";
 import { Tabs } from "../components/ui/Tabs";
 import Button from "../components/ui/Button";
 import Modal from "../components/ui/Modal";
@@ -168,6 +170,7 @@ const ProfileSettingsPage: React.FC = () => {
   const tabs = [
     { key: "activity", label: "My Activity", icon: <History className="h-4 w-4" /> },
     { key: "settings", label: "Account Settings", icon: <SettingsIcon className="h-4 w-4" /> },
+    { key: "sessions", label: "Sessions", icon: <Laptop className="h-4 w-4" /> },
   ];
 
   const categories = [
@@ -265,13 +268,17 @@ const ProfileSettingsPage: React.FC = () => {
 
              <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 custom-scrollbar">
                 {activeTab === "activity" ? (
-                  <div className="max-w-4xl mx-auto py-6 px-4">
-                     <ActivityTimeline items={logs} loading={logsLoading} />
-                  </div>
+                   <div className="max-w-4xl mx-auto py-6 px-4">
+                      <ActivityTimeline items={logs} loading={logsLoading} />
+                   </div>
+                ) : activeTab === "settings" ? (
+                   <div className="max-w-4xl mx-auto py-6 px-4 space-y-10">
+                      <SettingsLayout user={user} push={push} />
+                   </div>
                 ) : (
-                  <div className="max-w-4xl mx-auto py-6 px-4 space-y-10">
-                     <SettingsLayout user={user} push={push} />
-                  </div>
+                   <div className="max-w-4xl mx-auto py-6 px-4">
+                      <SessionManager />
+                   </div>
                 )}
              </div>
            </div>

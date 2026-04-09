@@ -39,8 +39,14 @@ const LoginPage: React.FC = () => {
 
       handleLoginSuccess(data);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || "Login failed";
-      setError(msg);
+      if (err?.response?.status === 429) {
+        const retryAfter = err?.response?.data?.retry_after;
+        const msg = err?.response?.data?.message || `Too many attempts. Please try again in ${retryAfter}s.`;
+        setError(msg);
+      } else {
+        const msg = err?.response?.data?.message || err?.message || "Login failed";
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -57,8 +63,14 @@ const LoginPage: React.FC = () => {
       });
       handleLoginSuccess(res.data);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || "Invalid verification code.";
-      setError(msg);
+      if (err?.response?.status === 429) {
+        const retryAfter = err?.response?.data?.retry_after;
+        const msg = err?.response?.data?.message || `Too many attempts. Please try again in ${retryAfter}s.`;
+        setError(msg);
+      } else {
+        const msg = err?.response?.data?.message || "Invalid verification code.";
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

@@ -78,8 +78,12 @@ export async function confirmTwoFactor(payload: { secret: string; code: string }
   return data as { message: string; recovery_codes: string[] };
 }
 
-export async function disableTwoFactor(password: string) {
-  const { data } = await api.post("/profile/two-factor/disable", { password });
+export async function disableTwoFactor(payload: {
+  password: string;
+  code?: string;
+  recovery_code?: string;
+}) {
+  const { data } = await api.post("/profile/two-factor/disable", payload);
   return data;
 }
 

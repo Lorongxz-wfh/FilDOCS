@@ -96,7 +96,7 @@ class ActivityLogController extends Controller
             'office_id' => 'nullable|integer|exists:offices,id',
             'date_from' => 'nullable|date',
             'date_to'  => 'nullable|date',
-            'category' => 'nullable|in:workflow,request,document,user,template,profile,actions',
+            'category' => 'nullable|in:workflow,request,document,user,template,profile,actions,security',
         ]);
     }
 
@@ -154,6 +154,7 @@ class ActivityLogController extends Controller
             'template' => ['template.'],
             'profile'       => ['profile.', 'auth.'],
             'announcement'  => ['announcement.'],
+            'security'      => ['auth.', 'security.', '2fa.'],
             // All document/workflow/request actions — excludes auth, profile, user-mgmt, template noise
             'actions'  => ['workflow.', 'document.', 'version.', 'message.', 'document_request.'],
         ];

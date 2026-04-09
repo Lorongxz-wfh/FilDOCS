@@ -204,20 +204,19 @@ class DocumentRequestController extends Controller
                 });
             }
 
+            $isAll = empty($data['direction']) || $data['direction'] === 'all';
             $paginated = $q->paginate($perPage);
 
-            $items = collect($paginated->items())->map(function ($row) use ($user) {
+            $items = collect($paginated->items())->map(function ($row) use ($user, $isQa, $isAll) {
                 try {
                     $requestId = (int) $row->id;
                     $mode = $row->mode ?? 'multi_office';
                     
-                    // Safer progress check
                     $prog = ['total' => 0, 'submitted' => 0, 'accepted' => 0];
                     try {
                         $prog = $this->progress->buildProgress($requestId, $mode);
                     } catch (\Throwable $pe) {}
 
-                    // Fetch recipients separately to avoid complex joins crashing on Render
                     $recipients = [];
                     try {
                         $recipients = DB::table('document_request_recipients as rr')
@@ -228,6 +227,18 @@ class DocumentRequestController extends Controller
                     } catch (\Throwable $re) {}
 
                     $isMine = (int)$row->created_by_user_id === (int)$user->id;
+                    $recCodes = collect($recipients)->pluck('code')->unique()->implode(',');
+                    $recNames = collect($recipients)->pluck('name')->unique()->implode(', ');
+
+                    // For QA/Admin, show more context in the "office" column if in "All" view
+                    $displayCodeResource = $row->creator_office_code ?: 'System';
+                    $displayText = $displayCodeResource;
+                    
+                    if ($isQa && $isAll) {
+                         $displayText = $displayCodeResource . " → " . (strlen($recCodes) > 15 ? substr($recCodes, 0, 15) . "..." : ($recCodes ?: 'None'));
+                    } else if ($isMine) {
+                         $displayText = $recCodes ?: 'None';
+                    }
 
                     return [
                         'id'                     => $requestId,
@@ -244,10 +255,10 @@ class DocumentRequestController extends Controller
                         'creator_label'          => $isMine ? 'YOU' : ($row->creator_office_code ?: 'System'),
                         'direction'              => $isMine ? 'outgoing' : 'incoming',
                         'progress'               => $prog,
-                        'office_code'            => $isMine ? collect($recipients)->pluck('code')->unique()->implode(',') : $row->creator_office_code,
-                        'office_name'            => $isMine ? collect($recipients)->pluck('name')->unique()->implode(', ') : $row->creator_office_name,
-                        'recipient_offices_code' => collect($recipients)->pluck('code')->unique()->implode(','),
-                        'recipient_offices_name' => collect($recipients)->pluck('name')->unique()->implode(', '),
+                        'office_code'            => $displayText,
+                        'office_name'            => $isMine ? $recNames : $row->creator_office_name,
+                        'recipient_offices_code' => $recCodes,
+                        'recipient_offices_name' => $recNames,
                     ];
                 } catch (\Throwable $e) {
                     \Log::warning("Skipping bad request row ID: " . ($row->id ?? 'unknown') . " - " . $e->getMessage());

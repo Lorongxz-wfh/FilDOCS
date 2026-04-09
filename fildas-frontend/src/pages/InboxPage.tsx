@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { getAuthUser } from "../lib/auth";
 import PageFrame from "../components/layout/PageFrame";
 import Button from "../components/ui/Button";
-import { Trash2, Search, X, Megaphone, Bell, CheckCircle } from "lucide-react";
+import { Trash2, Search, X, Megaphone, Bell, CheckCircle, ShieldAlert } from "lucide-react";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -90,8 +90,10 @@ const NotifCard: React.FC<{
   onMarkRead: (id: number) => void;
 }> = ({ n, onOpen, onDelete, onMarkRead }) => {
   const isUnread = !n.read_at;
-  const isAnnouncement = n.title.toLowerCase().includes("announcement");
-  const type = (n.meta?.type as string) || (isAnnouncement ? "info" : "");
+  const isSecurity = n.event?.startsWith("auth.") || n.title.toLowerCase().includes("factor") || n.event === 'admin.2fa_reset';
+  const isAnnouncement = n.event?.startsWith("announcement.") || n.title.toLowerCase().includes("announcement");
+  const cleanTitle = n.title.replace(/^[🔵\s]+/g, "").trim();
+  const type = (n.meta?.type as string) || (isSecurity ? "urgent" : isAnnouncement ? "info" : "");
   const statusDot = isUnread ? (
     <div className="h-1.5 w-1.5 rounded-full bg-brand-500" />
   ) : null;
@@ -106,7 +108,9 @@ const NotifCard: React.FC<{
 
       <div className="flex flex-1 items-start gap-4 px-4 py-4 min-w-0">
         <div className="mt-1 shrink-0 flex items-center justify-center w-5">
-          {isAnnouncement ? (
+          {isSecurity ? (
+            <ShieldAlert className="h-4 w-4 text-rose-500" strokeWidth={2} />
+          ) : isAnnouncement ? (
             <Megaphone className={`h-4 w-4 ${type === "urgent" ? "text-rose-500" : type === "warning" ? "text-amber-500" : "text-brand-500"}`} strokeWidth={1.5} />
           ) : (
             <div className="h-4 w-4 flex items-center justify-center">
@@ -121,9 +125,11 @@ const NotifCard: React.FC<{
           onClick={() => onOpen(n)}
         >
           <div className="flex items-center gap-2 flex-wrap">
-            <p className={`text-sm font-semibold leading-tight transition-colors ${isUnread ? "text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-400"}`}>
-              {n.title.replace(/^[🔵 announcement:\s]+/gi, "Announcement: ").trim()}
-            </p>
+            <div className={`text-sm font-semibold leading-tight transition-colors ${isUnread ? "text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-400"}`}>
+              {isSecurity && <span className="text-rose-600 dark:text-rose-400 font-bold mr-1">Security:</span>}
+              {isAnnouncement && !cleanTitle.toLowerCase().startsWith("announcement") && <span className="text-brand-600 dark:text-brand-400 font-bold mr-1">Announcement:</span>}
+              {cleanTitle}
+            </div>
             {isUnread && (
               <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400">
                 New

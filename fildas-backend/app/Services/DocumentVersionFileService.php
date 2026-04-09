@@ -27,6 +27,7 @@ class DocumentVersionFileService
 
         $version->original_filename = $file->getClientOriginalName();
         $version->file_path = $r2Path;
+        $version->checksum = hash_file('sha256', $file->getRealPath());
 
         // Preview generation: skip conversion if it's already a PDF
         if ($extension === 'pdf') {

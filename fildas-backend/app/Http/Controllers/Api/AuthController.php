@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\User;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
@@ -20,6 +21,20 @@ class AuthController extends Controller
             'email'    => 'required|email',
             'password' => 'required|string',
         ]);
+
+        $throttleKey = Str::lower($credentials['email']) . '|' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            $this->logActivity('auth.throttled', 'Login throttled due to too many attempts', null, null, [
+                'email' => $credentials['email'],
+                'seconds' => $seconds
+            ]);
+            return response()->json([
+                'message' => 'Too many login attempts. Please try again in ' . $seconds . ' seconds.',
+                'retry_after' => $seconds,
+            ], 429);
+        }
 
         $user = User::with(['role', 'office'])
             ->where('email', $credentials['email'])
@@ -38,6 +53,8 @@ class AuthController extends Controller
         ]);
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+            RateLimiter::hit($throttleKey, 60);
+
             $this->logActivity('auth.login_failed', 'Failed login attempt', null, null, [
                 'email'  => $credentials['email'],
                 'reason' => ! $user ? 'user_not_found' : 'invalid_password',
@@ -46,6 +63,8 @@ class AuthController extends Controller
                 'message' => 'Invalid credentials',
             ], 422);
         }
+
+        RateLimiter::clear($throttleKey);
 
 
         if ($user->disabled_at) {
@@ -66,6 +85,10 @@ class AuthController extends Controller
             ]);
         }
 
+        if (!$user instanceof User) {
+            return response()->json(['message' => 'Login failed.'], 422);
+        }
+
         return $this->issueToken($user);
     }
 
@@ -80,24 +103,48 @@ class AuthController extends Controller
             'recovery_code' => 'nullable|string',
         ]);
 
+        $throttleKey = '2fa:' . $data['challenge_id'] . '|' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return response()->json([
+                'message' => 'Too many 2FA attempts. Please try again in ' . $seconds . ' seconds.',
+                'retry_after' => $seconds,
+            ], 429);
+        }
+
         $userId = \Illuminate\Support\Facades\Cache::get('2fa_challenge_' . $data['challenge_id']);
 
+        Log::info('2FA Challenge debug', [
+            'challenge_id' => $data['challenge_id'] ?? 'MISSING',
+            'has_cache' => !!($userId ?? null),
+            'user_id' => $userId ?? null,
+            'has_code' => !empty($data['code']),
+            'has_recovery' => !empty($data['recovery_code']),
+            'code_length' => strlen($data['code'] ?? ''),
+        ]);
+
         if (!$userId) {
+            Log::warning('2FA Session Expired', ['challenge_id' => $data['challenge_id']]);
             return response()->json(['message' => 'The 2FA session has expired.'], 422);
         }
 
         $user = User::with(['role', 'office'])->find($userId);
         if (!$user) {
+            Log::error('2FA User Not Found', ['user_id' => $userId]);
             return response()->json(['message' => 'User not found.'], 422);
         }
 
         $valid = false;
 
-        if ($data['recovery_code']) {
+        $recoveryCode = $data['recovery_code'] ?? null;
+        $otpCode = $data['code'] ?? null;
+
+        if ($recoveryCode) {
             // Check recovery codes
             $codes = json_decode(decrypt($user->two_factor_recovery_codes), true);
             foreach ($codes as $index => $code) {
-                if ($code === $data['recovery_code']) {
+                if ($code === $recoveryCode) {
                     unset($codes[$index]);
                     $user->two_factor_recovery_codes = encrypt(json_encode(array_values($codes)));
                     $user->save();
@@ -105,14 +152,34 @@ class AuthController extends Controller
                     break;
                 }
             }
-        } else if ($data['code']) {
+        } else if ($otpCode) {
             // Check TOTP code
             $google2fa = new \PragmaRX\Google2FA\Google2FA();
-            $valid = $google2fa->verifyKey($user->two_factor_secret, $data['code']);
+            // Remove any spaces from code
+            $cleanCode = str_replace(' ', '', $otpCode);
+            
+            // Standard window is 1 (30s before/after). Widen to 2 for robustness.
+            $valid = $google2fa->verifyKey($user->two_factor_secret, $cleanCode, 2);
+            
+            Log::info('2FA TOTP verification result', [
+                'user_id' => $user->id,
+                'valid' => $valid,
+                'secret_set' => filled($user->two_factor_secret),
+                'input_code' => $cleanCode,
+                'window' => 2
+            ]);
         }
 
         if (!$valid) {
+            RateLimiter::hit($throttleKey, 300); // 5 minute penalty for 2FA fail
             return response()->json(['message' => 'Invalid verification code.'], 422);
+        }
+
+        RateLimiter::clear($throttleKey);
+
+        if (!$user instanceof User) {
+            Log::error('Invalid user object in 2FA logout', ['user_id' => $userId]);
+            return response()->json(['message' => 'Internal server error.'], 500);
         }
 
         // Success - remove challenge and issue token
@@ -123,7 +190,15 @@ class AuthController extends Controller
 
     private function issueToken(\App\Models\User $user)
     {
-        $token = $user->createToken('api-token')->plainTextToken;
+        $tokenInstance = $user->createToken('api-token');
+        $token = $tokenInstance->plainTextToken;
+
+        // Save IP and User Agent to the token record
+        $tokenInstance->accessToken->forceFill([
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ])->save();
+
         $roleName = $user->role ? strtolower(trim($user->role->name)) : null;
 
         if (!$roleName) {

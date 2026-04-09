@@ -44,6 +44,8 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
 
   // Disable state
   const [password, setPassword] = useState("");
+  const [disableCode, setDisableCode] = useState("");
+  const [disableIsRecovery, setDisableIsRecovery] = useState(false);
 
   const handleStartSetup = async () => {
     setLoading(true);
@@ -86,10 +88,14 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
   const handleDisable = async () => {
     setLoading(true);
     try {
-      await disableTwoFactor(password);
+      await disableTwoFactor({
+        password,
+        [disableIsRecovery ? "recovery_code" : "code"]: disableCode
+      });
       setIsEnabled(false);
       setIsDisableModalOpen(false);
       setPassword("");
+      setDisableCode("");
       
       const localUser = JSON.parse(localStorage.getItem("auth_user") || "{}");
       localStorage.setItem("auth_user", JSON.stringify({ ...localUser, two_factor_enabled: false }));
@@ -97,7 +103,7 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
       
       push({ type: "success", title: "Disabled", message: "Two-factor authentication has been turned off." });
     } catch (err) {
-      push({ type: "error", title: "Check Failed", message: normalizeError(err) });
+      push({ type: "error", title: "Action Failed", message: normalizeError(err) });
     } finally {
       setLoading(false);
     }
@@ -361,7 +367,7 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-6">
            <div className="p-3 bg-rose-50 border border-rose-100 rounded text-rose-700 flex gap-3">
               <Trash2 className="h-4 w-4 shrink-0 mt-0.5" />
               <div className="space-y-1">
@@ -370,14 +376,39 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
               </div>
            </div>
 
-           <FormField 
-              label="Confirm Password" 
-              isPassword 
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Enter password to confirm"
-              hint="You must verify your identity to disable 2FA."
-           />
+           <div className="space-y-4">
+              <FormField 
+                 label="Confirm Password" 
+                 isPassword 
+                 value={password}
+                 onChange={e => setPassword(e.target.value)}
+                 placeholder="Enter password to confirm"
+                 hint="You must verify your identity to disable 2FA."
+              />
+
+              <div className="pt-2 border-t border-slate-100 space-y-4">
+                <FormField 
+                  label={disableIsRecovery ? "Recovery Code" : "Verification Code"}
+                  type="text"
+                  placeholder={disableIsRecovery ? "XXXXX-XXXXX" : "000 000"}
+                  value={disableCode}
+                  onChange={e => setDisableCode(e.target.value)}
+                  icon={disableIsRecovery ? Key : CheckCircle2}
+                  maxLength={disableIsRecovery ? 21 : 6}
+                />
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDisableIsRecovery(!disableIsRecovery);
+                    setDisableCode("");
+                  }}
+                  className="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition"
+                >
+                  {disableIsRecovery ? "Use authenticator app code instead" : "Can't access your app? Use a recovery code"}
+                </button>
+              </div>
+           </div>
         </div>
       </Modal>
     </div>

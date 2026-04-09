@@ -134,10 +134,8 @@ export default function DocumentRequestListPage() {
 
   const [tab, setTab] = React.useState<ViewTab>("batches");
   const [q, setQ] = React.useState("");
-  const [status, setStatus] = React.useState<
-    "" | "open" | "closed" | "cancelled"
-  >("");
-  const [recipientStatus, setRecipientStatus] = React.useState<
+  const [batchStatus, setBatchStatus] = React.useState<string>("");
+  const [itemStatus, setItemStatus] = React.useState<
     "" | "pending" | "submitted" | "accepted" | "rejected"
   >("");
   const [officeFilter, setOfficeFilter] = React.useState<number | "">("");
@@ -154,12 +152,12 @@ export default function DocumentRequestListPage() {
 
   const activeFiltersCount = React.useMemo(() => {
     let count = 0;
-    if (status) count++;
-    if (recipientStatus) count++;
+    if (batchStatus) count++;
+    if (itemStatus) count++;
     if (direction !== "all") count++;
     if (officeFilter) count++;
     return count;
-  }, [status, recipientStatus, direction, officeFilter]);
+  }, [batchStatus, itemStatus, direction, officeFilter]);
 
   const [rows, setRows] = React.useState<any[]>([]);
   const [page, setPage] = React.useState(1);
@@ -280,36 +278,27 @@ export default function DocumentRequestListPage() {
       };
       let data: any;
 
+      const params = {
+        ...baseParams,
+        status: tab === "batches" ? (batchStatus || undefined) : (itemStatus || undefined),
+        direction: direction !== "all" ? direction : undefined,
+        office_id: officeFilter ? Number(officeFilter) : undefined,
+      };
+
       if (tab === "all") {
         data = await listDocumentRequestIndividual({
-          ...baseParams,
-          request_status: status || undefined,
-          status: recipientStatus || undefined,
-          direction: direction !== "all" ? direction : undefined,
-          office_id: officeFilter ? Number(officeFilter) : undefined,
-        });
-      } else if (isQaAdmin) {
-        data = await listDocumentRequests({
-          ...baseParams,
-          status: status || undefined,
-          direction: direction !== "all" ? direction : undefined,
-          office_id: officeFilter ? Number(officeFilter) : undefined,
-        });
-      } else if (direction === "outgoing") {
-        data = await listDocumentRequests({
-          ...baseParams,
-          status: status || undefined,
-          direction: "outgoing",
-        });
-      } else if (direction === "incoming") {
-        data = await listDocumentRequestInbox({
-          ...baseParams,
-          status: status || undefined,
-          direction: "incoming",
-          office_id: officeFilter ? Number(officeFilter) : undefined,
+          ...params,
+          request_status: batchStatus || undefined,
+          status: itemStatus || undefined,
         });
       } else {
-        data = canCreate ? await listDocumentRequests(baseParams) : await listDocumentRequestInbox(baseParams);
+        // Batches tab
+        if (isQaAdmin || direction === "all" || direction === "outgoing") {
+          data = await listDocumentRequests(params);
+        } else {
+          // Explicitly incoming
+          data = await listDocumentRequestInbox(params);
+        }
       }
 
       const incoming = Array.isArray(data?.data) ? data.data : [];
@@ -334,7 +323,7 @@ export default function DocumentRequestListPage() {
       setLoading(false);
       setInitialLoading(false);
     }
-  }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter, canCreate, page]);
+  }, [tab, qDebounced, batchStatus, itemStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter, canCreate, page]);
 
   const { refresh: refreshRequests, isRefreshing } = useSmartRefresh(async () => {
     const prevFirstId = firstIdRef.current;
@@ -348,12 +337,12 @@ export default function DocumentRequestListPage() {
     setPage(1);
     setHasMore(true);
     setInitialLoading(true);
-  }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter]);
+  }, [tab, qDebounced, batchStatus, itemStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter]);
 
   React.useEffect(() => {
     loadData(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, qDebounced, status, recipientStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter, activeTab]);
+  }, [tab, qDebounced, batchStatus, itemStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter, activeTab]);
 
   React.useEffect(() => {
     listOffices().then((res) => {
@@ -647,13 +636,14 @@ export default function DocumentRequestListPage() {
                 if (key === "batches") {
                   setTab("batches");
                   setQ("");
-                  setStatus("");
-                  setRecipientStatus("");
+                  setBatchStatus("");
+                  setItemStatus("");
                   setDirection("all");
                   setOfficeFilter("");
                 } else {
                   setTab("all");
-                  setStatus("");
+                  setBatchStatus("");
+                  setItemStatus("");
                 }
               }}
               id="requests"
@@ -685,8 +675,8 @@ export default function DocumentRequestListPage() {
             activeFiltersCount={activeFiltersCount}
             onClear={() => {
               setQ("");
-              setStatus("");
-              setRecipientStatus("");
+              setBatchStatus("");
+              setItemStatus("");
               setDirection("all");
               setOfficeFilter("");
               setPage(1);
@@ -733,10 +723,10 @@ export default function DocumentRequestListPage() {
                   <div className="flex flex-col gap-1.5 col-span-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Status</label>
                     <SelectDropdown
-                      value={tab === "batches" ? status : recipientStatus}
+                      value={tab === "batches" ? batchStatus : itemStatus}
                       onChange={(val) => {
-                        if (tab === "batches") setStatus(val as any);
-                        else setRecipientStatus(val as any);
+                        if (tab === "batches") setBatchStatus(val as any);
+                        else setItemStatus(val as any);
                         setPage(1);
                       }}
                       searchable={true}
@@ -795,10 +785,10 @@ export default function DocumentRequestListPage() {
             />
 
             <SelectDropdown
-              value={tab === "batches" ? status : recipientStatus}
+              value={tab === "batches" ? batchStatus : itemStatus}
               onChange={(val) => {
-                if (tab === "batches") setStatus(val as any);
-                else setRecipientStatus(val as any);
+                if (tab === "batches") setBatchStatus(val as any);
+                else setItemStatus(val as any);
                 setPage(1);
               }}
               searchable={true}
@@ -828,7 +818,7 @@ export default function DocumentRequestListPage() {
           <div className="flex-1 min-h-0 min-w-0 flex flex-col">
             <AnimatePresence mode="wait">
               <motion.div
-                key={tab + qDebounced + status + recipientStatus}
+                key={tab + qDebounced + batchStatus + itemStatus}
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
@@ -845,7 +835,7 @@ export default function DocumentRequestListPage() {
                     onRowClick={handleBatchRowClick}
                     loading={loading}
                     initialLoading={initialLoading}
-                    emptyMessage={q || status ? "No requests match your filters." : "No requests found."}
+                    emptyMessage={q || batchStatus ? "No requests match your filters." : "No requests found."}
                     hasMore={hasMore}
                     onLoadMore={() => setPage((p) => p + 1)}
                     gridTemplateColumns={adminDebugMode ? "50px 80px 90px minmax(150px, 1fr) 140px 90px 75px 95px 40px" : "50px 80px 90px minmax(150px, 1fr) 140px 90px 75px 95px"}

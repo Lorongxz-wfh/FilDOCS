@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Mail\PasswordResetMail;
+use Illuminate\Support\Facades\RateLimiter;
 
 class PasswordResetController extends Controller
 {
@@ -24,6 +25,15 @@ class PasswordResetController extends Controller
         $request->validate([
             'email' => 'required|email',
         ]);
+
+        $throttleKey = 'password-reset|' . $request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return response()->json([
+                'message' => "Too many reset requests. Please try again in {$seconds}s.",
+            ], 429);
+        }
+        RateLimiter::hit($throttleKey, 300); // 5 minute lockout
 
         $email = $request->input('email');
         $user  = User::where('email', $email)->whereNull('deleted_at')->first();
@@ -108,6 +118,15 @@ class PasswordResetController extends Controller
             'email'    => 'required|email',
             'password' => 'required|string|min:8|confirmed',
         ]);
+
+        $throttleKey = 'password-reset-submit|' . $request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return response()->json([
+                'message' => "Too many attempts. Please try again in {$seconds}s.",
+            ], 429);
+        }
+        RateLimiter::hit($throttleKey, 300);
 
         $email = $request->input('email');
         $token = $request->input('token');

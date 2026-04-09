@@ -13,7 +13,7 @@ return new class extends Migration
     {
         if (!Schema::hasColumn('users', 'theme_preference')) {
             Schema::table('users', function (Blueprint $table) {
-                $table->string('theme_preference')->default('system')->after('two_factor_enabled');
+                $table->string('theme_preference')->default('system')->after('two_factor_confirmed_at');
             });
         }
     }

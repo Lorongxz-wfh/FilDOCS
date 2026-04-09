@@ -23,12 +23,13 @@ type ActivityLogRow = {
   created_at?: string | null;
 };
 
-type Category = "" | "workflow" | "document" | "request";
+type Category = "" | "workflow" | "document" | "request" | "security";
 
 const CATEGORY_BADGE: Record<string, string> = {
   workflow: "bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400",
   document: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400",
   request:  "bg-violet-50 text-violet-700 dark:bg-violet-950/30 dark:text-violet-400",
+  security: "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400",
   other:    "bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-400",
 };
 
@@ -36,6 +37,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   workflow: "Workflow",
   document: "Document",
   request:  "Request",
+  security: "Security",
   other:    "Other",
 };
 
@@ -43,6 +45,7 @@ function categoryFromEvent(event: string): string {
   if (event.startsWith("workflow.")) return "workflow";
   if (event.startsWith("document.") || event.startsWith("version.") || event.startsWith("message.")) return "document";
   if (event.startsWith("document_request")) return "request";
+  if (event.startsWith("auth.") || event.includes("2fa")) return "security";
   return "other";
 }
 
@@ -331,6 +334,7 @@ const MyActivityPage: React.FC = () => {
                   { value: "workflow", label: "Workflow" },
                   { value: "document", label: "Documents & Files" },
                   { value: "request", label: "Requests" },
+                  { value: "security", label: "Security" },
                 ]}
               />
             </div>
@@ -362,6 +366,7 @@ const MyActivityPage: React.FC = () => {
             { value: "workflow", label: "Workflow" },
             { value: "document", label: "Documents & Files" },
             { value: "request", label: "Requests" },
+            { value: "security", label: "Security" },
           ]}
         />
 

@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\ActivityLog;
 use App\Models\Tag;
 use App\Services\WorkflowSteps;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class DocumentController extends Controller
@@ -1166,6 +1167,28 @@ class DocumentController extends Controller
         ], $version->document_id, $version->id);
 
         $stream = Storage::disk()->readStream($version->file_path);
+
+        // Verify integrity if checksum is recorded
+        if ($version->checksum) {
+            $tmpPath = sys_get_temp_dir() . '/integrity_check_' . $version->id;
+            file_put_contents($tmpPath, Storage::disk()->get($version->file_path));
+            $actualChecksum = hash_file('sha256', $tmpPath);
+            @unlink($tmpPath);
+
+            if ($actualChecksum !== $version->checksum) {
+                Log::critical('Document Integrity Failure detected!', [
+                    'version_id' => $version->id,
+                    'expected' => $version->checksum,
+                    'actual' => $actualChecksum,
+                    'user_id' => $user->id
+                ]);
+                $this->logActivity('security.integrity_failure', 'Document integrity verification failed during download', $user->id, $user->office_id, [
+                    'version_id' => $version->id,
+                    'document_title' => $version->document->title
+                ]);
+                return response()->json(['message' => 'Integrity Check Failed: This file has been modified or corrupted on the server.'], 500);
+            }
+        }
 
         return response()->stream(function () use ($stream) {
             fpassthru($stream);
