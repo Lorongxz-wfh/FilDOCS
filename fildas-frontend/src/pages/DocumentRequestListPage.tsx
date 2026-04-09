@@ -72,7 +72,7 @@ const ProgressBar: React.FC<{ progress: DocumentRequestProgress | undefined | nu
   const submittedPct = Math.round((submitted / total) * 100);
   const acceptedPct = Math.round((accepted / total) * 100);
   return (
-    <div className="flex items-center gap-3 min-w-0 pr-4">
+    <div className="flex items-center gap-3 min-w-0 pr-2">
       <div className="relative flex-1 h-2 rounded-full bg-slate-100 dark:bg-surface-400 overflow-hidden shadow-inner">
         <div
           className="absolute inset-y-0 left-0 rounded-full bg-sky-200 dark:bg-sky-700/50 transition-all duration-500"
@@ -620,6 +620,8 @@ export default function DocumentRequestListPage() {
               tabs={REQ_TABS}
               activeTab={tab}
               onChange={(key) => {
+                setIsSelectMode(false);
+                clearSelection();
                 if (key === "batches") {
                   setTab("batches");
                   setQ("");
@@ -765,7 +767,7 @@ export default function DocumentRequestListPage() {
                     emptyMessage={q || status ? "No requests match your filters." : "No requests found."}
                     hasMore={hasMore}
                     onLoadMore={() => setPage((p) => p + 1)}
-                    gridTemplateColumns={adminDebugMode ? "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px 50px" : "50px 90px 110px minmax(200px, 1fr) 130px 170px 100px 120px"}
+                    gridTemplateColumns={adminDebugMode ? "50px 80px 100px minmax(180px, 1fr) 110px 130px 90px 110px 40px" : "50px 80px 100px minmax(180px, 1fr) 110px 130px 90px 110px"}
                     selectable={isSelectMode}
                     selectedIds={selectedIds}
                     onToggleRow={toggleRow}
@@ -790,7 +792,7 @@ export default function DocumentRequestListPage() {
                     emptyMessage="No individual requests found."
                     hasMore={hasMore}
                     onLoadMore={() => setPage((p) => p + 1)}
-                    gridTemplateColumns="50px 90px minmax(150px, 1fr) 90px 90px 110px 130px 130px"
+                    gridTemplateColumns="50px 80px minmax(180px, 1fr) 80px 85px 100px 110px"
                     selectable={isSelectMode}
                     selectedIds={selectedIds}
                     onToggleRow={toggleRow}
