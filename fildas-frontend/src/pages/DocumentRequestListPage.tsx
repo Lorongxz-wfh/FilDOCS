@@ -417,31 +417,6 @@ export default function DocumentRequestListPage() {
         ),
       },
       {
-        key: "office",
-        header: "Source / Target",
-        skeletonShape: "narrow",
-        render: (r) => {
-          const isOutgoing = r.direction === 'outgoing';
-          const isMulti = r.mode === 'multi_office' && isOutgoing && r.office_code?.includes(',');
-
-          return (
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
-                {isOutgoing ? "To" : "From"}
-              </span>
-              <span className="text-xs font-bold text-brand-600 dark:text-brand-400 truncate max-w-35">
-                {isMulti ? "Multiple Offices" : (r.office_code || r.office?.code || r.creator_office_code || "—")}
-              </span>
-              {isMulti && (
-                <span className="text-[10px] text-slate-500 dark:text-slate-500 truncate mt-0.5 uppercase tracking-wide">
-                  {r.office_code?.split(',').length} recipients
-                </span>
-              )}
-            </div>
-          );
-        },
-      },
-      {
         key: "progress",
         header: "Progress",
         skeletonShape: "narrow",
@@ -460,6 +435,31 @@ export default function DocumentRequestListPage() {
               };
           return <ProgressBar progress={displayProgress} />;
         }
+      },
+      {
+        key: "office",
+        header: "Source / Target",
+        skeletonShape: "narrow",
+        render: (r) => {
+          const isOutgoing = r.direction === 'outgoing';
+          const isMulti = r.mode === 'multi_office' && isOutgoing && String(r.office_code || r.recipient_offices_code || "").includes(',');
+
+          return (
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                {isOutgoing ? "To" : "From"}
+              </span>
+              <span className="text-xs font-bold text-brand-600 dark:text-brand-400 truncate max-w-35">
+                {isMulti ? "Multiple Offices" : (r.office_code || r.office?.code || r.creator_office_code || "—")}
+              </span>
+              {isMulti && (
+                <span className="text-[10px] text-slate-500 dark:text-slate-500 truncate mt-0.5 uppercase tracking-wide">
+                  {(r.office_code || r.recipient_offices_code || "").split(',').length} recipients
+                </span>
+              )}
+            </div>
+          );
+        },
       },
       {
         key: "status",
@@ -848,7 +848,7 @@ export default function DocumentRequestListPage() {
                     emptyMessage={q || status ? "No requests match your filters." : "No requests found."}
                     hasMore={hasMore}
                     onLoadMore={() => setPage((p) => p + 1)}
-                    gridTemplateColumns={adminDebugMode ? "50px 80px 100px minmax(150px, 1fr) 100px 110px 80px 100px 40px" : "50px 80px 100px minmax(150px, 1fr) 100px 110px 80px 100px"}
+                    gridTemplateColumns={adminDebugMode ? "50px 80px 90px minmax(150px, 1fr) 140px 90px 75px 95px 40px" : "50px 80px 90px minmax(150px, 1fr) 140px 90px 75px 95px"}
                     selectable={isSelectMode}
                     selectedIds={selectedIds}
                     onToggleRow={toggleRow}
