@@ -39,6 +39,8 @@ Route::post('/login/two-factor/email', [AuthController::class, 'sendTwoFactorEma
 Route::post('/forgot-password', [\App\Http\Controllers\Api\PasswordResetController::class, 'forgot'])->middleware('throttle:6,1');
 Route::post('/reset-password', [\App\Http\Controllers\Api\PasswordResetController::class, 'reset'])->middleware('throttle:6,1');
 Route::get('/offices', [OfficeController::class, 'index']);
+Route::get('/system/maintenance', [SystemHealthController::class, 'maintenance']);
+Route::get('/admin/system/backups/restore-status', [SystemBackupController::class, 'status']);
 
 // ── Signed URLs (no auth middleware — signature is the guard) ──────────────
 Route::get('/document-versions/{version}/preview', [DocumentController::class, 'previewSigned'])
@@ -178,9 +180,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         Route::get('/users-csv',     [\App\Http\Controllers\Api\BackupController::class, 'usersCsv']);
     });
 
-    // ── System Snapshots ──────────────────────────────────────────────────
     // Controller enforces its own role check (qa, admin, sysadmin, office_head)
-    Route::get('/admin/system/backups/restore-status', [SystemBackupController::class, 'status']);
     Route::get('/admin/system/backups',           [SystemBackupController::class, 'index']);
     Route::post('/admin/system/backups',          [SystemBackupController::class, 'store']);
     Route::post('/admin/system/backups/upload',   [SystemBackupController::class, 'upload']);
@@ -278,7 +278,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         Route::get('/{template}/preview-link', [DocumentTemplateController::class, 'previewLink']);
     });
 
-    Route::get('/system/maintenance', [SystemHealthController::class, 'maintenance']);
+    // Route moved to public for restoration resilience
+    // Route::get('/system/maintenance', [SystemHealthController::class, 'maintenance']);
 
     // ── Admin ──────────────────────────────────────────────────────────────
     Route::middleware('admin')->prefix('admin')->group(function () {
