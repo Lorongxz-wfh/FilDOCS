@@ -412,6 +412,21 @@ export function useDocumentWorkflow({
   const clearNewMessageCount = useCallback(() => setNewMessageCount(0), []);
   const clearTaskChanged = useCallback(() => setTaskChanged(false), []);
 
+  const syncAll = useCallback(async () => {
+    if (!versionId || versionId === 0) return;
+    await Promise.all([
+      refreshTasksAndActions(versionId),
+      pollMessages(versionId),
+      listActivityLogs({
+        scope: "document",
+        document_id: documentId || undefined,
+        document_version_id: !documentId ? versionId : undefined,
+        category: "workflow",
+        per_page: 50,
+      }).then(p => setActivityLogs(p.data)).catch(() => {})
+    ]);
+  }, [versionId, documentId, refreshTasksAndActions, pollMessages]);
+
   return useMemo(() => ({
     tasks,
     setTasks,
@@ -433,6 +448,7 @@ export function useDocumentWorkflow({
     clearNewMessageCount,
     taskChanged,
     clearTaskChanged,
+    syncAll,
   }), [
      tasks,
      availableActions,
@@ -452,5 +468,6 @@ export function useDocumentWorkflow({
      clearNewMessageCount,
      taskChanged,
      clearTaskChanged,
+     syncAll,
   ]);
 }

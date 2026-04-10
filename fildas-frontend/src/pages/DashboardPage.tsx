@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import Skeleton from "../components/ui/loader/Skeleton";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
+import DatePresetSwitcher, { type PresetOption } from "../components/ui/DatePresetSwitcher";
 import Button from "../components/ui/Button";
 
 // Shared charts
@@ -33,6 +33,26 @@ import {
   Calendar,
   CalendarDays,
 } from "lucide-react";
+
+const DASHBOARD_PRESETS: PresetOption[] = [
+  { 
+    value: "today", 
+    label: "Today", 
+    mobileIcon: <Calendar className="h-4 w-4 stroke-[2.5]" />,
+    mobileBadge: "1"
+  },
+  { 
+    value: "this_week", 
+    label: "Week", 
+    mobileIcon: <Calendar className="h-4 w-4 stroke-[2.5]" />,
+    mobileBadge: "7"
+  },
+  { 
+    value: "all", 
+    label: "All", 
+    mobileIcon: <CalendarDays className="h-4 w-4 stroke-[2.5]" />
+  },
+];
 
 // ─── Shared announcements prop ─────────────────────────────────────────────
 type AnnouncementsHook = ReturnType<typeof useAnnouncements>;
@@ -545,16 +565,21 @@ const DashboardPage: React.FC = () => {
   // Page burst refresh deprecated in favor of clean single WebSocket updates.
 
   const { refresh, isRefreshing } = useSmartRefresh(async () => {
-    const result = await dashData.reload();
-    let message = "Dashboard updated.";
-    if (!result.changed) message = "Everything is up to date.";
-    else if (result.delta > 0)
-      message = `${result.delta} new pending task${result.delta === 1 ? "" : "s"} found.`;
-    else if (result.delta < 0)
-      message = `Queue updated — ${Math.abs(result.delta)} task${Math.abs(result.delta) === 1 ? "" : "s"} resolved.`;
+    // Page-wide synchronized refresh
+    const [dashResult] = await Promise.all([
+      dashData.reload(),
+      announcements.reload()
+    ]);
+
+    let message = "Dashboard data synchronized.";
+    if (!dashResult.changed) message = "Dashboard is up to date.";
+    else if (dashResult.delta > 0)
+      message = `${dashResult.delta} new pending task${dashResult.delta === 1 ? "" : "s"} found.`;
+    else if (dashResult.delta < 0)
+      message = `Queue updated — ${Math.abs(dashResult.delta)} task${Math.abs(dashResult.delta) === 1 ? "" : "s"} resolved.`;
 
     return {
-      changed: result.changed,
+      changed: dashResult.changed,
       message,
     };
   });
@@ -598,73 +623,12 @@ const DashboardPage: React.FC = () => {
 
           <div className="flex shrink-0 items-center gap-3">
             {/* Period Toggle */}
-            <div className="flex items-center rounded-sm border border-slate-200 bg-white p-0.5 dark:border-surface-400 dark:bg-surface-500 relative">
-              <button
-                type="button"
-                onClick={() => setPeriod("today")}
-                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${period === "today"
-                    ? "text-sky-600 dark:text-sky-400 shadow-xs"
-                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                  }`}
-                title="Today"
-              >
-                {period === "today" && (
-                  <motion.div
-                    layoutId="active-period"
-                    className="absolute inset-0 bg-sky-50 dark:bg-sky-950/30 rounded-xs -z-10"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-                  />
-                )}
-                <div className="md:hidden relative flex items-center justify-center z-10">
-                  <Calendar className="h-4 w-4 stroke-[2.5]" />
-                  <span className="absolute text-[7px] font-black pt-1.5 leading-none">1</span>
-                </div>
-                <span className="hidden md:inline z-10">Today</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPeriod("this_week")}
-                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${period === "this_week"
-                    ? "text-sky-600 dark:text-sky-400 shadow-xs"
-                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                  }`}
-                title="This Week"
-              >
-                {period === "this_week" && (
-                  <motion.div
-                    layoutId="active-period"
-                    className="absolute inset-0 bg-sky-50 dark:bg-sky-950/30 rounded-xs -z-10"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-                  />
-                )}
-                <div className="md:hidden relative flex items-center justify-center z-10">
-                  <Calendar className="h-4 w-4 stroke-[2.5]" />
-                  <span className="absolute text-[7px] font-black pt-1.5 leading-none">7</span>
-                </div>
-                <span className="hidden md:inline z-10">Week</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPeriod("all")}
-                className={`relative px-2 sm:px-2.5 py-1 text-[10px] sm:text-[10px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[32px] sm:min-w-0 z-0 ${period === "all"
-                    ? "text-sky-600 dark:text-sky-400 shadow-xs"
-                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                  }`}
-                title="All Time"
-              >
-                {period === "all" && (
-                  <motion.div
-                    layoutId="active-period"
-                    className="absolute inset-0 bg-sky-50 dark:bg-sky-950/30 rounded-xs -z-10"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-                  />
-                )}
-                <CalendarDays className="h-4 w-4 md:hidden stroke-[2.5] z-10" />
-                <span className="hidden md:inline z-10">All</span>
-              </button>
-            </div>
+            <DatePresetSwitcher
+              options={DASHBOARD_PRESETS}
+              value={period}
+              onChange={(val) => setPeriod(val)}
+              layoutId="active-period"
+            />
 
 
             <PageActions>

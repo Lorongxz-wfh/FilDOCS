@@ -104,7 +104,16 @@ class ProfileController extends Controller
 
         $data = $request->validate([
             'current_password' => ['required', 'string'],
-            'password'         => ['required', 'string', 'min:8', 'confirmed'],
+            'password'         => [
+                'required', 
+                'string', 
+                'min:8', 
+                'confirmed',
+                'regex:/[a-z]/',      
+                'regex:/[A-Z]/',      
+                'regex:/[0-9]/',      
+                'regex:/[@$!%*#?&_]/',
+            ],
         ]);
 
         if (!Hash::check($data['current_password'], $user->password)) {
@@ -198,20 +207,27 @@ class ProfileController extends Controller
         ]);
 
         try {
+            if ($user->profile_photo_path && !str_starts_with($user->profile_photo_path, 'data:')) {
+                Storage::disk()->delete($user->profile_photo_path);
+            }
+
             $file = $request->file('photo');
-            $data = base64_encode(file_get_contents($file->getRealPath()));
-            $mime = $file->getClientMimeType();
-            $user->profile_photo_path = 'data:' . $mime . ';base64,' . $data;
+            $ext = strtolower($file->getClientOriginalExtension());
+            $path = "avatars/user_{$user->id}." . $ext;
+
+            Storage::disk()->putFileAs('avatars', $file, "user_{$user->id}.{$ext}");
+            
+            $user->profile_photo_path = $path;
             $user->save();
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Profile Photo DB Upload Failed', [
+            \Illuminate\Support\Facades\Log::error('Profile Photo R2 Upload Failed', [
                 'error' => $e->getMessage(),
                 'user_id' => $user->id
             ]);
             return response()->json(['message' => 'Failed to process photo.'], 500);
         }
 
-        $this->logActivity('profile.photo_updated', 'Updated profile photo (Database)', $user->id, $user->office_id);
+        $this->logActivity('profile.photo_updated', 'Updated profile photo (Storage)', $user->id, $user->office_id);
 
         return response()->json(['user' => $this->userPayload($user)]);
     }
@@ -227,20 +243,26 @@ class ProfileController extends Controller
         ]);
 
         try {
+            if ($user->signature_path && !str_starts_with($user->signature_path, 'data:')) {
+                Storage::disk()->delete($user->signature_path);
+            }
+
             $file = $request->file('signature');
-            $data = base64_encode(file_get_contents($file->getRealPath()));
-            $mime = $file->getClientMimeType();
-            $user->signature_path = 'data:' . $mime . ';base64,' . $data;
+            $path = "signatures/user_{$user->id}.png";
+
+            Storage::disk()->putFileAs('signatures', $file, "user_{$user->id}.png");
+            
+            $user->signature_path = $path;
             $user->save();
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Signature DB Upload Failed', [
+            \Illuminate\Support\Facades\Log::error('Signature R2 Upload Failed', [
                 'error' => $e->getMessage(),
                 'user_id' => $user->id
             ]);
             return response()->json(['message' => 'Failed to process signature.'], 500);
         }
 
-        $this->logActivity('profile.signature_updated', 'Updated signature (Database)', $user->id, $user->office_id);
+        $this->logActivity('profile.signature_updated', 'Updated signature (Storage)', $user->id, $user->office_id);
 
         return response()->json(['user' => $this->userPayload($user)]);
     }

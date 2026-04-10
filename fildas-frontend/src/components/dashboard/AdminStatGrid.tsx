@@ -67,10 +67,10 @@ const AdminStatGrid: React.FC<Props> = ({ data, loading }) => {
             className={`rounded-md border border-slate-200 bg-white p-2.5 sm:px-4 sm:py-3.5 dark:border-surface-400 dark:bg-surface-500 flex flex-col justify-between transition-all ${isPulsing ? "animate-pulse-highlight ring-1 ring-emerald-500/10" : ""}`}
           >
             <div className="flex items-center justify-between gap-1">
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider leading-tight truncate">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider leading-tight truncate">
                 {item.label}
               </p>
-              <span className="text-slate-400 dark:text-slate-500 sm:scale-100 scale-75 shrink-0">
+              <span className="text-slate-500 dark:text-slate-500 sm:scale-100 scale-75 shrink-0">
                 {item.icon}
               </span>
             </div>
@@ -85,9 +85,25 @@ const AdminStatGrid: React.FC<Props> = ({ data, loading }) => {
               )}
             </div>
 
-            <p className="hidden sm:block mt-1.5 text-[11px] text-slate-400 dark:text-slate-500 truncate leading-tight italic">
-              {item.sub}
-            </p>
+            <div className="hidden sm:block mt-1.5 text-[11px] text-slate-500 dark:text-slate-500 truncate leading-tight italic">
+              {(() => {
+                if (item.label === "Total users" && data?.users.online && data.users.online > 0) {
+                  return (
+                    <span>
+                      {data.users.active} active · <span className="text-emerald-500 font-bold">{data.users.online} online now</span>
+                    </span>
+                  );
+                }
+                if (item.label === "Total documents" && data?.documents.distributed && data.documents.distributed > 0) {
+                  return (
+                    <span className="text-emerald-500 font-bold">
+                      {data.documents.distributed} distributed
+                    </span>
+                  );
+                }
+                return item.sub;
+              })()}
+            </div>
           </div>
         );
       })}

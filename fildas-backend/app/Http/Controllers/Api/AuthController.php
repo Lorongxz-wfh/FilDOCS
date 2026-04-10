@@ -289,6 +289,7 @@ class AuthController extends Controller
                 ] : null,
                 'office_id'          => $user->office_id,
                 'two_factor_enabled' => $user->two_factor_enabled,
+                'must_change_password' => $user->must_change_password,
             ],
         ]);
     }

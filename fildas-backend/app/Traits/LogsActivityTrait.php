@@ -33,14 +33,15 @@ trait LogsActivityTrait
         ?int $targetOfficeId = null,
     ): void {
         ActivityLog::create([
-            'document_id'         => $documentId,
-            'document_version_id' => $documentVersionId,
-            'actor_user_id'       => $actorUserId,
-            'actor_office_id'     => $actorOfficeId,
-            'target_office_id'    => $targetOfficeId,
-            'event'               => $event,
-            'label'               => $label,
-            'meta'                => $meta,
+            'document_id'              => $documentId,
+            'document_version_id'      => $documentVersionId,
+            'actor_user_id'            => $actorUserId,
+            'actor_office_id'          => $actorOfficeId,
+            'target_office_id'         => $targetOfficeId,
+            'event'                    => $event,
+            'label'                    => $label,
+            'meta'                     => $meta,
+            'personal_access_token_id' => request()->user()?->currentAccessToken()?->id,
         ]);
     }
 }

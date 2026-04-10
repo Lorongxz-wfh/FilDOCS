@@ -96,9 +96,14 @@ class DocumentTemplateController extends Controller
         }
 
         $officeId = $isGlobal ? null : $user->office_id;
+        $officeCode = 'global';
+        if ($officeId) {
+            $office = \App\Models\Office::find($officeId);
+            if ($office) $officeCode = $office->code;
+        }
 
         $disk = config('filesystems.default');
-        $path = $file->store('document_templates', $disk);
+        $path = $file->store("templates/{$officeCode}", $disk);
 
         $mimeType = $file->getMimeType() ?? $file->getClientMimeType();
 
@@ -181,10 +186,32 @@ class DocumentTemplateController extends Controller
     {
         $this->authorize('download', $template);
 
+        $path = $template->file_path;
         $disk = config('filesystems.default');
+        $storage = Storage::disk($disk);
 
-        if (!Storage::disk($disk)->exists($template->file_path)) {
-            return response()->json(['message' => 'File not found.'], 404);
+        if (!$storage->exists($path)) {
+            // Aggressive path healing for legacy data
+            $filename = basename($path);
+            $officeCode = $template->office ? $template->office->code : 'global';
+            
+            $alternatives = [
+                "templates/global/{$filename}",
+                "templates/{$officeCode}/{$filename}",
+                "document_templates/{$filename}",
+                "templates/{$filename}",
+            ];
+
+            foreach ($alternatives as $alt) {
+                if ($storage->exists($alt)) {
+                    $path = $alt;
+                    break;
+                }
+            }
+
+            if (!$storage->exists($path)) {
+                return response()->json(['message' => 'File not found on server.'], 404);
+            }
         }
 
         /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
@@ -194,7 +221,7 @@ class DocumentTemplateController extends Controller
         $downloadName = Str::slug($template->name) . ($extension ? '.' . $extension : '');
 
         return $storage->download(
-            $template->file_path,
+            $path,
             $downloadName
         );
     }
@@ -295,15 +322,38 @@ class DocumentTemplateController extends Controller
             abort(403, 'Unauthorized access to this template.');
         }
 
+        $path = $template->file_path;
         $disk = config('filesystems.default');
-        if (!Storage::disk($disk)->exists($template->file_path)) {
-            abort(404, 'File not found on server.');
+        $storage = Storage::disk($disk);
+
+        if (!$storage->exists($path)) {
+            // Aggressive path healing for legacy data
+            $filename = basename($path);
+            $officeCode = $template->office ? $template->office->code : 'global';
+            
+            $alternatives = [
+                "templates/global/{$filename}",
+                "templates/{$officeCode}/{$filename}",
+                "document_templates/{$filename}",
+                "templates/{$filename}",
+            ];
+
+            foreach ($alternatives as $alt) {
+                if ($storage->exists($alt)) {
+                    $path = $alt;
+                    break;
+                }
+            }
+
+            if (!$storage->exists($path)) {
+                abort(404, 'File not found on server.');
+            }
         }
 
         $mime = $template->mime_type ?? 'application/pdf';
 
-        return response()->stream(function () use ($template, $disk) {
-            $stream = Storage::disk($disk)->readStream($template->file_path);
+        return response()->stream(function () use ($path, $storage) {
+            $stream = $storage->readStream($path);
             fpassthru($stream);
             if (is_resource($stream)) fclose($stream);
         }, 200, [

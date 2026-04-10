@@ -24,6 +24,7 @@ type Props = {
   onSelectVersion?: (v: DocumentVersion) => void;
   isLoadingSelectedVersion?: boolean;
   canReplace?: boolean;
+  onClickTemplates?: () => void;
   isActiveApprover?: boolean;
   approverHasDownloaded?: boolean;
   onApproverDownload?: () => Promise<void>;
@@ -44,6 +45,7 @@ const DocumentPreviewWrapper: React.FC<Props> = ({
   fileInputRef,
   onOpenPreview,
   onClickReplace,
+  onClickTemplates,
   onReloadPreview,
   onDrop,
   onDragOver,
@@ -59,13 +61,13 @@ const DocumentPreviewWrapper: React.FC<Props> = ({
 }) => {
   return (
     <div
-      className="flex flex-col gap-0 rounded-xl overflow-hidden border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-sm"
+      className="flex flex-col gap-0 rounded-md overflow-hidden border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500"
       style={{ height: "100%" }}
     >
-      {/* Version Header Strip - Premium Enterprise Style */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-100 dark:bg-surface-700 border-b border-slate-200 dark:border-surface-400">
+      {/* Info Strip */}
+      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 dark:bg-surface-600 border-b border-slate-200 dark:border-surface-400">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center px-1.5 py-0.5 rounded bg-slate-800 dark:bg-slate-200 text-[10px] font-black text-white dark:text-slate-900 uppercase tracking-tighter">
+          <div className="flex items-center justify-center px-1.5 py-0.5 rounded-sm bg-slate-600 dark:bg-slate-400 text-[10px] font-bold text-white dark:text-slate-900 uppercase">
             V{localVersion.version_number}
           </div>
           <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
@@ -98,6 +100,7 @@ const DocumentPreviewWrapper: React.FC<Props> = ({
           fileInputRef={fileInputRef}
           onOpenPreview={onOpenPreview}
           onClickReplace={onClickReplace}
+          onClickTemplates={onClickTemplates}
           onReloadPreview={onReloadPreview}
           onDrop={onDrop}
           onDragOver={onDragOver}

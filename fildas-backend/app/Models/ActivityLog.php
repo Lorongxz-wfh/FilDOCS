@@ -15,6 +15,7 @@ class ActivityLog extends Model
         'event',
         'label',
         'meta',
+        'personal_access_token_id',
     ];
 
     protected $casts = [

@@ -171,7 +171,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
             animate={{ opacity: 1, x: 0 }}
             className={[
               "z-10 transition-all duration-300 truncate flex-1",
-              isActuallyActive ? "font-semibold" : "font-medium text-neutral-500 dark:text-neutral-400",
+              isActuallyActive ? "font-semibold" : "font-medium text-neutral-600 dark:text-neutral-400",
               mobileOpen ? "tracking-tight select-none" : ""
             ].join(" ")}
           >
@@ -185,7 +185,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
             className={[
               "transition-transform duration-300 z-10",
               isExpanded ? "rotate-0" : "-rotate-90",
-              isActuallyActive ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-400"
+              isActuallyActive ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-500"
             ].join(" ")} 
           />
         )}
@@ -228,11 +228,11 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
                         <div className={[
                           "absolute -left-[1px] top-0",
                           isLast ? "h-4.5" : "bottom-[-10px]", 
-                          "w-0.5 bg-slate-200 dark:bg-surface-300"
+                          "w-0.5 bg-slate-300 dark:bg-surface-300"
                         ].join(" ")} />
                         
                         {/* Horizontal Branch */}
-                        <div className="absolute -left-[1px] top-4.5 w-3.5 h-0.5 bg-slate-200 dark:bg-surface-300" />
+                        <div className="absolute -left-[1px] top-4.5 w-3.5 h-0.5 bg-slate-300 dark:bg-surface-300" />
                       </>
                     )}
                     <NavLink
@@ -246,7 +246,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
                         !mobileOpen ? "ml-3" : "",
                         isActive
                           ? "text-brand-600 dark:text-brand-400"
-                          : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200",
+                          : "text-slate-600 hover:bg-slate-200/50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200",
                       ].join(" ")}
                     >
                       {({ isActive }) => (
@@ -276,7 +276,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
                       })()}
                         <span className={[
                           "truncate z-10",
-                          isActive ? "font-semibold text-slate-700 dark:text-slate-100" : "font-medium text-neutral-500 dark:text-neutral-400"
+                          isActive ? "font-semibold text-slate-700 dark:text-slate-100" : "font-medium text-neutral-600 dark:text-neutral-400"
                         ].join(" ")}>{child.label}</span>
 
                         {/* Child Badge */}

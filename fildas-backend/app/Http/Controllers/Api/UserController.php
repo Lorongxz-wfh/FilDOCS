@@ -101,8 +101,14 @@ class UserController extends Controller
         if ($search = $request->get('q')) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('middle_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('suffix', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('office', function($o) use ($search) {
+                        $o->where('name', 'like', "%{$search}%")
+                          ->orWhere('code', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -207,7 +213,15 @@ class UserController extends Controller
             'role_id' => ['nullable', 'integer', 'exists:roles,id'],
 
             // If present and non-empty, reset password
-            'password' => ['nullable', 'string', 'min:6'],
+            'password' => [
+                'nullable', 
+                'string', 
+                'min:8', 
+                'regex:/[a-z]/',      // at least one lowercase
+                'regex:/[A-Z]/',      // at least one uppercase
+                'regex:/[0-9]/',      // at least one number
+                'regex:/[@$!%*#?&_]/', // at least one symbol
+            ],
         ]);
 
         // Only update fields that were sent (PATCH semantics)
@@ -411,18 +425,30 @@ class UserController extends Controller
         ]);
 
         try {
+            if ($user->profile_photo_path && !str_starts_with($user->profile_photo_path, 'data:')) {
+                Storage::disk()->delete($user->profile_photo_path);
+            }
+
             $file = $request->file('photo');
-            $data = base64_encode(file_get_contents($file->getRealPath()));
-            $mime = $file->getClientMimeType();
-            $user->profile_photo_path = 'data:' . $mime . ';base64,' . $data;
+            $ext = strtolower($file->getClientOriginalExtension());
+            $path = "avatars/user_{$user->id}." . $ext;
+
+            Storage::disk()->putFileAs('avatars', $file, "user_{$user->id}.{$ext}");
+            
+            $user->profile_photo_path = $path;
             $user->save();
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('User Photo DB Upload Failed', [
+            \Illuminate\Support\Facades\Log::error('User Photo R2 Upload Failed', [
                 'error' => $e->getMessage(),
                 'user_id' => $user->id
             ]);
             return response()->json(['message' => 'Failed to process photo.'], 500);
         }
+
+        $this->logActivity('admin.user_photo_updated', "Updated profile photo for user: {$user->full_name}", $request->user()->id, $request->user()->office_id, [
+            'target_user_id' => $user->id,
+            'target_user' => $user->full_name
+        ]);
 
         $user->load(['role', 'office']);
         return response()->json(['user' => $user]);
@@ -436,6 +462,11 @@ class UserController extends Controller
             $user->profile_photo_path = null;
             $user->save();
         }
+
+        $this->logActivity('admin.user_photo_removed', "Removed profile photo for user: {$user->full_name}", auth()->id(), auth()->user()->office_id ?? null, [
+            'target_user_id' => $user->id,
+            'target_user' => $user->full_name
+        ]);
 
         $user->load(['role', 'office']);
         return response()->json(['user' => $user]);

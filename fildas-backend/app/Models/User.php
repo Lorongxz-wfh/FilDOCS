@@ -39,6 +39,7 @@ class User extends Authenticatable
         'email_approvals',
         'email_requests',
         'theme_preference',
+        'must_change_password',
     ];
 
     /**
@@ -125,6 +126,7 @@ class User extends Authenticatable
             'email_doc_updates'  => 'boolean',
             'email_approvals'    => 'boolean',
             'email_requests'     => 'boolean',
+            'must_change_password' => 'boolean',
         ];
     }
 

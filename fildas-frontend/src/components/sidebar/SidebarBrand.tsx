@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Sun, Moon, Monitor, Menu, PanelLeftClose, Ghost } from "lucide-react";
 import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
+import { getUserRole } from "../../lib/roleFilters";
 import logoUrl from "../../assets/FCU Logo.png";
 
 interface SidebarBrandProps {
@@ -44,14 +45,36 @@ const SidebarBrand: React.FC<SidebarBrandProps> = ({
               <span className="text-[17px] font-bold tracking-tight text-neutral-900 dark:text-surface-50 truncate">
                 FilDAS
               </span>
-              {debugMode && (
-                <div 
-                  className="flex items-center justify-center h-5 w-5 rounded-full bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 animate-pulse shrink-0" 
-                  title="Admin: Debug Mode"
-                >
-                  <Ghost className="h-3 w-3" strokeWidth={2.5} />
-                </div>
-              )}
+              {(() => {
+                const role = getUserRole();
+                const isAdmin = role === "ADMIN" || role === "SYSADMIN";
+                if (!isAdmin) return null;
+
+                const toggleDebug = (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  const user = JSON.parse(localStorage.getItem("auth_user") || "{}");
+                  const key = `pref_debug_mode_${user?.id}`;
+                  const newVal = debugMode ? "0" : "1";
+                  localStorage.setItem(key, newVal);
+                  window.dispatchEvent(new CustomEvent("admin_debug_mode_changed"));
+                };
+
+                return (
+                  <button
+                    type="button"
+                    onClick={toggleDebug}
+                    className={[
+                      "flex items-center justify-center h-5 w-5 rounded-full transition-all cursor-pointer",
+                      debugMode 
+                        ? "bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 animate-pulse border border-brand-500/20" 
+                        : "bg-slate-100 dark:bg-surface-400 text-slate-400 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 border border-slate-200 dark:border-surface-300"
+                    ].join(" ")}
+                    title={debugMode ? "Disable Admin Debug Mode" : "Enable Admin Debug Mode"}
+                  >
+                    <Ghost className="h-3 w-3" strokeWidth={2.5} />
+                  </button>
+                );
+              })()}
             </div>
           )}
         </div>

@@ -116,7 +116,16 @@ class PasswordResetController extends Controller
         $request->validate([
             'token'    => 'required|string',
             'email'    => 'required|email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => [
+                'required', 
+                'string', 
+                'min:8', 
+                'confirmed',
+                'regex:/[a-z]/',      
+                'regex:/[A-Z]/',      
+                'regex:/[0-9]/',      
+                'regex:/[@$!%*#?&_]/',
+            ],
         ]);
 
         $throttleKey = 'password-reset-submit|' . $request->ip();

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useCallback, useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import PageFrame from "../components/layout/PageFrame";
 import Skeleton from "../components/ui/loader/Skeleton";
 import { DateRangePicker } from "../components/ui/DateRangePicker";
@@ -8,7 +8,6 @@ import {
   ScrollText,
   Download,
   Loader2,
-  Calendar,
   Database,
   Trash2,
   HardDrive,
@@ -18,8 +17,14 @@ import {
   RotateCcw,
   AlertTriangle,
   Upload,
+  Clock,
+  ChevronDown,
+  ShieldCheck,
+  Zap,
 } from "lucide-react";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
+import { useSmartRefresh } from "../hooks/useSmartRefresh";
+import DatePresetSwitcher, { type PresetOption } from "../components/ui/DatePresetSwitcher";
 import {
   getBackupSummary,
   downloadBackup,
@@ -28,6 +33,8 @@ import {
   deleteSystemBackup,
   downloadSystemSnapshot,
   restoreSystemSnapshot,
+  restoreDocumentBackup,
+  saveToSystemBackup,
   uploadSystemSnapshot,
   type BackupPreset,
   type BackupSummary,
@@ -35,7 +42,7 @@ import {
 } from "../services/backupApi";
 
 // ── Preset options ──────────────────────────────────────────────────────────
-const PRESETS: { value: BackupPreset; label: string }[] = [
+const PRESETS: PresetOption[] = [
   { value: "today", label: "Today" },
   { value: "this_week", label: "This Week" },
   { value: "this_month", label: "This Month" },
@@ -47,76 +54,101 @@ const PRESETS: { value: BackupPreset; label: string }[] = [
 const formatSize = (bytes: number) => {
   if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
 // ── Card component ──────────────────────────────────────────────────────────
-type BackupCardProps = {
+type ExportCardProps = {
   title: string;
   description: string;
   icon: React.ReactNode;
-  iconBg: string;
+  iconColor: string;
+  bgColor: string;
   count: number | null;
   countLabel: string;
   loading: boolean;
   downloading: boolean;
   onDownload: () => void;
+  onSaveToSystem?: () => void;
+  saveLoading?: boolean;
 };
 
-function BackupCard({
+function ExportCard({
   title,
   description,
   icon,
-  iconBg,
+  iconColor,
+  bgColor,
   count,
   countLabel,
   loading,
   downloading,
   onDownload,
-}: BackupCardProps) {
+  onSaveToSystem,
+  saveLoading,
+}: ExportCardProps) {
   return (
-    <div className="rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500">
-      <div className="flex items-start gap-4 px-5 py-4">
-        <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconBg}`}
-        >
-          {icon}
+    <div className="flex flex-col rounded-md border border-slate-200 bg-white transition-all dark:border-surface-400 dark:bg-surface-500 overflow-hidden">
+      <div className="flex flex-1 items-start gap-4 p-5">
+        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${bgColor} ${iconColor} border border-black/5 dark:border-white/5`}>
+          {React.cloneElement(icon as React.ReactElement<any>, { className: "h-6 w-6" })}
         </div>
+        
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {title}
-          </p>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between mb-0.5">
+             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">
+               {title}
+             </h3>
+             {loading ? <Skeleton className="h-4 w-12" /> : (
+               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-black/20 px-1.5 py-0.5 rounded border border-slate-100 dark:border-white/5">
+                 {countLabel}
+               </div>
+             )}
+          </div>
+          
+          <div className="h-8 flex items-end mb-2">
+            {loading ? (
+              <Skeleton className="h-7 w-16" />
+            ) : (
+              <p className="text-2xl font-bold tabular-nums text-slate-800 dark:text-white leading-none">
+                {count?.toLocaleString() ?? 0}
+              </p>
+            )}
+          </div>
+          
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 italic">
             {description}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 dark:border-surface-400">
-        {loading ? (
-          <Skeleton className="h-4 w-20" />
-        ) : (
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            <span className="font-semibold text-slate-700 dark:text-slate-200 tabular-nums">
-              {count?.toLocaleString() ?? 0}
-            </span>{" "}
-            {countLabel}
-          </p>
-        )}
+      <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 p-2.5 dark:border-surface-400 dark:bg-white/5">
+        {onSaveToSystem ? (
+          <button
+            type="button"
+            disabled={loading || saveLoading || (count ?? 0) === 0}
+            onClick={onSaveToSystem}
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:bg-white hover:text-brand-500 hover:shadow-sm transition-all disabled:opacity-30 dark:text-slate-400 dark:hover:bg-surface-400"
+          >
+            {saveLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <HardDrive className="h-3 w-3" />}
+            {saveLoading ? "Saving..." : "Save to History"}
+          </button>
+        ) : <div />}
+
         <button
           type="button"
           disabled={downloading || loading || (count ?? 0) === 0}
           onClick={onDownload}
-          className="flex items-center gap-1.5 rounded-md bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed dark:hover:bg-brand-400"
+          className="flex items-center gap-1.5 rounded-md bg-brand-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-brand-600 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-brand-600 dark:hover:bg-brand-500"
         >
           {downloading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : (
             <Download className="h-3.5 w-3.5" />
           )}
-          {downloading ? "Preparing…" : "Download"}
+          {downloading ? "Preparing..." : "Download CSV"}
         </button>
       </div>
     </div>
@@ -125,7 +157,6 @@ function BackupCard({
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function BackupPage() {
-
   const [preset, setPreset] = useState<BackupPreset>("today");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -143,8 +174,8 @@ export default function BackupPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [downloading, setDownloading] = useState<Record<string, boolean>>({});
+  const [isBackupMenuOpen, setIsBackupMenuOpen] = useState(false);
 
-  // ── Fetch summary when preset/dates change ──
   const fetchSummary = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -173,15 +204,19 @@ export default function BackupPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchSummary();
-  }, [fetchSummary]);
+  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+    try {
+      await Promise.all([fetchSummary(), fetchSystemBackups()]);
+      return { changed: true, message: "Backup registry synchronized." };
+    } catch (e: any) {
+      throw e;
+    }
+  });
 
   useEffect(() => {
-    fetchSystemBackups();
-  }, [fetchSystemBackups]);
+    refresh();
+  }, [refresh]);
 
-  // ── Download handler ──
   const handleDownload = (
     endpoint: "documents-csv" | "documents-zip" | "activity-csv" | "users-csv",
   ) => {
@@ -192,16 +227,33 @@ export default function BackupPage() {
       preset === "custom" ? dateFrom : undefined,
       preset === "custom" ? dateTo : undefined,
     );
-    // Reset after a delay (streaming download starts immediately)
     setTimeout(() => {
       setDownloading((prev) => ({ ...prev, [endpoint]: false }));
     }, 3000);
   };
 
-  const handleCreateSnapshot = async () => {
-    setCreating(true);
+  const handleSaveToSystem = async (endpoint: "documents-zip") => {
+    setDownloading((prev) => ({ ...prev, [endpoint]: true }));
+    setError(null);
     try {
-      await createSystemSnapshot();
+      await saveToSystemBackup(
+        preset,
+        preset === "custom" ? dateFrom : undefined,
+        preset === "custom" ? dateTo : undefined,
+      );
+      fetchSystemBackups();
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? "Failed to save backup to system.");
+    } finally {
+      setDownloading((prev) => ({ ...prev, [endpoint]: false }));
+    }
+  };
+
+  const handleCreateSnapshot = async (type: "db" | "doc" | "full" = "db") => {
+    setCreating(true);
+    setIsBackupMenuOpen(false);
+    try {
+      await createSystemSnapshot(type);
       fetchSystemBackups();
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? e?.message ?? "Failed to create snapshot.";
@@ -222,17 +274,23 @@ export default function BackupPage() {
     }
   };
 
-  const handleRestoreSnapshot = async (filename: string) => {
-    setRestoring(filename);
+  const handleRestoreSnapshot = async (backup: SystemBackupFile) => {
+    setRestoring(backup.filename);
     setConfirmingRestore(null);
     setError(null);
     try {
-      await restoreSystemSnapshot(filename);
-      alert("System restored successfully. The application will now reload.");
-      window.location.reload();
+      if (backup.type === 'doc') {
+        await restoreDocumentBackup(backup.filename);
+        alert("Object storage files re-populated successfully.");
+      } else {
+        await restoreSystemSnapshot(backup.filename);
+        alert("System database restored successfully. The application will now reload.");
+        window.location.reload();
+      }
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? e?.message ?? "Restore failed.";
       setError(msg);
+    } finally {
       setRestoring(null);
     }
   };
@@ -241,7 +299,6 @@ export default function BackupPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Basic client-side check
     const validExtensions = ['.zip', '.sql', '.sqlite'];
     if (!validExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
       setError("Please upload a valid backup file (.zip, .sql, or .sqlite)");
@@ -253,7 +310,7 @@ export default function BackupPage() {
     try {
       await uploadSystemSnapshot(file);
       fetchSystemBackups();
-      if (e.target) e.target.value = ''; // Reset input
+      if (e.target) e.target.value = '';
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? e?.message ?? "Upload failed.";
       setError(msg);
@@ -265,123 +322,210 @@ export default function BackupPage() {
   return (
     <PageFrame
       title="Backup & Recovery"
-      contentClassName="flex flex-col overflow-hidden"
       right={
         <PageActions>
-          <RefreshAction
-            onRefresh={async () => {
-              fetchSummary();
-              fetchSystemBackups();
-            }}
-            loading={loading || backupsLoading}
-          />
-        </PageActions>
-      }
-    >
-      {/* ── Header ── */}
-      <div className="shrink-0 border-b border-slate-200 bg-slate-50 dark:border-surface-400 dark:bg-surface-600 px-5 py-3.5">
-        <div className="mt-0 flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 text-slate-400 sm:shrink-0">
-            <Calendar className="h-3.5 w-3.5" />
-          </div>
-          
-          <div className="flex shrink-0 items-center gap-3">
-             <div className="flex items-center rounded-sm border border-slate-200 bg-white p-0.5 dark:border-surface-400 dark:bg-surface-500 relative">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.value}
-                  type="button"
-                  onClick={() => setPreset(p.value)}
-                  className={`relative px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-colors rounded-xs flex items-center justify-center min-w-[40px] z-0 ${
-                    preset === p.value
-                      ? "text-sky-600 dark:text-sky-400 shadow-xs"
-                      : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                  }`}
-                  title={p.label}
-                >
-                  {preset === p.value && (
-                    <motion.div
-                      layoutId="active-period-backup"
-                      className="absolute inset-0 bg-sky-50 dark:bg-sky-950/30 rounded-xs -z-10"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              id="snapshot-upload"
+              className="hidden"
+              accept=".zip,.sql,.sqlite"
+              onChange={handleFileUpload}
+            />
+            <button
+              type="button"
+              className="h-8 px-3 flex items-center gap-1.5 rounded-md bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition-all dark:bg-surface-500 dark:border-surface-400 dark:text-slate-300"
+              onClick={() => document.getElementById('snapshot-upload')?.click()}
+              disabled={uploading}
+            >
+              {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+              Upload
+            </button>
+            
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsBackupMenuOpen(!isBackupMenuOpen)}
+                disabled={creating}
+                className="h-8 pl-3 pr-2 flex items-center gap-1.5 rounded-md bg-brand-500 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm hover:bg-brand-600 active:scale-95 transition-all"
+              >
+                {creating ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
+                Generate Snapshot
+                <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isBackupMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {isBackupMenuOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsBackupMenuOpen(false)} 
                     />
-                  )}
-                  <span className="z-10">{p.value === "custom" ? "Custom" : p.label}</span>
-                </button>
-              ))}
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-72 z-50 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl dark:border-surface-400 dark:bg-surface-500"
+                    >
+                      <div className="p-2 space-y-1">
+                        <button
+                          onClick={() => handleCreateSnapshot("db")}
+                          className="w-full flex items-start gap-3 p-2.5 rounded-md hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-left"
+                        >
+                          <div className="mt-0.5 p-1.5 bg-brand-50 text-brand-600 rounded-md dark:bg-brand-950/30">
+                            <Database className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Database Snapshot</p>
+                            <p className="text-[10px] text-slate-500 leading-tight mt-0.5">Primary system data and document metadata.</p>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => handleCreateSnapshot("doc")}
+                          className="w-full flex items-start gap-3 p-2.5 rounded-md hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-left"
+                        >
+                          <div className="mt-0.5 p-1.5 bg-sky-50 text-sky-600 rounded-md dark:bg-sky-950/30">
+                            <FolderArchive className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Documents Archive</p>
+                            <p className="text-[10px] text-slate-500 leading-tight mt-0.5">All physical files, templates, and user signatures.</p>
+                          </div>
+                        </button>
+
+                        <div className="h-px bg-slate-100 dark:bg-surface-400 my-1 mx-2" />
+
+                        <button
+                          onClick={() => handleCreateSnapshot("full")}
+                          className="w-full flex items-start gap-3 p-2.5 rounded-md hover:bg-brand-500 group transition-colors text-left"
+                        >
+                          <div className="mt-0.5 p-1.5 bg-brand-500 text-white rounded-md group-hover:bg-white group-hover:text-brand-600 transition-colors shadow-sm">
+                            <Zap className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 group-hover:text-white uppercase tracking-tight">Complete System Backup</p>
+                            <p className="text-[10px] text-slate-500 group-hover:text-white/80 leading-tight mt-0.5">Everything: Database and all physical files.</p>
+                          </div>
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
-          {preset === "custom" && (
-            <DateRangePicker
-              from={dateFrom}
-              to={dateTo}
-              onSelect={(r: any) => {
-                setDateFrom(r.from);
-                setDateTo(r.to);
-              }}
-            />
+          <RefreshAction
+            onRefresh={refresh}
+            loading={isRefreshing || loading || backupsLoading}
+          />
+        </PageActions>
+      }
+      contentClassName="flex flex-col bg-slate-50/50 dark:bg-surface-600"
+      fullHeight
+    >
+      <div className="flex-1 overflow-y-auto p-6">
+        <AnimatePresence mode="wait">
+          {error && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="mb-6 overflow-hidden"
+            >
+              <div className="rounded-md border border-rose-200 bg-rose-50/50 p-3.5 flex items-start gap-3 dark:border-rose-900/50 dark:bg-rose-950/20">
+                <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+                <div className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                   {error}
+                </div>
+              </div>
+            </motion.div>
           )}
-        </div>
-      </div>
+        </AnimatePresence>
 
-      {/* ── Content ── */}
-      <div className="flex-1 overflow-y-auto p-5">
-        {error && (
-          <div className="mb-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:bg-rose-950/20 dark:border-rose-800 dark:text-rose-400">
-            {error}
-          </div>
-        )}
+        {/* ── Resource Collections ── */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4 border-l-2 border-brand-500 pl-3">
+             <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Resource Collections</h2>
+             
+             <div className="flex items-center gap-4">
+                <DatePresetSwitcher
+                  options={PRESETS}
+                  value={preset}
+                  onChange={(val) => setPreset(val)}
+                  layoutId="backup-presets"
+                />
 
-        {/* ── Data Exports ── */}
-        <div className="mb-8">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Data Exports</h2>
+                {preset === "custom" && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 10 }} 
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-2"
+                  >
+                    <DateRangePicker
+                      from={dateFrom}
+                      to={dateTo}
+                      onSelect={(r: any) => {
+                        setDateFrom(r.from);
+                        setDateTo(r.to);
+                      }}
+                    />
+                  </motion.div>
+                )}
+             </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <BackupCard
-              title="Document Metadata"
-              description="Export records as CSV — titles, codes, offices, statuses, and dates."
-              icon={<FileSpreadsheet className="h-5 w-5 text-emerald-500" />}
-              iconBg="bg-emerald-50 dark:bg-emerald-950/30"
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+            <ExportCard
+              title="Document Data"
+              description="Full record export of titles, codes, and document status details."
+              icon={<FileSpreadsheet />}
+              iconColor="text-emerald-500"
+              bgColor="bg-emerald-50/50 dark:bg-emerald-950/30"
               count={summary?.documents ?? null}
-              countLabel="documents"
+              countLabel="records"
               loading={loading}
               downloading={!!downloading["documents-csv"]}
               onDownload={() => handleDownload("documents-csv")}
             />
 
-            <BackupCard
+            <ExportCard
               title="Activity Logs"
-              description="Export the full activity trail — every action, actor, and timestamp."
-              icon={<ScrollText className="h-5 w-5 text-amber-500" />}
-              iconBg="bg-amber-50 dark:bg-amber-950/30"
+              description="The complete institutional trail. Record of every system action."
+              icon={<ScrollText />}
+              iconColor="text-amber-500"
+              bgColor="bg-amber-50/50 dark:bg-amber-950/30"
               count={summary?.activities ?? null}
-              countLabel="log entries"
+              countLabel="events"
               loading={loading}
               downloading={!!downloading["activity-csv"]}
               onDownload={() => handleDownload("activity-csv")}
             />
 
-            <BackupCard
-              title="Document Files (ZIP)"
-              description="Download all document files in a structured archive — organised by Office / Type / Date."
-              icon={<FolderArchive className="h-5 w-5 text-sky-500" />}
-              iconBg="bg-sky-50 dark:bg-sky-950/30"
+            <ExportCard
+              title="Documents & Files"
+              description="All uploaded document versions, templates, and user attachments."
+              icon={<FolderArchive />}
+              iconColor="text-sky-500"
+              bgColor="bg-sky-50/50 dark:bg-sky-950/30"
               count={summary?.files ?? null}
-              countLabel="files"
+              countLabel="assets"
               loading={loading}
               downloading={!!downloading["documents-zip"]}
               onDownload={() => handleDownload("documents-zip")}
+              onSaveToSystem={() => handleSaveToSystem("documents-zip")}
+              saveLoading={!!downloading["documents-zip"]} 
             />
 
-            <BackupCard
+            <ExportCard
               title="User Directory"
-              description="Export the full user roster — names, roles, offices, and account status."
-              icon={<Users className="h-5 w-5 text-indigo-500" />}
-              iconBg="bg-indigo-50 dark:bg-indigo-950/30"
+              description="Export current human roster, roles, and administrative classifications."
+              icon={<Users />}
+              iconColor="text-indigo-500"
+              bgColor="bg-indigo-50/50 dark:bg-indigo-950/30"
               count={summary?.users ?? null}
-              countLabel="users"
+              countLabel="profiles"
               loading={loading}
               downloading={!!downloading["users-csv"]}
               onDownload={() => handleDownload("users-csv")}
@@ -389,201 +533,211 @@ export default function BackupPage() {
           </div>
         </div>
 
-        {/* ── System Recovery ── */}
-        <div className="mb-6">
-          <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-             <div>
-                <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">System Snapshots</h2>
-               <p className="mt-1 text-[10px] text-slate-500 italic">Complete database state archives for disaster recovery.</p>
-             </div>
-             
+        {/* ── System Snapshots registry ── */}
+        <div className="mb-8 flex flex-col">
+          <div className="flex items-center justify-between mb-4 border-l-2 border-brand-500 pl-3 shrink-0">
              <div className="flex items-center gap-4">
-                <div className="hidden sm:flex flex-col items-end">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Total Usage</span>
-                 <div className="flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-200">
-                    <HardDrive className="h-3 w-3 text-brand-500" />
-                    {formatSize(totalSize)}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    id="snapshot-upload"
-                    className="hidden"
-                    accept=".zip,.sql,.sqlite"
-                    onChange={handleFileUpload}
-                  />
-                  <label
-                    htmlFor="snapshot-upload"
-                    className={`flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 cursor-pointer dark:border-surface-400 dark:bg-surface-500 dark:text-slate-300 dark:hover:bg-white/5 ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
-                  >
-                    {uploading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Upload className="h-3.5 w-3.5" />
-                    )}
-                    {uploading ? "Uploading..." : "Upload Snapshot"}
-                  </label>
-
-                  <button
-                    type="button"
-                    disabled={creating || uploading}
-                    onClick={handleCreateSnapshot}
-                    className="flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-brand-600 disabled:opacity-50"
-                  >
-                    {creating ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Database className="h-3.5 w-3.5" />
-                    )}
-                    {creating ? "Snapshooting..." : "Trigger System Snapshot"}
-                  </button>
-                </div>
+               <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">System Snapshots</h2>
+               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 dark:bg-surface-400 rounded-full border border-slate-200 dark:border-surface-300">
+                  <HardDrive className="h-3 w-3 text-brand-500" />
+                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-200 tabular-nums uppercase">{formatSize(totalSize)} USED</span>
+               </div>
+             </div>
+             <div className="text-[10px] text-slate-400 font-bold tracking-tighter cursor-default flex items-center gap-1.5">
+               <ShieldCheck className="h-3 w-3" />
+               ENCRYPTED PERSISTENT ARCHIVE
              </div>
           </div>
 
-          <div className="overflow-hidden rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500">
-            <table className="w-full text-left text-xs">
-               <thead>
-                 <tr className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:border-surface-400 dark:bg-white/5">
-                   <th className="px-5 py-3">Snapshot Name</th>
-                   <th className="px-5 py-3">Size</th>
-                   <th className="px-5 py-3">Status</th>
-                   <th className="px-5 py-3">Created At</th>
-                   <th className="px-5 py-3 text-right">Actions</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-slate-100 dark:divide-surface-400">
-                 {backupsLoading ? (
-                    Array.from({ length: 2 }).map((_, i) => (
-                      <tr key={i}>
-                        <td colSpan={5} className="px-5 py-4"><Skeleton className="h-4 w-full" /></td>
-                      </tr>
-                    ))
-                 ) : systemBackups.length === 0 ? (
-                   <tr>
-                     <td colSpan={5} className="px-5 py-12 text-center text-slate-400">
-                        <Database className="mx-auto mb-3 h-8 w-8 opacity-20" />
-                        <p className="font-semibold">No snapshots found.</p>
-                        <p className="text-[10px]">Manual triggers will appear here.</p>
-                     </td>
-                   </tr>
-                 ) : (
-                   systemBackups.map((b) => (
-                     <tr key={b.filename} className="group hover:bg-slate-50/80 dark:hover:bg-white/5 transition-colors">
-                       <td className="px-5 py-4 font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                         <div className="h-7 w-7 flex items-center justify-center rounded-md bg-brand-50 text-brand-600 dark:bg-brand-950/30">
-                           <Database className="h-4 w-4" />
-                         </div>
-                         {b.filename}
-                       </td>
-                       <td className="px-5 py-4 text-slate-500 dark:text-slate-400 font-medium">{formatSize(b.size)}</td>
-                       <td className="px-5 py-4">
-                         <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold tracking-tight">
-                           <CheckCircle2 className="h-3.5 w-3.5" />
-                           READY
-                         </div>
-                       </td>
-                       <td className="px-5 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                         {new Date(b.created_at).toLocaleString('en-US', { 
-                            month: 'short', day: 'numeric', year: 'numeric',
-                            hour: 'numeric', minute: '2-digit', hour12: true 
-                         })}
-                       </td>
-                       <td className="px-5 py-4 text-right">
-                         <div className="flex items-center justify-end gap-1">
+          <div className="max-h-[500px] flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 shadow-sm">
+            <div className="overflow-y-auto flex-1 custom-scrollbar">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="sticky top-0 z-20">
+                  <tr className="border-b border-slate-100 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:border-surface-400 dark:bg-surface-600">
+                    <th className="px-5 py-3">Snapshot Name</th>
+                    <th className="px-5 py-3">Capacity</th>
+                    <th className="px-5 py-3">State</th>
+                    <th className="px-5 py-3">Archived At</th>
+                    <th className="px-5 py-3 text-right">Control</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-surface-400">
+                {backupsLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <tr key={i}>
+                      <td colSpan={5} className="px-5 py-4"><Skeleton className="h-4 w-full" /></td>
+                    </tr>
+                  ))
+                ) : systemBackups.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-12 text-center text-slate-400">
+                      <Database className="mx-auto mb-3 h-8 w-8 opacity-20" />
+                      <p className="font-semibold italic">No manual snapshots detected.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  systemBackups.map((b) => {
+                    const isDoc = b.type === 'doc';
+                    return (
+                      <tr 
+                        key={b.filename} 
+                        className="group hover:bg-slate-50/80 dark:hover:bg-white/5 transition-all text-nowrap"
+                      >
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className={`h-8 w-8 flex items-center justify-center rounded border ${b.type === 'full' ? 'bg-brand-500 text-white border-brand-600' : isDoc ? 'bg-sky-50 text-sky-600 border-sky-100 dark:bg-sky-900/30 dark:border-sky-800' : 'bg-brand-50 text-brand-600 border-brand-100 dark:bg-brand-900/30 dark:border-brand-800'}`}>
+                              {b.type === 'full' ? <Zap className="h-4 w-4" /> : isDoc ? <FolderArchive className="h-4 w-4" /> : <Database className="h-4 w-4" />}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-extrabold text-slate-800 dark:text-slate-200 leading-tight truncate">
+                                {b.filename.replace(/\.[^/.]+$/, "")}
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">
+                                {b.type === 'full' ? 'Complete System' : isDoc ? 'Documents Archive' : 'Database Snapshot'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 font-bold tabular-nums text-slate-600 dark:text-slate-400">
+                          {formatSize(b.size)}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className="flex items-center gap-1.5 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/30 rounded border border-emerald-100 dark:border-emerald-900/50 w-fit">
+                            <CheckCircle2 className="h-3 w-3" />
+                            VALIDATED
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 font-bold tabular-nums text-slate-500 dark:text-slate-400">
+                           {new Date(b.created_at).toLocaleString('en-US', { 
+                            month: 'short', day: 'numeric', year: 'numeric' 
+                          })}
+                        </td>
+                        <td className="px-5 py-3.5 text-right">
+                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-1 group-hover:translate-x-0">
                             <button
                               onClick={() => downloadSystemSnapshot(b.filename)}
-                              className="p-1.5 text-slate-400 hover:text-brand-500 transition-colors"
-                              title="Download Snapshot"
-                              disabled={!!restoring}
+                              className="p-1.5 text-slate-400 hover:bg-white hover:text-brand-500 hover:shadow-sm rounded-md transition-all dark:hover:bg-surface-400"
+                              title="Download"
                             >
                               <Download className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => setConfirmingRestore(b.filename)}
-                              className="p-1.5 text-slate-400 hover:text-amber-600 transition-colors"
-                              title="Restore System"
-                              disabled={!!restoring}
+                              className="p-1.5 text-slate-400 hover:bg-white hover:text-amber-500 hover:shadow-sm rounded-md transition-all dark:hover:bg-surface-400"
+                              title="Restore"
                             >
-                              <RotateCcw className={`h-4 w-4 ${restoring === b.filename ? 'animate-spin' : ''}`} />
+                              <RotateCcw className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteBackup(b.filename)}
-                              className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors"
-                              title="Delete Snapshot"
-                              disabled={!!restoring}
+                              className="p-1.5 text-slate-400 hover:bg-white hover:text-rose-500 hover:shadow-sm rounded-md transition-all dark:hover:bg-surface-400"
+                              title="Delete"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
-                         </div>
-                       </td>
-                     </tr>
-                   ))
-                 )}
-               </tbody>
-            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        {/* Info note */}
-        <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 dark:border-surface-400 dark:bg-surface-600">
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            <span className="font-bold text-slate-700 dark:text-slate-200 mr-1 uppercase tracking-tighter">Institutional Policy:</span>
-            System Snapshots are full database state archives. It is recommended to perform a snapshot before any major metadata migration or bulk user management operation. 
-            All exports use UTF-8 encoding. CSV files are optimized for Excel; ZIP archives maintain institutional office hierarchy.
-          </p>
+        <div className="rounded-md border border-slate-200 bg-white p-4 dark:border-surface-400 dark:bg-surface-500 shadow-sm">
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="h-5 w-5 text-brand-500 shrink-0 mt-0.5" />
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed uppercase tracking-tight">
+               <span className="font-extrabold text-slate-900 dark:text-white mr-1">Institutional Data Policy:</span>
+               All snapshots are hosted on high-availability persistent storage. For disaster recovery, ensure both 
+               <span className="mx-1 text-brand-600 font-bold dark:text-brand-400 italic">Database Image</span> and 
+               <span className="mx-1 text-sky-600 font-bold dark:text-sky-400 italic">Object Volume</span> are restored in sequence. 
+               CSV exports omit sensitive checksums and binary blobs.
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── Restore Confirmation Modal ── */}
       {confirmingRestore && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-xl dark:border-surface-400 dark:bg-surface-500">
-            <div className="flex items-center gap-4 text-rose-600 dark:text-rose-400 mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-900/20">
-                <AlertTriangle className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold">Confirm System Restore</h3>
-                <p className="text-xs text-rose-500/80">This action is permanent.</p>
-              </div>
-            </div>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-2xl dark:border-surface-400 dark:bg-surface-500"
+          >
+            {(() => {
+              const backup = systemBackups.find(b => b.filename === confirmingRestore);
+              const isDoc = backup?.type === 'doc';
+              
+              return (
+                <>
+                  <div className={`flex items-center gap-4 ${isDoc ? 'text-sky-600 dark:text-sky-400' : 'text-rose-600 dark:text-rose-400'} mb-6`}>
+                    <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${isDoc ? 'bg-sky-50 dark:bg-sky-900/30' : 'bg-rose-50 dark:bg-rose-900/30'} border border-current/10`}>
+                      <AlertTriangle className="h-8 w-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold tracking-tight">{isDoc ? 'Volume Restoration' : 'Kernel Level Reset'}</h3>
+                      <p className="text-xs opacity-75 font-bold uppercase tracking-widest">{isDoc ? 'Safe Operation' : 'Critical Failure Risk'}</p>
+                    </div>
+                  </div>
 
-            <p className="mb-6 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              You are about to restore the system to state: <span className="font-mono font-bold text-slate-900 dark:text-white px-1.5 py-0.5 bg-slate-100 dark:bg-black/20 rounded">{confirmingRestore}</span>. 
-              This will <span className="font-bold underline decoration-rose-500">overwrite all current database records</span>. Any changes made since this snapshot will be lost.
-            </p>
+                  <div className="mb-6 space-y-3">
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {isDoc ? (
+                        <>You are re-populating the cloud object volume from: <span className="font-mono font-black text-slate-900 dark:text-white underline decoration-sky-500/30">{confirmingRestore}</span>.</>
+                      ) : (
+                        <>You are reverting the entire system database to state: <span className="font-mono font-black text-slate-900 dark:text-white underline decoration-rose-500/30">{confirmingRestore}</span>.</>
+                      )}
+                    </p>
+                    <div className="p-3 bg-slate-50 dark:bg-black/20 rounded border border-slate-100 dark:border-white/5 text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-2">
+                       <Clock className="h-3 w-3" />
+                       Action will synchronize across all offices
+                    </div>
+                  </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingRestore(null)}
-                className="flex-1 rounded-md border border-slate-200 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50 dark:border-surface-400 dark:text-slate-300 dark:hover:bg-white/5"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRestoreSnapshot(confirmingRestore)}
-                className="flex-1 rounded-md bg-rose-600 py-2.5 text-sm font-bold text-white transition hover:bg-rose-700 shadow-sm"
-              >
-                Proceed with Restore
-              </button>
-            </div>
-          </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingRestore(null)}
+                      className="flex-1 rounded-md border border-slate-200 py-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50 dark:border-surface-400 dark:text-slate-300 dark:hover:bg-white/5"
+                    >
+                      ABORT
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => backup && handleRestoreSnapshot(backup)}
+                      className={`flex-1 rounded-md ${isDoc ? 'bg-sky-600 hover:bg-sky-700' : 'bg-rose-600 hover:bg-rose-700'} py-3 text-xs font-bold text-white transition shadow-lg shadow-current/10`}
+                    >
+                      {isDoc ? 'RESTORE VOLUME' : 'INITIATE RESET'}
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+          </motion.div>
         </div>
       )}
 
-      {/* ── Global Restore Overlay ── */}
       {restoring && (
-        <div className="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-md text-white">
-          <Loader2 className="h-12 w-12 animate-spin text-brand-500 mb-6" />
-          <h2 className="text-xl font-bold tracking-tight">Recovering System State...</h2>
-          <p className="mt-2 text-slate-400 text-sm italic">Restoring database snapshot: {restoring}</p>
-          <div className="mt-8 px-4 py-2 bg-white/10 rounded-full text-[10px] uppercase font-bold tracking-widest animate-pulse border border-white/20">
-            Do not refresh or close this tab
+        <div className="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-xl text-white">
+          <div className="relative mb-10">
+             <div className="absolute inset-0 rounded-full bg-brand-500 blur-2xl opacity-20 animate-pulse" />
+             <Loader2 className="h-16 w-16 animate-spin text-brand-500 relative" />
+          </div>
+          <h2 className="text-2xl font-black tracking-tighter uppercase italic text-center px-4">
+            {systemBackups.find(b => b.filename === restoring)?.type === 'doc' 
+              ? 'Populating Volumetric Storage...' 
+              : 'Resurrecting System Core...'}
+          </h2>
+          <div className="mt-4 flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest tabular-nums">Manifest Identified: {restoring}</span>
+          </div>
+          <div className="mt-12 text-[9px] uppercase font-bold tracking-[0.3em] text-slate-500 animate-pulse">
+            Institutional integrity check in progress
           </div>
         </div>
       )}

@@ -26,6 +26,7 @@ import {
   uploadSignature, 
   updateNotificationPreferences,
   updateThemePreference,
+  fetchProfile,
   type ProfileUpdatePayload 
 } from "../services/profile";
 import { ActivityTimeline, type ActivityLogRow } from "../components/profile/ActivityTimeline";
@@ -42,6 +43,7 @@ import { useToast } from "../components/ui/toast/ToastContext";
 import { useThemeContext } from "../lib/ThemeContext";
 import { normalizeError } from "../lib/normalizeError";
 import { getUserRole, isAuditor } from "../lib/roleFilters";
+import { PasswordRequirements, validatePassword } from "../components/auth/PasswordRequirements";
 
 const ProfileSettingsPage: React.FC = () => {
   const user = useAuthUser();
@@ -58,6 +60,7 @@ const ProfileSettingsPage: React.FC = () => {
   // Filters
   const [category, setCategory] = useState<string | number | null>("all");
   const [timeFilter, setTimeFilter] = useState<string | number | null>("all");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const [profileForm, setProfileForm] = useState<ProfileUpdatePayload>({
     first_name: "",
@@ -118,9 +121,24 @@ const ProfileSettingsPage: React.FC = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchLogs();
-    setRefreshing(false);
-    return "Activity log updated.";
+    try {
+      // 1. Refresh Activity Logs
+      await fetchLogs();
+      
+      // 2. Refresh User Profile Data
+      const freshUser = await fetchProfile();
+      localStorage.setItem("auth_user", JSON.stringify({ ...JSON.parse(localStorage.getItem("auth_user") || "{}"), ...freshUser }));
+      window.dispatchEvent(new Event("auth_user_updated"));
+
+      // 3. Trigger children refresh (Sessions)
+      setRefreshTrigger(prev => prev + 1);
+
+      return "Page data synchronized.";
+    } catch (err) {
+      push({ type: "error", title: "Refresh Failed", message: "Could not synchronize all page data." });
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   // ── Sync Profile Form ─────────────────────────────────────────────────────
@@ -169,8 +187,8 @@ const ProfileSettingsPage: React.FC = () => {
 
   const tabs = [
     { key: "activity", label: "My Activity", icon: <History className="h-4 w-4" /> },
-    { key: "settings", label: "Account Settings", icon: <SettingsIcon className="h-4 w-4" /> },
     { key: "sessions", label: "Sessions", icon: <Laptop className="h-4 w-4" /> },
+    { key: "settings", label: "Account Settings", icon: <SettingsIcon className="h-4 w-4" /> },
   ];
 
   const categories = [
@@ -266,7 +284,7 @@ const ProfileSettingsPage: React.FC = () => {
                 )}
              </div>
 
-             <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 custom-scrollbar">
                 {activeTab === "activity" ? (
                    <div className="max-w-4xl mx-auto py-6 px-4">
                       <ActivityTimeline items={logs} loading={logsLoading} />
@@ -277,10 +295,10 @@ const ProfileSettingsPage: React.FC = () => {
                    </div>
                 ) : (
                    <div className="max-w-4xl mx-auto py-6 px-4">
-                      <SessionManager />
+                      <SessionManager refreshTrigger={refreshTrigger} />
                    </div>
                 )}
-             </div>
+              </div>
            </div>
         </main>
       </div>
@@ -388,6 +406,13 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validatePassword(pw.password)) {
+      return push({ 
+        type: "error", 
+        title: "Weak Password", 
+        message: "Please meet all complexity requirements: 8+ characters, uppercase, numbers, and symbols." 
+      });
+    }
     if (pw.password !== pw.password_confirmation) return push({ type: "error", message: "Passwords do not match." });
     setPwLoading(true);
     try {
@@ -425,6 +450,30 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
 
   return (
     <div className="space-y-12 pb-10">
+      {isAdmin && (
+        <div className="space-y-8 p-6 rounded-xl border border-brand-100 dark:border-brand-900/40 bg-brand-50/20 dark:bg-brand-500/5 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+          <PillarHeader title="Developer & Administrative Tools" />
+          <Section 
+            title="Developer Debug Mode" 
+            icon={<Wrench className="h-4 w-4" />} 
+            description="Toggle advanced permissions and testing tools. When enabled, you can act on behalf of any office to test workflow logic."
+          >
+            <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-brand-200/50 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 overflow-hidden shadow-sm">
+              <ToggleRow 
+                label="Enable Debug Mode" 
+                desc="Bypass role/office restrictions for testing purposes." 
+                checked={localStorage.getItem(`pref_debug_mode_${user?.id}`) === "1"} 
+                onChange={v => {
+                  localStorage.setItem(`pref_debug_mode_${user?.id}`, v ? "1" : "0");
+                  window.dispatchEvent(new CustomEvent("admin_debug_mode_changed"));
+                  push({ type: "success", title: "Debug Mode", message: v ? "Enabled" : "Disabled" });
+                }} 
+              />
+            </div>
+          </Section>
+        </div>
+      )}
+
       {/* ── Pillar 1: Configuration & Appearance ───────────────────────────── */}
       <div className="space-y-8">
         <PillarHeader title="Interface & Configuration" />
@@ -499,6 +548,13 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
                           <input type="password" className={inputCls} value={pw.password_confirmation} onChange={e => setPw(p => ({ ...p, password_confirmation: e.target.value }))} required />
                       </div>
                     </div>
+                    
+                    {pw.password && (
+                      <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                        <PasswordRequirements password={pw.password} />
+                      </div>
+                    )}
+
                     <div className="flex justify-start">
                       <Button loading={pwLoading} size="sm" className="font-bold">Update Password</Button>
                     </div>
@@ -528,24 +584,6 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
                         <input ref={sigInputRef} type="file" className="hidden" accept="image/*" onChange={handleSigUpload} />
                     </div>
                 </div>
-            </div>
-          </Section>
-        )}
-
-        {/* Admin section */}
-        {isAdmin && (
-          <Section title="Developer Tools" icon={<Wrench className="h-4 w-4" />} description="Administrative settings for debugging and enterprise testing.">
-            <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-slate-100 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 overflow-hidden shadow-sm">
-              <ToggleRow 
-                  label="Developer Debug Mode" 
-                  desc="Allow acting on behalf of other offices for testing workflows." 
-                  checked={localStorage.getItem(`pref_debug_mode_${user?.id}`) === "1"} 
-                  onChange={v => {
-                    localStorage.setItem(`pref_debug_mode_${user?.id}`, v ? "1" : "0");
-                    window.dispatchEvent(new CustomEvent("admin_debug_mode_changed"));
-                    push({ type: "success", title: "Debug Mode", message: v ? "Enabled" : "Disabled" });
-                  }} 
-                />
             </div>
           </Section>
         )}

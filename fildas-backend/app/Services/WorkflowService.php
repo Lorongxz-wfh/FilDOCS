@@ -969,6 +969,22 @@ class WorkflowService
             ->get();
 
         foreach ($users as $u) {
+            // 1. Database Notification
+            \App\Models\Notification::create([
+                'user_id'             => $u->id,
+                'document_id'         => $version->document_id,
+                'document_version_id' => $version->id,
+                'event'               => 'document.distributed',
+                'title'               => 'Document Distributed',
+                'body'                => ($doc->title ?? 'A document') . ' has been distributed and is now available in your library.',
+                'meta'                => [
+                    'version_id' => $version->id,
+                    'actor_name' => $actorName,
+                ],
+                'read_at' => null,
+            ]);
+
+            // 2. Email (Respect preference)
             if (!(bool) ($u->email_doc_updates ?? true) || !$u->email) continue;
             try {
                 Mail::to($u->email)->queue(new WorkflowNotificationMail(

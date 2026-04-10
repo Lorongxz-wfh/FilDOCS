@@ -37,7 +37,6 @@ interface Options {
   version: DocumentVersion | null;
   onChanged?: () => Promise<void> | void;
   onAfterActionClose?: () => void;
-  onBrowseTemplates?: () => void;
   adminDebugMode: boolean;
 }
 
@@ -46,7 +45,6 @@ export function useDocumentFlowUI({
   version,
   onChanged,
   onAfterActionClose,
-  onBrowseTemplates,
   adminDebugMode,
 }: Options) {
   const { push } = useToast();
@@ -633,21 +631,8 @@ export function useDocumentFlowUI({
           ]
         : [];
 
-    const templatesBtn = isDraftStatus
-      ? [
-          {
-            key: "BROWSE_TEMPLATES",
-            label: "Templates",
-            variant: "outline" as const,
-            onClick: async () => {
-              if (onBrowseTemplates) onBrowseTemplates();
-            },
-          },
-        ]
-      : [];
-
     const finalResult = replaceAction ? [replaceAction, ...finalButtons] : finalButtons;
-    return [...finalResult, ...templatesBtn, ...archiveBtn, ...restoreBtn];
+    return [...finalResult, ...archiveBtn, ...restoreBtn];
   }, [
     workflow.availableActions,
     workflow.isChangingStatus,
@@ -817,8 +802,9 @@ export function useDocumentFlowUI({
     workflow,
     fileUpload,
     handleActionResult,
+    syncAll: workflow.syncAll,
   }), [
-    workflow,
+    workflow.syncAll,
     fileUpload,
     handleActionResult,
     push,

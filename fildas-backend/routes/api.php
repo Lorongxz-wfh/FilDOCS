@@ -186,6 +186,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::get('/admin/system/backups/{file}',    [SystemBackupController::class, 'download'])->where('file', '.*');
     Route::delete('/admin/system/backups/{file}', [SystemBackupController::class, 'destroy'])->where('file', '.*');
     Route::post('/admin/system/backups/{file}/restore', [SystemBackupController::class, 'restore'])->where('file', '.*');
+    Route::post('/admin/system/backups/{file}/restore-documents', [SystemBackupController::class, 'restoreDocuments'])->where('file', '.*');
 
     // ── Search ─────────────────────────────────────────────────────────────────
     Route::get('/search', \App\Http\Controllers\Api\SearchController::class);
@@ -297,6 +298,13 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         Route::patch('/offices/{office}',         [AdminOfficeController::class, 'update']);
         Route::delete('/offices/{office}',        [AdminOfficeController::class, 'destroy']);
         Route::patch('/offices/{office}/restore', [AdminOfficeController::class, 'restore']);
+
+        // Session Management
+        Route::get('/sessions',                [SessionController::class, 'adminIndex']);
+        // Use a distinct parameter name or path to avoid collision if necessary, 
+        // but since it's under prefix('admin'), it's fine.
+        Route::delete('/sessions/{id}',        [SessionController::class, 'adminDestroy']);
+        Route::get('/sessions/{id}/activity',  [SessionController::class, 'adminSessionActivity']);
 
         // System Health & Maintenance
         Route::get('/system/health',              [SystemHealthController::class, 'index']);

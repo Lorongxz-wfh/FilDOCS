@@ -7,6 +7,7 @@ import Skeleton from "../components/ui/loader/Skeleton";
 import { getComplianceReport, getRequestsReport, getActivityReport, downloadMasterReportZip } from "../services/reportsApi";
 import { useAuthUser } from "../hooks/useAuthUser";
 import { PageActions, RefreshAction } from "../components/ui/PageActions";
+import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import {
   exportKpiCsv,
   exportKpiPdf,
@@ -233,6 +234,11 @@ const ReportExportPage: React.FC = () => {
     },
     { in_review: 0, approved: 0, returned: 0 },
   );
+
+  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+    setRefreshKey((k) => k + 1);
+    return { changed: true, message: "Analytical data synchronized." };
+  });
 
   React.useEffect(() => {
     if (!me) return;
@@ -572,11 +578,8 @@ const ReportExportPage: React.FC = () => {
       right={
         <PageActions>
           <RefreshAction
-            loading={loading}
-            onRefresh={async () => {
-              setRefreshKey((k) => k + 1);
-              return "Report data refreshed.";
-            }}
+            loading={isRefreshing || loading}
+            onRefresh={refresh}
           />
           <Button
             variant="outline"
@@ -607,7 +610,6 @@ const ReportExportPage: React.FC = () => {
         </PageActions>
       }
     >
-      {/* Global select all / none */}
       <div className="flex items-center gap-3 shrink-0">
         <button
           type="button"
@@ -635,13 +637,11 @@ const ReportExportPage: React.FC = () => {
         </div>
       )}
 
-      {/* Grouped sections */}
       {GROUPS.map((group) => {
         const groupSections = sections.filter((s) => s.group === group);
         const groupSelected = groupSections.filter((s) => selected[s.key]).length;
         return (
           <div key={group} className="flex flex-col gap-4">
-            {/* Group heading */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
@@ -670,7 +670,6 @@ const ReportExportPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Section cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {groupSections.map((s) => {
                 const isSelected = !!selected[s.key];
@@ -686,7 +685,6 @@ const ReportExportPage: React.FC = () => {
                         : "border-slate-200 dark:border-surface-400"
                     }`}
                   >
-                    {/* Card header */}
                     <div className="flex items-start justify-between gap-3 px-4 py-3.5 border-b border-slate-100 dark:border-surface-400">
                       <div className="flex items-start gap-2.5">
                         <input
@@ -705,7 +703,6 @@ const ReportExportPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Format toggle + export button */}
                       <div className="flex shrink-0 items-center gap-2">
                         <div className="flex rounded-md border border-slate-200 dark:border-surface-400 overflow-hidden text-xs font-medium">
                           {(["pdf", "csv"] as Format[]).map((f) => (
@@ -735,7 +732,6 @@ const ReportExportPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Preview table */}
                     <div className="px-4 py-3.5 overflow-x-auto">
                       <PreviewTable
                         headers={s.previewHeaders}

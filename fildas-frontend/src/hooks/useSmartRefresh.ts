@@ -28,18 +28,17 @@ export function useSmartRefresh(
     try {
       const result = await reloadFn();
       
-      // If result is void, just show a generic success message
+      // If result is void, show success but stay silent if not changed
       if (!result) {
         toast?.push({
-          type: "info",
-          message: "Page refreshed.",
+          type: "success",
+          message: "Page data synchronized.",
           durationMs: 2000,
         });
         return;
       }
 
       if (result.message) {
-        // Custom message takes precedence
         toast?.push({
           type: result.changed ? "success" : "info",
           message: result.message,
@@ -47,30 +46,31 @@ export function useSmartRefresh(
         });
       } else if (result.changed) {
         const deltaMsg = result.delta != null && result.delta > 0 
-          ? ` (${result.delta} new items found)` 
+          ? ` (${result.delta} new updates)` 
           : "";
         toast?.push({
           type: "success",
-          message: `Data updated${deltaMsg}.`,
+          message: `Data synchronized${deltaMsg}.`,
           durationMs: 2500,
         });
       } else {
         toast?.push({
           type: "info",
-          message: "Everything is up to date.",
+          message: "Data is up to date.",
           durationMs: 2000,
         });
       }
     } catch (err) {
       toast?.push({
         type: "error",
+        title: "Sync Failed",
         message: normalizeError(err),
       });
     } finally {
-      setIsRefreshing(true); // Artificial delay to ensure spinner is seen
-      setTimeout(() => setIsRefreshing(false), 300);
+      // Ensure the spinner stays visible for a minimum natural duration
+      setTimeout(() => setIsRefreshing(false), 400);
     }
-    return false; // Tells RefreshButton to be silent
+    return false;
   };
 
   return { refresh, isRefreshing };

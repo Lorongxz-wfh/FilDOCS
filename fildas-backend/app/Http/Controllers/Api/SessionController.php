@@ -62,4 +62,48 @@ class SessionController extends Controller
 
         return response()->json(['message' => 'All other sessions revoked successfully.']);
     }
+
+    /**
+     * ADMIN: List all active sessions in the system.
+     */
+    public function adminIndex(Request $request)
+    {
+        $sessions = PersonalAccessToken::with('tokenable.office')
+            ->orderBy('last_used_at', 'desc')
+            ->get()
+            ->map(function ($token) {
+                return [
+                    'id' => $token->id,
+                    'user' => $token->tokenable,
+                    'ip_address' => $token->ip_address,
+                    'user_agent' => $token->user_agent,
+                    'last_used_at' => $token->last_used_at,
+                    'created_at' => $token->created_at,
+                ];
+            });
+
+        return response()->json($sessions);
+    }
+
+    /**
+     * ADMIN: Revoke any specific session.
+     */
+    public function adminDestroy(Request $request, $id)
+    {
+        PersonalAccessToken::where('id', $id)->delete();
+        return response()->json(['message' => 'Session terminated by administrator.']);
+    }
+
+    /**
+     * ADMIN: Get activity logs for a specific session.
+     */
+    public function adminSessionActivity(Request $request, $id)
+    {
+        $logs = \App\Models\ActivityLog::with(['document', 'version'])
+            ->where('personal_access_token_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($logs);
+    }
 }

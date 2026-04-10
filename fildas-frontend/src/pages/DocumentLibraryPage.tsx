@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
-import { 
-  getUserRole, 
-  isQA, 
+import {
+  getUserRole,
+  isQA,
   isAuditor,
 } from "../lib/roleFilters";
 import { getAuthUser } from "../lib/auth";
@@ -36,12 +36,12 @@ import {
   TAB_LABELS,
   TAB_ICONS,
 } from "./documentLibrary/documentLibraryTypes";
-import { 
+import {
   listDocumentsPage,
   deleteDocument,
   listOffices,
 } from "../services/documents";
-import { 
+import {
   listDocumentRequestIndividual,
   deleteDocumentRequest,
 } from "../services/documentRequests";
@@ -89,6 +89,7 @@ export default function DocumentLibraryPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deletingType, setDeletingType] = useState<"doc" | "req" | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [trashRefreshTrigger, setTrashRefreshTrigger] = useState(0);
 
   const {
     selectedIds,
@@ -106,7 +107,7 @@ export default function DocumentLibraryPage() {
     (r, _action) => {
       // Logic for bulk action eligibility
       // const isDoc = !!(r.docId || r.id);
-      if (_action === "download") return true; 
+      if (_action === "download") return true;
       if (_action === "delete") return r.can_delete;
       if (_action === "archive") return r.can_archive;
       return true;
@@ -147,7 +148,7 @@ export default function DocumentLibraryPage() {
     const actionable = getActionableItems("delete");
     const totalSelected = selectionCount;
     const actionableIds = actionable.map(r => r.id || r.docId || r.reqId);
-    
+
     if (actionableIds.length === 0) {
       push({ type: "warning", title: "No Actionable Items", message: "None of the selected items can be deleted." });
       return;
@@ -164,7 +165,7 @@ export default function DocumentLibraryPage() {
     const actionable = getActionableItems("archive");
     const totalSelected = selectionCount;
     const actionableIds = actionable.map(r => r.id || r.docId || r.reqId);
-    
+
     if (actionableIds.length === 0) {
       push({ type: "warning", title: "No Actionable Items", message: "None of the selected items can be archived." });
       return;
@@ -180,27 +181,27 @@ export default function DocumentLibraryPage() {
   const executeBulkAction = async () => {
     if (!bulkConfirm) return;
     const { type, actionableIds } = bulkConfirm;
-    
+
     setIsBulkProcessing(true);
     setBulkConfirm(null);
     try {
       const endpoint = type === "archive" ? "/bulk/documents/archive" : "/bulk/documents/delete";
       const res = await axios.post(endpoint, { ids: actionableIds });
-      
-      push({ 
-        type: "success", 
-        title: `Bulk ${type === "archive" ? "Archive" : "Delete"}`, 
-        message: res.data.message 
+
+      push({
+        type: "success",
+        title: `Bulk ${type === "archive" ? "Archive" : "Delete"}`,
+        message: res.data.message
       });
-      
+
       setRows(prev => prev.filter(r => !actionableIds.includes(r.id || r.docId || r.reqId)));
       clearSelection();
       setIsSelectMode(false);
     } catch (e: any) {
-      push({ 
-        type: "error", 
-        title: `Bulk ${type === "archive" ? "Archive" : "Delete"} Failed`, 
-        message: e.response?.data?.message || e.message 
+      push({
+        type: "error",
+        title: `Bulk ${type === "archive" ? "Archive" : "Delete"} Failed`,
+        message: e.response?.data?.message || e.message
       });
     } finally {
       setIsBulkProcessing(false);
@@ -211,7 +212,7 @@ export default function DocumentLibraryPage() {
     const ids = Array.from(selectedIds).join(",");
     setBulkDownloadOpen(false);
     const url = `/api/bulk/documents/download?ids=${ids}&filename=${filename}`;
-    
+
     try {
       const res = await axios.get(url, { responseType: 'blob' });
       const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
@@ -365,7 +366,13 @@ export default function DocumentLibraryPage() {
 
   const { refresh, isRefreshing } = useSmartRefresh(async () => {
     await loadData(false, true);
-    return { changed: true }; 
+
+    // If on deleted tab, trigger its child refresh
+    if (activeTab === "deleted") {
+      setTrashRefreshTrigger(prev => prev + 1);
+    }
+    
+    return { changed: true };
   });
 
   useEffect(() => {
@@ -388,10 +395,10 @@ export default function DocumentLibraryPage() {
   const columns = useMemo(() => {
     const delDoc = adminDebugMode ? (id: number) => { setDeletingId(id); setDeletingType("doc"); } : undefined;
     const delReq = adminDebugMode ? (id: number) => { setDeletingId(id); setDeletingType("req"); } : undefined;
-    const delAll = adminDebugMode ? (id: number) => { 
-        setDeletingId(id);
-        const row = rows.find(r => (r.docId || r.reqId || r.id || r.request_id) === id);
-        setDeletingType(row?.docId ? "doc" : "req");
+    const delAll = adminDebugMode ? (id: number) => {
+      setDeletingId(id);
+      const row = rows.find(r => (r.docId || r.reqId || r.id || r.request_id) === id);
+      setDeletingType(row?.docId ? "doc" : "req");
     } : undefined;
 
     if (tab === "created") return buildCreatedColumns(delDoc);
@@ -479,16 +486,20 @@ export default function DocumentLibraryPage() {
 
       {activeTab === "deleted" ? (
         <div className="flex-1 min-h-0">
-          <DeletedItemsView type="documents" onRestored={() => setActiveTab("active")} />
+          <DeletedItemsView 
+            type="documents" 
+            onRestored={() => setActiveTab("active")} 
+            refreshTrigger={trashRefreshTrigger}
+          />
         </div>
       ) : (
         <>
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 pr-4">
-            <Tabs 
-              tabs={TABS} 
-              activeTab={tab} 
-              onChange={(key) => setTab(key as LibTab)} 
-              id="library" 
+            <Tabs
+              tabs={TABS}
+              activeTab={tab}
+              onChange={(key) => setTab(key as LibTab)}
+              id="library"
               className="border-none"
             />
             {activeTab === "active" && (
@@ -512,7 +523,15 @@ export default function DocumentLibraryPage() {
             setSearch={(val) => { setQ(val); setPage(1); }}
             placeholder="Search library..."
             activeFiltersCount={activeFiltersCount}
-            onClear={() => { setQ(""); setTypeFilter("all"); setDateFrom(""); setDateTo(""); setPage(1); }}
+            onClear={() => { 
+              setQ(""); 
+              setTypeFilter("all"); 
+              setDateFrom(""); 
+              setDateTo(""); 
+              setOfficeFilter("");
+              setBatchFilter("");
+              setPage(1); 
+            }}
             mobileFilters={
               <div className="flex flex-col gap-3">
                 <div className="grid grid-cols-2 gap-2">
@@ -589,13 +608,13 @@ export default function DocumentLibraryPage() {
                   hasMore={hasMore}
                   onLoadMore={() => loadData(true)}
                   gridTemplateColumns={
-                    (tab === "created" 
-                      ? "50px 90px 80px minmax(200px, 1fr) 90px 80px 80px 50px 100px" 
-                      : tab === "shared" 
-                        ? "50px 90px 80px minmax(200px, 1fr) 90px 80px 80px 50px 100px" 
-                        : tab === "requested" 
+                    (tab === "created"
+                      ? "50px 90px 80px minmax(200px, 1fr) 90px 80px 80px 50px 100px"
+                      : tab === "shared"
+                        ? "50px 90px 80px minmax(200px, 1fr) 90px 80px 80px 50px 100px"
+                        : tab === "requested"
                           ? (isAdmin || isQA(role) ? "50px minmax(250px, 1fr) 110px 110px" : "50px minmax(250px, 1fr) 110px")
-                          : "50px minmax(180px, 1fr) 90px 120px 100px") 
+                          : "50px minmax(180px, 1fr) 90px 120px 100px")
                     + (adminDebugMode ? " 50px" : "")
                   }
                   sortBy={sortBy}
@@ -624,11 +643,11 @@ export default function DocumentLibraryPage() {
         }
       >
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Are you sure you want to delete this {deletingType === "doc" ? "document" : "document request"}? 
+          Are you sure you want to delete this {deletingType === "doc" ? "document" : "document request"}?
           This will soft-delete the record, removing it from the active library.
         </p>
       </Modal>
-      <BulkActionBar 
+      <BulkActionBar
         selectedCount={selectionCount}
         onClear={clearSelection}
         actions={[
@@ -658,7 +677,7 @@ export default function DocumentLibraryPage() {
         ]}
       />
 
-      <BulkDownloadModal 
+      <BulkDownloadModal
         open={bulkDownloadOpen}
         onClose={() => setBulkDownloadOpen(false)}
         selectedCount={selectionCount}
@@ -674,9 +693,9 @@ export default function DocumentLibraryPage() {
         footer={
           <div className="flex justify-end gap-3">
             <Button variant="ghost" onClick={() => setBulkConfirm(null)}>Cancel</Button>
-            <Button 
-              variant={bulkConfirm?.type === "delete" ? "danger" : "primary"} 
-              loading={isBulkProcessing} 
+            <Button
+              variant={bulkConfirm?.type === "delete" ? "danger" : "primary"}
+              loading={isBulkProcessing}
               onClick={executeBulkAction}
             >
               Confirm {bulkConfirm?.type === "archive" ? "Archive" : "Delete"}
@@ -685,11 +704,10 @@ export default function DocumentLibraryPage() {
         }
       >
         <div className="flex flex-col gap-4">
-          <div className={`p-4 rounded-xl border ${
-            bulkConfirm?.type === "delete" 
-              ? "bg-rose-50 border-rose-100 dark:bg-rose-900/10 dark:border-rose-900/20" 
+          <div className={`p-4 rounded-xl border ${bulkConfirm?.type === "delete"
+              ? "bg-rose-50 border-rose-100 dark:bg-rose-900/10 dark:border-rose-900/20"
               : "bg-brand-50 border-brand-100 dark:bg-brand-900/10 dark:border-brand-900/20"
-          }`}>
+            }`}>
             <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               {bulkConfirm?.actionableIds.length} items will be {bulkConfirm?.type === "archive" ? "archived" : "deleted"}.
             </p>
@@ -700,7 +718,7 @@ export default function DocumentLibraryPage() {
             )}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            {bulkConfirm?.type === "delete" 
+            {bulkConfirm?.type === "delete"
               ? "This will soft-delete the records. They will be removed from the active library but can be restored by an administrator."
               : "Archived documents will be moved to the Archive section and will no longer be visible in the active library."
             }

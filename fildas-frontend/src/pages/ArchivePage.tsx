@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { 
+import {
   listDocumentsPage,
   deleteDocument
 } from "../services/documents";
@@ -54,7 +54,7 @@ export default function ArchivePage() {
       setIsDeleting(false);
     }
   };
-  
+
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
@@ -86,14 +86,14 @@ export default function ArchivePage() {
     const actionable = getActionableItems("restore");
     const totalSelected = selectionCount;
     const actionableIds = actionable.map(r => r.id);
-    
+
     if (actionableIds.length === 0) {
       push({ type: "warning", title: "No Actionable Items", message: "Cancelled or Superseded documents cannot be restored." });
       return;
     }
 
-    setBulkConfirm({ 
-      type: "restore", 
+    setBulkConfirm({
+      type: "restore",
       itemIds: actionableIds,
       skippedCount: totalSelected - actionableIds.length
     });
@@ -101,10 +101,10 @@ export default function ArchivePage() {
 
   const handleBulkDelete = () => {
     const itemIds = Array.from(selectedIds);
-    setBulkConfirm({ 
-      type: "delete", 
+    setBulkConfirm({
+      type: "delete",
       itemIds,
-      skippedCount: 0 
+      skippedCount: 0
     });
   };
 
@@ -233,11 +233,11 @@ export default function ArchivePage() {
   }, [adminDebugMode]);
 
   const handleRowClick = (row: any) => {
-    navigate(`/documents/${row.id}/view`, { 
-      state: { 
+    navigate(`/documents/${row.id}/view`, {
+      state: {
         from: "/archive",
-        breadcrumbs: [{ label: "Archive", to: "/archive" }] 
-      } 
+        breadcrumbs: [{ label: "Archive", to: "/archive" }]
+      }
     });
   };
 
@@ -289,7 +289,7 @@ export default function ArchivePage() {
         }}
         mobileFilters={
           <div className="flex flex-col gap-3">
-             <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <SelectDropdown
                 value={officeFilter}
                 onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
@@ -446,7 +446,7 @@ export default function ArchivePage() {
         </p>
       </Modal>
 
-      <BulkActionBar 
+      <BulkActionBar
         selectedCount={selectionCount}
         onClear={clearSelection}
         actions={[
@@ -471,7 +471,7 @@ export default function ArchivePage() {
         ]}
       />
 
-      <BulkDownloadModal 
+      <BulkDownloadModal
         open={bulkDownloadOpen}
         onClose={() => setBulkDownloadOpen(false)}
         selectedCount={selectionCount}
@@ -487,9 +487,9 @@ export default function ArchivePage() {
         footer={
           <div className="flex justify-end gap-3">
             <Button variant="ghost" onClick={() => setBulkConfirm(null)}>Cancel</Button>
-            <Button 
-              variant={bulkConfirm?.type === "delete" ? "danger" : "primary"} 
-              loading={isBulkProcessing} 
+            <Button
+              variant={bulkConfirm?.type === "delete" ? "danger" : "primary"}
+              loading={isBulkProcessing}
               onClick={executeBulkAction}
             >
               Confirm {bulkConfirm?.type === "restore" ? "Restore" : "Delete"}
@@ -498,11 +498,10 @@ export default function ArchivePage() {
         }
       >
         <div className="flex flex-col gap-4">
-          <div className={`p-4 rounded-xl border ${
-            bulkConfirm?.type === "delete" 
-              ? "bg-rose-50 border-rose-100 dark:bg-rose-900/10 dark:border-rose-900/20" 
+          <div className={`p-4 rounded-xl border ${bulkConfirm?.type === "delete"
+              ? "bg-rose-50 border-rose-100 dark:bg-rose-900/10 dark:border-rose-900/20"
               : "bg-brand-50 border-brand-100 dark:bg-brand-900/10 dark:border-brand-900/20"
-          }`}>
+            }`}>
             <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               {bulkConfirm?.itemIds.length} items will be {bulkConfirm?.type === "restore" ? "restored to library" : "soft-deleted"}.
             </p>
@@ -513,7 +512,7 @@ export default function ArchivePage() {
             )}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            {bulkConfirm?.type === "restore" 
+            {bulkConfirm?.type === "restore"
               ? "Restored documents will move back from the archive to the active document library."
               : "Deleted documents will move to the trash and can only be accessed by system administrators."
             }

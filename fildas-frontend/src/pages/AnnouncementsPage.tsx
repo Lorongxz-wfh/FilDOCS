@@ -13,6 +13,7 @@ import PageFrame from "../components/layout/PageFrame";
 import Button from "../components/ui/Button";
 import { PageActions, RefreshAction, CreateAction } from "../components/ui/PageActions";
 import Skeleton from "../components/ui/loader/Skeleton";
+import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import {
   listAllAnnouncements,
   createAnnouncement,
@@ -429,7 +430,7 @@ const AnnouncementsPage: React.FC = () => {
   const [dateFilter, setDateFilter] = React.useState<DateFilter>("all");
   const [search, setSearch] = React.useState("");
   
-  async function loadAll() {
+  const { refresh, isRefreshing } = useSmartRefresh(async () => {
     setLoading(true);
     try {
       const first = await listAllAnnouncements(1);
@@ -451,11 +452,17 @@ const AnnouncementsPage: React.FC = () => {
       });
       setItems(all);
       setTotal(first.meta.total);
+      return { changed: true, message: "Announcement feed synchronized." };
     } catch (e: any) {
       setError(e?.message ?? "Failed to load announcements feed.");
+      throw e;
     } finally {
       setLoading(false);
     }
+  });
+
+  async function loadAll() {
+    refresh();
   }
 
   React.useEffect(() => {
@@ -547,8 +554,8 @@ const AnnouncementsPage: React.FC = () => {
       right={
         <PageActions>
           <RefreshAction
-            onRefresh={async () => loadAll()}
-            loading={loading}
+            onRefresh={refresh}
+            loading={isRefreshing || loading}
           />
           <Button
             variant="outline"

@@ -156,6 +156,7 @@ export type AdminUserUpdatePayload = Partial<{
   email: string | null;
   office_id: number | null;
   role_id: number | null;
+  password?: string;
 }>;
 
 export async function updateAdminUser(
@@ -174,6 +175,7 @@ export type AdminUserCreatePayload = {
   email: string;
   office_id?: number | null;
   role_id?: number | null;
+  password?: string;
 };
 
 export async function createAdminUser(
@@ -228,4 +230,29 @@ export async function resetAdminUserTwoFactor(
 ): Promise<{ message: string; user: AdminUser }> {
   const res = await api.patch(`/admin/users/${userId}/reset-2fa`);
   return res.data as { message: string; user: AdminUser };
+}
+
+// ── Admin Sessions ──────────────────────────────────────────────────────────
+export interface AdminSession {
+  id: number;
+  user: AdminUser;
+  ip_address: string;
+  user_agent: string;
+  last_used_at: string;
+  created_at: string;
+}
+
+export async function getAdminSessions(): Promise<AdminSession[]> {
+  const res = await api.get("/admin/sessions");
+  return res.data as AdminSession[];
+}
+
+export async function revokeAdminSession(id: number): Promise<{ message: string }> {
+  const res = await api.delete(`/admin/sessions/${id}`);
+  return res.data;
+}
+
+export async function getAdminSessionActivity(id: number): Promise<any[]> {
+  const res = await api.get(`/admin/sessions/${id}/activity`);
+  return res.data;
 }

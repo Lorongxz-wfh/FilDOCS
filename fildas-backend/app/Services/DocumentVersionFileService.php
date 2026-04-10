@@ -13,25 +13,32 @@ class DocumentVersionFileService
         // Delete old files first
         $this->deleteVersionFiles($version);
 
-        $year = now()->year;
-        $extension = strtolower($file->getClientOriginalExtension());
-        $storedName = 'original.' . $extension;
-        $r2Path = $year . '/' . $version->id . '/' . $storedName;
+        // Load document and office relationships for path building
+        $version->load(['document.ownerOffice']);
+        $doc = $version->document;
+        $officeCode = $doc && $doc->ownerOffice ? $doc->ownerOffice->code : 'OTH';
+        $docCode = $doc ? ($doc->document_code ?: "ID-{$doc->id}") : "ID-{$version->document_id}";
+        $vNum = $version->version_number ?? 0;
 
-        // 1. Upload original file synchronously (so it exists for the job)
-        Storage::disk()->putFileAs(
-            $year . '/' . $version->id,
-            $file,
-            $storedName
-        );
+        $extension = strtolower($file->getClientOriginalExtension());
+        $storedName = "v{$vNum}_{$file->getClientOriginalName()}";
+
+        // Clean storedName for filesystem safety
+        $storedName = \Illuminate\Support\Str::slug(pathinfo($storedName, PATHINFO_FILENAME)) . '.' . $extension;
+
+        $r2Folder = "documents/{$officeCode}/{$docCode}";
+        $r2Path = "{$r2Folder}/{$storedName}";
+
+        // 1. Upload original file
+        Storage::disk()->putFileAs($r2Folder, $file, $storedName);
 
         $version->original_filename = $file->getClientOriginalName();
         $version->file_path = $r2Path;
-        $version->checksum = null; // Will be filled by background job
-        $version->preview_path = null; // Will be filled by background job
+        $version->checksum = null;
+        $version->preview_path = null;
         $version->save();
 
-        // 2. Dispatch background job for heavy processing (Hashing, PDF Preview)
+        // 2. Dispatch background job for heavy processing
         \App\Jobs\ProcessDocumentVersion::dispatch($version->id);
     }
 

@@ -22,6 +22,7 @@ import {
 import { useAdminDebugMode } from "../hooks/useAdminDebugMode";import { friendlyEvent } from "../utils/activityFormatters";
 import PageFrame from "../components/layout/PageFrame";
 import { PageActions, RefreshAction, CreateAction } from "../components/ui/PageActions";
+import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
 import { FileText, ClipboardList, LayoutTemplate } from "lucide-react";
 import StatCard from "../components/workQueue/StatCard";
@@ -169,6 +170,14 @@ const MyWorkQueuePage: React.FC = () => {
   const requestActionNeeded = requestStats?.action_required ?? 0;
 
 
+  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+    const changed = await loadAll(true);
+    return {
+      changed,
+      message: changed ? "Work queue synchronized." : "Queue is up to date.",
+    };
+  });
+
   return (
     <PageFrame
       title="Work Queue Hub"
@@ -176,11 +185,8 @@ const MyWorkQueuePage: React.FC = () => {
       right={
         <PageActions>
           <RefreshAction
-            onRefresh={async () => {
-              const changed = await loadAll(true);
-              return changed ? "New updates found." : "Work queue is up to date.";
-            }}
-            loading={loading}
+            onRefresh={refresh}
+            loading={isRefreshing || loading}
           />
         </PageActions>
       }

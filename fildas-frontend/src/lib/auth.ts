@@ -64,9 +64,11 @@ export function clearAuthUser(): void {
   localStorage.removeItem(AUTH_USER_KEY);
 }
 
-export function clearAuthAndRedirect(): void {
+export function clearAuthAndRedirect(reason?: "inactivity"): void {
   clearAuth();
-  window.location.href = "/login";
+  localStorage.removeItem("fildas_last_activity");
+  const url = reason === "inactivity" ? "/login?inactive=1" : "/login";
+  window.location.href = url;
 }
 
 /**
@@ -79,7 +81,7 @@ export async function logoutUser(reason: "manual" | "inactivity" = "manual"): Pr
   } catch (err) {
     console.error("Failed to notify backend of logout:", err);
   } finally {
-    clearAuthAndRedirect();
+    clearAuthAndRedirect(reason === "inactivity" ? "inactivity" : undefined);
   }
 }
 

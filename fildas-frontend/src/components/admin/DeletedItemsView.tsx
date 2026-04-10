@@ -25,9 +25,10 @@ import axios from "../../services/api";
 interface DeletedItemsViewProps {
   type: TrashType;
   onRestored?: () => void;
+  refreshTrigger?: number;
 }
 
-const DeletedItemsView: React.FC<DeletedItemsViewProps> = ({ type, onRestored }) => {
+const DeletedItemsView: React.FC<DeletedItemsViewProps> = ({ type, onRestored, refreshTrigger = 0 }) => {
   const [rows, setRows] = useState<TrashItem[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -88,7 +89,7 @@ const DeletedItemsView: React.FC<DeletedItemsViewProps> = ({ type, onRestored })
 
   useEffect(() => {
     load(true);
-  }, [type, searchDebounced]);
+  }, [type, searchDebounced, refreshTrigger]);
 
   const handleAction = async () => {
     if (!securityModal) return;

@@ -23,7 +23,7 @@ interface UserSession {
   is_current: boolean;
 }
 
-export const SessionManager: React.FC = () => {
+export const SessionManager: React.FC<{ refreshTrigger?: number }> = ({ refreshTrigger }) => {
   const { push } = useToast();
   const [sessions, setSessions] = useState<UserSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +43,7 @@ export const SessionManager: React.FC = () => {
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleRevoke = async (id: number) => {
     setRevokingId(id);

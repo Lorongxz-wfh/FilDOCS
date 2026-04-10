@@ -78,6 +78,7 @@ export function downloadBackup(
 // ── System Snapshots (Backups) ──────────────────────────────────────────────
 export type SystemBackupFile = {
   filename: string;
+  type: "db" | "doc" | "full";
   size: number;
   created_at: string;
 };
@@ -93,10 +94,29 @@ export async function getSystemBackups(): Promise<SystemBackupResponse> {
   return res.data as SystemBackupResponse;
 }
 
-export async function createSystemSnapshot(): Promise<SystemBackupFile> {
+export async function createSystemSnapshot(type: "db" | "doc" | "full" = "db"): Promise<SystemBackupFile> {
   const api = await getApi();
-  const res = await api.post("/admin/system/backups");
+  const res = await api.post("/admin/system/backups", { type });
   return res.data.backup as SystemBackupFile;
+}
+
+/**
+ * Triggers a Document ZIP generation and tells the system to save it 
+ * to the internal backup history instead of just downloading it.
+ */
+export async function saveToSystemBackup(
+  preset: BackupPreset,
+  dateFrom?: string,
+  dateTo?: string,
+): Promise<any> {
+  const api = await getApi();
+  const res = await api.get("/backup/documents-zip", {
+    params: {
+      ...buildParams(preset, dateFrom, dateTo),
+      save_to_system: true
+    }
+  });
+  return res.data;
 }
 
 export async function deleteSystemBackup(filename: string): Promise<void> {
@@ -133,6 +153,14 @@ export async function downloadSystemSnapshot(filename: string): Promise<void> {
 export async function restoreSystemSnapshot(filename: string): Promise<void> {
   const api = await getApi();
   await api.post(`/admin/system/backups/${filename}/restore`);
+}
+
+/**
+ * Restores object storage (Cloudflare R2) from a 'doc_snap' ZIP file.
+ */
+export async function restoreDocumentBackup(filename: string): Promise<void> {
+  const api = await getApi();
+  await api.post(`/admin/system/backups/${filename}/restore-documents`);
 }
 
 export async function uploadSystemSnapshot(file: File): Promise<void> {

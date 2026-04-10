@@ -118,12 +118,29 @@ class DocumentRequestFileController extends Controller
 
         /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
         $disk = Storage::disk();
-        if (!$disk->exists($row->example_preview_path)) {
-            return response()->json(['message' => 'Preview file not found on server.'], 404);
+        $path = $row->example_preview_path;
+
+        if (!$disk->exists($path)) {
+            // Path healing for legacy examples
+            $filename = basename($path);
+            $alternatives = [
+                "request_examples/" . $filename,
+                "previews/" . $filename,
+                "storage/previews/" . $filename,
+            ];
+            foreach ($alternatives as $alt) {
+                if ($disk->exists($alt)) {
+                    $path = $alt;
+                    break;
+                }
+            }
+            if (!$disk->exists($path)) {
+                return response()->json(['message' => 'Preview file not found on server.'], 404);
+            }
         }
 
-        $stream = $disk->readStream($row->example_preview_path);
-        $mime = $disk->mimeType($row->example_preview_path) ?: 'application/pdf';
+        $stream = $disk->readStream($path);
+        $mime = $disk->mimeType($path) ?: 'application/pdf';
 
         return response()->stream(function () use ($stream) {
             fpassthru($stream);
@@ -184,13 +201,28 @@ class DocumentRequestFileController extends Controller
 
         /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
         $disk = Storage::disk();
-        if (!$disk->exists($row->example_file_path)) {
-            return response()->json(['message' => 'File not found on server.'], 404);
+        $path = $row->example_file_path;
+
+        if (!$disk->exists($path)) {
+            // Path healing
+            $filename = basename($path);
+            $alternatives = [
+                "request_examples/" . $filename,
+            ];
+            foreach ($alternatives as $alt) {
+                if ($disk->exists($alt)) {
+                    $path = $alt;
+                    break;
+                }
+            }
+            if (!$disk->exists($path)) {
+                return response()->json(['message' => 'File not found on server.'], 404);
+            }
         }
 
         $downloadName = $row->example_original_filename ?? 'document_request_example';
 
-        return $disk->download($row->example_file_path, $downloadName);
+        return $disk->download($path, $downloadName);
     }
 
     // ---------- Submission file: preview-link ----------

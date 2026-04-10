@@ -53,8 +53,8 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
           type="button"
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
           className={`sm:hidden flex items-center gap-2 px-3 h-9 rounded-lg border transition-all ${isFiltersOpen || activeFiltersCount > 0
-              ? "bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400 shadow-xs"
-              : "bg-white border-slate-200 text-slate-600 dark:bg-surface-500 dark:border-surface-400 dark:text-slate-400"
+            ? "bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400 shadow-xs"
+            : "bg-white border-slate-200 text-slate-600 dark:bg-surface-500 dark:border-surface-400 dark:text-slate-400"
             }`}
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -66,14 +66,14 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
           )}
         </button>
 
-        {/* Desktop Filters Slot */}
-        <div className="hidden sm:flex items-center gap-2 flex-1">
+        {/* Desktop Filters Slot - Right Aligned */}
+        <div className="hidden sm:flex items-center gap-2 ml-auto justify-end">
           {children}
-          {onClear && (
+          {onClear && (activeFiltersCount > 0 || search) && (
             <button
               type="button"
               onClick={onClear}
-              className="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition"
+              className="px-3 py-1.5 text-xs font-semibold text-brand-600 hover:text-brand-800 dark:text-brand-400 dark:hover:text-brand-300 transition-colors animate-in fade-in slide-in-from-right-1 duration-200"
             >
               Clear
             </button>

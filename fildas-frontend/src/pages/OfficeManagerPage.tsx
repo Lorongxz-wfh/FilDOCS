@@ -42,6 +42,7 @@ export function OfficeManagerPage() {
 
   const _oc = pageCache.get<AdminOffice>("offices", '{"q":"","status":"active","type":""}', 10 * 60_000);
   const [items, setItems] = useState<AdminOffice[]>(_oc?.rows ?? []);
+  const [trashRefreshTrigger, setTrashRefreshTrigger] = useState(0);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(_oc?.hasMore ?? true);
   const [loading, setLoading] = useState(false);
@@ -100,6 +101,12 @@ export function OfficeManagerPage() {
   const { refresh, isRefreshing } = useSmartRefresh(async () => {
     const prevItems = [...items];
     const data = await load(1, true);
+    
+    // If on deleted tab, trigger its child refresh
+    if (activeTab === "deleted") {
+      setTrashRefreshTrigger(prev => prev + 1);
+    }
+
     if (!data) return { changed: false };
     const changed = JSON.stringify(data) !== JSON.stringify(prevItems.slice(0, data.length));
     return { changed };
@@ -264,94 +271,98 @@ export function OfficeManagerPage() {
 
       {activeTab === "deleted" ? (
         <div className="flex-1 min-h-0">
-          <DeletedItemsView type="offices" onRestored={() => setActiveTab("active")} />
+          <DeletedItemsView 
+            type="offices" 
+            onRestored={() => setActiveTab("active")} 
+            refreshTrigger={trashRefreshTrigger}
+          />
         </div>
       ) : (
         <>
           <SearchFilterBar
-        search={q}
-        setSearch={(val) => { setQ(val); setPage(1); }}
-        placeholder="Search name or code…"
-        activeFiltersCount={activeFiltersCount}
-        onClear={clearFilters}
-        mobileFilters={
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Status</label>
-              <SelectDropdown
-                value={statusFilter}
-                onChange={(val) => setStatusFilter((val as any) || "active")}
-                className="w-full"
-                options={[{ value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }, { value: "all", label: "All" }]}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
-              <SelectDropdown
-                value={typeFilter}
-                onChange={(val) => setTypeFilter((val as string) || "")}
-                className="w-full"
-                options={[{ value: "", label: "All types" }, ...OFFICE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))]}
-              />
-            </div>
+            search={q}
+            setSearch={(val) => { setQ(val); setPage(1); }}
+            placeholder="Search name or code…"
+            activeFiltersCount={activeFiltersCount}
+            onClear={clearFilters}
+            mobileFilters={
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Status</label>
+                  <SelectDropdown
+                    value={statusFilter}
+                    onChange={(val) => setStatusFilter((val as any) || "active")}
+                    className="w-full"
+                    options={[{ value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }, { value: "all", label: "All" }]}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
+                  <SelectDropdown
+                    value={typeFilter}
+                    onChange={(val) => setTypeFilter((val as string) || "")}
+                    className="w-full"
+                    options={[{ value: "", label: "All types" }, ...OFFICE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))]}
+                  />
+                </div>
+              </div>
+            }
+          >
+            <SelectDropdown
+              value={statusFilter}
+              onChange={(val) => setStatusFilter((val as any) || "active")}
+              className="w-28"
+              options={[{ value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }, { value: "all", label: "All" }]}
+            />
+            <SelectDropdown
+              value={typeFilter}
+              onChange={(val) => setTypeFilter((val as string) || "")}
+              className="w-32"
+              options={[{ value: "", label: "All types" }, ...OFFICE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))]}
+            />
+          </SearchFilterBar>
+
+          {error && <Alert variant="danger">{error}</Alert>}
+
+          <div className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
+            <Table<AdminOffice>
+              bare
+              className="h-full"
+              columns={columns}
+              rows={items}
+              rowKey={(o) => o.id}
+              onRowClick={openEdit}
+              loading={loading}
+              initialLoading={initialLoading}
+              emptyMessage={q || statusFilter !== "active" || typeFilter ? "No offices match your filters." : "No offices found."}
+              hasMore={hasMore}
+              onLoadMore={() => setPage((p) => p + 1)}
+              gridTemplateColumns="minmax(80px, 6rem) minmax(140px, 1.2fr) minmax(140px, 1.2fr) 8rem 7rem 8rem"
+              sortBy={sortBy}
+              sortDir={sortDir}
+              onSortChange={(key, dir) => { setSortBy(key as typeof sortBy); setSortDir(dir); }}
+              selectable={isSelectMode}
+              selectedIds={selectedIds}
+              onToggleRow={toggleRow}
+              onToggleAll={toggleAll}
+            />
           </div>
-        }
-      >
-        <SelectDropdown
-          value={statusFilter}
-          onChange={(val) => setStatusFilter((val as any) || "active")}
-          className="w-28"
-          options={[{ value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }, { value: "all", label: "All" }]}
-        />
-        <SelectDropdown
-          value={typeFilter}
-          onChange={(val) => setTypeFilter((val as string) || "")}
-          className="w-32"
-          options={[{ value: "", label: "All types" }, ...OFFICE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))]}
-        />
-      </SearchFilterBar>
 
-      {error && <Alert variant="danger">{error}</Alert>}
-
-      <div className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
-        <Table<AdminOffice>
-          bare
-          className="h-full"
-          columns={columns}
-          rows={items}
-          rowKey={(o) => o.id}
-          onRowClick={openEdit}
-          loading={loading}
-          initialLoading={initialLoading}
-          emptyMessage={q || statusFilter !== "active" || typeFilter ? "No offices match your filters." : "No offices found."}
-          hasMore={hasMore}
-          onLoadMore={() => setPage((p) => p + 1)}
-          gridTemplateColumns="minmax(80px, 6rem) minmax(140px, 1.2fr) minmax(140px, 1.2fr) 8rem 7rem 8rem"
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSortChange={(key, dir) => { setSortBy(key as typeof sortBy); setSortDir(dir); }}
-          selectable={isSelectMode}
-          selectedIds={selectedIds}
-          onToggleRow={toggleRow}
-          onToggleAll={toggleAll}
-        />
-      </div>
-
-      <BulkActionBar 
-        selectedCount={selectionCount}
-        onClear={clearSelection}
-        actions={[
-          {
-            label: "Delete",
-            icon: <Trash2 size={14} />,
-            onClick: handleBulkDelete,
-            variant: "danger",
-            count: selectionCount,
-            loading: isBulkProcessing
-          }
-        ]}
-      />
-      </>
+          <BulkActionBar
+            selectedCount={selectionCount}
+            onClear={clearSelection}
+            actions={[
+              {
+                label: "Delete",
+                icon: <Trash2 size={14} />,
+                onClick: handleBulkDelete,
+                variant: "danger",
+                count: selectionCount,
+                loading: isBulkProcessing
+              }
+            ]}
+          />
+        </>
       )}
 
       <OfficeEditModal

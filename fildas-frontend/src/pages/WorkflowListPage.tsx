@@ -138,7 +138,7 @@ export default function WorkflowListPage() {
   };
 
   useEffect(() => {
-    listOffices().then(setAllOffices).catch(() => {});
+    listOffices().then(setAllOffices).catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -150,7 +150,7 @@ export default function WorkflowListPage() {
 
   const loadData = useCallback(async (isNextPage = false, silent = false) => {
     const targetPage = isNextPage ? page + 1 : 1;
-    
+
     // If we're resetting to page 1, clear state
     if (!isNextPage && !silent) {
       setInitialLoading(true);
@@ -218,6 +218,8 @@ export default function WorkflowListPage() {
     let count = 0;
     if (phaseFilter) count++;
     if (officeFilter) count++;
+    if (dateFrom) count++;
+    if (dateTo) count++;
     return count;
   }, [phaseFilter, officeFilter, dateFrom, dateTo]);
 
@@ -319,19 +321,19 @@ export default function WorkflowListPage() {
     const isDistributed = tab === "distributed";
     // Base columns: ID, Activity/Dist, Name, Code
     let parts = ["50px", isDistributed ? "120px" : "110px", "minmax(200px, 1fr)", "100px"];
-    
+
     // Status column (only if not distributed)
     if (!isDistributed) parts.push("140px");
-    
+
     // Office column (if shown)
     if (showOffice) parts.push(isDistributed ? "110px" : "80px");
-    
+
     // Version and Created
     parts.push("40px", "110px");
-    
+
     // Debug actions
     if (adminDebugMode) parts.push("40px");
-    
+
     return parts.join(" ");
   }, [tab, showOffice, adminDebugMode]);
 

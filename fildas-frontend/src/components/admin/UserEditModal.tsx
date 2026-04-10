@@ -26,8 +26,9 @@ import { inputCls, labelCls } from "../../utils/formStyles";
 const apiMsg = (e: any, fallback: string) =>
   e?.response?.data?.message ?? e?.message ?? fallback;
 import { getAuthUser, AUTH_USER_KEY } from "../../lib/auth";
-import { User as UserIcon, ShieldOff } from "lucide-react";
+import { User as UserIcon, ShieldOff, AlertCircle, KeyRound } from "lucide-react";
 import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
+import { PasswordRequirements, validatePassword } from "../../components/auth/PasswordRequirements";
 
 type Props = {
   open: boolean;
@@ -64,6 +65,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
   const [officeId, setOfficeId] = useState<number | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
+  const [manualPassword, setManualPassword] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -79,6 +81,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
       setRoleId(null);
       setOfficeId(null);
       setPendingPhotoFile(null);
+      setManualPassword("");
       return;
     }
 
@@ -89,6 +92,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
     setEmail(user?.email ?? "");
     setRoleId(user?.role_id ?? null);
     setOfficeId(user?.office_id ?? null);
+    setManualPassword("");
   }, [open, user, mode]);
 
   useEffect(() => {
@@ -337,6 +341,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
           email: email.trim(),
           role_id: roleId,
           office_id: effectiveOfficeId,
+          password: manualPassword.trim() || undefined,
         });
         // Upload photo if one was selected
         let savedUser = res.user;
@@ -365,6 +370,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
         email: email.trim() || null,
         role_id: roleId,
         office_id: effectiveOfficeId,
+        password: manualPassword.trim() || undefined,
       });
       syncIfSelf(res.user);
       onSaved?.(res.user);
@@ -599,9 +605,59 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
 
       {/* Password info — create only */}
       {mode === "create" && (
-        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-surface-600 rounded-md px-3 py-2 border border-slate-200 dark:border-surface-400">
-          A temporary password will be generated and emailed to the user.
-        </p>
+        <div className="mt-3 space-y-3">
+          <div className="flex items-center gap-2 p-2 rounded-md bg-sky-50 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/30">
+            <AlertCircle className="h-4 w-4 text-sky-500" />
+            <p className="text-[11px] text-sky-700 dark:text-sky-400">
+              A temporary password will be emailed, but you can also set an initial one manually below.
+            </p>
+          </div>
+          
+          <div className="space-y-1.5">
+            <label className={labelCls}>Manual Initial Password (Optional)</label>
+            <input 
+              type="password" 
+              className={inputCls} 
+              placeholder="Leave blank for auto-generated"
+              value={manualPassword}
+              onChange={e => setManualPassword(e.target.value)}
+            />
+          </div>
+
+          {manualPassword && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+               <PasswordRequirements password={manualPassword} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Manual Password Reset — edit only */}
+      {mode === "edit" && !isDeleted && (
+        <div className="mt-6 pt-5 border-t border-slate-100 dark:border-surface-400">
+          <div className="flex items-center gap-2 mb-3">
+            <KeyRound className="h-4 w-4 text-slate-400" />
+            <h5 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Manual Password Reset</h5>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-3">
+            <div className="space-y-1.5">
+              <label className={labelCls}>New Password</label>
+              <input 
+                type="password" 
+                className={inputCls} 
+                placeholder="Enter to force a reset" 
+                value={manualPassword}
+                onChange={e => setManualPassword(e.target.value)}
+              />
+            </div>
+            {manualPassword && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                <PasswordRequirements password={manualPassword} />
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Role + Office */}
@@ -730,7 +786,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
             variant="primary"
             size="sm"
             onClick={handleSave}
-            disabled={!canSave || saving || acting !== null || isDeleted}
+            disabled={!canSave || saving || acting !== null || isDeleted || (manualPassword.length > 0 && !validatePassword(manualPassword))}
           >
             {saving ? (
               <span className="inline-flex items-center gap-2">

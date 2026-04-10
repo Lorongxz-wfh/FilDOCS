@@ -1,5 +1,5 @@
 // import React from "react";
-import { RefreshCw, Download, Maximize2 } from "lucide-react";
+import { Download, Maximize2 } from "lucide-react";
 
 type Props = {
   url: string;
@@ -9,7 +9,6 @@ type Props = {
   emptyLabel?: string;
   onViewModal?: () => void;
   onDownload?: () => void;
-  onRefresh?: () => void;
 };
 
 export default function RequestPreviewBox({
@@ -20,10 +19,9 @@ export default function RequestPreviewBox({
   emptyLabel,
   onViewModal,
   onDownload,
-  onRefresh,
 }: Props) {
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500">
       <div className="shrink-0 flex items-center justify-between border-b border-slate-100 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 pl-4 pr-2 py-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 shrink-0 uppercase tracking-wide">
@@ -36,16 +34,6 @@ export default function RequestPreviewBox({
           )}
         </div>
         <div className="flex items-center gap-0.5">
-          {onRefresh && (
-            <button
-              onClick={onRefresh}
-              disabled={loading}
-              title="Refresh preview"
-              className="p-1.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-surface-500 transition-colors disabled:opacity-30"
-            >
-              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
-            </button>
-          )}
           {onDownload && (
             <button
               onClick={onDownload}

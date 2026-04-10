@@ -5,6 +5,7 @@ import { Sun, Moon, Lock, CheckCircle2, ArrowLeft, AlertCircle } from "lucide-re
 import { useTheme } from "../hooks/useTheme";
 import FormField from "../components/ui/FormField";
 import api from "../services/api";
+import { PasswordRequirements, validatePassword } from "../components/auth/PasswordRequirements";
 
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -20,9 +21,9 @@ const ResetPasswordPage: React.FC = () => {
   const [countdown, setCountdown] = useState(4);
   const { theme, toggle: toggleDark } = useTheme();
 
-  const passwordTooShort = password.length > 0 && password.length < 8;
+  const passwordValid = validatePassword(password);
   const passwordsMatch =
-    password.length >= 8 &&
+    passwordValid &&
     passwordConfirmation.length > 0 &&
     password === passwordConfirmation;
   const passwordsMismatch =
@@ -42,7 +43,7 @@ const ResetPasswordPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordTooShort || passwordsMismatch) return;
+    if (!passwordValid || passwordsMismatch) return;
     setError(null);
     setLoading(true);
     try {
@@ -165,10 +166,16 @@ const ResetPasswordPage: React.FC = () => {
                   required
                   isRequired
                   icon={Lock}
-                  hint="Must be at least 8 characters."
-                  error={passwordTooShort ? "Password must be at least 8 characters." : undefined}
-                  isValid={password.length >= 8}
+                  hint="Password requires uppercase, numbers, and symbols."
+                  error={password.length > 0 && !passwordValid ? "Please meet all complexity requirements." : undefined}
+                  isValid={passwordValid}
                 />
+
+                {password && (
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                    <PasswordRequirements password={password} />
+                  </div>
+                )}
 
                 <FormField
                   label="Confirm Password"
@@ -191,7 +198,7 @@ const ResetPasswordPage: React.FC = () => {
 
                 <button
                   type="submit"
-                  disabled={loading || passwordTooShort || passwordsMismatch || !password || !passwordConfirmation}
+                  disabled={loading || !passwordValid || passwordsMismatch || !password || !passwordConfirmation}
                   className="w-full py-2.5 rounded-md bg-brand-400 hover:bg-brand-500 dark:bg-brand-300 dark:hover:bg-brand-400 text-sm font-semibold text-white transition disabled:opacity-50"
                 >
                   {loading ? "Resetting..." : "Reset Password"}

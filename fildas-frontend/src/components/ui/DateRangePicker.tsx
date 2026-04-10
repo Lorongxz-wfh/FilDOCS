@@ -8,10 +8,12 @@ import {
   startOfWeek, 
   endOfWeek, 
   isSameMonth, 
+  isToday,
   addDays, 
   isWithinInterval,
   subDays,
-  subYears
+  subYears,
+  startOfDay
 } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -67,10 +69,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  const handlePreset = (type: "week" | "month" | "year") => {
-    const end = new Date();
+  const handlePreset = (type: "today" | "week" | "month" | "year") => {
+    const end = startOfDay(new Date());
     let start: Date;
-    if (type === "week") start = subDays(end, 7);
+    if (type === "today") start = end;
+    else if (type === "week") start = subDays(end, 7);
     else if (type === "month") start = subMonths(end, 1);
     else start = subYears(end, 1);
 
@@ -156,6 +159,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         const disabled = !isSameMonth(currentDaySelection, monthStart);
         const selected = isSelected(currentDaySelection);
         const inRange = isInRange(currentDaySelection);
+        const today = isToday(currentDaySelection);
 
         days.push(
           <div
@@ -172,10 +176,15 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
               selected 
                 ? "bg-brand-500 text-white shadow-sm ring-2 ring-brand-500/20" 
                 : inRange 
-                  ? "text-brand-600 dark:text-brand-400" 
-                  : "text-slate-600 dark:text-slate-300 group-hover:bg-slate-100 dark:group-hover:bg-surface-400"
+                  ? "text-brand-600 dark:text-brand-400 font-bold" 
+                  : today
+                    ? "text-brand-500 ring-1 ring-brand-500/50"
+                    : "text-slate-600 dark:text-slate-300 group-hover:bg-slate-100 dark:group-hover:bg-surface-400"
             }`}>
               {format(currentDaySelection, "d")}
+              {today && !selected && !inRange && (
+                <div className="absolute top-1 right-1 w-1 h-1 bg-brand-500 rounded-full" />
+              )}
             </span>
           </div>
         );
@@ -219,14 +228,14 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           >
             <div className="w-full sm:w-36 bg-slate-50 dark:bg-surface-500/30 border-b sm:border-b-0 sm:border-r border-slate-100 dark:border-surface-400/30 p-3 space-y-1.5 flex flex-row sm:flex-col items-center sm:items-stretch overflow-x-auto whitespace-nowrap scrollbar-none">
               <span className="hidden sm:block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2 px-2">Presets</span>
-              {["week", "month", "year"].map((p) => (
+              {["today", "week", "month", "year"].map((p) => (
                 <button
                   key={p}
                   onClick={() => handlePreset(p as any)}
                   className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-surface-400 rounded-lg transition-all border border-transparent hover:border-slate-200 dark:hover:border-surface-400"
                 >
                   <Clock size={12} className="opacity-50" />
-                  Last {p}
+                  {p === "today" ? "Today" : `Last ${p}`}
                 </button>
               ))}
             </div>

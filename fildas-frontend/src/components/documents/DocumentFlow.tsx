@@ -47,6 +47,7 @@ interface DocumentFlowProps {
   onAfterActionClose?: () => void;
   onRightPanelContent?: (content: React.ReactNode) => void;
   adminDebugMode?: boolean;
+  refreshTrigger?: number;
 }
 
 const DocumentFlow: React.FC<DocumentFlowProps> = ({
@@ -62,6 +63,7 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
   onAfterActionClose,
   onRightPanelContent,
   adminDebugMode = false,
+  refreshTrigger = 0,
 }) => {
   const { push } = useToast();
   const me = React.useMemo(() => getAuthUser(), []);
@@ -73,9 +75,14 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
     version,
     onChanged,
     onAfterActionClose,
-    onBrowseTemplates: () => setTemplatesPanelOpen(true),
     adminDebugMode,
   });
+
+  React.useEffect(() => {
+    if (refreshTrigger > 0) {
+      actions.syncAll();
+    }
+  }, [refreshTrigger, actions]);
 
   // ── Sync Header State to Parent ───────────────────────────
   const onHeaderStateChangeRef = React.useRef(onHeaderStateChange);
@@ -331,6 +338,7 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
                 if (!state.canAct) return;
                 actions.fileUpload.triggerFilePicker();
               }}
+              onClickTemplates={() => setTemplatesPanelOpen(true)}
               onReloadPreview={async () => {
                 // This logic is mostly handled in hook useEffect, but we can trigger a refresh via actions if needed
                 invalidatePreviewCache(state.localVersion!.id);

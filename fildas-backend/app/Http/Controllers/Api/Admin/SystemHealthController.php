@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SystemStatus;
 use App\Models\User;
+use App\Models\Notification;
 use App\Mail\SystemHealthAlertMail;
 use App\Mail\SystemTestMail;
 use Illuminate\Http\Request;
@@ -147,6 +148,10 @@ class SystemHealthController extends Controller
             'Message' => $validated['message'] ?? 'N/A'
         ]);
 
+        if ($validated['mode'] !== 'off') {
+            $this->notifyAllUsers('Maintenance Mode Enabled', $validated['message'] ?? 'The system is currently undergoing maintenance.');
+        }
+
         return response()->json([
             'message' => 'Maintenance status updated.',
             'status' => $status
@@ -188,6 +193,8 @@ class SystemHealthController extends Controller
             $startsAt->toIso8601String(),
             $status->maintenance_message
         ));
+
+        $this->notifyAllUsers('Maintenance Scheduled', "Maintenance is scheduled at: " . $startsAt->toDateTimeString() . ". " . ($validated['message'] ?? ''));
 
         return response()->json([
             'message' => "Maintenance scheduled in {$validated['minutes']} minutes.",
@@ -418,5 +425,32 @@ class SystemHealthController extends Controller
                 'starts_at' => ($status && $status->maintenance_starts_at) ? $status->maintenance_starts_at->toIso8601String() : null,
             ]
         ]);
+    }
+
+    private function notifyAllUsers(string $title, string $body)
+    {
+        $users = User::whereNull('deleted_at')->whereNull('disabled_at')->pluck('id');
+        $now = now();
+        $chunk = [];
+        foreach ($users as $userId) {
+            $chunk[] = [
+                'user_id' => $userId,
+                'event' => 'system.maintenance',
+                'title' => $title,
+                'body' => $body,
+                'meta' => json_encode(['type' => 'system_alert']),
+                'read_at' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+
+            if (count($chunk) >= 500) {
+                Notification::insert($chunk);
+                $chunk = [];
+            }
+        }
+        if (count($chunk) > 0) {
+            Notification::insert($chunk);
+        }
     }
 }

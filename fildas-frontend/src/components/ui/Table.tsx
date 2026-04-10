@@ -223,7 +223,7 @@ export default function Table<T>({
                   type="button"
                   onClick={() => onSortChange!(c.sortKey!, nextDir)}
                   className={[
-                    "flex items-center gap-1 transition-colors select-none",
+                    "flex w-full items-center gap-1 transition-colors select-none",
                     alignHeaderClass(c.align),
                     c.headerClassName ?? "",
                     isActive
@@ -241,7 +241,7 @@ export default function Table<T>({
               <div
                 key={c.key}
                 className={[
-                  "flex items-center",
+                  "flex w-full items-center min-w-0 overflow-hidden",
                   alignHeaderClass(c.align),
                   c.headerClassName ?? "",
                 ].join(" ")}
@@ -447,9 +447,11 @@ export default function Table<T>({
                   {columns.map((c) => (
                     <div
                       key={c.key}
-                      className={[alignClass(c.align), c.className ?? ""].join(
-                        " ",
-                      )}
+                      className={[
+                        "min-w-0 overflow-hidden",
+                        alignClass(c.align), 
+                        c.className ?? ""
+                      ].join(" ")}
                     >
                       {c.render(row)}
                     </div>
@@ -483,7 +485,7 @@ export default function Table<T>({
         className={["flex flex-col min-h-0 h-full", className ?? ""].join(" ")}
       >
         <div className="flex-1 overflow-x-auto">
-          <div className="min-w-max flex flex-col min-h-0 h-full">{inner}</div>
+          <div className="w-full flex flex-col min-h-0 h-full">{inner}</div>
         </div>
       </div>
     );
@@ -497,7 +499,7 @@ export default function Table<T>({
       ].join(" ")}
     >
       <div className="flex-1 overflow-x-auto">
-        <div className="min-w-max flex flex-col min-h-0 h-full">{inner}</div>
+        <div className="w-full flex flex-col min-h-0 h-full">{inner}</div>
       </div>
     </div>
   );

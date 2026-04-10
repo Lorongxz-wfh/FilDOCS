@@ -378,8 +378,8 @@ export default function DocumentRequestListPage() {
         skeletonShape: "narrow",
         render: (row) => (
           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${row.direction === 'outgoing'
-              ? "bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400"
-              : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+            ? "bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400"
+            : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
             }`}>
             {row.direction || 'outgoing'}
           </span>
@@ -517,8 +517,8 @@ export default function DocumentRequestListPage() {
         skeletonShape: "narrow",
         render: (r) => (
           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${r.direction === 'outgoing'
-              ? "bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400"
-              : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+            ? "bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400"
+            : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
             }`}>
             {r.direction || 'outgoing'}
           </span>
@@ -735,18 +735,18 @@ export default function DocumentRequestListPage() {
                       options={
                         tab === "batches"
                           ? [
-                              { value: "", label: "All statuses" },
-                              { value: "open", label: "Open" },
-                              { value: "closed", label: "Closed" },
-                              { value: "cancelled", label: "Cancelled" },
-                            ].sort((a, b) => a.label === "All statuses" ? -1 : b.label === "All statuses" ? 1 : a.label.localeCompare(b.label))
+                            { value: "", label: "All statuses" },
+                            { value: "open", label: "Open" },
+                            { value: "closed", label: "Closed" },
+                            { value: "cancelled", label: "Cancelled" },
+                          ].sort((a, b) => a.label === "All statuses" ? -1 : b.label === "All statuses" ? 1 : a.label.localeCompare(b.label))
                           : [
-                              { value: "", label: "All statuses" },
-                              { value: "pending", label: "Pending" },
-                              { value: "submitted", label: "Submitted" },
-                              { value: "accepted", label: "Accepted" },
-                              { value: "rejected", label: "Rejected" },
-                            ].sort((a, b) => a.label === "All statuses" ? -1 : b.label === "All statuses" ? 1 : a.label.localeCompare(b.label))
+                            { value: "", label: "All statuses" },
+                            { value: "pending", label: "Pending" },
+                            { value: "submitted", label: "Submitted" },
+                            { value: "accepted", label: "Accepted" },
+                            { value: "rejected", label: "Rejected" },
+                          ].sort((a, b) => a.label === "All statuses" ? -1 : b.label === "All statuses" ? 1 : a.label.localeCompare(b.label))
                       }
                     />
                   </div>
@@ -797,18 +797,18 @@ export default function DocumentRequestListPage() {
               options={
                 tab === "batches"
                   ? [
-                      { value: "", label: "All Status" },
-                      { value: "open", label: "Open" },
-                      { value: "closed", label: "Closed" },
-                      { value: "cancelled", label: "Cancelled" },
-                    ].sort((a, b) => a.label === "All Status" ? -1 : b.label === "All Status" ? 1 : a.label.localeCompare(b.label))
+                    { value: "", label: "All Status" },
+                    { value: "open", label: "Open" },
+                    { value: "closed", label: "Closed" },
+                    { value: "cancelled", label: "Cancelled" },
+                  ].sort((a, b) => a.label === "All Status" ? -1 : b.label === "All Status" ? 1 : a.label.localeCompare(b.label))
                   : [
-                      { value: "", label: "All Status" },
-                      { value: "pending", label: "Pending" },
-                      { value: "submitted", label: "Submitted" },
-                      { value: "accepted", label: "Accepted" },
-                      { value: "rejected", label: "Rejected" },
-                    ].sort((a, b) => a.label === "All Status" ? -1 : b.label === "All Status" ? 1 : a.label.localeCompare(b.label))
+                    { value: "", label: "All Status" },
+                    { value: "pending", label: "Pending" },
+                    { value: "submitted", label: "Submitted" },
+                    { value: "accepted", label: "Accepted" },
+                    { value: "rejected", label: "Rejected" },
+                  ].sort((a, b) => a.label === "All Status" ? -1 : b.label === "All Status" ? 1 : a.label.localeCompare(b.label))
               }
             />
           </SearchFilterBar>

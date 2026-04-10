@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
 
@@ -126,147 +127,45 @@ class BackupController extends Controller
 
     // ─── Documents ZIP ────────────────────────────────────────────────────────
 
-    public function documentsZip(Request $request): StreamedResponse
+    public function documentsZip(Request $request, \App\Services\SystemBackupService $service)
     {
         $this->checkBackupAccess($request);
         [$from, $to] = $this->dateRange($request);
         $suffix = $this->dateSuffix($request);
-
-        $query = DocumentVersion::query()
-            ->whereNotNull('file_path')
-            ->where('file_path', '!=', '')
-            ->with(['document:id,title,code,owner_office_id', 'document.ownerOffice:id,code']);
-
-        if ($from) $query->where('document_versions.created_at', '>=', "{$from} 00:00:00");
-        if ($to)   $query->where('document_versions.created_at', '<=', "{$to} 23:59:59");
-
-        set_time_limit(0); // Prevent timeout for large backups
-
-        if (!class_exists('ZipArchive')) {
-            abort(500, 'PHP Zip extension is not installed. Please contact administrator.');
-        }
+        $saveToSystem = filter_var($request->query('save_to_system', false), FILTER_VALIDATE_BOOLEAN);
 
         $filename = "fildas-documents-{$suffix}.zip";
 
-        // Use system temp directory for maximum cross-platform compatibility
-        $tempPath = tempnam(sys_get_temp_dir(), 'fildas_backup_') . '.zip';
-        \Log::info("Starting Document ZIP generation", ['temp' => $tempPath]);
-
         try {
-            $zip = new ZipArchive();
-            $res = $zip->open($tempPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-            
-            if ($res !== true) {
-                $errMsg = "ZipArchive::open failed with code: " . $res;
-                \Log::error($errMsg, ['path' => $tempPath]);
-                abort(500, $errMsg);
-            }
+            $tempPath = $service->generateDocumentZip($from, $to);
+            \Log::info("Document ZIP generated via Service", ['temp' => $tempPath]);
 
-            $filesAdded = 0;
+            if ($saveToSystem) {
+                $backupPath = "backups/{$filename}";
+                Storage::disk()->put($backupPath, file_get_contents($tempPath));
+                @unlink($tempPath);
 
-            // 1. Regular Documents
-            $query->orderBy('document_versions.created_at', 'desc')
-                ->chunk(100, function ($versions) use ($zip, &$filesAdded) {
-                    foreach ($versions as $v) {
-                        $found = $this->findFileAcrossDisks($v->file_path);
-                        
-                        if (!$found) {
-                            // Resilient Fallback: maybe it's renamed to "original.ext" in the same folder?
-                            $dir = dirname($v->file_path);
-                            $ext = pathinfo($v->file_path, PATHINFO_EXTENSION);
-                            $fallback = "{$dir}/original.{$ext}";
-                            $found = $this->findFileAcrossDisks($fallback);
-                        }
-
-                        if (!$found) {
-                            \Log::warning("Backup ZIP: Document file not found in any disk", ['id' => $v->id, 'path' => $v->file_path]);
-                            continue;
-                        }
-
-                        $officeCode = $v->document?->ownerOffice?->code ?? 'Unknown';
-                        $docCode    = $v->document?->code ?? "doc-{$v->document_id}";
-                        $vNum       = $v->version_number;
-                        $ext        = pathinfo($v->original_filename ?? $v->file_path, PATHINFO_EXTENSION) ?: 'pdf';
-                        $date       = $v->created_at?->format('Y-m-d') ?? 'Unknown Date';
-
-                        $entryName = "{$officeCode}/Created Documents/{$date}/{$docCode}_v{$vNum}.{$ext}";
-                        $zip->addFile($found['abs_path'], $entryName);
-                        $filesAdded++;
-                    }
-                });
-
-            // 2. Document Request Files
-            $reqQuery = \App\Models\DocumentRequestSubmissionFile::query()
-                ->whereNotNull('file_path')
-                ->where('file_path', '!=', '')
-                ->with([
-                    'submission.recipient.office:id,code',
-                    'submission.recipient.request:id,title',
-                    'submission.item:id,title'
+                return response()->json([
+                    'message'  => 'Document backup saved to system list.',
+                    'filename' => $filename
                 ]);
-
-            if ($from) $reqQuery->where('document_request_submission_files.created_at', '>=', "{$from} 00:00:00");
-            if ($to)   $reqQuery->where('document_request_submission_files.created_at', '<=', "{$to} 23:59:59");
-
-            $reqQuery->orderBy('document_request_submission_files.created_at', 'desc')
-                ->chunk(100, function ($files) use ($zip, &$filesAdded) {
-                    foreach ($files as $f) {
-                        $found = $this->findFileAcrossDisks($f->file_path);
-
-                        if (!$found) {
-                            $dir = dirname($f->file_path);
-                            $ext = pathinfo($f->file_path, PATHINFO_EXTENSION);
-                            $fallback = "{$dir}/original.{$ext}";
-                            $found = $this->findFileAcrossDisks($fallback);
-                        }
-
-                        if (!$found) {
-                            \Log::warning("Backup ZIP: Request file not found in any disk", ['id' => $f->id, 'path' => $f->file_path]);
-                            continue;
-                        }
-
-                        $officeCode = $f->submission?->recipient?->office?->code ?? 'Unknown';
-                        $date       = $f->created_at?->format('Y-m-d') ?? 'Unknown Date';
-
-                        // Sanitize titles for filesystem safety
-                        $safeReqTitle  = preg_replace('/[^A-Za-z0-9_\- ]/', '', $f->submission?->recipient?->request?->title ?? "Req-{$f->submission_id}");
-                        $safeItemTitle = preg_replace('/[^A-Za-z0-9_\- ]/', '', $f->submission?->item?->title ?? "Item-{$f->id}");
-                        $safeReqTitle  = substr(trim($safeReqTitle), 0, 50);
-                        $safeItemTitle = substr(trim($safeItemTitle), 0, 50);
-                        
-                        $ext      = pathinfo($f->original_filename ?? $f->file_path, PATHINFO_EXTENSION) ?: 'pdf';
-                        $fileName = "{$safeReqTitle} - {$safeItemTitle}.{$ext}";
-
-                        $entryName = "{$officeCode}/Document Requests/{$date}/{$fileName}";
-                        $zip->addFile($found['abs_path'], $entryName);
-                        $filesAdded++;
-                    }
-                });
-
-            if ($filesAdded === 0) {
-                $zip->addFromString('readme.txt', 'No document files found in the specified range across local or public storage.');
             }
 
-            $zip->close();
-            \Log::info("Document ZIP completed", ['files' => $filesAdded]);
+            return response()->streamDownload(function () use ($tempPath) {
+                if (file_exists($tempPath)) {
+                    readfile($tempPath);
+                    @unlink($tempPath);
+                }
+            }, $filename, [
+                'Content-Type' => 'application/zip',
+            ]);
+
         } catch (\Throwable $e) {
             \Log::error("Backup ZIP failed: 500", [
                 'message' => $e->getMessage(),
-                'line'    => $e->getLine(),
-                'file'    => basename($e->getFile()),
             ]);
-            @unlink($tempPath);
             abort(500, "Backup ZIP failed: " . $e->getMessage());
         }
-
-        return response()->streamDownload(function () use ($tempPath) {
-            if (file_exists($tempPath)) {
-                readfile($tempPath);
-                @unlink($tempPath);
-            }
-        }, $filename, [
-            'Content-Type' => 'application/zip',
-        ]);
     }
 
     // ─── Activity Logs CSV ────────────────────────────────────────────────────
@@ -406,9 +305,19 @@ class BackupController extends Controller
         if ($from) $versionQuery->where('created_at', '>=', "{$from} 00:00:00");
         if ($to)   $versionQuery->where('created_at', '<=', "{$to} 23:59:59");
         
+        $templateQuery = \App\Models\DocumentTemplate::query()->whereNotNull('file_path')->where('file_path', '!=', '');
+        // Note: templates usually don't filter by date range for full backup context, but we can if needed
+        
         $reqFileQuery = \App\Models\DocumentRequestSubmissionFile::query()->whereNotNull('file_path')->where('file_path', '!=', '');
         if ($from) $reqFileQuery->where('created_at', '>=', "{$from} 00:00:00");
         if ($to)   $reqFileQuery->where('created_at', '<=', "{$to} 23:59:59");
+
+        $identityCount = User::whereNotNull('profile_photo_path')
+            ->where('profile_photo_path', 'NOT LIKE', 'data:%')
+            ->count() + 
+            User::whereNotNull('signature_path')
+            ->where('signature_path', 'NOT LIKE', 'data:%')
+            ->count();
 
         $activityQuery = ActivityLog::query();
         if ($from) $activityQuery->where('created_at', '>=', "{$from} 00:00:00");
@@ -416,7 +325,7 @@ class BackupController extends Controller
 
         return response()->json([
             'documents'  => $docQuery->count(),
-            'files'      => $versionQuery->count() + $reqFileQuery->count(),
+            'files'      => $versionQuery->count() + $templateQuery->count() + $reqFileQuery->count() + $identityCount,
             'activities' => $activityQuery->count(),
             'users'      => User::whereNull('deleted_at')->count(),
         ]);

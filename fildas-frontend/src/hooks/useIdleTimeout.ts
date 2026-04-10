@@ -10,6 +10,8 @@ const IDLE_EVENTS: (keyof WindowEventMap)[] = [
   "focus",
 ];
 
+const LAST_ACTIVITY_KEY = "fildas_last_activity";
+
 /**
  * Tracks user inactivity and logs them out after `timeoutMs`.
  * Shows a warning dialog `warningMs` before the timeout fires.
@@ -28,7 +30,26 @@ export function useIdleTimeout(
     if (warningRef.current) clearTimeout(warningRef.current);
   }, []);
 
+  const checkIdleStatus = useCallback(() => {
+    const lastActivity = parseInt(localStorage.getItem(LAST_ACTIVITY_KEY) || Date.now().toString());
+    const now = Date.now();
+    const diff = now - lastActivity;
+
+    if (diff >= timeoutMs) {
+      onTimeout();
+      return true;
+    }
+    
+    if (diff >= (timeoutMs - warningMs)) {
+      setShowWarning(true);
+    } else {
+      setShowWarning(false);
+    }
+    return false;
+  }, [timeoutMs, warningMs, onTimeout]);
+
   const resetTimers = useCallback(() => {
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
     clearTimers();
     setShowWarning(false);
 
@@ -37,19 +58,33 @@ export function useIdleTimeout(
     }, timeoutMs - warningMs);
 
     timeoutRef.current = setTimeout(() => {
-      onTimeout();
+      // Final double check before firing onTimeout
+      if (!checkIdleStatus()) {
+        resetTimers();
+      }
     }, timeoutMs);
-  }, [timeoutMs, warningMs, clearTimers, onTimeout]);
+  }, [timeoutMs, warningMs, clearTimers, checkIdleStatus]);
 
   // Reset on any user interaction
   useEffect(() => {
     resetTimers();
-    IDLE_EVENTS.forEach((ev) => window.addEventListener(ev, resetTimers, { passive: true }));
+
+    const handleInteraction = () => resetTimers();
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        checkIdleStatus();
+      }
+    };
+
+    IDLE_EVENTS.forEach((ev) => window.addEventListener(ev, handleInteraction, { passive: true }));
+    window.addEventListener("visibilitychange", handleVisibility);
+
     return () => {
       clearTimers();
-      IDLE_EVENTS.forEach((ev) => window.removeEventListener(ev, resetTimers));
+      IDLE_EVENTS.forEach((ev) => window.removeEventListener(ev, handleInteraction));
+      window.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [resetTimers, clearTimers]);
+  }, [resetTimers, clearTimers, checkIdleStatus]);
 
   /** Call this when user clicks "Stay logged in" */
   const stayLoggedIn = useCallback(() => {

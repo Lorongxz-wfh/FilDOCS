@@ -122,6 +122,7 @@ const DocumentFlowPage: React.FC = () => {
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [isLoadingSelectedVersion, setIsLoadingSelectedVersion] =
     useState(false);
+  const [docRefreshTrigger, setDocRefreshTrigger] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
@@ -451,13 +452,17 @@ const refreshAndSelectBest = React.useCallback(
                     await refreshAndSelectBest({
                       preferVersionId: selectedVersion?.id,
                     });
+                    
+                    // Trigger deep sync of tasks/comments/logs
+                    setDocRefreshTrigger(prev => prev + 1);
+
                     const statusChanged =
                       selectedVersion?.status !== prevStatus;
                     const newVersionAdded =
                       allVersions.length > prevVersionCount;
                     if (statusChanged || newVersionAdded)
-                      return "Document updated.";
-                    return "Already up to date.";
+                      return "Document workspace updated.";
+                    return "No changes found.";
                   } finally {
                     setIsRefreshing(false);
                   }
@@ -679,6 +684,7 @@ const refreshAndSelectBest = React.useCallback(
                 await refreshAndSelectBest({ preferVersionId: preferId });
               }, [selectedVersion?.id, refreshAndSelectBest])}
               onRightPanelContent={setRightPanelContent}
+              refreshTrigger={docRefreshTrigger}
             />
           </div>
         }

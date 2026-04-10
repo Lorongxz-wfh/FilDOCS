@@ -2,13 +2,17 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { setAuthUser } from "../lib/auth";
 import logoUrl from "../assets/FCU Logo.png";
-import { CheckCircle2, Sun, Moon, Mail, Lock } from "lucide-react";
+import { CheckCircle2, Sun, Moon, Mail, Lock, AlertCircle, X } from "lucide-react";
 import { useThemeContext } from "../lib/ThemeContext";
 import FormField from "../components/ui/FormField";
 import api from "../services/api";
+import { useSearchParams } from "react-router-dom";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isInactiveLogout = searchParams.get("inactive") === "1";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
@@ -93,6 +97,11 @@ const LoginPage: React.FC = () => {
     // 4. Update the global listener so everything knows auth is finished
     window.dispatchEvent(new Event("auth_user_updated"));
     
+    if (data.user?.must_change_password) {
+      navigate("/force-password-change", { replace: true });
+      return;
+    }
+
     navigate("/dashboard", { replace: true });
   };
 
@@ -205,6 +214,31 @@ const LoginPage: React.FC = () => {
               ? (isRecovery ? "Enter a backup recovery code to access your account." : "Enter the 6-digit code from your authenticator app.") 
               : "Enter your credentials to access your portal."}
           </p>
+
+          {isInactiveLogout && (
+            <div className="mt-6 flex items-start gap-3 rounded-lg border border-brand-100 bg-brand-50/50 p-3.5 dark:border-brand-900/30 dark:bg-brand-950/20 animate-in fade-in slide-in-from-top-2 duration-300">
+              <AlertCircle className="mt-0.5 h-4 w-4 text-brand-600 dark:text-brand-400 shrink-0" />
+              <div className="flex-1">
+                <p className="text-[11px] font-bold text-brand-900 dark:text-brand-100 uppercase tracking-tight">
+                  Session Timed Out
+                </p>
+                <p className="mt-0.5 text-[10px] leading-relaxed text-brand-700/80 dark:text-brand-300/80 font-medium">
+                  You have been logged out due to inactivity for security. Please sign in again.
+                </p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => {
+                  searchParams.delete("inactive");
+                  setSearchParams(searchParams);
+                }}
+                className="rounded p-1 text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-900/50 transition-colors"
+                title="Dismiss"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
 
           {!showChallenge ? (
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">

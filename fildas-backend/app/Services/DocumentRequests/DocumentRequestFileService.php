@@ -9,10 +9,11 @@ class DocumentRequestFileService
 {
     public function saveRequestExampleFile(int $requestId, $file): array
     {
-        $year = now()->year;
         $extension = strtolower($file->getClientOriginalExtension());
-        $storedName = 'example.' . $extension;
-        $r2Folder = $year . '/document_requests/' . $requestId;
+        $safeTitle = \Illuminate\Support\Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+        $storedName = "example_{$safeTitle}.{$extension}";
+        
+        $r2Folder = "requests/examples/{$requestId}";
         $originalName = $file->getClientOriginalName();
         $filePath = $r2Folder . '/' . $storedName;
 
@@ -56,10 +57,10 @@ class DocumentRequestFileService
 
     public function saveRequestItemExampleFile(int $itemId, $file): array
     {
-        $year = now()->year;
         $extension = strtolower($file->getClientOriginalExtension());
-        $storedName = 'example.' . $extension;
-        $r2Folder = $year . '/document_request_items/' . $itemId;
+        $safeTitle = \Illuminate\Support\Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+        $storedName = "item_example_{$safeTitle}.{$extension}";
+        $r2Folder = "requests/item_examples/{$itemId}";
         $originalName = $file->getClientOriginalName();
         $filePath = $r2Folder . '/' . $storedName;
 
@@ -103,10 +104,10 @@ class DocumentRequestFileService
 
     public function saveSubmissionFile(int $submissionId, $file, int $index): array
     {
-        $year = now()->year;
         $extension = strtolower($file->getClientOriginalExtension());
-        $storedName = 'file_' . $index . '.' . $extension;
-        $r2Folder = $year . '/document_request_submissions/' . $submissionId;
+        $safeTitle = \Illuminate\Support\Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+        $storedName = "sub_{$index}_{$safeTitle}.{$extension}";
+        $r2Folder = "requests/submissions/{$submissionId}";
 
         $originalName = $file->getClientOriginalName();
         $mime = $file->getClientMimeType();

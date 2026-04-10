@@ -45,7 +45,7 @@ export default function RequestExampleTab({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 gap-3">
-      <div className="shrink-0 flex items-center gap-3 rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-5 py-4">
+      <div className="shrink-0 flex items-center gap-3 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-5 py-4">
         {isTemplate ? (
           <FileCheck size={14} className="text-emerald-500 shrink-0" />
         ) : (
