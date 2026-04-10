@@ -897,7 +897,6 @@ export default function DocumentRequestPage() {
                   examplePreviewUrl={examplePreviewUrl}
                   examplePreviewLoading={examplePreviewLoading}
                   examplePreviewError={examplePreviewError}
-                  onRefresh={loadExamplePreview}
                   onViewModal={() =>
                     setPreviewModal({
                       url: examplePreviewUrl,

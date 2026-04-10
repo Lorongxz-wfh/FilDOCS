@@ -8,7 +8,6 @@ type Props = {
   examplePreviewUrl: string;
   examplePreviewLoading: boolean;
   examplePreviewError: string | null;
-  onRefresh: () => void;
   onViewModal: () => void;
 };
 
@@ -17,7 +16,6 @@ export default function RequestExampleTab({
   examplePreviewUrl,
   examplePreviewLoading,
   examplePreviewError,
-  onRefresh,
   onViewModal,
 }: Props) {
   const isTemplate = !!req.template;
@@ -69,7 +67,6 @@ export default function RequestExampleTab({
             ? "Preview not available for this file type."
             : "No example file attached."
         }
-        onRefresh={req.example_preview_path ? onRefresh : undefined}
         onViewModal={examplePreviewUrl ? onViewModal : undefined}
       />
     </div>
