@@ -5,6 +5,7 @@ import {
   listOffices,
   getDocumentRouteSteps,
   getDocumentPreviewLink,
+  getDocumentVersion,
   invalidatePreviewCache,
   downloadDocument,
   archiveDocument,
@@ -50,6 +51,11 @@ export function useDocumentFlowUI({
 }: Options) {
   const { push } = useToast();
   const myOfficeId = getCurrentUserOfficeId();
+
+  const onChangedRef = useRef(onChanged);
+  const onAfterActionCloseRef = useRef(onAfterActionClose);
+  useEffect(() => { onChangedRef.current = onChanged; }, [onChanged]);
+  useEffect(() => { onAfterActionCloseRef.current = onAfterActionClose; }, [onAfterActionClose]);
 
   // ── Sign modal ───────────────────────────────────────────────
   const [signingOpen, setSigningOpen] = useState(false);
@@ -141,18 +147,15 @@ export function useDocumentFlowUI({
     if (!localVersion.preview_path) {
       setSignedPreviewUrl("");
       setIsPreviewLoading(false);
-      setPreviewNonce((n) => n + 1);
       prevPreviewPathRef.current = null;
       prevUpdatedAtRef.current = null;
       return;
     }
 
     const pathChanged = localVersion.preview_path !== prevPreviewPathRef.current;
-    const updatedAtChanged = localVersion.updated_at !== prevUpdatedAtRef.current;
     prevPreviewPathRef.current = localVersion.preview_path;
-    prevUpdatedAtRef.current = localVersion.updated_at;
 
-    const contentChanged = pathChanged || updatedAtChanged;
+    const contentChanged = pathChanged;
 
     if (contentChanged) {
       delete previewUrlCacheRef.current[localVersion.preview_path];
@@ -185,7 +188,55 @@ export function useDocumentFlowUI({
         }
       });
     return () => { alive = false; };
-  }, [localVersion?.id, localVersion?.preview_path, localVersion?.updated_at]);
+  }, [localVersion?.id, localVersion?.preview_path]);
+
+  const handleActionResult = useCallback(
+    (res: { version: DocumentVersion; message?: string }) => {
+      if (!res) return;
+      setLocalVersion((prev) => {
+        if (!prev) return res.version;
+        // Check if preview path changed to invalidate local cache
+        const newPreviewPath = res.version.preview_path ?? null;
+        const oldPreviewPath = prev.preview_path ?? null;
+        if (newPreviewPath !== oldPreviewPath) {
+          if (oldPreviewPath) delete previewUrlCacheRef.current[oldPreviewPath];
+          if (newPreviewPath) delete previewUrlCacheRef.current[newPreviewPath];
+          setPreviewNonce((n) => n + 1);
+        }
+        return { ...prev, ...res.version };
+      });
+    },
+    [setLocalVersion]
+  );
+
+  useEffect(() => {
+    // Only poll if we have a file but are missing either checksum or preview_path
+    if (!localVersion || !localVersion.file_path || (localVersion.checksum && localVersion.preview_path)) return;
+
+    let pollCount = 0;
+    const maxPolls = 30; // 90 seconds (30 * 3s)
+    
+    const interval = setInterval(async () => {
+      pollCount++;
+      if (pollCount > maxPolls) {
+        clearInterval(interval);
+        return;
+      }
+
+      try {
+        const res = await getDocumentVersion(localVersion.id);
+        // Only trigger update and stop polling if we got both checksum and preview_path
+        if (res.version.checksum && res.version.preview_path) {
+          clearInterval(interval);
+          handleActionResult({ version: res.version });
+        }
+      } catch (e) {
+        console.warn("Polling version failed", e);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [localVersion?.id, localVersion?.checksum, localVersion?.file_path, handleActionResult]);
 
   // ── Derived ──────────────────────────────────────────────────
   const qaOfficeId = useMemo(() => offices?.length ? officeIdByCode(offices, "QA") : null, [offices]);
@@ -211,8 +262,8 @@ export function useDocumentFlowUI({
     versionId: localVersion?.id && localVersion.id > 0 ? localVersion.id : 0,
     documentId: document?.id ?? 0,
     isTerminal,
-    onChanged,
-    onAfterActionClose,
+    onChanged: (...args) => onChangedRef.current?.(...args),
+    onAfterActionClose: (...args) => onAfterActionCloseRef.current?.(...args),
     myOfficeId,
     qaOfficeId,
     adminDebugMode,
@@ -233,7 +284,7 @@ export function useDocumentFlowUI({
     canEditEffectiveDate,
     onVersionUpdated: useCallback((v: Partial<DocumentVersion>) =>
       setLocalVersion((prev) => (prev ? { ...prev, ...v } : (v as DocumentVersion))), []),
-    onChanged,
+    onChanged: (...args) => onChangedRef.current?.(...args),
   });
 
   const fileUpload = useDocumentFileUpload({
@@ -241,18 +292,20 @@ export function useDocumentFlowUI({
     onUploadComplete: useCallback(async () => {
       previewUrlCacheRef.current = {};
       setSignedPreviewUrl("");
-      setIsPreviewLoading(true);
+      // Do NOT set isPreviewLoading(true) here. 
+      // isUploading will handle the progress bar, 
+      // and the preview effect will handle the spinner only when actually fetching a link.
       setPreviewNonce((n) => n + 1);
-      if (onChanged) await onChanged();
-      setPreviewNonce((n) => n + 1);
-    }, [onChanged]),
+      if (onChangedRef.current) await onChangedRef.current();
+    }, [onChangedRef]),
   });
 
   useEffect(() => {
-    if (!workflow.taskChanged) return;
-    workflow.clearTaskChanged();
-    if (onChanged) void Promise.resolve(onChanged()).catch(() => {});
-  }, [workflow.taskChanged, onChanged, workflow.clearTaskChanged]);
+    if (workflow.taskChanged) {
+      workflow.clearTaskChanged();
+      if (onChangedRef.current) void Promise.resolve(onChangedRef.current()).catch(() => {});
+    }
+  }, [workflow.taskChanged, workflow.clearTaskChanged]);
 
   // ── Current task + step ──────────────────────────────────────
   const [currentTask, setCurrentTask] = useState<WorkflowTask | null>(null);
@@ -394,21 +447,6 @@ export function useDocumentFlowUI({
     return Array.from(ids);
   }, [document, workflow.tasks, routeSteps]);
 
-  const handleActionResult = useCallback(
-    (res: { version: DocumentVersion; message?: string }) => {
-      if (!res) return;
-      const newPreviewPath = res.version.preview_path ?? null;
-      const oldPreviewPath = localVersion?.preview_path ?? null;
-      if (!localVersion) return;
-      if (newPreviewPath !== oldPreviewPath) {
-        if (oldPreviewPath) delete previewUrlCacheRef.current[oldPreviewPath];
-        if (newPreviewPath) delete previewUrlCacheRef.current[newPreviewPath];
-        setPreviewNonce((n) => n + 1);
-      }
-      setLocalVersion((prev) => (prev ? { ...prev, ...res.version } : (res.version as DocumentVersion)));
-    },
-    [localVersion?.preview_path]
-  );
 
   const canReplace = localVersion?.status === "Draft" || localVersion?.status === "Office Draft";
 
@@ -548,7 +586,7 @@ export function useDocumentFlowUI({
               onClick: async () => {
                 try {
                   await archiveDocument(document!.id);
-                  if (onChanged) await onChanged();
+                  if (onChangedRef.current) await onChangedRef.current();
                   push({
                     type: "success",
                     title: "Document archived",
@@ -577,7 +615,7 @@ export function useDocumentFlowUI({
               onClick: async () => {
                 try {
                   await restoreDocument(document!.id);
-                  if (onChanged) await onChanged();
+                  if (onChangedRef.current) await onChangedRef.current();
                   push({
                     type: "success",
                     title: "Document restored",
@@ -621,21 +659,20 @@ export function useDocumentFlowUI({
     isActiveApprover,
     approverHasDownloaded,
     approverHasUploaded,
-    localVersion,
+    localVersion?.status,
+    localVersion?.version_number,
+    localVersion?.file_path,
     currentPhase.id,
     adminDebugMode,
     isPreApprovalCreatorCheck,
     hasSignedFile,
     approverNeedsSignedUpload,
-    handleActionResult,
     fileUpload.isUploading,
     document?.archived_at,
     document?.owner_office_id,
     isQAOfficeUser,
     myOfficeId,
-    onChanged,
     fileUpload.triggerFilePicker,
-    push,
   ]);
 
   const versionActions: HeaderActionButton[] = useMemo(() => {
@@ -664,7 +701,14 @@ export function useDocumentFlowUI({
       });
     }
     return actions;
-  }, [localVersion, myOfficeId, document, push]);
+  }, [
+    localVersion?.id, 
+    localVersion?.status, 
+    myOfficeId, 
+    document?.id, 
+    document?.owner_office_id,
+    push
+  ]);
 
   const state = useMemo(() => ({
     localVersion,
@@ -705,7 +749,13 @@ export function useDocumentFlowUI({
     activeWorkflowCode,
     participantOfficeIds,
   }), [
-    localVersion,
+    localVersion?.id,
+    localVersion?.status,
+    localVersion?.version_number,
+    localVersion?.file_path,
+    localVersion?.checksum,
+    localVersion?.preview_path,
+    localVersion?.updated_at,
     localTitle,
     localDesc,
     localEffectiveDate,

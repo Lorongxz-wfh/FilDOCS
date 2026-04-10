@@ -226,23 +226,27 @@ class WorkflowController extends Controller
 
         // Monitoring: docs visible to this office (owned, shared, or participant), 
         // not currently assigned (excluding Cancelled/Superseded/Distributed)
-        $monitorVersions = \App\Models\DocumentVersion::query()
-            ->whereNotIn('status', ['Cancelled', 'Superseded', 'Distributed'])
-            ->whereHas('document', function ($q) use ($userOfficeId) {
+        $monitoringDocuments = \App\Models\Document::query()
+            ->whereHas('latestVersion', function ($q) {
+                $q->whereNotIn('status', ['Cancelled', 'Superseded', 'Distributed']);
+            })
+            ->where(function ($q) use ($userOfficeId) {
                 $q->where('owner_office_id', $userOfficeId)
                     ->orWhereHas('sharedOffices', fn($s) => $s->where('offices.id', $userOfficeId))
                     ->orWhereHas('versions.tasks', fn($t) => $t->where('assigned_office_id', $userOfficeId));
             })
             ->with([
-                'document.ownerOffice',
-                'tasks' => fn($q) => $q->orderByDesc('id'),
+                'ownerOffice',
+                'latestVersion',
+                'latestVersion.tasks' => fn($q) => $q->where('status', 'open')->orderByDesc('id'),
             ])
-            ->orderByDesc('id')
+            ->orderByDesc('updated_at')
             ->limit(50)
             ->get();
-
-        $monitoring = $monitorVersions->map(function ($v) use ($userOfficeId) {
-            $openTask = $v->tasks->firstWhere('status', 'open');
+            
+        $monitoring = $monitoringDocuments->map(function ($doc) use ($userOfficeId) {
+            $version  = $doc->latestVersion;
+            $openTask = $version ? $version->tasks->first() : null;
 
             // Already in assigned list — skip
             if ($openTask && (int) $openTask->assigned_office_id === $userOfficeId) {
@@ -250,10 +254,10 @@ class WorkflowController extends Controller
             }
 
             return [
-                'task'    => $openTask,
-                'version' => $v,
-                'document' => $v->document,
-                'can_act' => false,
+                'task'     => $openTask,
+                'version'  => $version,
+                'document' => $doc,
+                'can_act'  => false,
             ];
         })->filter()->values();
 

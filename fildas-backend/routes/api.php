@@ -35,6 +35,7 @@ Route::post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
 })->middleware('auth:sanctum');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 Route::post('/login/two-factor', [AuthController::class, 'loginTwoFactor'])->middleware('throttle:6,1');
+Route::post('/login/two-factor/email', [AuthController::class, 'sendTwoFactorEmailCode'])->middleware('throttle:6,1');
 Route::post('/forgot-password', [\App\Http\Controllers\Api\PasswordResetController::class, 'forgot'])->middleware('throttle:6,1');
 Route::post('/reset-password', [\App\Http\Controllers\Api\PasswordResetController::class, 'reset'])->middleware('throttle:6,1');
 Route::get('/offices', [OfficeController::class, 'index']);

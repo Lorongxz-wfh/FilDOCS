@@ -18,7 +18,7 @@ class DocumentVersionFileService
         $storedName = 'original.' . $extension;
         $r2Path = $year . '/' . $version->id . '/' . $storedName;
 
-        // Upload original file to storage
+        // 1. Upload original file synchronously (so it exists for the job)
         Storage::disk()->putFileAs(
             $year . '/' . $version->id,
             $file,
@@ -27,44 +27,12 @@ class DocumentVersionFileService
 
         $version->original_filename = $file->getClientOriginalName();
         $version->file_path = $r2Path;
-        $version->checksum = hash_file('sha256', $file->getRealPath());
-
-        // Preview generation: skip conversion if it's already a PDF
-        if ($extension === 'pdf') {
-            $version->preview_path = $r2Path;
-        } else {
-            // Convert to PDF for preview
-            $tmpDir = sys_get_temp_dir() . '/fildas/' . $version->id;
-            if (!is_dir($tmpDir)) {
-                mkdir($tmpDir, 0775, true);
-            }
-
-            $tmpFilePath = $tmpDir . '/' . $storedName;
-            copy($file->getRealPath(), $tmpFilePath);
-
-            $previewFileName = DocumentPreviewService::generatePreview($tmpDir, $tmpFilePath);
-
-            if ($previewFileName) {
-                $previewTmpPath = $tmpDir . '/' . $previewFileName;
-                $r2PreviewPath  = $year . '/' . $version->id . '/' . $previewFileName;
-
-                Storage::disk()->putFileAs(
-                    $year . '/' . $version->id,
-                    new \Illuminate\Http\File($previewTmpPath),
-                    $previewFileName
-                );
-
-                $version->preview_path = $r2PreviewPath;
-                @unlink($previewTmpPath);
-            } else {
-                $version->preview_path = null;
-            }
-
-            @unlink($tmpFilePath);
-            @rmdir($tmpDir);
-        }
-
+        $version->checksum = null; // Will be filled by background job
+        $version->preview_path = null; // Will be filled by background job
         $version->save();
+
+        // 2. Dispatch background job for heavy processing (Hashing, PDF Preview)
+        \App\Jobs\ProcessDocumentVersion::dispatch($version->id);
     }
 
     public function deleteVersionFiles(DocumentVersion $version): void

@@ -15,6 +15,7 @@ final class WorkflowSteps
     const STATUS_DRAFT       = 'Draft';
     const STATUS_DISTRIBUTED = 'Distributed';
     const STATUS_CANCELLED   = 'Cancelled';
+    const STATUS_SUPERSEDED  = 'Superseded';
 
     // ── QA Flow Statuses ───────────────────────────────────────────────────
     const STATUS_QA_OFFICE_REVIEW       = 'For Office Review';

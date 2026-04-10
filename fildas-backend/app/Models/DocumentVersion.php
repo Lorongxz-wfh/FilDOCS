@@ -19,6 +19,7 @@ class DocumentVersion extends Model
         'file_path',
         'preview_path',
         'original_filename',
+        'checksum',
         'description',
         'revision_reason',
         'effective_date',
@@ -26,6 +27,16 @@ class DocumentVersion extends Model
         'superseded_at',
         'cancelled_at',
     ];
+
+    /**
+     * Boot the model.
+     */
+    protected static function booted()
+    {
+        static::created(function ($version) {
+            $version->document()->update(['latest_version_id' => $version->id]);
+        });
+    }
 
     protected $casts = [
         'workflow_type' => 'string',

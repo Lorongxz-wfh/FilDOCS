@@ -425,111 +425,143 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
 
   return (
     <div className="space-y-12 pb-10">
-      {/* Theme section */}
-      <Section 
-        title="Default Theme" 
-        icon={<Layout className="h-4 w-4" />} 
-        description="Choose your account's default appearance. This will be applied regardless of which device you use."
-      >
-         <div className="flex p-1 bg-slate-100 dark:bg-surface-400 rounded-lg max-w-sm">
-            {[
-              { id: "light", label: "Light", icon: <Sun className="h-3.5 w-3.5" /> },
-              { id: "dark", label: "Dark", icon: <Moon className="h-3.5 w-3.5" /> },
-              { id: "system", label: "System", icon: <Monitor className="h-3.5 w-3.5" /> }
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => handleThemeChange(opt.id as any)}
-                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-bold transition-all ${
-                  currentTheme === opt.id 
-                    ? "bg-white dark:bg-surface-600 text-brand-500 shadow-sm" 
-                    : "text-slate-500 hover:text-slate-700 dark:text-slate-100"
-                }`}
-              >
-                {opt.icon}
-                {opt.label}
-              </button>
-            ))}
-         </div>
-      </Section>
-
-      {/* Password section */}
-      <Section title="Security & Authentication" icon={<KeyRound className="h-4 w-4" />} description="Protect your account by using a strong password and multi-factor verification.">
-         <div className="space-y-8">
-            <TwoFactorManager user={user} />
-            
-            <div className="pt-4 border-t border-slate-100 dark:border-surface-400">
-               <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-400 mb-4">Change Password</h5>
-               <form onSubmit={handlePasswordSubmit} className="space-y-5">
-                  <div className="space-y-1.5 max-w-sm">
-                     <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Current Password</label>
-                     <input type="password" className={inputCls} value={pw.current_password} onChange={e => setPw(p => ({ ...p, current_password: e.target.value }))} required />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">New Password</label>
-                        <input type="password" className={inputCls} value={pw.password} onChange={e => setPw(p => ({ ...p, password: e.target.value }))} required />
-                     </div>
-                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Confirm New Password</label>
-                        <input type="password" className={inputCls} value={pw.password_confirmation} onChange={e => setPw(p => ({ ...p, password_confirmation: e.target.value }))} required />
-                     </div>
-                  </div>
-                  <div className="flex justify-start">
-                     <Button loading={pwLoading} size="sm" className="font-bold">Update Password</Button>
-                  </div>
-               </form>
-            </div>
-         </div>
-      </Section>
-
-      {/* Signature section */}
-      {!isAuditor(getUserRole()) && (
-        <Section title="E-Signature" icon={<PenLine className="h-4 w-4" />} description="Use your uploaded signature to sign documents and evidence requests.">
-           <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-md border border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/50">
-               <div className="h-20 w-48 border border-dashed border-slate-300 dark:border-surface-400 rounded flex items-center justify-center bg-white dark:bg-surface-600 overflow-hidden">
-                  {sigUrl ? <img src={sigUrl} className="max-h-full object-contain" alt="Sig" /> : <p className="text-xs text-slate-400 italic">No signature uploaded</p>}
-               </div>
-               <div className="flex flex-col gap-2">
-                   <p className="text-xs text-slate-500">Supported formats: PNG, JPG (transparent recommended). Max size 1MB.</p>
-                   <div className="flex items-center gap-3">
-                      <Button variant="outline" size="sm" onClick={() => sigInputRef.current?.click()}>Upload Signature</Button>
-                      <input ref={sigInputRef} type="file" className="hidden" accept="image/*" onChange={handleSigUpload} />
-                   </div>
-               </div>
-           </div>
-        </Section>
-      )}
-
-      {/* Notifications section */}
-      <Section title="Notifications & Sound" icon={<Bell className="h-4 w-4" />} description="Manage how and when you want to be notified about workflow events.">
-          <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-slate-100 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500">
-             <ToggleRow label="Document Updates" desc="Notify when documents are distributed or renamed." checked={prefs.email_doc_updates} onChange={v => handleToggle("email_doc_updates", v)} />
-             <ToggleRow label="Action Required" desc="Notify about new tasks and workflow returns." checked={prefs.email_approvals} onChange={v => handleToggle("email_approvals", v)} />
-             <ToggleRow label="In-App Notification Sound" desc="Play a subtle chime when new notifications arrive." icon={<Volume2 className="h-3.5 w-3.5" />} checked={prefs.sound_notif} onChange={v => handleToggle("sound_notif", v)} />
+      {/* ── Pillar 1: Configuration & Appearance ───────────────────────────── */}
+      <div className="space-y-8">
+        <PillarHeader title="Interface & Configuration" />
+        
+        {/* Theme section */}
+        <Section 
+          title="Default Theme" 
+          icon={<Layout className="h-4 w-4" />} 
+          description="Choose your account's default appearance. This will be applied regardless of which device you use."
+        >
+          <div className="flex p-1 bg-slate-100 dark:bg-surface-400 rounded-lg max-w-sm">
+              {[
+                { id: "light", label: "Light", icon: <Sun className="h-3.5 w-3.5" /> },
+                { id: "dark", label: "Dark", icon: <Moon className="h-3.5 w-3.5" /> },
+                { id: "system", label: "System", icon: <Monitor className="h-3.5 w-3.5" /> }
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => handleThemeChange(opt.id as any)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-bold transition-all ${
+                    currentTheme === opt.id 
+                      ? "bg-white dark:bg-surface-600 text-brand-500 shadow-sm" 
+                      : "text-slate-500 hover:text-slate-700 dark:text-slate-100"
+                  }`}
+                >
+                  {opt.icon}
+                  {opt.label}
+                </button>
+              ))}
           </div>
-      </Section>
-
-      {/* Admin section */}
-      {isAdmin && (
-        <Section title="Developer Tools" icon={<Wrench className="h-4 w-4" />} description="Administrative settings for debugging and enterprise testing.">
-           <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-slate-100 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500">
-             <ToggleRow 
-                label="Developer Debug Mode" 
-                desc="Allow acting on behalf of other offices for testing workflows." 
-                checked={localStorage.getItem(`pref_debug_mode_${user?.id}`) === "1"} 
-                onChange={v => {
-                  localStorage.setItem(`pref_debug_mode_${user?.id}`, v ? "1" : "0");
-                  window.dispatchEvent(new CustomEvent("admin_debug_mode_changed"));
-                  push({ type: "success", title: "Debug Mode", message: v ? "Enabled" : "Disabled" });
-                }} 
-              />
-           </div>
         </Section>
-      )}
+
+        {/* Notifications section */}
+        <Section 
+          title="Notifications & Sound" 
+          icon={<Bell className="h-4 w-4" />} 
+          description="Manage how and when you want to be notified about workflow events."
+        >
+            <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-slate-100 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 overflow-hidden shadow-sm">
+               <ToggleRow label="Document Updates" desc="Notify when documents are distributed or renamed." checked={prefs.email_doc_updates} onChange={v => handleToggle("email_doc_updates", v)} />
+               <ToggleRow label="Action Required" desc="Notify about new tasks and workflow returns." checked={prefs.email_approvals} onChange={v => handleToggle("email_approvals", v)} />
+               <ToggleRow label="In-App Notification Sound" desc="Play a subtle chime when new notifications arrive." icon={<Volume2 className="h-3.5 w-3.5" />} checked={prefs.sound_notif} onChange={v => handleToggle("sound_notif", v)} />
+            </div>
+        </Section>
+      </div>
+
+      <div className="border-t border-slate-100 dark:border-surface-400" />
+
+      {/* ── Pillar 2: Security & Identity ─────────────────────────────────── */}
+      <div className="space-y-8">
+        <PillarHeader title="Security & Access" />
+        
+        {/* Password section */}
+        <Section title="Authentication" icon={<KeyRound className="h-4 w-4" />} description="Protect your account by using a strong password and multi-factor verification.">
+          <div className="space-y-8">
+              <TwoFactorManager user={user} />
+              
+              <div className="pt-4 border-t border-slate-100 dark:border-surface-400">
+                <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-400 mb-4">Change Password</h5>
+                <form onSubmit={handlePasswordSubmit} className="space-y-5">
+                    <div className="space-y-1.5 max-w-sm">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Current Password</label>
+                      <input type="password" className={inputCls} value={pw.current_password} onChange={e => setPw(p => ({ ...p, current_password: e.target.value }))} required />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                          <label className="text-xs font-bold uppercase tracking-wider text-slate-400">New Password</label>
+                          <input type="password" className={inputCls} value={pw.password} onChange={e => setPw(p => ({ ...p, password: e.target.value }))} required />
+                      </div>
+                      <div className="space-y-1.5">
+                          <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Confirm New Password</label>
+                          <input type="password" className={inputCls} value={pw.password_confirmation} onChange={e => setPw(p => ({ ...p, password_confirmation: e.target.value }))} required />
+                      </div>
+                    </div>
+                    <div className="flex justify-start">
+                      <Button loading={pwLoading} size="sm" className="font-bold">Update Password</Button>
+                    </div>
+                </form>
+              </div>
+          </div>
+        </Section>
+      </div>
+
+      <div className="border-t border-slate-100 dark:border-surface-400" />
+
+      {/* ── Pillar 3: Identification & Misc ────────────────────────────────── */}
+      <div className="space-y-8">
+        <PillarHeader title="Identity & Personalization" />
+
+        {/* Signature section */}
+        {!isAuditor(getUserRole()) && (
+          <Section title="E-Signature" icon={<PenLine className="h-4 w-4" />} description="Use your uploaded signature to sign documents and evidence requests.">
+            <div className="flex flex-col sm:flex-row items-center gap-6 p-5 rounded-md border border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/50">
+                <div className="h-24 w-52 border border-dashed border-slate-300 dark:border-surface-400 rounded-md flex items-center justify-center bg-white dark:bg-surface-600 shadow-inner overflow-hidden">
+                    {sigUrl ? <img src={sigUrl} className="max-h-full object-contain p-2" alt="Sig" /> : <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest opacity-50">No Signature</p>}
+                </div>
+                <div className="flex flex-col gap-3">
+                    <p className="text-[11px] text-slate-500 leading-relaxed max-w-xs">Supported formats: PNG, JPG (transparent recommended). Max size 1MB.</p>
+                    <div className="flex items-center gap-3">
+                        <Button variant="outline" size="sm" onClick={() => sigInputRef.current?.click()} className="font-bold text-[11px]">Upload New Signature</Button>
+                        <input ref={sigInputRef} type="file" className="hidden" accept="image/*" onChange={handleSigUpload} />
+                    </div>
+                </div>
+            </div>
+          </Section>
+        )}
+
+        {/* Admin section */}
+        {isAdmin && (
+          <Section title="Developer Tools" icon={<Wrench className="h-4 w-4" />} description="Administrative settings for debugging and enterprise testing.">
+            <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-slate-100 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 overflow-hidden shadow-sm">
+              <ToggleRow 
+                  label="Developer Debug Mode" 
+                  desc="Allow acting on behalf of other offices for testing workflows." 
+                  checked={localStorage.getItem(`pref_debug_mode_${user?.id}`) === "1"} 
+                  onChange={v => {
+                    localStorage.setItem(`pref_debug_mode_${user?.id}`, v ? "1" : "0");
+                    window.dispatchEvent(new CustomEvent("admin_debug_mode_changed"));
+                    push({ type: "success", title: "Debug Mode", message: v ? "Enabled" : "Disabled" });
+                  }} 
+                />
+            </div>
+          </Section>
+        )}
+      </div>
     </div>
   );
 };
+
+const PillarHeader: React.FC<{ title: string }> = ({ title }) => (
+  <div className="flex items-center gap-4">
+    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400/80 shrink-0">
+      {title}
+    </h3>
+    <div className="h-px flex-1 bg-slate-100 dark:bg-surface-400/50" />
+  </div>
+);
 
 const Section: React.FC<{ icon: any; title: string; description: string; children: any }> = ({ icon, title, description, children }) => (
   <div className="space-y-4">

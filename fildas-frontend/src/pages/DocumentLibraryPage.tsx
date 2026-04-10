@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
 import { 
@@ -15,7 +15,7 @@ import { DateRangePicker } from "../components/ui/DateRangePicker";
 import { PageActions, CreateAction, RefreshAction } from "../components/ui/PageActions";
 import SearchFilterBar from "../components/ui/SearchFilterBar";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
-import { LayoutGrid, List, Share2, ClipboardList, Archive, Library, Trash2 } from "lucide-react";
+import { Archive, Library, Trash2 } from "lucide-react";
 // import { formatDate } from "../utils/formatters";
 import { Tabs } from "../components/ui/Tabs";
 import { TabBar as SubTabBar } from "../components/documentRequests/shared";
@@ -33,6 +33,8 @@ import {
   type LibraryItem,
   docToLibraryItem,
   reqToLibraryItem,
+  TAB_LABELS,
+  TAB_ICONS,
 } from "./documentLibrary/documentLibraryTypes";
 import { 
   listDocumentsPage,
@@ -49,19 +51,7 @@ import Button from "../components/ui/Button";
 import { buildCreatedColumns, buildSharedColumns, buildRequestedColumns, buildAllColumns } from "./documentLibrary/DocumentLibraryColumns";
 // import TagBadge from "../components/documents/TagBadge";
 
-const TAB_LABELS: Record<LibTab, string> = {
-  all: "All Documents",
-  created: "Created",
-  requested: "Requested",
-  shared: "Shared with Me",
-};
-
-const TAB_ICONS: Record<LibTab, React.ReactNode> = {
-  all: <LayoutGrid className="h-3.5 w-3.5" />,
-  created: <List className="h-3.5 w-3.5" />,
-  requested: <ClipboardList className="h-3.5 w-3.5" />,
-  shared: <Share2 className="h-3.5 w-3.5" />,
-};
+// Unified tab definitions handled by documentLibraryTypes.ts
 
 export default function DocumentLibraryPage() {
   const navigate = useNavigate();
@@ -441,6 +431,12 @@ export default function DocumentLibraryPage() {
     }));
   }, [role]);
 
+  useEffect(() => {
+    if (activeTab === "active" && tab === "all") {
+      loadData(false);
+    }
+  }, [tab, qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, loadData, activeTab]);
+
   return (
     <PageFrame
       title="Document Library"
@@ -599,7 +595,7 @@ export default function DocumentLibraryPage() {
                         ? "50px 90px 80px minmax(200px, 1fr) 90px 80px 80px 50px 100px" 
                         : tab === "requested" 
                           ? (isAdmin || isQA(role) ? "50px minmax(250px, 1fr) 110px 110px" : "50px minmax(250px, 1fr) 110px")
-                          : "50px minmax(180px, 1fr) 90px 80px 80px 80px 90px 80px 100px") 
+                          : "50px minmax(180px, 1fr) 90px 120px 100px") 
                     + (adminDebugMode ? " 50px" : "")
                   }
                   sortBy={sortBy}

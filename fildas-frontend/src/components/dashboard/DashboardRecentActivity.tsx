@@ -13,6 +13,7 @@ import {
   History,
 } from "lucide-react";
 import { formatRelative } from "../../utils/formatters";
+import { friendlyEvent } from "../../utils/activityFormatters";
 import EmptyState from "../ui/EmptyState";
 
 type Props = {
@@ -88,7 +89,6 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
         return next;
       });
 
-      // Cleanup animation classes after 400ms
       const timer = setTimeout(() => {
         setNewLogIds(new Set(ids));
       }, 400);
@@ -98,9 +98,11 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
 
   const isRecentlyAdded = (id: number) => !newLogIds.has(id);
 
+  // Grouping logic: Doc-centric
+
   return (
-    <div className="relative h-[240px] overflow-hidden">
-      <div className={`divide-y divide-slate-100 dark:divide-surface-400 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"}`}>
+    <div className="relative h-[250px] overflow-hidden">
+      <div className={`space-y-4 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"}`}>
         {loading && !hasData ? (
           <SkeletonList variant="activity" rows={4} className="divide-y divide-slate-100 dark:divide-surface-400" />
         ) : logs.length === 0 ? (
@@ -110,43 +112,50 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
             className="py-10"
           />
         ) : (
-          logs.slice(0, 5).map((log) => {
-            const meta = getEventMeta(log.event);
-            return (
-              <div
-                key={log.id}
-                className={`flex items-start gap-2.5 sm:gap-3 py-2.5 sm:py-2.5 px-0.5 sm:px-0 ${isRecentlyAdded(log.id) ? "animate-live-entry" : ""}`}
-              >
-                {/* Event icon */}
-                <div
-                  className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded ${meta.bg} ${meta.text} sm:scale-100 scale-90`}
-                >
-                  {meta.icon}
-                </div>
+          <div className="space-y-4">
+            {logs.slice(0, 10).map((log, idx) => {
+              const meta = getEventMeta(log.event);
+              const docName = log.document 
+                ? (log.document.code ? `${log.document.code} — ${log.document.title}` : log.document.title)
+                : (log.meta?.filename || log.meta?.original_filename || "System Action");
 
-                {/* Event text */}
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] sm:text-sm text-slate-800 dark:text-slate-200 leading-snug">
-                    <span className="font-semibold">{log.event}</span>
-                    {log.label && (
-                      <span className="text-slate-500 dark:text-slate-400 line-clamp-1">
-                        {" — "}{log.label}
+              return (
+                <div
+                  key={log.id}
+                  className={`flex items-start gap-3 ${isRecentlyAdded(log.id) ? "animate-live-entry" : ""}`}
+                  style={{ animationDelay: `${idx * 50}ms` }}
+                >
+                  <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border border-slate-100 dark:border-surface-400/30 bg-white dark:bg-surface-500 ${meta.text} shadow-xs`}>
+                    {meta.icon}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    {/* Action Made - Header */}
+                    <p className="text-[12px] sm:text-[13px] font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight">
+                      {friendlyEvent(log.event)}
+                    </p>
+
+                    {/* Name of document | Time and Date - Subheader */}
+                    <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium overflow-hidden">
+                      <span className="truncate max-w-[70%]">
+                        {docName}
                       </span>
-                    )}
-                  </p>
-                  <p className="mt-0.5 text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500">
-                    {formatRelative(log.created_at)}
-                  </p>
+                      <span className="shrink-0 opacity-40">|</span>
+                      <span className="tabular-nums whitespace-nowrap opacity-80">
+                        {formatRelative(log.created_at)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </div>
 
       {/* Fading overlay + Minimal Button */}
       {!loading && (
-        <div className={`inset-x-0 bottom-0 flex items-center justify-center ${logs.length > 0 ? "absolute h-24 bg-gradient-to-t from-white dark:from-surface-500 via-white/80 dark:via-surface-500/80 to-transparent pointer-events-none" : "py-2"}`}>
+        <div className={`inset-x-0 bottom-0 flex items-center justify-center ${logs.length > 0 ? "absolute h-24 bg-gradient-to-t from-white dark:from-surface-500 via-white/90 dark:via-surface-500/90 to-transparent pointer-events-none" : "py-2"}`}>
           <div className={`${logs.length > 0 ? "pb-4 pointer-events-auto" : "mt-2"}`}>
             <button
               type="button"
@@ -154,7 +163,7 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
               className="flex items-center gap-1.5 px-3 py-1 border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-400 rounded-sm text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] shadow-xs hover:bg-slate-50 dark:hover:bg-surface-300 transition-all active:scale-95"
             >
               <History className="h-2.5 w-2.5" />
-              View all activity
+              View full activity log
             </button>
           </div>
         </div>

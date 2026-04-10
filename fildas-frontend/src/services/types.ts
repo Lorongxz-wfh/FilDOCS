@@ -50,6 +50,7 @@ export interface Document {
   version_number: number;
   file_path: string | null;
   preview_path: string | null;
+  checksum: string | null;
   original_filename: string | null;
   current_step_notes?: string | null;
   created_by: number | null;
@@ -109,6 +110,7 @@ export interface DocumentVersion {
   status: string;
   file_path: string | null;
   preview_path: string | null;
+  checksum: string | null;
   original_filename: string | null;
   signed_file_path?: string | null;
   pre_sign_file_path?: string | null;
@@ -479,6 +481,7 @@ export type FinishedDocumentRow = {
   original_filename: string | null;
   file_path: string | null;
   preview_path: string | null;
+  checksum: string | null;
 };
 
 export interface Office {

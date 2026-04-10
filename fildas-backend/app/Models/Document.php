@@ -15,6 +15,7 @@ class Document extends Model
         'doctype',
         'owner_office_id',
         'review_office_id',
+        'latest_version_id',
         'visibility_scope',
         'code',
         'reserved_code',
@@ -64,8 +65,7 @@ class Document extends Model
 
     public function latestVersion()
     {
-        return $this->hasOne(DocumentVersion::class)
-            ->latestOfMany('version_number');
+        return $this->belongsTo(DocumentVersion::class, 'latest_version_id');
     }
 
     public function latestDistributedVersion()

@@ -59,15 +59,32 @@ const DocumentPreviewWrapper: React.FC<Props> = ({
 }) => {
   return (
     <div
-      className="flex flex-col gap-0 rounded-xl overflow-hidden border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500"
+      className="flex flex-col gap-0 rounded-xl overflow-hidden border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-sm"
       style={{ height: "100%" }}
     >
+      {/* Version Header Strip - Premium Enterprise Style */}
+      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-100 dark:bg-surface-700 border-b border-slate-200 dark:border-surface-400">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center px-1.5 py-0.5 rounded bg-slate-800 dark:bg-slate-200 text-[10px] font-black text-white dark:text-slate-900 uppercase tracking-tighter">
+            V{localVersion.version_number}
+          </div>
+          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+            {localVersion.status}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+            SYNCED: {new Date(localVersion.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+      </div>
       {/* Preview — fills available space */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <DocumentPreviewPanel
           versionId={localVersion.id}
           previewPath={localVersion.preview_path ?? null}
           filePath={localVersion.file_path ?? null}
+          checksum={localVersion.checksum ?? null}
           originalFilename={localVersion.original_filename ?? null}
           status={localVersion.status}
           canReplace={canReplace}

@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TwoFactorChallengeMail;
 
 class AuthController extends Controller
 {
@@ -153,7 +156,7 @@ class AuthController extends Controller
                 }
             }
         } else if ($otpCode) {
-            // Check TOTP code
+            // 1. Try TOTP code
             $google2fa = new \PragmaRX\Google2FA\Google2FA();
             // Remove any spaces from code
             $cleanCode = str_replace(' ', '', $otpCode);
@@ -168,6 +171,16 @@ class AuthController extends Controller
                 'input_code' => $cleanCode,
                 'window' => 2
             ]);
+
+            // 2. Fallback to Email OTP if TOTP fails (and code is 6 digits)
+            if (!$valid && strlen($cleanCode) === 6) {
+                $cachedCode = Cache::get('2fa_email_code_' . $data['challenge_id']);
+                if ($cachedCode && (string)$cachedCode === (string)$cleanCode) {
+                    Cache::forget('2fa_email_code_' . $data['challenge_id']);
+                    $valid = true;
+                    Log::info('2FA Email OTP fallback success', ['user_id' => $user->id]);
+                }
+            }
         }
 
         if (!$valid) {
@@ -186,6 +199,52 @@ class AuthController extends Controller
         \Illuminate\Support\Facades\Cache::forget('2fa_challenge_' . $data['challenge_id']);
 
         return $this->issueToken($user);
+    }
+
+    /**
+     * Send 2FA code to email as a fallback.
+     */
+    public function sendTwoFactorEmailCode(Request $request)
+    {
+        $data = $request->validate([
+            'challenge_id' => 'required|string',
+        ]);
+
+        $challengeKey = '2fa_challenge_' . $data['challenge_id'];
+        $userId = Cache::get($challengeKey);
+        
+        if (!$userId) {
+            return response()->json(['message' => 'The 2FA session has expired.'], 422);
+        }
+
+        $user = User::find($userId);
+        if (!$user || !$user->email) {
+            return response()->json(['message' => 'User not found or has no email address.'], 422);
+        }
+
+        $throttleKey = '2fa_email:' . $user->id;
+        if (RateLimiter::tooManyAttempts($throttleKey, 2)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return response()->json(['message' => "Please wait {$seconds}s before requesting a new email code."], 429);
+        }
+        RateLimiter::hit($throttleKey, 60);
+
+        // Generate 6-digit numeric code
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+        // Cache code for 5 minutes linked to challenge_id
+        Cache::put('2fa_email_code_' . $data['challenge_id'], $code, 300);
+
+        try {
+            Mail::to($user->email)->send(new TwoFactorChallengeMail($user->full_name, $code));
+            
+            $this->logActivity('auth.2fa_email_sent', 'Requested 2FA code via email', $user->id, $user->office_id);
+
+            return response()->json(['message' => 'Verification code sent to your email.']);
+        } catch (\Exception $e) {
+            Log::error('Failed to send 2FA email code', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Failed to send email. Please try again later.'], 500);
+        }
     }
 
     private function issueToken(\App\Models\User $user)

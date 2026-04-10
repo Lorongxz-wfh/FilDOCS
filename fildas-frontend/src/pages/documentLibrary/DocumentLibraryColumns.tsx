@@ -410,51 +410,11 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
       ),
     },
     {
-      key: "distributed",
-      header: "Distributed",
-      skeletonShape: "narrow",
-      sortKey: "distributed_at",
-      align: "left",
-      render: (item) => (
-        <NormalText secondary>
-          {formatDate(item.dateDistributed || item.date)}
-        </NormalText>
-      ),
-    },
-    {
-      key: "effective_date",
-      header: "Effective",
-      skeletonShape: "narrow",
-      sortKey: "effective_date",
-      align: "left",
-      render: (item: any) => (
-        <NormalText secondary>
-          {formatDate(item.effectiveDate || item.effective_date) || "—"}
-        </NormalText>
-      ),
-    },
-    {
       key: "code",
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
       render: (item: any) => <NormalText secondary>{item.code}</NormalText>,
-    },
-    {
-      key: "source",
-      header: "Source",
-      skeletonShape: "narrow",
-      render: (item) => (
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-surface-600 dark:text-slate-400 px-1.5 py-0.5 rounded">
-          {item.source}
-        </span>
-      ),
-    },
-    {
-      key: "type",
-      header: "Type",
-      skeletonShape: "text",
-      render: (item) => <TypeText type={item.doctype || item.mode || "—"} />,
     },
     {
       key: "office",
@@ -478,41 +438,33 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
       skeletonShape: "badge",
       render: (item) => <StatusBadge status={item.status || "Distributed"} />,
     },
-    {
-      key: "created_at",
-      header: "Date Created",
-      skeletonShape: "narrow",
-      sortKey: "created_at",
-      align: "right",
-      render: (item) => (
-        <NormalText secondary>
-          {formatDate(item.date)}
-        </NormalText>
-      ),
-    },
   ];
 
   if (onDelete) {
-    cols.push({
-      key: "actions",
-      header: "Action",
-      align: "right",
-      render: (item) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(item.docId || item.reqId || 0);
-          }}
-          className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-          title="Delete Record"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      ),
-    });
+    appendActions(cols, onDelete);
   }
 
   return cols;
+}
+
+function appendActions(cols: TableColumn<any>[], onDelete: (id: number) => void) {
+  cols.push({
+    key: "actions",
+    header: "Action",
+    align: "right",
+    render: (item) => (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(item.docId || item.reqId || 0);
+        }}
+        className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+        title="Delete Record"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </button>
+    ),
+  });
 }
 
 export function buildArchiveColumns(onDelete?: (id: number) => void): TableColumn<Document>[] {

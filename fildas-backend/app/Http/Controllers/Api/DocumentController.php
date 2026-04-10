@@ -106,13 +106,10 @@ class DocumentController extends Controller
         // (Date filters will be applied inside the aggregation below for precision)
 
         // 3. Single-Pass SQL Aggregation
-        // We join the latest version once to calculate all stats at the same time.
-        // This avoids memory exhaustion and SQL alias conflicts.
+        // We join the latest version directly using the denormalized latest_version_id.
+        // This avoids expensive subqueries and improves O-notation scale.
         $stats = $visibleDocsQuery
-            ->leftJoin('document_versions as lv', function ($join) {
-                $join->on('lv.document_id', '=', 'documents.id')
-                     ->whereRaw('lv.version_number = (SELECT MAX(version_number) FROM document_versions as dv2 WHERE dv2.document_id = documents.id)');
-            })
+            ->leftJoin('document_versions as lv', 'lv.id', '=', 'documents.latest_version_id')
             ->selectRaw("
                 COUNT(CASE 
                     WHEN (documents.created_at >= ? OR ? IS NULL) 

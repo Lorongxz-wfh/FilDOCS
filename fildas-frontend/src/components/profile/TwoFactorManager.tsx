@@ -186,33 +186,35 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
         {!showRecoveryNow ? (
           <div className="space-y-6">
             <div className="flex gap-4">
-               <div className="h-10 w-10 rounded bg-brand-50 flex items-center justify-center shrink-0">
-                  <Smartphone className="h-5 w-5 text-brand-600" />
+               <div className="h-10 w-10 rounded bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center shrink-0">
+                  <Smartphone className="h-5 w-5 text-brand-600 dark:text-brand-400" />
                </div>
                <div className="space-y-1">
-                  <p className="text-sm font-bold text-slate-800">1. Scan the QR Code</p>
-                  <p className="text-xs text-slate-500">Scan this image with your authenticator app (e.g., Google Authenticator, Authy).</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">1. Scan the QR Code</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Scan this image with your authenticator app (e.g., Google Authenticator, Authy).</p>
                </div>
             </div>
 
-            <div className="flex justify-center bg-white p-4 rounded-lg border border-slate-100">
+            <div className="flex justify-center bg-white p-4 sm:p-6 rounded-lg border border-slate-100 dark:border-surface-400">
                {setupData?.qr_image ? (
-                 <img src={setupData.qr_image} alt="2FA QR Code" className="h-48 w-48" />
+                 <div className="relative w-full max-w-[160px] sm:max-w-[200px] aspect-square mx-auto">
+                    <img src={setupData.qr_image} alt="2FA QR Code" className="w-full h-full object-contain" />
+                 </div>
                ) : (
-                 <div className="h-48 w-48 bg-slate-50 animate-pulse rounded flex items-center justify-center">
-                    <RefreshCw className="h-6 w-6 text-slate-200 animate-spin" />
+                 <div className="w-full max-w-[160px] sm:max-w-[200px] aspect-square bg-slate-50 dark:bg-surface-400 animate-pulse rounded flex items-center justify-center mx-auto">
+                    <RefreshCw className="h-6 w-6 text-slate-200 dark:text-slate-100 opacity-20 animate-spin" />
                  </div>
                )}
             </div>
 
-            <div className="bg-slate-50 p-3 rounded-md border border-slate-100 space-y-2">
-                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider text-center">Or enter manually</p>
+            <div className="bg-slate-50 dark:bg-surface-400/20 p-3 rounded-md border border-slate-100 dark:border-surface-400 space-y-2">
+                <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider text-center">Or enter manually</p>
                 <div className="flex items-center justify-center gap-2">
-                   <code className="text-sm font-mono font-bold text-slate-700 bg-white px-2 py-1 rounded shadow-sm">
+                   <code className="text-xs sm:text-sm font-mono font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-surface-500 px-2.5 py-1 rounded shadow-sm break-all text-center border border-slate-100 dark:border-surface-400">
                       {setupData?.secret.match(/.{1,4}/g)?.join(' ') || "..."}
                    </code>
                    <button 
-                     className="p-1 hover:bg-slate-200 rounded text-slate-400 transition"
+                     className="p-1 hover:bg-slate-200 dark:hover:bg-surface-400 rounded text-slate-400 transition shrink-0"
                      onClick={() => {
                         navigator.clipboard.writeText(setupData?.secret || "");
                         push({ type: "success", message: "Secret copied to clipboard." });
@@ -225,11 +227,11 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
 
             <div className="space-y-3 pt-2">
                <div className="space-y-1">
-                  <p className="text-sm font-bold text-slate-800">2. Verification Code</p>
-                  <p className="text-xs text-slate-500">Enter the 6-digit code shown in your app to confirm.</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">2. Verification Code</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Enter the 6-digit code shown in your app to confirm.</p>
                </div>
                <input 
-                 className="w-full text-center text-2xl font-mono tracking-[0.5em] h-14 rounded-md border-slate-200 focus:border-brand-500 focus:ring-brand-500/20"
+                 className="w-full text-center text-xl sm:text-2xl font-mono tracking-[0.3em] sm:tracking-[0.5em] h-12 sm:h-14 rounded-md bg-white dark:bg-surface-500 border-slate-200 dark:border-surface-400 text-slate-800 dark:text-slate-100 focus:border-brand-500 focus:ring-brand-500/20"
                  placeholder="000000"
                  maxLength={6}
                  value={confirmCode}
@@ -247,19 +249,19 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
           </div>
         ) : (
            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center gap-3 text-emerald-600 bg-emerald-50 p-3 rounded-md border border-emerald-100">
+              <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 p-3 rounded-md border border-emerald-100 dark:border-emerald-500/20">
                  <CheckCircle2 className="h-5 w-5" />
                  <p className="text-xs font-bold uppercase tracking-wider">Setup Complete</p>
               </div>
 
               <div className="space-y-3">
-                 <p className="text-xs text-slate-500 leading-relaxed">
+                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                     Store these recovery codes in a secure place. If you lose access to your authenticator app, these are the **only way** to regain access to your account.
                  </p>
 
-                 <div className="grid grid-cols-2 gap-2 bg-slate-50 p-4 rounded-md border border-slate-100 font-mono text-[11px] font-bold text-slate-600">
+                 <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-surface-400/20 p-4 rounded-md border border-slate-100 dark:border-surface-400 font-mono text-[11px] font-bold text-slate-600 dark:text-slate-300">
                     {recoveryCodes.map(c => (
-                      <div key={c} className="bg-white p-1.5 px-2 rounded shadow-sm border border-slate-100">
+                      <div key={c} className="bg-white dark:bg-surface-500 p-1.5 px-2 rounded shadow-sm border border-slate-100 dark:border-surface-400">
                         {c}
                       </div>
                     ))}

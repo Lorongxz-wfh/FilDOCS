@@ -1,19 +1,19 @@
 import React from "react";
 import {
-  BookOpen,
   FileText,
   ArrowDownToLine,
   Users,
+  BookOpen,
 } from "lucide-react";
 import type { Document } from "../../services/documents";
 
 export type LibTab = "all" | "created" | "requested" | "shared";
 
 export const TAB_LABELS: Record<LibTab, string> = {
-  all: "All",
+  all: "All Documents",
   created: "Created",
   requested: "Requested",
-  shared: "Shared",
+  shared: "Shared with Me",
 };
 
 export const TAB_ICONS: Record<LibTab, React.ReactNode> = {

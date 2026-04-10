@@ -206,6 +206,32 @@ class ActivityLogController extends Controller
 
             // Fetch activity logs where meta->document_request_id matches (database agnostic)
             $q->where('meta->document_request_id', (string) $reqId);
+        } elseif ($scope === 'connected') {
+            if (!$userOfficeId) {
+                return response()->json(['message' => 'Your account has no office assigned.'], 422);
+            }
+
+            // "Connected" means: Owner, Participant, or Share Recipient
+            $q->where(function ($qq) use ($user, $userOfficeId) {
+                // 1. Direct Ownership
+                $qq->whereIn('document_id', function ($sub) use ($user, $userOfficeId) {
+                    $sub->select('id')->from('documents')
+                        ->where('created_by', $user->id)
+                        ->orWhere('owner_office_id', $userOfficeId);
+                })
+                // 2. Workflow Participation (current or past)
+                ->orWhereIn('document_id', function ($sub) use ($userOfficeId) {
+                    $sub->select('dv.document_id')
+                        ->from('workflow_tasks as wt')
+                        ->join('document_versions as dv', 'wt.document_version_id', '=', 'dv.id')
+                        ->where('wt.assigned_office_id', $userOfficeId);
+                })
+                // 3. Shared access
+                ->orWhereIn('document_id', function ($sub) use ($userOfficeId) {
+                    $sub->select('document_id')->from('document_shares')
+                        ->where('office_id', $userOfficeId);
+                });
+            });
         } elseif ($scope === 'office') {
             if (!$userOfficeId) {
                 return response()->json(['message' => 'Your account has no office assigned. Use scope=all or scope=mine.'], 422);
@@ -218,9 +244,29 @@ class ActivityLogController extends Controller
         } else {
             // scope=all: QA/admin see everything; office_head scoped to their office; others see their office too
             if (!$canSeeAll || ($roleName === 'office_head' && $userOfficeId)) {
-                $q->where(function ($qq) use ($userOfficeId) {
-                    $qq->where('actor_office_id', $userOfficeId)
-                        ->orWhere('target_office_id', $userOfficeId);
+                $q->where(function ($qq) use ($user, $userOfficeId) {
+                    // Fallback to "connected" for non-admins if scope is all
+                    $qq->whereIn('document_id', function ($sub) use ($user, $userOfficeId) {
+                        $sub->select('id')->from('documents')
+                            ->where('created_by', $user->id)
+                            ->orWhere('owner_office_id', $userOfficeId);
+                    })
+                    ->orWhereIn('document_id', function ($sub) use ($userOfficeId) {
+                        $sub->select('dv.document_id')
+                            ->from('workflow_tasks as wt')
+                            ->join('document_versions as dv', 'wt.document_version_id', '=', 'dv.id')
+                            ->where('wt.assigned_office_id', $userOfficeId);
+                    })
+                    ->orWhereIn('document_id', function ($sub) use ($userOfficeId) {
+                        $sub->select('document_id')->from('document_shares')
+                            ->where('office_id', $userOfficeId);
+                    })
+                    // Also include generic user/office actions not tied to a document
+                    ->orWhereNull('document_id')
+                    ->where(function ($sub) use ($userOfficeId) {
+                        $sub->where('actor_office_id', $userOfficeId)
+                            ->orWhere('target_office_id', $userOfficeId);
+                    });
                 });
             }
         }

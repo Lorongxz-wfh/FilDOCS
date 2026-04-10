@@ -114,17 +114,17 @@ export const SessionManager: React.FC = () => {
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Login Sessions</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">Manage all devices where you are currently signed in.</p>
          </div>
-         {sessions.length > 1 && (
+          {sessions.length > 1 && (
             <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-rose-600 border-rose-100 hover:bg-rose-50"
+                className="text-rose-600 border-rose-100 dark:border-rose-900/30 hover:bg-rose-50 dark:hover:bg-rose-900/20"
                 onClick={handleRevokeOthers}
                 loading={revokingOthers}
             >
                 Revoke All Others
             </Button>
-         )}
+          )}
       </div>
 
       <div className="space-y-3">
@@ -136,12 +136,12 @@ export const SessionManager: React.FC = () => {
               className={`group relative flex items-center justify-between p-4 rounded-lg border transition-all ${
                 session.is_current 
                   ? "border-brand-200 bg-brand-50/30 dark:border-brand-500/20 dark:bg-brand-500/5 shadow-sm" 
-                  : "border-slate-100 dark:border-surface-400 bg-white dark:bg-surface-500 hover:border-slate-200"
+                  : "border-slate-100 dark:border-surface-400 bg-white dark:bg-surface-500 hover:border-slate-200 dark:hover:border-surface-300"
               }`}
             >
               <div className="flex items-center gap-4">
                 <div className={`h-10 w-10 flex items-center justify-center rounded-lg ${
-                  session.is_current ? "bg-brand-100 text-brand-600" : "bg-slate-100 text-slate-500 dark:bg-surface-400"
+                  session.is_current ? "bg-brand-100 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400" : "bg-slate-100 text-slate-500 dark:bg-surface-400 dark:text-slate-400"
                 }`}>
                   {device.includes("Mobile") ? <Smartphone className="h-5 w-5" /> : <Laptop className="h-5 w-5" />}
                 </div>
@@ -150,7 +150,7 @@ export const SessionManager: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-bold text-slate-800 dark:text-slate-100">{device}</span>
                     {session.is_current && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400 border border-brand-200 dark:border-brand-500/20">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400 border border-brand-200 dark:border-brand-500/20 shadow-sm">
                         <ShieldCheck className="h-2.5 w-2.5" />
                         Current Session
                       </span>
@@ -158,15 +158,15 @@ export const SessionManager: React.FC = () => {
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
                     <span className="flex items-center gap-1">
-                        <Globe className="h-3 w-3" />
+                        <Globe className="h-3 w-3 opacity-70" />
                         {session.ip_address}
                     </span>
                     <span className="flex items-center gap-1">
-                        <Monitor className="h-3 w-3" />
+                        <Monitor className="h-3 w-3 opacity-70" />
                         {browser}
                     </span>
                     <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
+                        <Clock className="h-3 w-3 opacity-70" />
                         Last used: {session.last_used_at ? format(new Date(session.last_used_at), "MMM d, h:mm a") : "Just now"}
                     </span>
                   </div>
@@ -177,7 +177,7 @@ export const SessionManager: React.FC = () => {
                 <button 
                   onClick={() => handleRevoke(session.id)}
                   disabled={revokingId === session.id}
-                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md transition-all opacity-0 group-hover:opacity-100"
                   title="Revoke session"
                 >
                   {revokingId === session.id ? (
@@ -192,11 +192,11 @@ export const SessionManager: React.FC = () => {
         })}
       </div>
 
-      <div className="p-4 rounded-lg bg-slate-50 dark:bg-surface-600 border border-slate-100 dark:border-surface-400 flex gap-3">
-         <AlertCircle className="h-5 w-5 text-slate-400 shrink-0" />
+      <div className="p-4 rounded-lg bg-slate-50 dark:bg-surface-400/20 border border-slate-100 dark:border-surface-400 flex gap-3 shadow-sm">
+         <AlertCircle className="h-5 w-5 text-slate-400 dark:text-slate-500 shrink-0" />
          <div className="space-y-1">
-            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Account Security Tip</h4>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
+            <h4 className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest">Account Security Tip</h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400/90 leading-normal">
                 If you see a device you don't recognize, revoke it immediately and change your account password. 
                 We recommend enabling Two-Factor Authentication for maximum account integrity.
             </p>

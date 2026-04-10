@@ -288,6 +288,27 @@ const LoginPage: React.FC = () => {
                   >
                     {loading ? "Verifying..." : "Verify Code"}
                   </button>
+
+                  {!isRecovery && (
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={async () => {
+                        setLoading(true);
+                        try {
+                          await api.post("/login/two-factor/email", { challenge_id: challengeId });
+                          setError("Verification code sent to your email."); 
+                        } catch (err: any) {
+                          setError(err?.response?.data?.message || "Failed to send email.");
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      className="mt-3 text-xs font-bold text-slate-500 hover:text-brand-500 dark:text-slate-400 dark:hover:text-brand-300 transition text-center py-1"
+                    >
+                      Can't access your app? Send code to email
+                    </button>
+                  )}
                   
                   <button
                     type="button"
@@ -296,7 +317,7 @@ const LoginPage: React.FC = () => {
                         setCode("");
                         setError(null);
                     }}
-                    className="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition text-center"
+                    className="mt-3 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition text-center"
                   >
                     {isRecovery ? "Use authenticator app" : "Can't access your app? Use a recovery code"}
                   </button>

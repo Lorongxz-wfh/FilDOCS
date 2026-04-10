@@ -91,6 +91,16 @@ class WorkflowService
         ?string $effectiveDate = null,
     ): WorkflowTask {
         return DB::transaction(function () use ($version, $user, $action, $note, $effectiveDate) {
+            // 1. Guard against terminal states
+            $terminalStatuses = [
+                WorkflowSteps::STATUS_DISTRIBUTED,
+                WorkflowSteps::STATUS_CANCELLED,
+                WorkflowSteps::STATUS_SUPERSEDED
+            ];
+            if (in_array($version->status, $terminalStatuses, true)) {
+                throw new \RuntimeException("Cannot perform action '{$action}' on a document version that is already {$version->status}.");
+            }
+
             // Cancel — handled before task check
             if ($action === WorkflowSteps::ACTION_CANCEL_DOCUMENT) {
                 if (!$note) throw new \RuntimeException('A reason is required when cancelling.');
@@ -818,7 +828,7 @@ class WorkflowService
 
         // 6. Notifications + logs
         $this->notify($nextOfficeId, $actor, $version, $nextStatus, $isReject);
-        $this->log($version, $actor, $nextOfficeId, $fromStatus, $nextStatus, $nextStep, $nextPhase, $note, $isReject);
+        $this->log($version, $actor, $nextOfficeId, $fromStatus, $nextStatus, $currentTask->step, $nextStep, $nextPhase, $note, $isReject);
 
         if ($isFinal) {
             $this->notifyDistributed($version, $actor);
@@ -983,17 +993,19 @@ class WorkflowService
         int $targetOfficeId,
         string $fromStatus,
         string $toStatus,
-        string $step,
+        string $fromStep,
+        string $toStep,
         string $phase,
         ?string $note,
         bool $isReject,
     ): void {
-        [$event, $label] = $this->resolveEventAndLabel($step, $toStatus, $isReject);
+        [$event, $label] = $this->resolveEventAndLabel($toStep, $toStatus, $isReject);
         $this->logActivity($event, $label, $actor->id, $actor->office_id, [
             'from_status' => $fromStatus,
             'to_status'   => $toStatus,
+            'from_step'   => $fromStep,
+            'to_step'     => $toStep,
             'phase'       => $phase,
-            'step'        => $step,
             'note'        => $note,
         ], $version->document_id, $version->id, $targetOfficeId);
     }

@@ -2,7 +2,7 @@ import { getApi, normalizePaginated, dedupeFetch } from "./_base";
 import type { Paginated, ActivityLogItem } from "./types";
 
 export async function listActivityLogs(params: {
-  scope?: "office" | "mine" | "document" | "all" | "request";
+  scope?: "office" | "mine" | "document" | "all" | "request" | "connected";
   document_id?: number;
   request_id?: number;
   document_version_id?: number;

@@ -84,11 +84,24 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
   }, [onHeaderStateChange]);
 
   const headerSig = React.useMemo(() => {
-    return `${state.localVersion?.status}|${state.localVersion?.version_number}|${state.canAct}|${actions.workflow.isTasksReady}|${state.needsFileReplacement ? 1 : 0}|${actions.fileUpload.isUploading ? 1 : 0}`;
-  }, [state.localVersion?.status, state.localVersion?.version_number, state.canAct, actions.workflow.isTasksReady, state.needsFileReplacement, actions.fileUpload.isUploading]);
+    return `${state.localVersion?.id}|${state.localVersion?.status}|${state.localVersion?.version_number}|${state.canAct}|${actions.workflow.isTasksReady}|${state.needsFileReplacement ? 1 : 0}|${actions.fileUpload.isUploading ? 1 : 0}|${state.localTitle}`;
+  }, [
+    state.localVersion?.id,
+    state.localVersion?.status,
+    state.localVersion?.version_number,
+    state.canAct,
+    actions.workflow.isTasksReady,
+    state.needsFileReplacement,
+    actions.fileUpload.isUploading,
+    state.localTitle
+  ]);
 
+  const lastSigRef = React.useRef("");
   React.useEffect(() => {
     if (!state.localVersion) return;
+    if (headerSig === lastSigRef.current) return;
+    lastSigRef.current = headerSig;
+
     onHeaderStateChangeRef.current?.({
       title: state.localVersion.status === "Draft" ? state.localTitle : (document?.title ?? ""),
       code: document?.code ?? "CODE-NOT-AVAILABLE",
@@ -99,7 +112,7 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
       headerActions: state.headerActions,
       versionActions: state.versionActions,
     });
-  }, [headerSig, state.headerActions, state.versionActions, actions.workflow.isTasksReady]);
+  }, [headerSig, state.headerActions, state.versionActions, document?.title, document?.code, state.localTitle]);
 
   // ── Sync Right Panel Content to Parent ───────────────────────
   const [draftMessage, setDraftMessage] = React.useState("");
@@ -126,8 +139,26 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
     }
   }, [state.localVersion?.id, actions.workflow.refreshMessages, draftMessage, push]);
 
+  const rightPanelSig = React.useMemo(() => {
+    return `${state.localVersion?.id}|${state.localVersion?.updated_at}|${actions.workflow.tasks.length}|${actions.workflow.messages.length}|${actions.workflow.activityLogs.length}|${state.activeSideTab}|${isSendingMessage}|${draftMessage}|${actions.workflow.newMessageCount}`;
+  }, [
+    state.localVersion?.id,
+    state.localVersion?.updated_at,
+    actions.workflow.tasks.length,
+    actions.workflow.messages.length,
+    actions.workflow.activityLogs.length,
+    state.activeSideTab,
+    isSendingMessage,
+    draftMessage,
+    actions.workflow.newMessageCount,
+  ]);
+
+  const lastRightPanelSigRef = React.useRef("");
   React.useEffect(() => {
     if (!document || !state.localVersion) return;
+    if (rightPanelSig === lastRightPanelSigRef.current) return;
+    lastRightPanelSigRef.current = rightPanelSig;
+
     onRightPanelContentRef.current?.(
       <DocumentRightPanel
         document={document}
@@ -163,15 +194,29 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
       />
     );
   }, [
-    state,
-    actions.workflow,
-    actions.setActiveSideTab,
-    draftMessage,
+    rightPanelSig,
+    document,
+    state.localVersion,
+    state.offices,
+    state.routeSteps,
+    actions.workflow.tasks,
+    actions.workflow.messages,
+    actions.workflow.activityLogs,
+    actions.workflow.newMessageCount,
+    actions.workflow.clearNewMessageCount,
+    actions.workflow.isLoadingActivityLogs,
+    actions.workflow.isLoadingMessages,
+    state.activeSideTab,
     isSendingMessage,
+    draftMessage,
     optimisticMessages,
+    handleSendMessage,
+    formatWhen,
+    state.isQAOfficeUser,
     me,
     onChanged,
-    push
+    actions.setActiveSideTab,
+    actions.setLocalTitle,
   ]);
 
   return (
@@ -275,7 +320,7 @@ const DocumentFlow: React.FC<DocumentFlowProps> = ({
               isUploading={actions.fileUpload.isUploading}
               uploadProgress={actions.fileUpload.uploadProgress}
               isPreviewLoading={state.isPreviewLoading}
-              setIsPreviewLoading={() => { /* logic in hook already checks this via useEffect */ }}
+              setIsPreviewLoading={actions.setIsPreviewLoading}
               fileInputRef={actions.fileUpload.fileInputRef}
               onOpenPreview={async () => {
                 

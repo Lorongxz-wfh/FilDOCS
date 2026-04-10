@@ -256,8 +256,8 @@ export function useDashboardData(role: UserRole): DashboardData {
           if (!silent) {
             setTimeout(async () => {
               const res = await listActivityLogs({ 
-                scope: "office", 
-                per_page: 5,
+                scope: "connected", 
+                per_page: 10,
                 date_from: dateFrom,
                 date_to: dateTo
               });

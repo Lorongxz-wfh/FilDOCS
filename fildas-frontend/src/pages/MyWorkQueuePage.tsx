@@ -19,7 +19,8 @@ import {
   isOfficeStaff,
   isOfficeHead,
 } from "../lib/roleFilters";
-import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
+import { useAdminDebugMode } from "../hooks/useAdminDebugMode";import { formatRelative } from "../utils/formatters";
+import { friendlyEvent } from "../utils/activityFormatters";
 import PageFrame from "../components/layout/PageFrame";
 import { PageActions, RefreshAction, CreateAction } from "../components/ui/PageActions";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
@@ -366,26 +367,37 @@ const MyWorkQueuePage: React.FC = () => {
                 />
               ) : (
                 <div className="space-y-0.5 focus-within:z-20">
-                  {recentActivity.map((l: any) => (
-                    <button
-                      key={l.id}
-                      type="button"
-                      onClick={() => openActivity(l)}
-                      className="w-full text-left rounded-md px-3 py-2.5 transition hover:bg-slate-50 dark:hover:bg-surface-400"
-                    >
-                      <p className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 truncate uppercase tracking-wider">
-                        {l.label || l.event}
-                      </p>
-                      <div className="flex items-center justify-between mt-0.5 gap-2">
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate lowercase font-medium opacity-70">
-                          {l.event}
+                  {recentActivity.map((l: any, idx) => {
+                    const docName = l.document 
+                      ? (l.document.code ? `${l.document.code} — ${l.document.title}` : l.document.title)
+                      : (l.meta?.filename || l.meta?.original_filename || "System Action");
+
+                    return (
+                      <button
+                        key={l.id}
+                        type="button"
+                        onClick={() => openActivity(l)}
+                        className="w-full text-left rounded-md px-3 py-2.5 transition hover:bg-slate-50 dark:hover:bg-surface-400"
+                        style={{ animationDelay: `${idx * 50}ms` }}
+                      >
+                        {/* Action - Header */}
+                        <p className="text-[12px] font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight">
+                          {friendlyEvent(l.event)}
                         </p>
-                        <p className="shrink-0 text-[11px] text-slate-400 dark:text-slate-500 font-bold tabular-nums">
-                          {formatWhen(l.created_at)}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+
+                        {/* Doc Context | Time - Subheader */}
+                        <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium overflow-hidden">
+                          <span className="truncate max-w-[75%]">
+                            {docName}
+                          </span>
+                          <span className="shrink-0 opacity-40">|</span>
+                          <span className="tabular-nums whitespace-nowrap opacity-80">
+                            {formatWhen(l.created_at)}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
