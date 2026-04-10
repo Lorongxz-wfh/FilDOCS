@@ -121,6 +121,7 @@ class ProfileController extends Controller
         }
 
         $user->password = $data['password'];
+        $user->must_change_password = false;
         $user->save();
 
         $this->logActivity('profile.password_changed', 'Changed account password', $user->id, $user->office_id);
@@ -364,6 +365,7 @@ class ProfileController extends Controller
             'email_approvals'     => (bool) ($user->email_approvals ?? true),
             'email_requests'      => (bool) ($user->email_requests ?? true),
             'theme_preference'    => $user->theme_preference ?? 'system',
+            'must_change_password' => (bool) $user->must_change_password,
         ];
     }
 }
