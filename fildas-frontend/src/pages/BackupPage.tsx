@@ -175,15 +175,25 @@ export default function BackupPage() {
   const [confirmingRestore, setConfirmingRestore] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // ── Auto-detect Active Restoration on Mount ────────────────────────────────
+  // ── Browser Persistence (Resistant to refreshes/crashes) ────────────────────
   useEffect(() => {
     const detectRestoration = async () => {
+      // Check localStorage first for persistence
+      const persistedNode = localStorage.getItem('fildas_restoring_node');
+      if (persistedNode) {
+        setRestoring(persistedNode);
+      }
+
       try {
         const data = await getRestoreStatus();
         if (data.status === 'running') {
-            // Re-attach to the ongoing restoration
-            setRestoring('SYSTEM_CORE'); // Semantic marker
+            setRestoring(persistedNode || 'SYSTEM_CORE');
             setRestoreStatus(data);
+        } else if (data.status === 'idle' && persistedNode) {
+            // It was in localStorage but server says idle?
+            // Clean up stale flag.
+            localStorage.removeItem('fildas_restoring_node');
+            setRestoring(null);
         }
       } catch (e) {}
     };
@@ -299,6 +309,7 @@ export default function BackupPage() {
 
   const handleRestoreSnapshot = async (backup: SystemBackupFile) => {
     setRestoring(backup.filename);
+    localStorage.setItem('fildas_restoring_node', backup.filename);
     setConfirmingRestore(null);
     setError(null);
     setRestoreStatus({ status: 'running', message: 'Connecting to server...', progress: 5 });
@@ -310,6 +321,7 @@ export default function BackupPage() {
         await restoreSystemSnapshot(backup.filename);
       }
     } catch (e: any) {
+      localStorage.removeItem('fildas_restoring_node');
       const msg = e?.response?.data?.message ?? e?.message ?? "Restore failed.";
       setError(msg);
       setRestoring(null);
@@ -327,20 +339,26 @@ export default function BackupPage() {
           setRestoreStatus(status);
           
           if (status.status === 'completed') {
+            localStorage.removeItem('fildas_restoring_node');
             clearInterval(interval);
             setTimeout(() => {
                 alert("Institutional Restoration Confirmed. The application will now reload to synchronize data.");
                 window.location.reload();
             }, 1000);
           } else if (status.status === 'failed') {
+            localStorage.removeItem('fildas_restoring_node');
             clearInterval(interval);
             setError("Restoration process failed: " + status.message);
             setRestoring(null);
             setRestoreStatus(null);
           } else if (status.status === 'idle' && restoreStatus && restoreStatus.progress > 0) {
-            // This is a transient case where the cache might have dipped momentarily
-            // but we were previously at X%. Don't abort yet.
-            console.warn("Restoration poll returned idle while active. Holding state...");
+            // ── The Ghost Filter ─────────────────────────────────────────────
+            // This is a transient case where the cache might have dipped 
+            // but we were previously at X%. Don't abort the view.
+            console.warn("Restoration poll returned idle while previously active. Holding state...");
+          } else if (status.status === 'running') {
+            // Keep the heartbeat alive
+            setRestoreStatus(status);
           }
         } catch (e) {
           // Silent - connection might flicker during restore
