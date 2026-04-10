@@ -32,7 +32,14 @@ class SystemBackupController extends Controller
 
     private function checkAccess(Request $request): void
     {
+        // Allow status checks to bypass local role check since DB might be wiped
+        if ($request->route() && $request->route()->getActionMethod() === 'status') {
+            return;
+        }
+
         $user = $request->user();
+        if (!$user) abort(401);
+
         $role = $this->roleNameOf($user);
         if (!in_array($role, ['qa', 'admin', 'sysadmin', 'office_head'], true)) {
             abort(403, 'Unauthorized.');
@@ -366,9 +373,20 @@ class SystemBackupController extends Controller
 
     public function status(Request $request)
     {
-        $this->checkAccess($request);
-        $statusKey = "restore_status_{$request->user()->id}";
-        $status = Cache::get($statusKey, ['status' => 'idle', 'message' => 'No active restoration.', 'progress' => 0]);
+        // Try user-specific status first, then fallback to a global marker
+        $userId = $request->user()?->id ?? 'global';
+        $statusKey = "restore_status_{$userId}";
+        
+        $status = Cache::get($statusKey);
+
+        // If no user-specific key, check if there's any active restore
+        if (!$status) {
+            $status = Cache::get('system_restore_status', [
+                'status' => 'idle', 
+                'message' => 'No active restoration.', 
+                'progress' => 0
+            ]);
+        }
         
         return response()->json($status);
     }
