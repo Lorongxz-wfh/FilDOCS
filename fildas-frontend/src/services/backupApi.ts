@@ -1,4 +1,4 @@
-import { getApi, API_BASE } from "./_base";
+import { getApi, API_BASE, dedupeFetch } from "./_base";
 
 export type BackupPreset = "today" | "this_week" | "this_month" | "custom" | "all";
 
@@ -23,11 +23,13 @@ export async function getBackupSummary(
   dateFrom?: string,
   dateTo?: string,
 ): Promise<BackupSummary> {
-  const api = await getApi();
-  const res = await api.get("/backup/summary", {
-    params: buildParams(preset, dateFrom, dateTo),
+  return dedupeFetch(`backup-summary-${preset}-${dateFrom}-${dateTo}`, async () => {
+    const api = await getApi();
+    const res = await api.get("/backup/summary", {
+      params: buildParams(preset, dateFrom, dateTo),
+    });
+    return res.data as BackupSummary;
   });
-  return res.data as BackupSummary;
 }
 
 /**
@@ -89,9 +91,11 @@ export type SystemBackupResponse = {
 };
 
 export async function getSystemBackups(): Promise<SystemBackupResponse> {
-  const api = await getApi();
-  const res = await api.get("/admin/system/backups");
-  return res.data as SystemBackupResponse;
+  return dedupeFetch("system-backups", async () => {
+    const api = await getApi();
+    const res = await api.get("/admin/system/backups");
+    return res.data as SystemBackupResponse;
+  });
 }
 
 export async function createSystemSnapshot(type: "db" | "doc" | "full" = "db"): Promise<SystemBackupFile> {
