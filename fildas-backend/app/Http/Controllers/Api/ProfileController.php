@@ -102,9 +102,10 @@ class ProfileController extends Controller
         /** @var \App\Models\User $user */
         $user = $request->user();
 
-        $data = $request->validate([
-            'current_password' => ['required', 'string'],
-            'password'         => [
+        $isForced = (bool) $user->must_change_password;
+
+        $rules = [
+            'password' => [
                 'required', 
                 'string', 
                 'min:8', 
@@ -114,9 +115,15 @@ class ProfileController extends Controller
                 'regex:/[0-9]/',      
                 'regex:/[@$!%*#?&_]/',
             ],
-        ]);
+        ];
 
-        if (!Hash::check($data['current_password'], $user->password)) {
+        if (!$isForced) {
+            $rules['current_password'] = ['required', 'string'];
+        }
+
+        $data = $request->validate($rules);
+
+        if (!$isForced && !Hash::check($data['current_password'], $user->password)) {
             return response()->json(['message' => 'Current password is incorrect.'], 422);
         }
 
