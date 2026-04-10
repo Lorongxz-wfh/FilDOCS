@@ -176,7 +176,8 @@ class SystemRestoreJob implements ShouldQueue
                 // ── Infrastructure Protection (Do not re-create tables that keep app alive) ──
                 $isDangerous = (str_contains($lowerLine, 'drop table') || str_contains($lowerLine, 'create table')) && 
                                (str_contains($lowerLine, 'users') || str_contains($lowerLine, 'roles') || 
-                                str_contains($lowerLine, 'personal_access_tokens') || str_contains($lowerLine, 'offices'));
+                                str_contains($lowerLine, 'personal_access_tokens') || str_contains($lowerLine, 'offices') ||
+                                str_contains($lowerLine, 'cache') || str_contains($lowerLine, 'sessions'));
 
                 if ($isDangerous) {
                     if (str_ends_with(trim($trimmedLine), ';')) $query = "";
@@ -227,9 +228,9 @@ class SystemRestoreJob implements ShouldQueue
         $isMysql = in_array($dbConnection, ['mysql', 'mariadb'], true);
         $isPgsql = $dbConnection === 'pgsql';
 
-        // ── Infrastructure Tables (DO NOT DROP - KEEPS APP ALIVE) ──
+        // ── Infrastructure Tables (DO NOT TOUCH - KEEPS SESSION ALIVE) ──
         $protectedTables = [
-            'migrations', 'jobs', 'failed_jobs', 'cache', 'cache_locks', 
+            'migrations', 'jobs', 'failed_jobs', 'cache', 'cache_locks', 'sessions',
             'personal_access_tokens', 'users', 'roles', 'offices',
             'telescope_entries', 'telescope_entries_tags', 'telescope_monitoring'
         ];
@@ -241,19 +242,17 @@ class SystemRestoreJob implements ShouldQueue
         } elseif ($isPgsql) {
             $tables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
             $tableNames = array_column($tables, 'tablename');
+            // Force bypass FK checks in Postgres for the wipe
+            DB::statement("SET session_replication_role = 'replica'");
         } else {
             $tables = DB::select("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
             $tableNames = array_column($tables, 'name');
         }
 
         foreach ($tableNames as $table) {
-            if (in_array($table, $protectedTables)) {
-                // Just clear the data, don't kill the structure so Auth works
-                try {
-                    DB::table($table)->truncate();
-                } catch (\Throwable $e) {}
-                continue;
-            }
+            // IF it's a protected table, skip it entirely.
+            // Restoration SQL will handle the data merge/overwrite later.
+            if (in_array($table, $protectedTables)) continue;
 
             try {
                 if ($isMysql) DB::statement("DROP TABLE IF EXISTS `{$table}` CASCADE");
@@ -263,6 +262,7 @@ class SystemRestoreJob implements ShouldQueue
         }
 
         if ($isMysql) DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        elseif ($isPgsql) DB::statement("SET session_replication_role = 'origin'");
     }
 
     private function internalRestoreDocuments($zipPath)
