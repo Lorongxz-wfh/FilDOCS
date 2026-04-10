@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
-import { Clock } from "lucide-react";
+import { Clock, Settings, ShieldAlert } from "lucide-react";
 import { getMaintenanceStatus } from "../../services/systemHealthApi";
 import echo from "../../lib/echo";
+import { isAdmin, getUserRole } from "../../lib/roleFilters";
+import { Link } from "react-router-dom";
 
 export default function MaintenanceBanner() {
   const [schedule, setSchedule] = useState<{ startsAt: Date; message: string; mode: string } | null>(null);
   const [timeLeft, setTimeLeft] = useState<string>("");
+  const userRole = getUserRole();
+  const isPrivileged = isAdmin(userRole);
 
   const fetchStatus = async () => {
     const token = localStorage.getItem("auth_token");
@@ -69,13 +73,16 @@ export default function MaintenanceBanner() {
       const diff = schedule.startsAt.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setSchedule(null);
+        // Keep the banner visible as "Ongoing"
         setTimeLeft("");
         
-        // If it's a hard maintenance, force the redirect immediately
-        if (schedule.mode === "hard") {
+        // Only redirect if NOT an Admin
+        if (schedule.mode === "hard" && !isPrivileged) {
            window.location.href = "/maintenance";
         }
+        
+        // Stop the timer but keep the schedule state to show the banner
+        clearInterval(timer);
         return;
       }
 
@@ -85,17 +92,19 @@ export default function MaintenanceBanner() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [schedule]);
+  }, [schedule, isPrivileged]);
 
-  const isStarted = schedule && new Date() >= schedule.startsAt;
-  if (!schedule || (!timeLeft && !isStarted)) return null;
+  const startsAtTime = schedule?.startsAt.getTime() ?? 0;
+  const isStarted = schedule && new Date().getTime() >= startsAtTime;
+  
+  if (!schedule) return null;
 
   return (
     <div className="relative z-[100] animate-in slide-in-from-top-full duration-500">
-      <div className={`${isStarted ? 'bg-rose-500/90' : 'bg-amber-500/90'} backdrop-blur-md text-white px-4 py-2 border-b ${isStarted ? 'border-rose-600/20' : 'border-amber-600/20'} flex items-center justify-between shadow-sm`}>
+      <div className={`${isStarted ? 'bg-rose-600/90' : 'bg-amber-500/90'} backdrop-blur-md text-white px-4 py-2 border-b ${isStarted ? 'border-rose-700/20' : 'border-amber-600/20'} flex items-center justify-between shadow-sm`}>
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="bg-white/20 p-1.5 rounded-md shrink-0">
-            <Clock size={16} className={isStarted ? "" : "animate-pulse"} />
+            {isStarted ? <ShieldAlert size={16} className="animate-pulse" /> : <Clock size={16} className="animate-pulse" />}
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 overflow-hidden">
             <span className="text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
@@ -108,7 +117,7 @@ export default function MaintenanceBanner() {
         </div>
 
         <div className="flex items-center gap-4 shrink-0">
-          <div className={`flex items-center gap-2 ${isStarted ? 'bg-white/20' : 'bg-black/10'} px-3 py-1 rounded-full border border-white/20`}>
+          <div className={`flex items-center gap-2 ${isStarted ? 'bg-rose-950/20' : 'bg-black/10'} px-3 py-1 rounded-full border border-white/20`}>
             <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest">
               {isStarted ? "Status" : "Starts in"}
             </span>
@@ -116,6 +125,16 @@ export default function MaintenanceBanner() {
               {isStarted ? "ACTIVE" : timeLeft}
             </span>
           </div>
+
+          {isPrivileged && (
+            <Link 
+              to="/admin/system/health"
+              className="hidden md:flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-md border border-white/20 text-[11px] font-bold tracking-tight transition active:scale-95"
+            >
+              <Settings size={12} />
+              Manage
+            </Link>
+          )}
         </div>
       </div>
     </div>
