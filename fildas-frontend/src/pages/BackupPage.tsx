@@ -175,6 +175,21 @@ export default function BackupPage() {
   const [confirmingRestore, setConfirmingRestore] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // ── Auto-detect Active Restoration on Mount ────────────────────────────────
+  useEffect(() => {
+    const detectRestoration = async () => {
+      try {
+        const data = await getRestoreStatus();
+        if (data.status === 'running') {
+            // Re-attach to the ongoing restoration
+            setRestoring('SYSTEM_CORE'); // Semantic marker
+            setRestoreStatus(data);
+        }
+      } catch (e) {}
+    };
+    detectRestoration();
+  }, []);
+
   const [downloading, setDownloading] = useState<Record<string, boolean>>({});
   const [isBackupMenuOpen, setIsBackupMenuOpen] = useState(false);
 
@@ -322,6 +337,10 @@ export default function BackupPage() {
             setError("Restoration process failed: " + status.message);
             setRestoring(null);
             setRestoreStatus(null);
+          } else if (status.status === 'idle' && restoreStatus && restoreStatus.progress > 0) {
+            // This is a transient case where the cache might have dipped momentarily
+            // but we were previously at X%. Don't abort yet.
+            console.warn("Restoration poll returned idle while active. Holding state...");
           }
         } catch (e) {
           // Silent - connection might flicker during restore

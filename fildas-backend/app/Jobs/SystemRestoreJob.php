@@ -41,7 +41,7 @@ class SystemRestoreJob implements ShouldQueue
         set_time_limit(1800);
 
         $statusKey = "restore_status_{$this->actorId}";
-        $data = ['status' => 'running', 'message' => "Starting restoration of {$this->filename}...", 'progress' => 10];
+        $data = ['status' => 'running', 'message' => "Starting restoration of {$this->filename}...", 'progress' => 5];
         Cache::store('file')->put($statusKey, $data, 1800);
         Cache::store('file')->put('system_restore_status', $data, 1800);
 
@@ -60,7 +60,11 @@ class SystemRestoreJob implements ShouldQueue
             fclose($readStream);
             fclose($writeStream);
 
-            $data = ['status' => 'running', 'message' => "Download complete. Extracting archive...", 'progress' => 30];
+            $data = ['status' => 'running', 'message' => "Archive downloaded to local storage. Extracting...", 'progress' => 25];
+            Cache::store('file')->put($statusKey, $data, 1800);
+            Cache::store('file')->put('system_restore_status', $data, 1800);
+
+            $data = ['status' => 'running', 'message' => "Archive extraction complete. Preparing schema...", 'progress' => 40];
             Cache::store('file')->put($statusKey, $data, 1800);
             Cache::store('file')->put('system_restore_status', $data, 1800);
 
@@ -82,7 +86,7 @@ class SystemRestoreJob implements ShouldQueue
                 }
 
                 if ($sqlFileInZip) {
-                    $data = ['status' => 'running', 'message' => "Wiping old data and restoring database...", 'progress' => 50];
+                    $data = ['status' => 'running', 'message' => "Clearing environment and injecting SQL...", 'progress' => 60];
                     Cache::store('file')->put($statusKey, $data, 1800);
                     Cache::store('file')->put('system_restore_status', $data, 1800);
                     
@@ -95,7 +99,7 @@ class SystemRestoreJob implements ShouldQueue
                 }
 
                 if ($docZipInZip) {
-                    $data = ['status' => 'running', 'message' => "Synchronizing documents to Cloud Storage...", 'progress' => 80];
+                    $data = ['status' => 'running', 'message' => "Verifying integrity and syncing documents...", 'progress' => 85];
                     Cache::store('file')->put($statusKey, $data, 1800);
                     Cache::store('file')->put('system_restore_status', $data, 1800);
                     
@@ -242,17 +246,21 @@ class SystemRestoreJob implements ShouldQueue
         } elseif ($isPgsql) {
             $tables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
             $tableNames = array_column($tables, 'tablename');
-            // Force bypass FK checks in Postgres for the wipe
-            DB::statement("SET session_replication_role = 'replica'");
         } else {
             $tables = DB::select("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
             $tableNames = array_column($tables, 'name');
         }
 
         foreach ($tableNames as $table) {
-            // IF it's a protected table, skip it entirely.
-            // Restoration SQL will handle the data merge/overwrite later.
-            if (in_array($table, $protectedTables)) continue;
+            if (in_array($table, $protectedTables)) {
+                // Just clear the data, don't kill the structure so Auth works.
+                // Use raw statements for CASCADE support on restricted Postgres.
+                try {
+                    if ($isPgsql) DB::statement("TRUNCATE TABLE \"{$table}\" CASCADE");
+                    else DB::table($table)->truncate();
+                } catch (\Throwable $e) {}
+                continue;
+            }
 
             try {
                 if ($isMysql) DB::statement("DROP TABLE IF EXISTS `{$table}` CASCADE");
@@ -262,7 +270,6 @@ class SystemRestoreJob implements ShouldQueue
         }
 
         if ($isMysql) DB::statement('SET FOREIGN_KEY_CHECKS=1');
-        elseif ($isPgsql) DB::statement("SET session_replication_role = 'origin'");
     }
 
     private function internalRestoreDocuments($zipPath)
