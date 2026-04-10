@@ -94,7 +94,7 @@ const ForcePasswordChangePage: React.FC = () => {
         {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
       </button>
 
-      <div className="relative z-10 w-full max-w-sm mx-auto px-4 py-10">
+      <div className="relative z-10 w-full max-w-md mx-auto px-4 py-10">
         <div className="rounded-3xl bg-white dark:bg-surface-500 shadow-2xl px-10 py-12 flex flex-col">
           {/* Logo */}
           <div className="flex items-center justify-center mb-8">
@@ -122,15 +122,11 @@ const ForcePasswordChangePage: React.FC = () => {
               required
               isRequired
               icon={Lock}
-              error={password.length > 0 && !passwordValid ? "Please meet all complexity requirements." : undefined}
+              error={password.length > 0 && !passwordValid ? "Policy requirements not met" : undefined}
               isValid={passwordValid}
             />
 
-            {password && (
-              <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                <PasswordRequirements password={password} />
-              </div>
-            )}
+            <PasswordRequirements password={password} />
 
             <FormField
               label="Confirm New Password"
