@@ -51,8 +51,8 @@ export default function MaintenanceBanner() {
       setTimeLeft("");
     });
 
-    // Fallback polling (every 10 minutes)
-    const interval = setInterval(fetchStatus, 600000);
+    // Fallback polling (every 60 seconds for higher reactivity)
+    const interval = setInterval(fetchStatus, 60000);
 
     return () => {
       channel.stopListening(".maintenance.scheduled");
@@ -71,7 +71,11 @@ export default function MaintenanceBanner() {
       if (diff <= 0) {
         setSchedule(null);
         setTimeLeft("");
-        // The API interceptor will handle the actual logout on the next request
+        
+        // If it's a hard maintenance, force the redirect immediately
+        if (schedule.mode === "hard") {
+           window.location.href = "/maintenance";
+        }
         return;
       }
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useToastSafe } from "../components/ui/toast/ToastContext";
 import { normalizeError } from "../lib/normalizeError";
 
@@ -21,7 +21,7 @@ export function useSmartRefresh(
   const [isRefreshing, setIsRefreshing] = useState(false);
   const toast = useToastSafe();
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
     
@@ -70,8 +70,7 @@ export function useSmartRefresh(
       // Ensure the spinner stays visible for a minimum natural duration
       setTimeout(() => setIsRefreshing(false), 400);
     }
-    return false;
-  };
+  }, [isRefreshing, reloadFn, toast]);
 
   return { refresh, isRefreshing };
 }

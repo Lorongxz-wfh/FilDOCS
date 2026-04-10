@@ -99,10 +99,22 @@ export default function MaintenancePage() {
 
         {/* Footer */}
         <div className="mt-12 flex flex-col items-center gap-4">
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">
+          <button 
+            onClick={() => {
+              if (confirm("Are you sure you want to sign out? This will clear your current session.")) {
+                localStorage.clear();
+                window.location.href = "/login";
+              }
+            }}
+            className="text-[10px] font-bold text-slate-400 hover:text-rose-500 uppercase tracking-widest transition-colors"
+          >
+            Sign Out Permanently
+          </button>
+          
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest opacity-60">
             Quality Assurance Office • Filamer Christian University
           </p>
-          <div className="flex items-center gap-6 opacity-40 hover:opacity-100 transition duration-300">
+          <div className="flex items-center gap-6 opacity-40">
              <div className="h-[1px] w-8 bg-slate-300 dark:bg-surface-400" />
              <AlertTriangle size={14} className="text-amber-500" />
              <div className="h-[1px] w-8 bg-slate-300 dark:bg-surface-400" />

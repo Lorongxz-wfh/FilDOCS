@@ -125,10 +125,13 @@ class DocumentIndexService
                 $v->whereNotIn('status', ['Distributed', 'Cancelled', 'Superseded']);
             });
         } elseif ($space === 'library') {
-            // Active distributed documents: Distributed status and not manually archived
-            $query->where('documents.archived_at', null)
-                ->whereHas('latestVersion', function ($v) {
+            // Active distributed documents: Has a Distributed version and not manually archived/cancelled
+            $query->whereNull('documents.archived_at')
+                ->whereHas('versions', function ($v) {
                     $v->where('status', 'Distributed');
+                })
+                ->whereHas('latestVersion', function ($v) {
+                    $v->whereNotIn('status', ['Cancelled', 'Superseded']);
                 });
         } elseif ($space === 'archive') {
             // Terminated or manually archived documents
