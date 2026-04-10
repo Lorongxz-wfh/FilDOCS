@@ -21,32 +21,31 @@ export function useSmartRefresh(
   const [isRefreshing, setIsRefreshing] = useState(false);
   const toast = useToastSafe();
 
-  // Use a ref to store the latest reloadFn to avoid dependency loops if the parent
-  // passes a non-memoized function.
+  // 1. Decouple logic from identity: use refs for identity-agnostic access
   const fnRef = useRef(reloadFn);
+  const isBusyRef = useRef(false);
+
   useEffect(() => {
     fnRef.current = reloadFn;
   }, [reloadFn]);
 
   const refresh = useCallback(async () => {
-    // Avoid multiple concurrent refreshes
-    if (isRefreshing) return;
+    // 2. Guard with Ref to prevent concurrent calls without identity shuffling
+    if (isBusyRef.current) return;
+    
+    isBusyRef.current = true;
     setIsRefreshing(true);
     
     try {
       const result = await fnRef.current();
       
-      // If result is void, show success but stay silent
       if (!result) {
         toast?.push({
           type: "success",
           message: "Page data synchronized.",
           durationMs: 2000,
         });
-        return;
-      }
-
-      if (result.message) {
+      } else if (result.message) {
         toast?.push({
           type: result.changed ? "success" : "info",
           message: result.message,
@@ -75,10 +74,12 @@ export function useSmartRefresh(
         message: normalizeError(err),
       });
     } finally {
-      // Small timeout for better visual feedback of the "status" change
+      // 3. Cleanup
+      isBusyRef.current = false;
       setTimeout(() => setIsRefreshing(false), 300);
     }
-  }, [isRefreshing, toast]); // reloadFn removed from deps to prevent loops
+  }, [toast]); // Identity is now stable!
+
 
   return { refresh, isRefreshing };
 }
