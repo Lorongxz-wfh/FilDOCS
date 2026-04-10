@@ -147,18 +147,24 @@ class SystemRestoreJob implements ShouldQueue
                 $trimmedLine = trim($line);
                 if (empty($trimmedLine) || str_starts_with($trimmedLine, '--') || str_starts_with($trimmedLine, '/*')) continue;
                 
-                // ── MySQL to Postgres Translation ──
+                // ── Forbidden Command Filtering (Managed Postgres Resilience) ──
+                $lowerLine = strtolower($trimmedLine);
+                $isForbidden = str_contains($lowerLine, 'session_replication_role') || 
+                               str_contains($lowerLine, 'owner to') || 
+                               str_contains($lowerLine, 'pg_catalog.set_config') ||
+                               str_contains($lowerLine, 'create extension');
+
+                if ($isForbidden) {
+                    if (str_ends_with(trim($trimmedLine), ';')) {
+                        $query = ""; // Clear buffer if the forbidden command was a single line
+                    }
+                    continue; 
+                }
+
+                // ── MySQL to Postgres Translation (Still useful for mixed envs) ──
                 if ($isPgsql) {
-                    // Convert backticks to double quotes
                     $line = str_replace('`', '"', $line);
-                    // Remove MySQL specific engine and charset definitions
                     $line = preg_replace('/ENGINE=[^; ]+/', '', $line);
-                    $line = preg_replace('/AUTO_INCREMENT=[^; ]+/', '', $line);
-                    $line = preg_replace('/DEFAULT CHARSET=[^; ]+/', '', $line);
-                    $line = preg_replace('/COLLATE=[^; ]+/', '', $line);
-                    // Convert Boolean/TinyInt MySQL to SmallInt/Boolean for Postgres
-                    $line = str_replace('tinyint(1)', 'boolean', $line);
-                    $line = str_replace('datetime', 'timestamp', $line);
                 }
 
                 $query .= $line;
@@ -166,11 +172,20 @@ class SystemRestoreJob implements ShouldQueue
                 // Check for statement end with flexibility
                 if (str_ends_with(trim($trimmedLine), ';')) {
                     try {
-                        DB::unprepared($query);
+                        // Strip whitespace and check if we have anything to run
+                        $execQuery = trim($query);
+                        if (!empty($execQuery)) {
+                            DB::unprepared($execQuery);
+                        }
                     } catch (\Throwable $e) {
-                        // Very common to fail on 'SET' or 'ENGINE' lines if we didn't strip enough
-                        if (!str_contains($e->getMessage(), 'syntax error')) {
-                           Log::warning("SQL Error during restore: " . $e->getMessage(), ['query' => substr($query, 0, 100)]);
+                        $msg = $e->getMessage();
+                        // Ignore standard 'already exists' or 'permission' errors that aren't fatal
+                        $isIgnorable = str_contains($msg, 'already exists') || 
+                                       str_contains($msg, 'permission denied') ||
+                                       str_contains($msg, 'must be owner');
+                                       
+                        if (!$isIgnorable) {
+                           Log::warning("SQL Error: " . $msg, ['query' => substr($query, 0, 100)]);
                         }
                     }
                     $query = "";
