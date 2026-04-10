@@ -301,6 +301,8 @@ export default function BackupPage() {
     }
   };
 
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -312,9 +314,10 @@ export default function BackupPage() {
     }
 
     setUploading(true);
+    setUploadProgress(0);
     setError(null);
     try {
-      await uploadSystemSnapshot(file);
+      await uploadSystemSnapshot(file, (p) => setUploadProgress(p));
       fetchSystemBackups();
       if (e.target) e.target.value = '';
     } catch (e: any) {
@@ -345,7 +348,7 @@ export default function BackupPage() {
               disabled={uploading}
             >
               {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-              Upload
+              {uploading ? `Uploading ${uploadProgress}%` : "Upload"}
             </button>
             
             <div className="relative">

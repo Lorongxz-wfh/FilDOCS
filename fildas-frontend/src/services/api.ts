@@ -15,6 +15,21 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("auth_token");
 
+  // ── Single-Threaded Dev Server Traffic Control ────────────────────────
+  // If an upload is active, we cancel low-priority background polls 
+  // (maintenance, notifications) so they don't 'cut in line' on the 
+  // single-threaded local development server (artisan serve).
+  const isBackgroundPoll = config.url?.includes('/maintenance') || 
+                           config.url?.includes('/notifications') || 
+                           config.url?.includes('/unread-count');
+  
+  if (isBackgroundPoll && (window as any).IS_UPLOADING_BACKUP) {
+    const source = axios.CancelToken.source();
+    config.cancelToken = source.token;
+    source.cancel("Upload in progress. Background polling paused.");
+    return config;
+  }
+
   config.headers = config.headers ?? {};
   config.headers.Accept = "application/json";
 

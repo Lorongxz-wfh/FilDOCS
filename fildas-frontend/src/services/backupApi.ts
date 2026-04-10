@@ -181,11 +181,28 @@ export async function restoreDocumentBackup(filename: string): Promise<void> {
   await api.post(`/admin/system/backups/${filename}/restore-documents`);
 }
 
-export async function uploadSystemSnapshot(file: File): Promise<void> {
+export async function uploadSystemSnapshot(
+  file: File, 
+  onProgress?: (p: number) => void
+): Promise<void> {
   const api = await getApi();
   const formData = new FormData();
   formData.append("file", file);
-  await api.post("/admin/system/backups/upload", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+
+  (window as any).IS_UPLOADING_BACKUP = true;
+
+  try {
+    await api.post("/admin/system/backups/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 0, // No timeout for uploads
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(percent);
+        }
+      },
+    });
+  } finally {
+    (window as any).IS_UPLOADING_BACKUP = false;
+  }
 }
