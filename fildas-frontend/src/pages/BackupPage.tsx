@@ -307,10 +307,15 @@ export default function BackupPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validExtensions = ['.zip', '.sql', '.sqlite'];
-    if (!validExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
-      setError("Please upload a valid backup file (.zip, .sql, or .sqlite)");
+    const MAX_SIZE = 1000 * 1024 * 1024; // 1GB limit
+    if (file.size > MAX_SIZE) {
+      setError(`File is too large (${formatSize(file.size)}). Maximum upload size is 1GB.`);
       return;
+    }
+
+    // Warn about PHP limits for files > 100MB
+    if (file.size > 100 * 1024 * 1024) {
+      console.warn("Large file detected. Ensure your server's php.ini (upload_max_filesize and post_max_size) is set to at least " + formatSize(file.size));
     }
 
     setUploading(true);
