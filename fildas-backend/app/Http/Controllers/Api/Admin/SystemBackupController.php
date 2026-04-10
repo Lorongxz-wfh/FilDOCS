@@ -112,7 +112,9 @@ class SystemBackupController extends Controller
                 $zip->close();
                 
                 $backupPath = "{$this->backupDir}/{$finalFilename}";
-                $this->disk()->put($backupPath, file_get_contents($zipTempPath));
+                $stream = fopen($zipTempPath, 'r');
+                $this->disk()->put($backupPath, $stream);
+                if (is_resource($stream)) fclose($stream);
                 
                 @unlink($tempSql);
                 @unlink($zipTempPath);
@@ -126,7 +128,10 @@ class SystemBackupController extends Controller
                 $finalFilename = "fildas-documents-{$timestamp}.zip";
                 $backupPath = "{$this->backupDir}/{$finalFilename}";
                 
-                $this->disk()->put($backupPath, file_get_contents($tempZip));
+                $stream = fopen($tempZip, 'r');
+                $this->disk()->put($backupPath, $stream);
+                if (is_resource($stream)) fclose($stream);
+
                 @unlink($tempZip);
 
             } elseif ($type === 'full') {
@@ -154,7 +159,9 @@ class SystemBackupController extends Controller
                 $zip->close();
                 
                 $backupPath = "{$this->backupDir}/{$finalFilename}";
-                $this->disk()->put($backupPath, file_get_contents($zipTempPath));
+                $stream = fopen($zipTempPath, 'r');
+                $this->disk()->put($backupPath, $stream);
+                if (is_resource($stream)) fclose($stream);
                 
                 @unlink($tempSql);
                 @unlink($tempDocZip);

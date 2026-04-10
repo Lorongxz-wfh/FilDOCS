@@ -48,13 +48,19 @@ class SystemBackupService
                 } else {
                     // It's remote (S3/R2). Stream it to a local temp file first.
                     $tempFile = tempnam(sys_get_temp_dir(), 'fildas_stream_');
-                    $stream = $disk->readStream($zipPath);
-                    if ($stream) {
-                        file_put_contents($tempFile, $stream);
-                        fclose($stream);
+                    $srcStream = $disk->readStream($zipPath);
+                    $destStream = fopen($tempFile, 'w');
+                    
+                    if ($srcStream && $destStream) {
+                        stream_copy_to_stream($srcStream, $destStream);
+                        fclose($srcStream);
+                        fclose($destStream);
+                        
                         $zip->addFile($tempFile, $entryName);
                         $localTempFiles[] = $tempFile;
                     } else {
+                        if (is_resource($srcStream)) fclose($srcStream);
+                        if (is_resource($destStream)) fclose($destStream);
                         return false;
                     }
                 }
