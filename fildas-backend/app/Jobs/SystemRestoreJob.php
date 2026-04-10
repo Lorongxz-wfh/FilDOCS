@@ -173,6 +173,16 @@ class SystemRestoreJob implements ShouldQueue
                     continue; 
                 }
 
+                // ── Infrastructure Protection (Do not re-create tables that keep app alive) ──
+                $isDangerous = (str_contains($lowerLine, 'drop table') || str_contains($lowerLine, 'create table')) && 
+                               (str_contains($lowerLine, 'users') || str_contains($lowerLine, 'roles') || 
+                                str_contains($lowerLine, 'personal_access_tokens') || str_contains($lowerLine, 'offices'));
+
+                if ($isDangerous) {
+                    if (str_ends_with(trim($trimmedLine), ';')) $query = "";
+                    continue;
+                }
+
                 // ── MySQL to Postgres Translation (Still useful for mixed envs) ──
                 if ($isPgsql) {
                     $line = str_replace('`', '"', $line);
@@ -217,7 +227,12 @@ class SystemRestoreJob implements ShouldQueue
         $isMysql = in_array($dbConnection, ['mysql', 'mariadb'], true);
         $isPgsql = $dbConnection === 'pgsql';
 
-        $skipTables = ['migrations', 'jobs', 'failed_jobs', 'cache', 'cache_locks', 'telescope_entries', 'telescope_entries_tags', 'telescope_monitoring'];
+        // ── Infrastructure Tables (DO NOT DROP - KEEPS APP ALIVE) ──
+        $protectedTables = [
+            'migrations', 'jobs', 'failed_jobs', 'cache', 'cache_locks', 
+            'personal_access_tokens', 'users', 'roles', 'offices',
+            'telescope_entries', 'telescope_entries_tags', 'telescope_monitoring'
+        ];
 
         if ($isMysql) {
             $tables = DB::select('SHOW TABLES');
@@ -232,9 +247,16 @@ class SystemRestoreJob implements ShouldQueue
         }
 
         foreach ($tableNames as $table) {
-            if (in_array($table, $skipTables)) continue;
+            if (in_array($table, $protectedTables)) {
+                // Just clear the data, don't kill the structure so Auth works
+                try {
+                    DB::table($table)->truncate();
+                } catch (\Throwable $e) {}
+                continue;
+            }
+
             try {
-                if ($isMysql) DB::statement("DROP TABLE IF EXISTS `{$table}` CASCADE"); // MySQL doesn't use CASCADE but just in case
+                if ($isMysql) DB::statement("DROP TABLE IF EXISTS `{$table}` CASCADE");
                 elseif ($isPgsql) DB::statement("DROP TABLE IF EXISTS \"{$table}\" CASCADE");
                 else DB::statement("DROP TABLE IF EXISTS `{$table}`");
             } catch (\Throwable $e) {}
