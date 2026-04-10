@@ -42,4 +42,13 @@ class ActivityLog extends Model
     {
         return $this->belongsTo(Office::class, 'target_office_id');
     }
+
+    /**
+     * Relationship to DocumentRequest using the document_request_id stored in meta.
+     * Note: This works in Laravel 10+ with meta->document_request_id as the foreign key.
+     */
+    public function documentRequest()
+    {
+        return $this->belongsTo(DocumentRequest::class, 'meta->document_request_id');
+    }
 }

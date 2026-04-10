@@ -408,7 +408,7 @@ export interface ActivityLogItem {
   created_at: string;
   updated_at: string;
 
-  actor_user?: {
+  actor_user?: { role?: { id: number; name: string; label?: string; } | null;
     id: number;
     first_name: string;
     last_name: string;
@@ -422,7 +422,7 @@ export interface ActivityLogItem {
     name: string;
   } | null;
 
-  document?: {
+  document_request?: { id: number; title: string; } | null; document?: {
     id: number;
     title: string;
     code: string | null;

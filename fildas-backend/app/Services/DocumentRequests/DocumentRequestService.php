@@ -97,10 +97,11 @@ class DocumentRequestService
 
             // Activity log
             $this->logActivity('document_request.created', 'Created a document request', $actor->id, $actor->office_id, [
-                'document_request_id' => $requestId,
-                'mode'                => $mode,
-                'office_ids'          => $officeIds,
-                'due_at'              => $data['due_at'] ?? null,
+                'document_request_id'    => $requestId,
+                'document_request_title' => $data['title'],
+                'mode'                   => $mode,
+                'office_ids'             => $officeIds,
+                'due_at'                 => $data['due_at'] ?? null,
             ]);
 
             // Dispatch Notifications
@@ -167,11 +168,12 @@ class DocumentRequestService
                 ]);
 
             $this->logActivity('document_request.submission.submitted', 'Submitted document request evidence', $actor->id, $actor->office_id, [
-                'document_request_id' => $requestId,
-                'recipient_id'        => $recipientId,
-                'submission_id'       => $submissionId,
-                'item_id'             => $itemId,
-                'attempt_no'          => $attemptNo,
+                'document_request_id'    => $requestId,
+                'document_request_title' => DB::table('document_requests')->where('id', $requestId)->value('title'),
+                'recipient_id'           => $recipientId,
+                'submission_id'          => $submissionId,
+                'item_id'                => $itemId,
+                'attempt_no'             => $attemptNo,
             ]);
 
             // System message
@@ -246,10 +248,11 @@ class DocumentRequestService
             ]);
 
             $this->logActivity('document_request.submission.reviewed', "Reviewed submission as {$data['decision']}", $actor->id, $actor->office_id, [
-                'document_request_id' => $recipient->request_id,
-                'recipient_id'        => $recipient->id,
-                'submission_id'       => $submissionId,
-                'decision'            => $data['decision'],
+                'document_request_id'    => $recipient->request_id,
+                'document_request_title' => $requestRow->title,
+                'recipient_id'           => $recipient->id,
+                'submission_id'          => $submissionId,
+                'decision'               => $data['decision'],
             ]);
 
             // System message

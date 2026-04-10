@@ -49,11 +49,12 @@ class ActivityLogController extends Controller
 
         $paginated = $result->with([
             'actorUser' => function ($query) {
-                $query->withTrashed();
+                $query->withTrashed()->with('role');
             },
             'actorOffice:id,name,code',
             'targetOffice:id,name,code',
             'document:id,title,code',
+            'documentRequest:id,title',
         ])->paginate($perPage);
 
         return response()->json($paginated);
@@ -72,11 +73,12 @@ class ActivityLogController extends Controller
         // Limit to 5000 max to prevent memory exhaustion
         $logs = $result->with([
             'actorUser' => function ($query) {
-                $query->withTrashed();
+                $query->withTrashed()->with('role');
             },
             'actorOffice:id,name,code',
             'targetOffice:id,name,code',
             'document:id,title,code',
+            'documentRequest:id,title',
         ])->limit(5000)->get();
 
         return response()->json($logs);

@@ -205,9 +205,10 @@ class DocumentRequestMessageController extends Controller
             $user->id,
             $user->office_id,
             [
-                'document_request_id' => $requestId,
-                'message_id'          => $id,
-                'thread'              => $thread ?? ($itemId ? 'item' : ($recipientId ? 'recipient' : 'batch')),
+                'document_request_id'    => $requestId,
+                'document_request_title' => DB::table('document_requests')->where('id', $requestId)->value('title'),
+                'message_id'             => $id,
+                'thread'                 => $thread ?? ($itemId ? 'item' : ($recipientId ? 'recipient' : 'batch')),
             ]
         );
 

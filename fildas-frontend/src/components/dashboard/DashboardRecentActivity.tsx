@@ -115,30 +115,55 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
           <div className="space-y-4">
             {logs.slice(0, 10).map((log, idx) => {
               const meta = getEventMeta(log.event);
-              const docName = log.document 
+              
+              // Target name resolution
+              const targetName = log.document 
                 ? (log.document.code ? `${log.document.code} — ${log.document.title}` : log.document.title)
-                : (log.meta?.filename || log.meta?.original_filename || "System Action");
+                : (Object(log).document_request?.title || log.meta?.document_request_title || log.meta?.filename || log.meta?.original_filename || "System Action");
+
+              // Actor name resolution
+              const actorName = log.actor_user 
+                ? `${log.actor_user.first_name} ${log.actor_user.last_name}${Object(log.actor_user).role?.name ? ` (${Object(log.actor_user).role.name})` : ""}`
+                : (log.actor_office?.code || "System");
+
+              const handleLogClick = () => {
+                if (log.document_id) {
+                  navigate(`/documents/${log.document_id}`);
+                } else {
+                  const requestId = Object(log).document_request?.id || log.meta?.document_request_id;
+                  if (requestId) {
+                    navigate(`/document-requests/${requestId}`);
+                  }
+                }
+              };
+
+              const isClickable = !!(log.document_id || Object(log).document_request?.id || log.meta?.document_request_id);
 
               return (
                 <div
                   key={log.id}
-                  className={`flex items-start gap-3 ${isRecentlyAdded(log.id) ? "animate-live-entry" : ""}`}
+                  onClick={isClickable ? handleLogClick : undefined}
+                  className={`flex items-start gap-3 group/item ${isRecentlyAdded(log.id) ? "animate-live-entry" : ""} ${isClickable ? "cursor-pointer" : ""}`}
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
-                  <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border border-slate-100 dark:border-surface-400/30 bg-white dark:bg-surface-500 ${meta.text} shadow-xs`}>
+                  <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border border-slate-100 dark:border-surface-400/30 bg-white dark:bg-surface-500 ${meta.text} shadow-xs transition-transform group-hover/item:scale-110`}>
                     {meta.icon}
                   </div>
 
                   <div className="min-w-0 flex-1">
                     {/* Action Made - Header */}
-                    <p className="text-[12px] sm:text-[13px] font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight">
+                    <p className={`text-[12px] sm:text-[13px] font-bold uppercase tracking-tight leading-tight transition-colors ${isClickable ? "text-slate-800 dark:text-slate-100 group-hover/item:text-sky-600 dark:group-hover/item:text-sky-400" : "text-slate-600 dark:text-slate-300"}`}>
                       {friendlyEvent(log.event)}
                     </p>
 
-                    {/* Name of document | Time and Date - Subheader */}
-                    <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium overflow-hidden">
-                      <span className="truncate max-w-[70%]">
-                        {docName}
+                    {/* Actor | Target | Time - Subheader */}
+                    <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium overflow-hidden">
+                      <span className="shrink-0 font-bold text-slate-600 dark:text-slate-300">
+                        {actorName}
+                      </span>
+                      <span className="shrink-0 opacity-40">|</span>
+                      <span className="truncate max-w-[50%]">
+                        {targetName}
                       </span>
                       <span className="shrink-0 opacity-40">|</span>
                       <span className="tabular-nums whitespace-nowrap opacity-80">
