@@ -65,18 +65,31 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
     try {
       const res = await api.post("/login/two-factor", {
         challenge_id: challengeId,
         [isRecovery ? "recovery_code" : "code"]: code,
       });
+      
+      // If we got here, the backend accepted the code. 
+      // We navigate immediately; any secondary failures won't show as a "code error"
       handleLoginSuccess(res.data);
     } catch (err: any) {
-      if (err?.response?.status === 429) {
+      // If we somehow have a token now, it means handleLoginSuccess was partially 
+      // successful or the race condition favored the token save.
+      if (localStorage.getItem("auth_token")) {
+        console.warn("Login success detected despite challenge error caught:", err);
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      const status = err?.response?.status;
+      if (status === 429) {
         const retryAfter = err?.response?.data?.retry_after;
         const msg = err?.response?.data?.message || `Too many attempts. Please try again in ${retryAfter}s.`;
         setError(msg);
-      } else if (err?.response?.status === 503) {
+      } else if (status === 503) {
         setError(err?.response?.data?.message || "System is under maintenance.");
       } else {
         const msg = err?.response?.data?.message || "Invalid verification code.";
@@ -88,28 +101,32 @@ const LoginPage: React.FC = () => {
   };
 
   const handleLoginSuccess = (data: any) => {
-    // 1. Save keys
+    // 1. CRITICAL: Save keys first
     localStorage.setItem("auth_token", data.token);
     setAuthUser(data.user);
 
-    // 2. Force theme sync immediately (Syncs to account default)
-    if (data.user?.theme_preference) {
-      setTheme(data.user.theme_preference);
+    // 2. Wrap non-critical side effects in try/catch to prevent transition crashes
+    try {
+      if (data.user?.theme_preference) {
+        setTheme(data.user.theme_preference);
+      }
+      
+      // Fire events
+      window.dispatchEvent(new Event("show_splash"));
+      window.dispatchEvent(new Event("auth_user_updated"));
+      
+      // Background pre-load (non-blocking)
+      import("./DashboardPage").catch(() => {});
+    } catch (sideEffectError) {
+      console.error("Non-critical login side-effect failed:", sideEffectError);
     }
-
-    // 3. UI Feedback
-    import("./DashboardPage").catch(() => {});
-    window.dispatchEvent(new Event("show_splash"));
     
-    // 4. Update the global listener so everything knows auth is finished
-    window.dispatchEvent(new Event("auth_user_updated"));
-    
+    // 3. Navigate
     if (data.user?.must_change_password) {
       navigate("/force-password-change", { replace: true });
-      return;
+    } else {
+      navigate("/dashboard", { replace: true });
     }
-
-    navigate("/dashboard", { replace: true });
   };
 
   const features = [

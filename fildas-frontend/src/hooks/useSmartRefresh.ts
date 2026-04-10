@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useToastSafe } from "../components/ui/toast/ToastContext";
 import { normalizeError } from "../lib/normalizeError";
 
@@ -21,14 +21,22 @@ export function useSmartRefresh(
   const [isRefreshing, setIsRefreshing] = useState(false);
   const toast = useToastSafe();
 
+  // Use a ref to store the latest reloadFn to avoid dependency loops if the parent
+  // passes a non-memoized function.
+  const fnRef = useRef(reloadFn);
+  useEffect(() => {
+    fnRef.current = reloadFn;
+  }, [reloadFn]);
+
   const refresh = useCallback(async () => {
+    // Avoid multiple concurrent refreshes
     if (isRefreshing) return;
     setIsRefreshing(true);
     
     try {
-      const result = await reloadFn();
+      const result = await fnRef.current();
       
-      // If result is void, show success but stay silent if not changed
+      // If result is void, show success but stay silent
       if (!result) {
         toast?.push({
           type: "success",
@@ -67,10 +75,10 @@ export function useSmartRefresh(
         message: normalizeError(err),
       });
     } finally {
-      // Ensure the spinner stays visible for a minimum natural duration
-      setTimeout(() => setIsRefreshing(false), 400);
+      // Small timeout for better visual feedback of the "status" change
+      setTimeout(() => setIsRefreshing(false), 300);
     }
-  }, [isRefreshing, reloadFn, toast]);
+  }, [isRefreshing, toast]); // reloadFn removed from deps to prevent loops
 
   return { refresh, isRefreshing };
 }

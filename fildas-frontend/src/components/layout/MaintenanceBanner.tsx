@@ -22,17 +22,25 @@ export default function MaintenanceBanner() {
 
     try {
       const data = await getMaintenanceStatus();
-      if (data.maintenance.starts_at) {
+      const mode = data.maintenance.mode;
+      
+      if (mode === "off") {
+        setSchedule(null);
+        return;
+      }
+
+      // If scheduled OR currently active (starts_at might be null if manually toggled to hard/soft)
+      if (data.maintenance.starts_at || mode === "hard" || mode === "soft") {
         setSchedule({
-          startsAt: new Date(data.maintenance.starts_at),
-          message: data.maintenance.message || "Scheduled maintenance",
-          mode: data.maintenance.mode
+          startsAt: data.maintenance.starts_at ? new Date(data.maintenance.starts_at) : new Date(),
+          message: data.maintenance.message || "Maintenance active",
+          mode: mode
         });
       } else {
         setSchedule(null);
       }
     } catch (error) {
-      // Silently fail for background status check
+       // Silently fail background status check
     }
   };
 
@@ -42,11 +50,13 @@ export default function MaintenanceBanner() {
     // Listen for Real-time events
     const channel = echo.channel("system-status");
     
+    // Use the exact class-based name if the . prefix is flaky in some environments,
+    // though .maintenance.scheduled is the customized broadcastAs name in Laravel
     channel.listen(".maintenance.scheduled", (e: any) => {
       setSchedule({
         startsAt: new Date(e.startsAt),
         message: e.message || "Scheduled maintenance",
-        mode: "hard" // Default to hard for safety in banner
+        mode: "hard"
       });
     });
 
@@ -55,7 +65,7 @@ export default function MaintenanceBanner() {
       setTimeLeft("");
     });
 
-    // Fallback polling (every 60 seconds for higher reactivity)
+    // Fallback polling (every 60 seconds)
     const interval = setInterval(fetchStatus, 60000);
 
     return () => {
@@ -98,6 +108,7 @@ export default function MaintenanceBanner() {
   const isStarted = schedule && new Date().getTime() >= startsAtTime;
   
   if (!schedule) return null;
+
 
   return (
     <div className="relative z-[100] animate-in slide-in-from-top-full duration-500">
