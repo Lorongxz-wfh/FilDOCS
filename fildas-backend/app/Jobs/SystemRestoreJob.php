@@ -176,9 +176,8 @@ class SystemRestoreJob implements ShouldQueue
             DB::statement('SET FOREIGN_KEY_CHECKS=0');
         }
 
-        if ($isPgsql) {
-            DB::unprepared("SET session_replication_role = 'replica';");
-        }
+        // Use a single transaction for managed-safe dependency handling
+        DB::beginTransaction();
 
         try {
             foreach ($statements as $index => $statement) {
@@ -200,7 +199,7 @@ class SystemRestoreJob implements ShouldQueue
                     $this->attemptAtomicRecovery($finalSql);
                 }
 
-                // Heartbeat for UI visibility (throttle log spam)
+                // Heartbeat for UI visibility
                 if ($index % 25 === 0) {
                     $this->updateStatus([
                         'status' => 'running',
@@ -209,12 +208,15 @@ class SystemRestoreJob implements ShouldQueue
                     ]);
                 }
             }
+
+            DB::commit();
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
         } finally {
             if ($dbConnection === 'mysql') {
                 DB::statement('SET FOREIGN_KEY_CHECKS=1');
-            }
-            if ($isPgsql) {
-                DB::unprepared("SET session_replication_role = 'origin';");
             }
         }
 
