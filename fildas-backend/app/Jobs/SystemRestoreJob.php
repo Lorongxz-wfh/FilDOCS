@@ -236,8 +236,8 @@ class SystemRestoreJob implements ShouldQueue
                             try {
                                 DB::unprepared($batchBuffer);
 
-                                // Heartbeat update every 600 total statements
-                                if ($statementCount % 600 === 0) {
+                                // Heartbeat update every 50 total statements
+                                if ($statementCount % 50 === 0) {
                                     $this->updateStatus([
                                         'status' => 'running',
                                         'message' => "Injecting SQL Data (Segment " . ($statementCount / $batchSize) . ")...",
@@ -328,12 +328,10 @@ class SystemRestoreJob implements ShouldQueue
         }
 
         foreach ($tableNames as $table) {
-            // Keep migrations metadata so Laravel stays sane
-            if ($table === 'migrations') continue;
+            if (in_array($table, $protectedTables)) continue;
 
             try {
                 if ($isPgsql) {
-                    // TRUNCATE is safer than DROP because it keeps the schema created by migrate:fresh
                     DB::statement("TRUNCATE TABLE \"{$table}\" CASCADE");
                 } elseif ($isMysql) {
                     DB::statement("TRUNCATE TABLE `{$table}`");
@@ -341,8 +339,7 @@ class SystemRestoreJob implements ShouldQueue
                     DB::table($table)->truncate();
                 }
             } catch (\Throwable $e) {
-                // Ignore failures (system tables or locked tables)
-                \Log::debug("Table bypass during sweep: {$table}");
+                \Log::debug("Table sweep skip: {$table}");
             }
         }
 
