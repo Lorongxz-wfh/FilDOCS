@@ -174,7 +174,7 @@ class SystemRestoreJob implements ShouldQueue
         $query = "";
         $statementCount = 0;
         $batchBuffer = ""; 
-        $batchSize = 20; // Safety Batch: 20 statements prevents memory spikes on 512MB RAM
+        $batchSize = 5; // Reduced batch size for managed database stability
 
         if ($handle) {
             while (($line = fgets($handle)) !== false) {
@@ -309,6 +309,9 @@ class SystemRestoreJob implements ShouldQueue
                         str_contains($msg, 'foreign key') ||
                         str_contains($msg, 'unique constraint') ||
                         str_contains($msg, 'invalid input syntax') ||
+                        str_contains($msg, 'syntax error') ||
+                        str_contains($msg, 'undefined') ||
+                        str_contains($msg, 'invalid command') ||
                         str_contains($msg, 'violates') ||
                         str_contains($msg, 'check violation') ||
                         str_contains($msg, 'extension');
