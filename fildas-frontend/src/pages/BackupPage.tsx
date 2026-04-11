@@ -184,11 +184,16 @@ export default function BackupPage() {
         const data = await getRestoreStatus();
         
         if (data.status === 'running') {
+            setRestoring(persistedNode);
             setRestoreStatus(data);
+        } else if (data.status === 'completed' || data.status === 'failed') {
+            // Let the interval or the user handle the final state
         } else {
-            if (persistedNode) localStorage.removeItem('fildas_restoring_node');
-            setRestoring(null);
-            setRestoreStatus(null);
+            // Only clear if we don't think we're restoring
+            if (!persistedNode) {
+              setRestoring(null);
+              setRestoreStatus(null);
+            }
         }
       } catch (e) {
         if (!persistedNode) setRestoring(null);
