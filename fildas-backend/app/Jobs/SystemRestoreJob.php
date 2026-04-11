@@ -276,9 +276,14 @@ class SystemRestoreJob implements ShouldQueue
             }
         } catch (\Throwable $e) {
             // IF BATCH FAILS, fallback to single-statement precision
-            $statements = array_filter(explode(";\n", $batch));
+            // Use regex to split statements correctly regardless of newline style
+            $statements = preg_split('/;[\r\n]+/', $batch, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($statements as $stmt) {
-                $this->executeSingleStatement(trim($stmt) . ";");
+                // Ensure the semicolon is restored for execution
+                $cleanStmt = trim($stmt);
+                if (!empty($cleanStmt)) {
+                    $this->executeSingleStatement($cleanStmt . ";");
+                }
             }
         }
     }
@@ -462,18 +467,21 @@ class SystemRestoreJob implements ShouldQueue
             $json = json_encode($data);
             $key = 'system_restore_status';
             
-            // On Render, Database is the ONLY shared medium between Worker and Web
-            // We write a RAW string so the Lifeboat script can read it without Laravel's serialization
+            // 1. Physical Signal (Source of Truth)
+            @file_put_contents(public_path('_restore_signal.json'), $json);
+
+            // 2. Database Cache (Redundancy)
             DB::table('cache')->updateOrInsert(
                 ['key' => $key],
                 ['value' => $json, 'expiration' => time() + 3600]
             );
 
-            // Also maintain Laravel cache for standard app logic
+            // 3. Laravel Cache (App logic)
             Cache::put($key, $data, 3600);
         } catch (\Throwable $e) {
-            // Log but don't crash if DB is busy
-            \Log::debug("Status heartbeat skipped (DB busy): " . $e->getMessage());
+            // Still write to file even if DB fails
+            $json = json_encode($data);
+            @file_put_contents(public_path('_restore_signal.json'), $json);
         }
     }
 }

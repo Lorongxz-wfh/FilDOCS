@@ -9,8 +9,14 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
 // 1. Physical Proof (Source of Truth)
-// We check for a lock file FIRST to avoid false alarms during migrate:fresh
+$signalFile = __DIR__ . '/_restore_signal.json';
 $lockFile = __DIR__ . '/../storage/app/restoration.lock';
+
+if (file_exists($signalFile)) {
+    echo file_get_contents($signalFile);
+    exit;
+}
+
 $isPhysicallyRunning = file_exists($lockFile);
 
 // 2. Resolve Credentials
