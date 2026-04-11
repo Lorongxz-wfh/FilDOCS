@@ -182,6 +182,14 @@ export async function restoreDocumentBackup(filename: string): Promise<void> {
 }
 
 /**
+ * Permanent Erasure of restoration locks and signals on the server.
+ */
+export async function unlockRestoration(): Promise<void> {
+    const api = await getApi();
+    await api.post('/admin/system/restore/unlock');
+}
+
+/**
  * Gets the current background restoration status.
  * Uses a clean fetch without auth headers to survive database wipes.
  */

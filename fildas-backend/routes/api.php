@@ -188,6 +188,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::delete('/admin/system/backups/{file}', [SystemBackupController::class, 'destroy'])->where('file', '.*');
     Route::post('/admin/system/backups/{file}/restore', [SystemBackupController::class, 'restore'])->where('file', '.*');
     Route::post('/admin/system/backups/{file}/restore-documents', [SystemBackupController::class, 'restoreDocuments'])->where('file', '.*');
+    Route::post('/admin/system/restore/unlock', [SystemBackupController::class, 'unlock']);
 
     // ── Search ─────────────────────────────────────────────────────────────────
     Route::get('/search', \App\Http\Controllers\Api\SearchController::class);

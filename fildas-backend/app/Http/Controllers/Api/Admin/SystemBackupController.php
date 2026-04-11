@@ -416,6 +416,26 @@ class SystemBackupController extends Controller
         }
     }
 
+    /**
+     * Permanent Erasure of restoration locks and signals.
+     */
+    public function unlock(Request $request)
+    {
+        $lockFile = storage_path('app/restoration.lock');
+        $sharedSignal = storage_path('app/backups/_restore_signal.json');
+        $publicSignal = public_path('_restore_signal.json');
+
+        if (file_exists($lockFile)) @unlink($lockFile);
+        if (file_exists($sharedSignal)) @unlink($sharedSignal);
+        if (file_exists($publicSignal)) @unlink($publicSignal);
+
+        Cache::store('file')->forget('system_restore_status');
+        Cache::store('file')->forget("restore_status_{$request->user()->id}");
+        Cache::forget('system_restore_status');
+
+        return response()->json(['success' => true, 'message' => 'Restoration locks and signals cleared permanently.']);
+    }
+
     private function runSqlRestore($sqlPath)
     {
         $dbConnection = config('database.default');

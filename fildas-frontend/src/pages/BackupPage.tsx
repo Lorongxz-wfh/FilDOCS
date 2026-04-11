@@ -37,6 +37,7 @@ import {
   saveToSystemBackup,
   uploadSystemSnapshot,
   getRestoreStatus,
+  unlockRestoration,
   type BackupPreset,
   type BackupSummary,
   type SystemBackupFile,
@@ -882,7 +883,12 @@ export default function BackupPage() {
             </div>
             
             <button
-               onClick={() => {
+               onClick={async () => {
+                 try {
+                   await unlockRestoration();
+                 } catch (e) {
+                   // Fallback to local clear if API is totally dead
+                 }
                  localStorage.removeItem('fildas_restoring_node');
                  setRestoring(null);
                  setRestoreStatus(null);
