@@ -398,11 +398,22 @@ class SystemRestoreJob implements ShouldQueue
 
     private function updateStatus($data)
     {
-        $statusKey = "restore_status_{$this->actorId}";
-        Cache::store('file')->put($statusKey, $data, 1800);
-        Cache::store('file')->put('system_restore_status', $data, 1800);
-        
-        // Mirror to public root for the lifeboat script (Maximum Reliability)
-        @file_put_contents(public_path('_restore_signal.json'), json_encode($data));
+        try {
+            $json = json_encode($data);
+            $key = 'system_restore_status';
+            
+            // On Render, Database is the ONLY shared medium between Worker and Web
+            // We write a RAW string so the Lifeboat script can read it without Laravel's serialization
+            DB::table('cache')->updateOrInsert(
+                ['key' => $key],
+                ['value' => $json, 'expiration' => time() + 3600]
+            );
+
+            // Also maintain Laravel cache for standard app logic
+            Cache::put($key, $data, 3600);
+        } catch (\Throwable $e) {
+            // Log but don't crash if DB is busy
+            \Log::debug("Status heartbeat skipped (DB busy): " . $e->getMessage());
+        }
     }
 }

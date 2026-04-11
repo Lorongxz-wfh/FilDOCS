@@ -1,6 +1,6 @@
 <?php
 /**
- * FilDAS LIFEBOAT: RAW DATABASE MONITOR
+ * FilDAS LIFEBOAT: RAW DATABASE MONITOR (v2)
  * This script bypasses the Laravel framework to remain 100% stable.
  * It queries the shielded cache table directly for high-reliability tracking.
  */
@@ -34,44 +34,28 @@ try {
         PDO::ATTR_TIMEOUT => 2
     ]);
 
-    // 3. Query the Shielded Cache Table for the Heartbeat
+    // 3. Query the Heartbeat Key (Direct JSON signaling)
     $stmt = $pdo->prepare("SELECT value FROM cache WHERE key = :key LIMIT 1");
-    // Standard Laravel cache key logic
-    $searchKey = 'fildas_cache' . 'system_restore_status';
-    
-    $stmt->execute(['key' => $searchKey]);
+    $stmt->execute(['key' => 'system_restore_status']);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$row) {
-        $stmt->execute(['key' => 'system_restore_status']);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    }
 
     if ($row) {
         $val = $row['value'];
-        // Extract JSON from Laravel serialization
+        // On Render, if we wrote it via DB::table()->updateOrInsert, it's clean JSON
+        if (strpos($val, '{"') === 0) {
+            echo $val;
+            exit;
+        }
+        // Fallback for Laravel serialization
         if (preg_match('/\{"status".*?\}/', $val, $matches)) {
             echo $matches[0];
             exit;
         }
-        echo $val;
-        exit;
-    }
-
-    // 4. Fallback: Secondary check for the local signal file
-    $signalFile = __DIR__ . '/_restore_signal.json';
-    if (file_exists($signalFile)) {
-        echo file_get_contents($signalFile);
-        exit;
     }
 
     echo json_encode(['status' => 'idle', 'message' => 'Waiting for engine...', 'progress' => 0]);
 
 } catch (\Throwable $e) {
-    // If DB is unreachable (wiping/syncing), we are definitely running.
-    echo json_encode([
-        'status' => 'running',
-        'message' => 'Database Syncing (Shielded)...',
-        'progress' => 10
-    ]);
+    // If DB is unreachable, it means it's likely being wiped/restored right now.
+    echo json_encode(['status' => 'running', 'message' => 'Database Syncing...', 'progress' => 10]);
 }
