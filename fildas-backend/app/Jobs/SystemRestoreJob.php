@@ -173,7 +173,7 @@ class SystemRestoreJob implements ShouldQueue
         $query = "";
         $statementCount = 0;
         $batchBuffer = "";
-        $batchSize = 50; // Reduced for maximum stability on shared DB resources
+        $batchSize = 10; // High-precision batching to avoid constraint spikes
 
         if ($handle) {
             while (($line = fgets($handle)) !== false) {
@@ -245,6 +245,8 @@ class SystemRestoreJob implements ShouldQueue
                                 // Ignore standard 'already exists' or 'extension' errors that aren't fatal.
                                 $isIgnorable = str_contains($msg, 'already exists') ||
                                     str_contains($msg, 'must be owner') ||
+                                    str_contains($msg, 'foreign key') ||
+                                    str_contains($msg, 'unique constraint') ||
                                     str_contains($msg, 'extension');
 
                                 if (!$isIgnorable) {
@@ -263,7 +265,15 @@ class SystemRestoreJob implements ShouldQueue
                 try {
                     DB::unprepared($batchBuffer);
                 } catch (\Throwable $e) {
-                   // Ignore standard errors in final flush
+                    $msg = $e->getMessage();
+                    $isIgnorable = str_contains($msg, 'already exists') ||
+                                    str_contains($msg, 'must be owner') ||
+                                    str_contains($msg, 'foreign key') ||
+                                    str_contains($msg, 'unique constraint') ||
+                                    str_contains($msg, 'extension');
+                    if (!$isIgnorable) {
+                        throw new \Exception("Final Flush Failure: " . $msg);
+                    }
                 }
             }
 
