@@ -185,22 +185,20 @@ export default function BackupPage() {
         const data = await getRestoreStatus();
         
         if (data.status === 'running') {
-            // Only open modal if server confirms it's actually running
-            setRestoring(persistedNode || 'SYSTEM_CORE');
+            // We update the status silently, but we DO NOT setRestoring()
+            // which prevents the modal from auto-opening and locking the UI.
             setRestoreStatus(data);
+            
+            // If the user refreshed and we have a persisted node, we can choose to re-open
+            // But to break the loop, we'll only do this if they actually INTENDED to stay there.
+            // For now, we stay closed to ensure the user can at least use the page.
         } else {
-            // Server is idle or failed - clean up any stale browser flag
-            if (persistedNode) {
-                localStorage.removeItem('fildas_restoring_node');
-            }
+            if (persistedNode) localStorage.removeItem('fildas_restoring_node');
             setRestoring(null);
             setRestoreStatus(null);
         }
       } catch (e) {
-        // On error (e.g. 500 during wipe), we stay quiet unless we were ALREADY in a session
-        if (!persistedNode) {
-            setRestoring(null);
-        }
+        if (!persistedNode) setRestoring(null);
       }
     };
     detectRestoration();

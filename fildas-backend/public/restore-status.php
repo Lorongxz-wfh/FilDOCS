@@ -10,19 +10,18 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// 1. Physical Proof (Source of Truth via Shared Storage)
-$sharedSignal = __DIR__ . '/../storage/app/backups/_restore_signal.json';
-$localSignal = __DIR__ . '/_restore_signal.json';
-$lockFile = __DIR__ . '/../storage/app/restoration.lock';
+// 1. Physical Proof (Unified Source of Truth)
+$possiblePaths = [
+    __DIR__ . '/../storage/app/restore.json',
+    __DIR__ . '/restore.json',
+    'C:/Users/Lorongxz/Computer Science Files/FilDASv2/fildas-backend/storage/app/restore.json'
+];
 
-if (file_exists($sharedSignal)) {
-    echo @file_get_contents($sharedSignal);
-    exit;
-}
-
-if (file_exists($localSignal)) {
-    echo @file_get_contents($localSignal);
-    exit;
+foreach ($possiblePaths as $path) {
+    if (file_exists($path)) {
+        echo @file_get_contents($path);
+        exit;
+    }
 }
 
 // 2. No Signal Found -> Return Idle

@@ -421,19 +421,23 @@ class SystemBackupController extends Controller
      */
     public function unlock(Request $request)
     {
-        $lockFile = storage_path('app/restoration.lock');
-        $sharedSignal = storage_path('app/backups/_restore_signal.json');
-        $publicSignal = public_path('_restore_signal.json');
+        $possibleSignals = [
+            storage_path('app/restore.json'),
+            storage_path('app/restoration.lock'),
+            storage_path('app/backups/_restore_signal.json'),
+            public_path('restore.json'),
+            public_path('_restore_signal.json'),
+        ];
 
-        if (file_exists($lockFile)) @unlink($lockFile);
-        if (file_exists($sharedSignal)) @unlink($sharedSignal);
-        if (file_exists($publicSignal)) @unlink($publicSignal);
+        foreach ($possibleSignals as $path) {
+            if (file_exists($path)) @unlink($path);
+        }
 
         Cache::store('file')->forget('system_restore_status');
         Cache::store('file')->forget("restore_status_{$request->user()->id}");
         Cache::forget('system_restore_status');
 
-        return response()->json(['success' => true, 'message' => 'Restoration locks and signals cleared permanently.']);
+        return response()->json(['success' => true, 'message' => 'Restoration signals cleared from all paths.']);
     }
 
     private function runSqlRestore($sqlPath)

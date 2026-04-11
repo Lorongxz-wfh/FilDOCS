@@ -470,8 +470,15 @@ class SystemRestoreJob implements ShouldQueue
             $json = json_encode($data);
             $key = 'system_restore_status';
             
-            // 1. Shared Physical Signal (Source of Truth for Distrubuted Services)
-            @file_put_contents(storage_path('app/backups/_restore_signal.json'), $json);
+            // Unified Signal Path
+            $paths = [
+                storage_path('app/restore.json'),
+                public_path('restore.json')
+            ];
+
+            foreach ($paths as $path) {
+                @file_put_contents($path, $json);
+            }
 
             // 2. Database Cache (Redundancy)
             DB::table('cache')->updateOrInsert(
@@ -482,9 +489,8 @@ class SystemRestoreJob implements ShouldQueue
             // 3. Laravel Cache (App logic)
             Cache::put($key, $data, 3600);
         } catch (\Throwable $e) {
-            // Still write to shared disk even if DB fails
             $json = json_encode($data);
-            @file_put_contents(storage_path('app/backups/_restore_signal.json'), $json);
+            @file_put_contents(storage_path('app/restore.json'), $json);
         }
     }
 }
