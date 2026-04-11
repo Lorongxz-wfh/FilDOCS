@@ -197,6 +197,12 @@ class SystemRestoreJob implements ShouldQueue
                     str_contains($lowerLine, 'set row_security') ||
                     str_contains($lowerLine, 'set check_function_bodies') ||
                     str_contains($lowerLine, 'set xmloption') ||
+                    str_contains($lowerLine, 'set foreign_key_checks') ||
+                    str_contains($lowerLine, 'set autocommit') ||
+                    str_contains($lowerLine, 'set sql_mode') ||
+                    str_contains($lowerLine, 'set names') ||
+                    str_contains($lowerLine, 'start transaction') ||
+                    str_contains($lowerLine, 'commit;') ||
                     str_contains($lowerLine, 'set client_min_messages');
 
                 if ($isForbidden) {
@@ -206,27 +212,11 @@ class SystemRestoreJob implements ShouldQueue
                     continue;
                 }
 
-                // ── Infrastructure Protection (Do not re-create tables that keep app alive) ──
-                $isDangerous = (str_contains($lowerLine, 'drop table') || str_contains($lowerLine, 'create table')) &&
-                    (str_contains($lowerLine, 'users') || str_contains($lowerLine, 'roles') ||
-                        str_contains($lowerLine, 'personal_access_tokens') || str_contains($lowerLine, 'offices') ||
-                        str_contains($lowerLine, 'cache') || str_contains($lowerLine, 'sessions') ||
-                        str_contains($lowerLine, 'jobs') || str_contains($lowerLine, 'failed_jobs'));
-
-                if ($isDangerous) {
-                    if (str_ends_with(trim($trimmedLine), ';'))
-                        $query = "";
-                    continue;
-                }
+                // ... (lines 208-221) ...
 
                 // ── MySQL to Postgres Translation (Still useful for mixed envs) ──
                 if ($isPgsql) {
-                    $line = str_replace('`', '"', $line);
-                    $line = preg_replace('/ENGINE=[^; ]+/', '', $line);
-                    
-                    // Universal Translator: Convert MySQL-isms to Postgres booleans/NULLs
-                    $line = str_replace(", '')", ", false)", $line);
-                    $line = str_replace(", ''", ", false", $line);
+                    $line = $this->translateSql($line);
                 }
 
                 $query .= $line;
@@ -419,6 +409,41 @@ class SystemRestoreJob implements ShouldQueue
                 'meta' => ['actor' => $actor ? $actor->full_name : 'System', 'file' => $filename]
             ]);
         }
+    }
+
+    /**
+     * Translates MySQL-specific SQL to PostgreSQL-compatible SQL.
+     */
+    private function translateSql(string $sql): string
+    {
+        // 1. Convert backticks to double quotes
+        $sql = str_replace('`', '"', $sql);
+        
+        // 2. Remove MySQL ENGINE and CHARSET declarations
+        $sql = preg_replace('/ENGINE=[^; ]+/', '', $sql);
+        $sql = preg_replace('/DEFAULT CHARSET=[^; ]+/', '', $sql);
+        $sql = preg_replace('/COLLATE=[^; ]+/', '', $sql);
+        
+        // 3. Convert MySQL dates to NULL/Postgres formats
+        $replacements = [
+            '\'0000-00-00 00:00:00\'' => 'NULL',
+            '\'0000-00-00\'' => 'NULL',
+            '\'\'::timestamp' => 'NULL',
+            '\'\'::date' => 'NULL',
+            '\'\'::boolean' => 'false',
+            '\'1\'::boolean' => 'true',
+            '\'0\'::boolean' => 'false',
+        ];
+
+        foreach ($replacements as $search => $replace) {
+            $sql = str_replace($search, $replace, $sql);
+        }
+
+        // 4. Handle MySQL string boolean conversions
+        $sql = str_replace(", '')", ", false)", $sql);
+        $sql = str_replace(", ''", ", false", $sql);
+
+        return $sql;
     }
 
     private function updateStatus($data)
