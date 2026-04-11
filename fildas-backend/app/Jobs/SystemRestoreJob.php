@@ -178,6 +178,7 @@ class SystemRestoreJob implements ShouldQueue
 
         $query = "";
         $statementCount = 0;
+        $batchBuffer = ""; // Initialize the buffer
         $batchSize = 100; // Turbo Mode: Inject 100 lines at once for raw speed
 
         if ($handle) {
