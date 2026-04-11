@@ -178,6 +178,11 @@ class SystemRestoreJob implements ShouldQueue
 
         // Use a single transaction for managed-safe dependency handling
         DB::beginTransaction();
+        
+        if ($isPgsql) {
+            // Force PostgreSQL to wait until the final COMMIT before checking any foreign keys
+            DB::unprepared("SET CONSTRAINTS ALL DEFERRED;");
+        }
 
         try {
             foreach ($statements as $index => $statement) {
