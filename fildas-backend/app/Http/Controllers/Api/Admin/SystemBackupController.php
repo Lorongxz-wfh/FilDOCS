@@ -374,20 +374,20 @@ class SystemBackupController extends Controller
             ], 1800);
             \Log::info("RESTORE: Handshake status set in cache");
 
-            \App\Jobs\SystemRestoreJob::dispatch(
+            \App\Jobs\SystemRestoreJob::dispatchSync(
                 $filename, 
                 $path, 
                 $request->user()->id, 
                 $request->user()->office_id,
                 $diskName
             );
-            \Log::info("RESTORE: Job dispatched to queue");
+            \Log::info("RESTORE: Sync Job completed successfully");
             
             return response()->json([
                 'success' => true, 
-                'message' => 'Restoration process initialized.',
-                'status' => 'running'
-            ], 202);
+                'message' => 'Restoration completed successfully (Instant Path).',
+                'status' => 'completed'
+            ], 200);
         } catch (\Throwable $e) {
             \Log::error("RESTORE ENDPOINT CRASH: " . $e->getMessage());
             \Log::error($e->getTraceAsString());
