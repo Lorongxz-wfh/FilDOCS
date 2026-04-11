@@ -260,8 +260,8 @@ class SystemRestoreJob implements ShouldQueue
         try {
             DB::unprepared($batch);
             
-            // Heartbeat update every 50 statements
-            if ($count % 50 === 0) {
+            // Heartbeat update every 10 statements for production visibility
+            if ($count % 10 === 0) {
                 $this->updateStatus([
                     'status' => 'running',
                     'message' => "Turbo Injection Active (Statement {$count})...",
