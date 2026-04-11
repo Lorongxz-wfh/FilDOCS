@@ -216,6 +216,12 @@ class SystemRestoreJob implements ShouldQueue
                 if ($isPgsql) {
                     $line = str_replace('`', '"', $line);
                     $line = preg_replace('/ENGINE=[^; ]+/', '', $line);
+                    
+                    // Universal Translator: Convert MySQL-isms to Postgres booleans/NULLs
+                    $line = str_replace(", '')", ", false)", $line);
+                    $line = str_replace(", ''", ", false", $line);
+                    $line = str_replace("'off'", "false", $line);
+                    $line = str_replace("'on'", "true", $line);
                 }
 
                 $query .= $line;
@@ -247,6 +253,7 @@ class SystemRestoreJob implements ShouldQueue
                                     str_contains($msg, 'must be owner') ||
                                     str_contains($msg, 'foreign key') ||
                                     str_contains($msg, 'unique constraint') ||
+                                    str_contains($msg, 'invalid input syntax') ||
                                     str_contains($msg, 'extension');
 
                                 if (!$isIgnorable) {
