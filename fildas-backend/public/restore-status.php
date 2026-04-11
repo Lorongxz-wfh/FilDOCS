@@ -6,6 +6,10 @@
 
 error_reporting(0);
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
 // 1. Physical Proof (Source of Truth via Shared Storage)
 $sharedSignal = __DIR__ . '/../storage/app/backups/_restore_signal.json';
 $localSignal = __DIR__ . '/_restore_signal.json';
