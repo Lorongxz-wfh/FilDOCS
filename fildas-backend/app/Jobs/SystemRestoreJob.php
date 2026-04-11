@@ -136,10 +136,14 @@ class SystemRestoreJob implements ShouldQueue
             $this->notifyAdminsOfCompletion($actor, $this->filename);
 
         } catch (\Throwable $e) {
-            $this->updateStatus(['status' => 'failed', 'message' => $e->getMessage(), 'progress' => 0]);
-            @unlink('/tmp/fildas_restore/active.lock');
-            @unlink('/tmp/fildas_restore/status.json');
-            @unlink(public_path('_restore_signal.json'));
+            $this->updateStatus(['status' => 'failed', 'message' => "Restoration Error: " . $e->getMessage(), 'progress' => 0]);
+            Log::error("Restoration failed critically: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            // WE DO NOT UNLINK on failure - we need the UI to see the error message
             @unlink($tempZip);
         }
     }
