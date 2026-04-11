@@ -173,6 +173,7 @@ export default function BackupPage() {
   const [restoring, setRestoring] = useState<string | null>(null);
   const [restoreStatus, setRestoreStatus] = useState<{ status: string; message: string; progress: number } | null>(null);
   const [confirmingRestore, setConfirmingRestore] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // ── Browser Persistence (Resistant to refreshes/crashes) ────────────────────
@@ -351,9 +352,8 @@ export default function BackupPage() {
             localStorage.removeItem('fildas_restoring_node');
             clearInterval(interval);
             setTimeout(() => {
-                alert("Institutional Restoration Confirmed. The application will now reload to synchronize data.");
-                window.location.reload();
-            }, 1000);
+                setShowSuccessModal(true);
+            }, 500);
           } else if (status.status === 'failed') {
             localStorage.removeItem('fildas_restoring_node');
             clearInterval(interval);
@@ -880,6 +880,38 @@ export default function BackupPage() {
                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest tabular-nums truncate max-w-[200px]">Node: {restoring}</span>
              </div>
            </div>
+        </div>
+      )}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-7 shadow-2xl dark:border-surface-400 dark:bg-surface-500 text-center"
+          >
+            <div className="flex flex-col items-center">
+              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500 border border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-800 shadow-inner">
+                <CheckCircle2 className="h-10 w-10" />
+              </div>
+              
+              <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">Restoration Success</h3>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 mb-6">Database Synchronized</p>
+              
+              <div className="mb-8 p-4 bg-slate-50 dark:bg-black/20 rounded-md border border-slate-100 dark:border-white/5">
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                  Institutional data recovery is complete. The application must now reload to finalize the synchronization.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="w-full rounded-md bg-brand-500 py-4 text-xs font-bold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-600 transition-all active:scale-[0.98] uppercase tracking-widest"
+              >
+                Reload Application
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
     </PageFrame>
