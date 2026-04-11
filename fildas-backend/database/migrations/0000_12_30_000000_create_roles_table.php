@@ -8,12 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('roles', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();      // qa, department, vpaa, president
-            $table->string('label')->nullable();   // readable label e.g. "QA", "Department Head"
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('roles')) {
+            Schema::create('roles', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->unique();      // qa, department, vpaa, president
+                $table->string('label')->nullable();   // readable label e.g. "QA", "Department Head"
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void
