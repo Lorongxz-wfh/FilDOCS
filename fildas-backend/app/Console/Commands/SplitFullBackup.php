@@ -63,34 +63,47 @@ class SplitFullBackup extends Command
 
             // 1. Create DB Only Backup
             if ($sqlFile) {
-                $this->info("Extracting Database...");
-                $sqlContent = $zip->getFromName($sqlFile);
+                $this->info("Extracting Database (Streaming Mode)...");
                 $dbZipPath = tempnam(sys_get_temp_dir(), 'db_');
+                
+                // Use the zip:// wrapper to copy directly to a new file without loading into RAM
+                $sqlSourcePath = "zip://" . $tempPath . "#" . $sqlFile;
+                $tempSqlFile = tempnam(sys_get_temp_dir(), 'sql_');
+                copy($sqlSourcePath, $tempSqlFile);
+                
                 $dbZip = new ZipArchive();
                 $dbZip->open($dbZipPath, ZipArchive::CREATE);
-                $dbZip->addFromString($sqlFile, $sqlContent);
+                $dbZip->addFile($tempSqlFile, $sqlFile);
                 $dbZip->close();
                 
                 $newDbName = $baseName . "_db_only.zip";
-                $disk->put("backups/database/{$newDbName}", file_get_contents($dbZipPath));
+                $disk->put("backups/database/{$newDbName}", fopen($dbZipPath, 'r+'));
                 $this->info("Created: backups/database/{$newDbName}");
+                
                 @unlink($dbZipPath);
+                @unlink($tempSqlFile);
             }
 
             // 2. Create Storage Only Backup
             if ($docZip) {
-                $this->info("Extracting Storage...");
-                $docContent = $zip->getFromName($docZip);
+                $this->info("Extracting Storage (Streaming Mode)...");
                 $docZipPath = tempnam(sys_get_temp_dir(), 'st_');
+                
+                $stSourcePath = "zip://" . $tempPath . "#" . $docZip;
+                $tempDocFile = tempnam(sys_get_temp_dir(), 'doc_');
+                copy($stSourcePath, $tempDocFile);
+
                 $stZip = new ZipArchive();
                 $stZip->open($docZipPath, ZipArchive::CREATE);
-                $stZip->addFromString($docZip, $docContent);
+                $stZip->addFile($tempDocFile, $docZip);
                 $stZip->close();
 
                 $newStName = $baseName . "_storage_only.zip";
-                $disk->put("backups/storage/{$newStName}", file_get_contents($docZipPath));
+                $disk->put("backups/storage/{$newStName}", fopen($docZipPath, 'r+'));
                 $this->info("Created: backups/storage/{$newStName}");
+                
                 @unlink($docZipPath);
+                @unlink($tempDocFile);
             }
 
             $zip->close();
