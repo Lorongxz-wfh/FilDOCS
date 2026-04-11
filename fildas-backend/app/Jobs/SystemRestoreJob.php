@@ -465,12 +465,12 @@ class SystemRestoreJob implements ShouldQueue
             $data['time'] = time();
             $key = 'system_restore_status';
             
-            // Framework-Native Cache Only
-            Cache::store('file')->put($key, $data, 1800);
+            // Use shared cache (database) for production sync
+            Cache::put($key, $data, 1800);
             
-            // Backup for user-specific monitoring
-            $userKey = "restore_status_{$this->actorId}";
-            Cache::store('file')->put($userKey, $data, 1800);
+            if ($this->actorId) {
+                Cache::put("restore_status_{$this->actorId}", $data, 1800);
+            }
         } catch (\Throwable $e) {
             Log::error("Failed to update restore status: " . $e->getMessage());
         }
