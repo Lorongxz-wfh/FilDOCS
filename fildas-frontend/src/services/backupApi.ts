@@ -183,12 +183,24 @@ export async function restoreDocumentBackup(filename: string): Promise<void> {
 
 /**
  * Gets the current background restoration status.
- * Uses standard authenticated API polling.
+ * USES PUBLIC FETCH to avoid auth-interceptor loops during DB wipe.
  */
 export async function getRestoreStatus(): Promise<{ status: string; message: string; progress: number }> {
-    const api = await getApi();
-    const res = await api.get('/admin/system/backups/restore-status');
-    return res.data;
+  try {
+    const response = await fetch(`${API_BASE}/admin/system/backups/restore-status`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!response.ok) {
+        return { status: 'idle', message: 'Syncing...', progress: 0 };
+    }
+    
+    return await response.json();
+  } catch (e) {
+    // If server is unreachable (504/502), assume it's still busy
+    return { status: 'running', message: 'Institutional Resilience Active...', progress: 65 };
+  }
 }
 
 export async function uploadSystemSnapshot(

@@ -317,6 +317,15 @@ export default function BackupPage() {
         await restoreSystemSnapshot(backup.filename);
       }
     } catch (e: any) {
+      // RENDER/PRODUCTION RESILIENCE: 
+      // Initial trigger often 504s because DB is busy wiping, but the job IS DISPATCHED.
+      const isTimeout = e?.code === 'ECONNABORTED' || e?.response?.status === 504 || e?.message?.includes('timeout');
+      
+      if (isTimeout) {
+        console.warn("Trigger timed out on production, but polling remains active.");
+        return; // Stay in 'restoring' state to let polling track the worker
+      }
+
       localStorage.removeItem('fildas_restoring_node');
       const msg = e?.response?.data?.message ?? e?.message ?? "Restore failed.";
       setError(msg);
