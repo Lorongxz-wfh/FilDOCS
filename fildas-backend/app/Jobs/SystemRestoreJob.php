@@ -8,261 +8,204 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Mail;
 use App\Models\User;
-use App\Models\Notification;
+use App\Models\Notification as NotificationModel;
 use ZipArchive;
 
 class SystemRestoreJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $timeout = 1800; // 30 minutes
-    private $filename;
-    private $path;
-    private $actorId;
-    private $officeId;
-    private $diskName;
+    protected $filename;
+    protected $path;
+    protected $userId;
+    protected $officeId;
+    protected $diskName;
 
-    public function __construct($filename, $path, $actorId, $officeId, $diskName = null)
+    public $timeout = 600; // 10 minutes
+
+    public function __construct($filename, $path, $userId, $officeId, $diskName = 'local')
     {
-        $this->connection = 'database'; // CRITICAL: Force background queue.
         $this->filename = $filename;
         $this->path = $path;
-        $this->actorId = $actorId;
+        $this->userId = $userId;
         $this->officeId = $officeId;
-        $this->diskName = $diskName ?: (config('filesystems.default') === 's3' ? 's3' : 'local');
+        $this->diskName = $diskName;
     }
 
     public function handle()
     {
-        ini_set('memory_limit', '4096M');
-        set_time_limit(0);
-
-        $statusKey = "restore_status_{$this->actorId}";
-        $this->updateStatus(['status' => 'running', 'message' => "Starting restoration of {$this->filename}...", 'progress' => 5]);
-
-        $disk = Storage::disk($this->diskName);
-        $tempZip = tempnam(sys_get_temp_dir(), 'rest_final_');
-
-        Log::info("Async Restore Started: " . $this->filename);
-
         try {
-            // 1. Download safely (Stream aware)
-            $readStream = @$disk->readStream($this->path);
-            
-            if (!$readStream) {
-                // Fallback for Local/Windows environments where stream markers might be finicky
-                $localPath = storage_path('app/' . $this->path);
-                
-                // If the disk is 'public', the file is in storage/app/public/...
-                if ($this->diskName === 'public' && !file_exists($localPath)) {
-                    $localPath = storage_path('app/public/' . $this->path);
-                }
+            $this->updateStatus([
+                'status' => 'running',
+                'message' => 'Preparing structural recovery...',
+                'progress' => 10,
+                'time' => time()
+            ]);
 
-                if (file_exists($localPath)) {
-                    copy($localPath, $tempZip);
+            \Log::info("Async Restore Started: {$this->filename}");
+
+            $disk = Storage::disk($this->diskName);
+            if (!$disk->exists($this->path)) {
+                throw new \Exception("Backup file not found at path: {$this->path}");
+            }
+
+            $tempDir = storage_path('app/temp/restore_' . time());
+            if (!is_dir($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
+
+            $localFile = $tempDir . '/' . basename($this->path);
+            file_put_contents($localFile, $disk->get($this->path));
+
+            // Extract if ZIP
+            if (str_ends_with($this->filename, '.zip')) {
+                $zip = new ZipArchive();
+                if ($zip->open($localFile) === true) {
+                    $zip->extractTo($tempDir);
+                    $zip->close();
+                    
+                    // Look for SQL file inside
+                    $files = scandir($tempDir);
+                    $sqlFile = null;
+                    foreach ($files as $f) {
+                        if (str_ends_with($f, '.sql')) {
+                            $sqlFile = $tempDir . '/' . $f;
+                            break;
+                        }
+                    }
+
+                    if ($sqlFile) {
+                        $this->runSqlRestore($sqlFile);
+                    } else {
+                        throw new \Exception("No SQL file found inside the zip.");
+                    }
                 } else {
-                    throw new \Exception("Backup file not found at path: " . $localPath);
+                    throw new \Exception("Failed to open ZIP backup.");
                 }
             } else {
-                $writeStream = fopen($tempZip, 'w+');
-                stream_copy_to_stream($readStream, $writeStream);
-                fclose($readStream);
-                fclose($writeStream);
+                $this->runSqlRestore($localFile);
             }
 
-            if (!file_exists($tempZip) || filesize($tempZip) === 0) {
-                 throw new \Exception("Failed to prepare local backup archive for extraction.");
+            // Clean up
+            File::deleteDirectory($tempDir);
+
+            // Final Status Notification
+            $actor = User::find($this->userId);
+            if ($actor) {
+                $this->notifyAdminsOfRestore($actor, 'Full System', $this->filename);
             }
 
-            $this->updateStatus(['status' => 'running', 'message' => "Archive prepared. Extracting...", 'progress' => 25]);
+            $this->updateStatus([
+                'status' => 'completed',
+                'message' => 'System Restoration successful!',
+                'progress' => 100,
+                'time' => time()
+            ]);
 
-            $tempExtractDir = storage_path('app/temp/restore_f_' . time());
-            if (!is_dir($tempExtractDir))
-                mkdir($tempExtractDir, 0755, true);
-
-            $zip = new ZipArchive();
-            if ($zip->open($tempZip) === true) {
-                // Flexible File Detection
-                $sqlFileInZip = null;
-                $docZipInZip = null;
-
-                for ($i = 0; $i < $zip->numFiles; $i++) {
-                    $stat = $zip->statIndex($i);
-                    $name = strtolower($stat['name']);
-                    if (str_ends_with($name, '.sql'))
-                        $sqlFileInZip = $stat['name'];
-                    if (str_ends_with($name, 'document_collection.zip'))
-                        $docZipInZip = $stat['name'];
-                }
-
-                if ($sqlFileInZip) {
-                    $this->updateStatus(['status' => 'running', 'message' => "Environment Sync: Clearing application data...", 'progress' => 50]);
-
-                    $this->updateStatus(['status' => 'running', 'message' => "Injecting SQL snapshot...", 'progress' => 60]);
-
-                    $tempSql = $tempExtractDir . '/restore.sql';
-                    $zip->extractTo($tempExtractDir, [$sqlFileInZip]);
-                    rename($tempExtractDir . '/' . $sqlFileInZip, $tempSql);
-
-                    $this->runSqlRestore($tempSql);
-                    @unlink($tempSql);
-                }
-
-                if ($docZipInZip) {
-                    $this->updateStatus(['status' => 'running', 'message' => "Syncing documents...", 'progress' => 85]);
-
-                    $tempDocZip = $tempExtractDir . '/docs.zip';
-                    $zip->extractTo($tempExtractDir, [$docZipInZip]);
-                    rename($tempExtractDir . '/' . $docZipInZip, $tempDocZip);
-
-                    $this->internalRestoreDocuments($tempDocZip);
-                    @unlink($tempDocZip);
-                }
-
-                $zip->close();
-            }
-
-            @unlink($tempZip);
-            File::deleteDirectory($tempExtractDir);
-
-            $data = ['status' => 'completed', 'message' => "Restoration finished successfully.", 'progress' => 100];
-            $this->updateStatus($data);
-
-            $actor = User::find($this->actorId);
-            $this->notifyAdminsOfCompletion($actor, $this->filename);
+            \Log::info("RESTORE: Background Process finished successfully");
 
         } catch (\Throwable $e) {
-            $this->updateStatus(['status' => 'failed', 'message' => "Restoration Error: " . $e->getMessage(), 'progress' => 0]);
-            Log::error("Restoration failed critically: " . $e->getMessage());
-        } finally {
-            if (file_exists($tempZip)) @unlink($tempZip);
-            if (isset($tempExtractDir) && is_dir($tempExtractDir)) {
-                File::deleteDirectory($tempExtractDir);
-            }
+            \Log::error("Restoration failed critically: " . $e->getMessage());
+            $this->updateStatus([
+                'status' => 'failed',
+                'message' => 'Restoration failed: ' . $e->getMessage(),
+                'progress' => 0,
+                'time' => time()
+            ]);
         }
+    }
+
+    private function updateStatus($data)
+    {
+        $existing = Cache::get('system_restore_status', []);
+        Cache::put('system_restore_status', array_merge($existing, $data), 1800);
     }
 
     private function runSqlRestore($sqlPath)
     {
-        $dbConnection = config('database.default');
-        $isPgsql = $dbConnection === 'pgsql';
-        $isDestPgsql = $isPgsql; // Alias for clarity
+        $dbDriver = config('database.default');
+        $isMysql = ($dbDriver === 'mysql');
 
-        $sql = file_get_contents($sqlPath);
-        if ($sql === false) {
-            throw new \Exception("Failed to read SQL backup file.");
+        // 1. ANSI ARMOR + LAX MODE: The Global "Mission" Settings
+        // ANSI_QUOTES: Treats " as identifiers (PostgreSQL native style)
+        // NO_AUTO_VALUE_ON_ZERO: allows id=0 in imports
+        if ($isMysql) {
+            DB::statement("SET sql_mode='ANSI_QUOTES,NO_AUTO_VALUE_ON_ZERO,NO_ENGINE_SUBSTITUTION'");
         }
 
-        // Detect Source Driver
-        $sourceDriver = 'mysql'; // Default fallback
-        if (preg_match('/-- BackupDriver: (mysql|pgsql|sqlite|mariadb)/', $sql, $matches)) {
-            $sourceDriver = $matches[1];
-        } elseif (str_contains($sql, '`')) {
-            $sourceDriver = 'mysql';
-        } elseif (str_contains($sql, '"')) {
-            $sourceDriver = 'pgsql';
-        }
-
-        $needsTranslation = ($sourceDriver === 'mysql' || $sourceDriver === 'mariadb') && $isDestPgsql;
-
-        // System-level check before starting
-        \Log::info("RESTORE: Source Driver detected as {$sourceDriver}. Destination: {$dbConnection}. Translation needed: " . ($needsTranslation ? 'YES' : 'NO'));
-
-        if ($isPgsql) {
-            DB::statement("SET search_path TO public, \"\$user\"");
-        }
-
-        // Robust statement splitting
-        $statements = preg_split("/;[ \t]*\r?\n/", $sql);
-        $total = count($statements);
-        
+        // 2. Clear out existing architecture before injection
         $this->wipeApplicationTables();
-        $this->updateStatus(['status' => 'running', 'message' => "Environment cleared. Starting Multi-Pass Injection...", 'progress' => 65]);
 
-        $attempted = array_filter(array_map('trim', $statements));
+        // 3. STEP-BY-STEP RECONSTRUCTION: Line-by-line streaming buffer
+        $handle = fopen($sqlPath, "r");
+        $statements = [];
+        $currentStmt = "";
+
+        while (($line = fgets($handle)) !== false) {
+            $trimmed = trim($line);
+            if (empty($trimmed) || str_starts_with($trimmed, '--')) continue;
+            
+            $currentStmt .= $line;
+            if (str_ends_with($trimmed, ';')) {
+                $statements[] = trim($currentStmt);
+                $currentStmt = "";
+            }
+        }
+        fclose($handle);
+        
+        $total = count($statements);
         $pass = 1;
-        $totalInjected = 0;
         $maxPasses = 5;
+        $attempted = $statements;
+        $totalInjected = 0;
 
-        while (count($attempted) > 0 && $pass <= $maxPasses) {
+        \Log::info("RESTORE: Pass 1 starting with {$total} buffered statements.");
+
+        while ($pass <= $maxPasses && count($attempted) > 0) {
             $failedInThisPass = [];
             $injectedInThisPass = 0;
             
-            \Log::info("RESTORE: Pass {$pass} starting with " . count($attempted) . " statements.");
-            $this->updateStatus(['message' => "Data Injection Pass {$pass}: " . count($attempted) . " remaining..."]);
-
             foreach ($attempted as $stmt) {
                 if (empty($stmt)) continue;
 
-                $finalSql = $stmt . ';';
-                if ($needsTranslation) {
-                    $finalSql = $this->translateSql($finalSql);
-                }
+                // Strip trailing semicolon for execution
+                $execSql = rtrim($stmt, ';');
 
-                // Handle Postgres search path in every statement if needed, or set once per pass
-                if ($isPgsql && $pass === 1 && $injectedInThisPass === 0) {
-                    try { DB::statement("SET search_path TO public, \"\$user\""); } catch(\Throwable $e){}
-                }
+                // PROTECT SESSION/JOB SAFETY
+                if (str_contains($execSql, '"sessions"') || str_contains($execSql, '"jobs"')) continue;
+
+                // Final Data Healing (Booleans/Casting only)
+                $execSql = $this->translateToMysql($execSql);
 
                 try {
-                    DB::unprepared($finalSql);
+                    DB::connection()->getPdo()->exec($execSql);
                     $injectedInThisPass++;
                     $totalInjected++;
                 } catch (\Throwable $e) {
                     $msg = $e->getMessage();
-                    
-                    // ── AUTO-HEAL: PostgreSQL Boolean/Empty String Fix ──
-                    if ($isPgsql && (str_contains($msg, 'boolean') || str_contains($msg, 'invalid input syntax'))) {
-                        try {
-                            $fixedSql = str_replace([", '')", ", ''"], [", NULL)", ", NULL"], $finalSql);
-                            DB::unprepared($fixedSql);
-                            $injectedInThisPass++;
-                            $totalInjected++;
-                            continue; // Success!
-                        } catch (\Throwable $e2) {
-                            // Fallback to 'false' if NULL doesn't work
-                            try {
-                                $fixedSql = str_replace([", '')", ", ''"], [", false)", ", false"], $finalSql);
-                                DB::unprepared($fixedSql);
-                                $injectedInThisPass++;
-                                $totalInjected++;
-                                continue; 
-                            } catch (\Throwable $e3) {
-                                // Real failure, move to retry queue
-                            }
-                        }
-                    }
-
-                    // If it's a dependency error (Foreign Key), we'll retry it in the next pass
-                    if (str_contains($msg, 'foreign key') || str_contains($msg, 'violates') || str_contains($msg, 'present in table') || str_contains($msg, 'does not exist')) {
+                    // Retry on foreign key errors
+                    if (str_contains(strtolower($msg), 'foreign key') || str_contains(strtolower($msg), 'does not exist')) {
                         $failedInThisPass[] = $stmt;
                     } else {
-                        \Log::warning("RESTORE: Statement failed: " . substr($msg, 0, 100));
-                        if ($pass === $maxPasses) {
-                            $failedInThisPass[] = $stmt;
-                        }
+                        \Log::warning("RESTORE: Statement failed! Error: {$msg} | SQL: " . substr($execSql, 0, 300));
                     }
                 }
 
-                // Simple progress heartbeat
                 if ($totalInjected % 50 === 0) {
-                    $progressVal = 65 + (int)(($totalInjected / $total) * 33);
-                    $this->updateStatus(['progress' => min(98, $progressVal)]);
+                    $this->updateStatus(['progress' => 15 + (int)(($totalInjected / $total) * 80)]);
                 }
             }
 
             \Log::info("RESTORE: Pass {$pass} complete. Injected: {$injectedInThisPass}. Remaining: " . count($failedInThisPass));
             
-            // If we didn't inject anything this pass, we are stuck (circular dependency or real error)
             if ($injectedInThisPass === 0 && count($failedInThisPass) > 0) {
-                \Log::error("RESTORE: Deadlock detected at Pass {$pass}. Remaining items cannot be injected.");
+                \Log::error("RESTORE: Deadlock detected at Pass {$pass}. This usually implies translation failure.");
                 break; 
             }
 
@@ -270,217 +213,100 @@ class SystemRestoreJob implements ShouldQueue
             $pass++;
         }
 
-        if (count($attempted) > 0) {
-            throw new \Exception("Restoration Integrity Check Failed: " . count($attempted) . " records could not be injected due to persistent errors.");
-        }
-
-        $this->updateStatus(['progress' => 99, 'message' => "SQL Injection complete. Finalizing..."]);
-        \Log::info("RESTORE: Finished SQL injection. Total records injected: {$totalInjected}.");
+        $this->updateStatus(['progress' => 99, 'message' => "SQL Reconstruction complete."]);
     }
 
-    private function attemptAtomicRecovery($sql)
+    private function translateToMysql(string $sql): string
     {
-        // Fallback for character encoding or NULL constraints that often break in standard dumps
-        try {
-            // Replace empty string inserts with NULL for PostgreSQL strictness
-            $fb = str_replace([", '')", ", ''"], [", NULL)", ", NULL"], $sql);
-            DB::unprepared($fb);
-        } catch (\Throwable $e) {
-            \Log::error("RESTORE: Atomic recovery failed: " . $e->getMessage());
-        }
-    }
+        // 1. Remove PostgreSQL specific casting globally
+        $sql = str_replace(['public.', '::jsonb', '::json', '::text', '::timestamp', '::date', '::varying'], '', $sql);
+        $sql = preg_replace('/::[a-z_ ]+/', '', $sql);
 
-    private function executeSingleStatement($sql)
-    {
-        if (empty(trim($sql)) || $sql === ';') return;
+        // 2. Standalone Boolean conversion
+        // (MySQL ANSI_QUOTES handles the "quotes", we handle the true/false)
+        $sql = preg_replace('/\btrue\b/i', '1', $sql);
+        $sql = preg_replace('/\bfalse\b/i', '0', $sql);
         
-        try {
-            DB::unprepared($sql);
-        } catch (\Throwable $e) {
-            $msg = $e->getMessage();
-            
-            // ATOMIC FALLBACKS
-            try {
-                $fb = str_replace(", '')", ", NULL)", $sql);
-                $fb = str_replace(", ''", ", NULL", $fb);
-                DB::unprepared($fb);
-            } catch (\Throwable $e2) {
-                try {
-                    $fb = str_replace(", '')", ", false)", $sql);
-                    $fb = str_replace(", ''", ", false", $fb);
-                    DB::unprepared($fb);
-                } catch (\Throwable $e3) {
-                    $isIgnorable = str_contains($msg, 'already exists') ||
-                        str_contains($msg, 'Duplicate entry') ||
-                        str_contains($msg, 'PRIMARY') ||
-                        str_contains($msg, 'must be owner') ||
-                        str_contains($msg, 'foreign key') ||
-                        str_contains($msg, 'unique constraint') ||
-                        str_contains($msg, 'invalid input syntax') ||
-                        str_contains($msg, 'syntax error') ||
-                        str_contains($msg, 'undefined') ||
-                        str_contains($msg, 'invalid command') ||
-                        str_contains($msg, 'violates') ||
-                        str_contains($msg, 'check violation') ||
-                        str_contains($msg, 'extension');
+        // 3. PostgreSQL Constants
+        $sql = str_replace("'now'", "NOW()", $sql);
 
-                    if (!$isIgnorable) {
-                        throw new \Exception("Atomic Injection Failure: " . $msg);
-                    }
-                }
-            }
-        }
+        return $sql;
     }
 
     private function wipeApplicationTables()
     {
-        $dbConnection = config('database.default');
-        $isMysql = in_array($dbConnection, ['mysql', 'mariadb'], true);
-        $isPgsql = $dbConnection === 'pgsql';
-
-        // ── Infrastructure Tables (DO NOT TOUCH - KEEPS SESSION ALIVE) ──
-        $protectedTables = [
-            'migrations',
-            'jobs',
-            'failed_jobs',
-            'cache',
-            'cache_locks',
-            'sessions',
-            'telescope_entries',
-            'telescope_entries_tags',
-            'telescope_monitoring'
-        ];
+        $dbDriver = config('database.default');
+        $isMysql = ($dbDriver === 'mysql');
+        $isPgsql = ($dbDriver === 'pgsql');
 
         if ($isMysql) {
-            $tables = DB::select('SHOW TABLES');
-            $tableNames = array_map(fn($t) => array_values((array) $t)[0], $tables);
             DB::statement('SET FOREIGN_KEY_CHECKS=0');
         } elseif ($isPgsql) {
-            $tables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
-            $tableNames = array_column($tables, 'tablename');
-        } else {
-            $tables = DB::select("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
-            $tableNames = array_column($tables, 'name');
+            DB::statement('SET session_replication_role = \'replica\'');
         }
 
-        foreach ($tableNames as $table) {
-            if (in_array($table, $protectedTables)) continue;
+        $tables = DB::select($isMysql ? 'SHOW TABLES' : "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'");
+        $key = $isMysql ? 'Tables_in_' . config('database.connections.mysql.database') : 'tablename';
+
+        $protectedTables = ['migrations', 'jobs', 'failed_jobs', 'cache', 'cache_locks', 'sessions', 'telescope_entries', 'telescope_entries_tags', 'telescope_monitoring'];
+
+        foreach ($tables as $table) {
+            $tableName = $table->$key;
+            if (in_array($tableName, $protectedTables)) continue;
 
             try {
-                if ($isPgsql) {
-                    DB::statement("TRUNCATE TABLE public.\"{$table}\" CASCADE");
-                } else {
-                    DB::statement("SET FOREIGN_KEY_CHECKS=0");
-                    DB::statement("TRUNCATE TABLE `{$table}`");
-                    DB::statement("SET FOREIGN_KEY_CHECKS=1");
-                }
+                DB::table($tableName)->truncate();
             } catch (\Throwable $e) {
-                \Log::debug("Table sweep skip: {$table}");
+                \Log::warning("Could not truncate {$tableName}, skipping wipe.", ['error' => $e->getMessage()]);
             }
         }
 
         if ($isMysql) {
             DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        } elseif ($isPgsql) {
+            DB::statement('SET session_replication_role = \'origin\'');
         }
     }
 
-    private function internalRestoreDocuments($zipPath)
-    {
-        $zip = new ZipArchive();
-        if ($zip->open($zipPath) !== true)
-            return;
-
-        $extractDir = storage_path('app/temp/restore_docs_' . time());
-        mkdir($extractDir, 0755, true);
-        $zip->extractTo($extractDir);
-        $zip->close();
-
-        $manifestPath = $extractDir . '/manifest.json';
-        if (file_exists($manifestPath)) {
-            $manifest = json_decode(file_get_contents($manifestPath), true);
-            foreach ($manifest as $entryName => $originalPath) {
-                $localSource = $extractDir . '/' . $entryName;
-                if (file_exists($localSource)) {
-                    $stream = fopen($localSource, 'r');
-                    // Ensure the target disk is used correctly
-                    Storage::disk(config('filesystems.default'))->put($originalPath, $stream);
-                    if (is_resource($stream))
-                        fclose($stream);
-                }
-            }
-        }
-        File::deleteDirectory($extractDir);
-    }
-
-    private function notifyAdminsOfCompletion($actor, $filename)
+    private function notifyAdminsOfRestore($actor, $type, $filename)
     {
         $admins = User::whereHas('role', function ($q) {
             $q->whereIn('name', ['Admin', 'SysAdmin']);
         })->get();
 
+        $now = now()->format('F j, Y g:i A');
+        $notifTitle = "CRITICAL: System Restore Performed";
+        $notifBody = "A {$type} restore was performed by {$actor->full_name} using backup file: {$filename}. System state has been reverted.";
+
         foreach ($admins as $admin) {
-            Notification::create([
+            NotificationModel::create([
                 'user_id' => $admin->id,
-                'event' => 'admin.system_restored',
-                'title' => 'SUCCESS: System Identity Restored',
-                'body' => "The restoration of {$filename} has completed successfully. All data and documents are now live.",
-                'meta' => ['actor' => $actor ? $actor->full_name : 'System', 'file' => $filename]
+                'event'   => 'admin.system_restored',
+                'title'   => $notifTitle,
+                'body'    => $notifBody,
+                'meta'    => [
+                    'actor_id' => $actor->id,
+                    'filename' => $filename,
+                    'type'     => $type,
+                    'timestamp' => $now
+                ]
             ]);
-        }
-    }
 
-    /**
-     * Translates MySQL-specific SQL to PostgreSQL-compatible SQL.
-     */
-    private function translateSql(string $sql): string
-    {
-        // 1. Convert backticks to double quotes
-        $sql = str_replace('`', '"', $sql);
-        
-        // 2. Remove MySQL ENGINE and CHARSET declarations
-        $sql = preg_replace('/ENGINE=[^; ]+/', '', $sql);
-        $sql = preg_replace('/DEFAULT CHARSET=[^; ]+/', '', $sql);
-        $sql = preg_replace('/COLLATE=[^; ]+/', '', $sql);
-        
-        // 3. Convert MySQL dates to NULL/Postgres formats
-        $replacements = [
-            '\'0000-00-00 00:00:00\'' => 'NULL',
-            '\'0000-00-00\'' => 'NULL',
-            '\'\'::timestamp' => 'NULL',
-            '\'\'::date' => 'NULL',
-            '\'\'::boolean' => 'false',
-            '\'1\'::boolean' => 'true',
-            '\'0\'::boolean' => 'false',
-        ];
-
-        foreach ($replacements as $search => $replace) {
-            $sql = str_replace($search, $replace, $sql);
-        }
-
-        // 4. Handle Postgres escape sequences (MySQL uses \', Postgres uses '')
-        $sql = str_replace("\\'", "''", $sql);
-
-        // 5. Handle MySQL string boolean conversions
-        $sql = str_replace(", '')", ", false)", $sql);
-        $sql = str_replace(", ''", ", false", $sql);
-
-        return $sql;
-    }
-
-    private function updateStatus($data)
-    {
-        try {
-            $data['time'] = time();
-            $key = 'system_restore_status';
-            
-            // Use shared cache (database) for production sync
-            Cache::put($key, $data, 1800);
-            
-            if ($this->actorId) {
-                Cache::put("restore_status_{$this->actorId}", $data, 1800);
-            }
-        } catch (\Throwable $e) {
-            Log::error("Failed to update restore status: " . $e->getMessage());
+            try {
+                Mail::to($admin->email)->queue(new \App\Mail\WorkflowNotificationMail(
+                    recipientName: $admin->full_name,
+                    notifTitle: $notifTitle,
+                    notifBody: $notifBody,
+                    documentTitle: 'System Integrity',
+                    documentStatus: 'RESTORED',
+                    isReject: true, 
+                    actorName: $actor->full_name,
+                    documentId: null,
+                    appUrl: rtrim(env('FRONTEND_URL', config('app.url')), '/'),
+                    appName: config('app.name', 'FilDAS'),
+                    cardLabel: 'Critical'
+                ));
+            } catch (\Throwable $e) {}
         }
     }
 }

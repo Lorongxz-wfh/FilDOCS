@@ -382,7 +382,7 @@ class SystemBackupController extends Controller
             set_time_limit(0); 
             ignore_user_abort(true);
 
-            \App\Jobs\SystemRestoreJob::dispatchSync(
+            \App\Jobs\SystemRestoreJob::dispatch(
                 $filename, 
                 $path, 
                 $userId, 
@@ -398,12 +398,6 @@ class SystemBackupController extends Controller
 
         } catch (\Throwable $e) {
             \Log::error("RESTORE ENDPOINT CRASH: " . $e->getMessage());
-            Cache::put('system_restore_status', [
-                'status' => 'failed',
-                'message' => 'Restoration Crash: ' . $e->getMessage(),
-                'progress' => 0,
-                'time' => time()
-            ], 1800);
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
@@ -433,53 +427,6 @@ class SystemBackupController extends Controller
                 'message' => 'Institutional Resilience Active...', 
                 'progress' => 65
             ]);
-        }
-    }
-
-    private function runSqlRestore($sqlPath)
-    {
-        $dbConnection = config('database.default');
-
-        if ($dbConnection === 'sqlite' && str_ends_with($sqlPath, '.sqlite')) {
-            $dbPath = config('database.connections.sqlite.database');
-            copy($sqlPath, $dbPath);
-            \Log::info("Streaming SQL restoration via line-splitter...", ['path' => $sqlPath]);
-            
-            if ($dbConnection === 'mysql') {
-                DB::statement('SET FOREIGN_KEY_CHECKS=0');
-            } elseif ($dbConnection === 'pgsql') {
-                DB::statement('SET session_replication_role = \'replica\'');
-            }
-
-            // Split and execute SQL line-by-line to avoid PDO memory/packet limits
-            $handle = fopen($sqlPath, "r");
-            $query = "";
-            if ($handle) {
-                while (($line = fgets($handle)) !== false) {
-                    $trimmedLine = trim($line);
-                    // Skip comments or empty lines
-                    if (empty($trimmedLine) || str_starts_with($trimmedLine, '--') || str_starts_with($trimmedLine, '/*')) {
-                        continue;
-                    }
-                    
-                    $query .= $line;
-                    if (str_ends_with($trimmedLine, ';')) {
-                        try {
-                            DB::unprepared($query);
-                        } catch (\Throwable $e) {
-                            \Log::error("SQL part failed - might be okay if it's a duplication", ['error' => $e->getMessage(), 'query' => substr($query, 0, 100)]);
-                        }
-                        $query = "";
-                    }
-                }
-                fclose($handle);
-            }
-
-            if ($dbConnection === 'mysql') {
-                DB::statement('SET FOREIGN_KEY_CHECKS=1');
-            } elseif ($dbConnection === 'pgsql') {
-                DB::statement('SET session_replication_role = \'origin\'');
-            }
         }
     }
 
