@@ -184,13 +184,7 @@ export default function BackupPage() {
         const data = await getRestoreStatus();
         
         if (data.status === 'running') {
-            // We update the status silently, but we DO NOT setRestoring()
-            // which prevents the modal from auto-opening and locking the UI.
             setRestoreStatus(data);
-            
-            // If the user refreshed and we have a persisted node, we can choose to re-open
-            // But to break the loop, we'll only do this if they actually INTENDED to stay there.
-            // For now, we stay closed to ensure the user can at least use the page.
         } else {
             if (persistedNode) localStorage.removeItem('fildas_restoring_node');
             setRestoring(null);
@@ -288,7 +282,6 @@ export default function BackupPage() {
     } catch (e: any) {
       let msg = e?.response?.data?.message ?? e?.message ?? "Failed to create snapshot.";
       
-      // If it looks like a timeout/network error (common for large snapshots)
       if (e?.code === 'ECONNABORTED' || e?.message?.includes('timeout') || (!e.response && e.message === 'Network Error')) {
         msg = "The request timed out or was interrupted. The server may still be processing the snapshot in the background. Please wait a few minutes and refresh.";
       }
@@ -332,7 +325,6 @@ export default function BackupPage() {
     }
   };
 
-  // ── Polling for restoration status ──────────────────────────────────────────
   useEffect(() => {
     let interval: any;
     if (restoring) {
@@ -351,19 +343,13 @@ export default function BackupPage() {
           } else if (status.status === 'failed') {
             localStorage.removeItem('fildas_restoring_node');
             clearInterval(interval);
-            // We do NOT setRestoring(null) here so the Error Modal remains visible.
             setError("Restoration process failed: " + status.message);
           } else if (status.status === 'idle' && restoreStatus && restoreStatus.progress > 0) {
-            // ── The Ghost Filter ─────────────────────────────────────────────
-            // This is a transient case where the cache might have dipped 
-            // but we were previously at X%. Don't abort the view.
             console.warn("Restoration poll returned idle while previously active. Holding state...");
           } else if (status.status === 'running') {
-            // Keep the heartbeat alive
             setRestoreStatus(status);
           }
         } catch (e) {
-          // Silent - connection might flicker during restore
         }
       }, 3000);
     }
@@ -376,15 +362,10 @@ export default function BackupPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const MAX_SIZE = 1000 * 1024 * 1024; // 1GB limit
+    const MAX_SIZE = 1000 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       setError(`File is too large (${formatSize(file.size)}). Maximum upload size is 1GB.`);
       return;
-    }
-
-    // Warn about PHP limits for files > 100MB
-    if (file.size > 100 * 1024 * 1024) {
-      console.warn("Large file detected. Ensure your server's php.ini (upload_max_filesize and post_max_size) is set to at least " + formatSize(file.size));
     }
 
     setUploading(true);
@@ -519,7 +500,7 @@ export default function BackupPage() {
       contentClassName="flex flex-col bg-slate-50/50 dark:bg-surface-600"
       fullHeight
     >
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-6 scroll-bar">
         <AnimatePresence mode="wait">
           {error && (
             <motion.div 
@@ -539,7 +520,7 @@ export default function BackupPage() {
         </AnimatePresence>
 
         {/* ── Resource Collections ── */}
-        <div className="mb-10">
+        <div className="mb-10 text-slate-900 dark:text-slate-100">
           <div className="flex items-center justify-between mb-4 border-l-2 border-brand-500 pl-3">
              <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Resource Collections</h2>
              
@@ -631,11 +612,11 @@ export default function BackupPage() {
         <div className="mb-8 flex flex-col">
           <div className="flex items-center justify-between mb-4 border-l-2 border-brand-500 pl-3 shrink-0">
              <div className="flex items-center gap-4">
-               <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">System Snapshots</h2>
-               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 dark:bg-surface-400 rounded-full border border-slate-200 dark:border-surface-300">
-                  <HardDrive className="h-3 w-3 text-brand-500" />
-                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-200 tabular-nums uppercase">{formatSize(totalSize)} USED</span>
-               </div>
+                <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">System Snapshots</h2>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 dark:bg-surface-400 rounded-full border border-slate-200 dark:border-surface-300">
+                   <HardDrive className="h-3 w-3 text-brand-500" />
+                   <span className="text-[10px] font-bold text-slate-600 dark:text-slate-200 tabular-nums uppercase">{formatSize(totalSize)} USED</span>
+                </div>
              </div>
              <div className="text-[10px] text-slate-400 font-bold tracking-tighter cursor-default flex items-center gap-1.5">
                <ShieldCheck className="h-3 w-3" />
@@ -648,11 +629,11 @@ export default function BackupPage() {
               <table className="w-full text-left text-xs border-collapse">
                 <thead className="sticky top-0 z-20">
                   <tr className="border-b border-slate-100 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:border-surface-400 dark:bg-surface-600">
-                    <th className="px-5 py-3">Snapshot Name</th>
-                    <th className="px-5 py-3">Capacity</th>
-                    <th className="px-5 py-3">State</th>
-                    <th className="px-5 py-3">Archived At</th>
-                    <th className="px-5 py-3 text-right">Control</th>
+                    <th className="px-5 py-3 text-slate-900 dark:text-slate-100">Snapshot Name</th>
+                    <th className="px-5 py-3 text-slate-900 dark:text-slate-100">Capacity</th>
+                    <th className="px-5 py-3 text-slate-900 dark:text-slate-100">State</th>
+                    <th className="px-5 py-3 text-slate-900 dark:text-slate-100">Archived At</th>
+                    <th className="px-5 py-3 text-right text-slate-900 dark:text-slate-100">Control</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-surface-400">
@@ -773,7 +754,7 @@ export default function BackupPage() {
                       <AlertTriangle className="h-8 w-8" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold tracking-tight">{isDoc ? 'Volume Restoration' : 'Kernel Level Reset'}</h3>
+                      <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{isDoc ? 'Volume Restoration' : 'Kernel Level Reset'}</h3>
                       <p className="text-xs opacity-75 font-bold uppercase tracking-widest">{isDoc ? 'Safe Operation' : 'Critical Failure Risk'}</p>
                     </div>
                   </div>
@@ -802,7 +783,7 @@ export default function BackupPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => backup && handleRestoreSnapshot(backup)}
+                      onClick={() => handleRestoreSnapshot(backup!)}
                       className={`flex-1 rounded-md ${isDoc ? 'bg-sky-600 hover:bg-sky-700' : 'bg-rose-600 hover:bg-rose-700'} py-3 text-xs font-bold text-white transition shadow-lg shadow-current/10`}
                     >
                       {isDoc ? 'RESTORE VOLUME' : 'INITIATE RESET'}
@@ -817,62 +798,74 @@ export default function BackupPage() {
 
       {restoring && (
         <div className="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-xl text-white p-6">
-          <div className="relative mb-10">
-             <div className="absolute inset-0 rounded-full bg-brand-500 blur-2xl opacity-20 animate-pulse" />
-             <Loader2 className="h-16 w-16 animate-spin text-brand-500 relative" />
-          </div>
-          
-          <div className="w-full max-w-sm">
-            <h2 className="text-2xl font-black tracking-tighter uppercase italic text-center mb-6">
-              {systemBackups.find(b => b.filename === restoring)?.type === 'doc' 
-                ? 'Populating Volumetric Storage...' 
-                : 'Resurrecting System Core...'}
-            </h2>
+           {(!(restoreStatus && restoreStatus.status === 'failed')) && (
+             <div className="relative mb-10">
+                <div className="absolute inset-0 rounded-full bg-brand-500 blur-2xl opacity-20 animate-pulse" />
+                <Loader2 className="h-16 w-16 animate-spin text-brand-500 relative" />
+             </div>
+           )}
+           
+           <div className="w-full max-w-sm">
+             <h2 className="text-2xl font-black tracking-tighter uppercase italic text-center mb-6">
+               {restoreStatus && restoreStatus.status === 'failed' 
+                 ? 'Restoration Inhibited' 
+                 : (systemBackups.find(b => b.filename === restoring)?.type === 'doc' 
+                   ? 'Populating Volumetric Storage...' 
+                   : 'Resurrecting System Core...')}
+             </h2>
 
-            {restoreStatus && (
-              <div className="space-y-4">
-                 <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-slate-400">
-                    <span className={restoreStatus.status === 'failed' ? 'text-red-400' : ''}>
-                      {restoreStatus.status === 'failed' ? 'SYSTEM FAILURE' : restoreStatus.message}
-                    </span>
-                    <span className={`tabular-nums ${restoreStatus.status === 'failed' ? 'text-red-500' : 'text-brand-500'}`}>
-                      {restoreStatus.progress}%
-                    </span>
-                 </div>
-                 
-                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden border border-white/5">
-                    <motion.div 
-                      className={`h-full ${restoreStatus.status === 'failed' ? 'bg-red-600' : 'bg-brand-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]'}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${restoreStatus.progress}%` }}
-                      transition={{ duration: 0.5 }}
-                    />
-                 </div>
+             {restoreStatus && (
+               <div className="space-y-4">
+                  {restoreStatus.status !== 'failed' && (
+                    <>
+                      <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-slate-400">
+                         <span>{restoreStatus.message}</span>
+                         <span className="tabular-nums text-brand-500">
+                           {restoreStatus.progress}%
+                         </span>
+                      </div>
+                      
+                      <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden border border-white/5">
+                         <motion.div 
+                           className="h-full bg-brand-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                           initial={{ width: 0 }}
+                           animate={{ width: `${restoreStatus.progress}%` }}
+                           transition={{ duration: 0.5 }}
+                         />
+                      </div>
+                    </>
+                  )}
 
-                 {restoreStatus.status === 'failed' && (
-                    <div className="mt-4 space-y-4">
-                       <div className="p-4 bg-red-950/20 border border-red-500/30 rounded text-xs font-mono text-red-200 leading-relaxed text-center">
-                          {restoreStatus.message}
-                       </div>
-                       <button
-                         onClick={() => {
-                           setRestoring(null);
-                           setRestoreStatus(null);
-                         }}
-                         className="w-full py-3 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded transition border border-white/10"
-                       >
-                         DISMISS AND DIAGNOSE
-                       </button>
-                    </div>
-                 )}
-              </div>
-            )}
-            
-            <div className="mt-8 flex items-center justify-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10 w-fit mx-auto">
+                  {restoreStatus.status === 'failed' && (
+                     <div className="mt-4 space-y-4">
+                        <div className="p-5 bg-red-500/5 border border-red-500/20 rounded shadow-2xl font-mono text-[11px] leading-relaxed text-red-400 max-h-[400px] overflow-y-auto scroll-bar">
+                           <div className="flex items-center gap-2 mb-4 pb-3 border-b border-red-500/10">
+                              <span className="px-1.5 py-0.5 rounded bg-red-500 text-slate-900 font-black text-[9px] uppercase tracking-tighter">Failure Node</span>
+                              <span className="text-red-500/60 tabular-nums uppercase text-[10px] tracking-widest">{new Date().toLocaleTimeString()}</span>
+                           </div>
+                           <div className="whitespace-pre-wrap break-words italic px-2 py-2 bg-red-950/20 rounded border border-red-500/10">
+                              {restoreStatus.message}
+                           </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setRestoring(null);
+                            setRestoreStatus(null);
+                          }}
+                          className="w-full py-4 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[11px] font-bold uppercase tracking-[0.3em] rounded transition-all border border-white/5 hover:border-white/20"
+                        >
+                          DISMISS AND DIAGNOSE
+                        </button>
+                     </div>
+                  )}
+               </div>
+             )}
+             
+             <div className="mt-8 flex items-center justify-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10 w-fit mx-auto">
                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest tabular-nums truncate max-w-[200px]">Node: {restoring}</span>
-            </div>
-          </div>
+             </div>
+           </div>
         </div>
       )}
     </PageFrame>

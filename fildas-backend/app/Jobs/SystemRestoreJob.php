@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use App\Models\User;
 use App\Models\Notification;
 use ZipArchive;
@@ -26,13 +27,15 @@ class SystemRestoreJob implements ShouldQueue
     private $path;
     private $actorId;
     private $officeId;
+    private $diskName;
 
-    public function __construct($filename, $path, $actorId, $officeId)
+    public function __construct($filename, $path, $actorId, $officeId, $diskName = null)
     {
         $this->filename = $filename;
         $this->path = $path;
         $this->actorId = $actorId;
         $this->officeId = $officeId;
+        $this->diskName = $diskName ?: (config('filesystems.default') === 's3' ? 's3' : 'local');
     }
 
     public function handle()
@@ -43,23 +46,41 @@ class SystemRestoreJob implements ShouldQueue
         $statusKey = "restore_status_{$this->actorId}";
         $this->updateStatus(['status' => 'running', 'message' => "Starting restoration of {$this->filename}...", 'progress' => 5]);
 
-        $disk = Storage::disk(config('filesystems.default') === 's3' ? 's3' : 'local');
+        $disk = Storage::disk($this->diskName);
         $tempZip = tempnam(sys_get_temp_dir(), 'rest_final_');
 
         Log::info("Async Restore Started: " . $this->filename);
 
         try {
-            // 1. Download safely
-            $readStream = $disk->readStream($this->path);
-            if (!$readStream)
-                throw new \Exception("Could not open read stream for backup file.");
+            // 1. Download safely (Stream aware)
+            $readStream = @$disk->readStream($this->path);
+            
+            if (!$readStream) {
+                // Fallback for Local/Windows environments where stream markers might be finicky
+                $localPath = storage_path('app/' . $this->path);
+                
+                // If the disk is 'public', the file is in storage/app/public/...
+                if ($this->diskName === 'public' && !file_exists($localPath)) {
+                    $localPath = storage_path('app/public/' . $this->path);
+                }
 
-            $writeStream = fopen($tempZip, 'w+');
-            stream_copy_to_stream($readStream, $writeStream);
-            fclose($readStream);
-            fclose($writeStream);
+                if (file_exists($localPath)) {
+                    copy($localPath, $tempZip);
+                } else {
+                    throw new \Exception("Backup file not found at path: " . $localPath);
+                }
+            } else {
+                $writeStream = fopen($tempZip, 'w+');
+                stream_copy_to_stream($readStream, $writeStream);
+                fclose($readStream);
+                fclose($writeStream);
+            }
 
-            $this->updateStatus(['status' => 'running', 'message' => "Archive downloaded. Extracting...", 'progress' => 25]);
+            if (!file_exists($tempZip) || filesize($tempZip) === 0) {
+                 throw new \Exception("Failed to prepare local backup archive for extraction.");
+            }
+
+            $this->updateStatus(['status' => 'running', 'message' => "Archive prepared. Extracting...", 'progress' => 25]);
 
             $tempExtractDir = storage_path('app/temp/restore_f_' . time());
             if (!is_dir($tempExtractDir))
@@ -81,7 +102,9 @@ class SystemRestoreJob implements ShouldQueue
                 }
 
                 if ($sqlFileInZip) {
-                    $this->updateStatus(['status' => 'running', 'message' => "Injecting SQL...", 'progress' => 60]);
+                    $this->updateStatus(['status' => 'running', 'message' => "Environment Sync: Clearing application data...", 'progress' => 50]);
+
+                    $this->updateStatus(['status' => 'running', 'message' => "Injecting SQL snapshot...", 'progress' => 60]);
 
                     $tempSql = $tempExtractDir . '/restore.sql';
                     $zip->extractTo($tempExtractDir, [$sqlFileInZip]);
@@ -117,7 +140,11 @@ class SystemRestoreJob implements ShouldQueue
         } catch (\Throwable $e) {
             $this->updateStatus(['status' => 'failed', 'message' => "Restoration Error: " . $e->getMessage(), 'progress' => 0]);
             Log::error("Restoration failed critically: " . $e->getMessage());
-            @unlink($tempZip);
+        } finally {
+            if (file_exists($tempZip)) @unlink($tempZip);
+            if (isset($tempExtractDir) && is_dir($tempExtractDir)) {
+                File::deleteDirectory($tempExtractDir);
+            }
         }
     }
 
@@ -276,6 +303,8 @@ class SystemRestoreJob implements ShouldQueue
                     DB::unprepared($fb);
                 } catch (\Throwable $e3) {
                     $isIgnorable = str_contains($msg, 'already exists') ||
+                        str_contains($msg, 'Duplicate entry') ||
+                        str_contains($msg, 'PRIMARY') ||
                         str_contains($msg, 'must be owner') ||
                         str_contains($msg, 'foreign key') ||
                         str_contains($msg, 'unique constraint') ||
@@ -306,10 +335,6 @@ class SystemRestoreJob implements ShouldQueue
             'cache',
             'cache_locks',
             'sessions',
-            'personal_access_tokens',
-            'users',
-            'roles',
-            'offices',
             'telescope_entries',
             'telescope_entries_tags',
             'telescope_monitoring'
@@ -421,7 +446,10 @@ class SystemRestoreJob implements ShouldQueue
             $sql = str_replace($search, $replace, $sql);
         }
 
-        // 4. Handle MySQL string boolean conversions
+        // 4. Handle Postgres escape sequences (MySQL uses \', Postgres uses '')
+        $sql = str_replace("\\'", "''", $sql);
+
+        // 5. Handle MySQL string boolean conversions
         $sql = str_replace(", '')", ", false)", $sql);
         $sql = str_replace(", ''", ", false", $sql);
 

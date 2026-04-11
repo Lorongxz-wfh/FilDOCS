@@ -360,11 +360,13 @@ class SystemBackupController extends Controller
 
         try {
             // Use standard dispatch but ensure the web process doesn't hang if the jobs table is locked
+            $diskName = env('FILESYSTEM_BACKUP_DISK', config('filesystems.default'));
             \App\Jobs\SystemRestoreJob::dispatch(
                 $filename, 
                 $path, 
                 $request->user()->id, 
-                $request->user()->office_id
+                $request->user()->office_id,
+                $diskName
             );
             
             return response()->json([
@@ -385,21 +387,25 @@ class SystemBackupController extends Controller
     public function status(Request $request)
     {
         try {
-            // Strictly poll the framework cache. 
-            // If the worker is running, it will write here.
+            // Force file driver explicitly to survive DB wipe
             $status = Cache::store('file')->get('system_restore_status');
 
             if (!$status) {
                 return response()->json([
                     'status' => 'idle',
-                    'message' => 'System stands ready.',
+                    'message' => 'Institutional Core Static.',
                     'progress' => 0
                 ]);
             }
             
             return response()->json($status);
         } catch (\Throwable $e) {
-            return response()->json(['status' => 'idle', 'message' => 'Ready.', 'progress' => 0]);
+            // If even Cache fails (e.g. disk permissions), return a clean fallback
+            return response()->json([
+                'status' => 'idle', 
+                'message' => 'Resilience Mode Active.', 
+                'progress' => 0
+            ]);
         }
     }
 
