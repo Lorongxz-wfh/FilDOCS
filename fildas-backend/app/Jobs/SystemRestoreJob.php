@@ -152,6 +152,9 @@ class SystemRestoreJob implements ShouldQueue
     private function runSqlRestore($sqlPath)
     {
         $dbConnection = config('database.default');
+        $isPgsql = $dbConnection === 'pgsql';
+        $isDestPgsql = $isPgsql; // Alias for clarity
+
         $sql = file_get_contents($sqlPath);
         if ($sql === false) {
             throw new \Exception("Failed to read SQL backup file.");
@@ -166,6 +169,8 @@ class SystemRestoreJob implements ShouldQueue
         } elseif (str_contains($sql, '"')) {
             $sourceDriver = 'pgsql';
         }
+
+        $needsTranslation = ($sourceDriver === 'mysql' || $sourceDriver === 'mariadb') && $isDestPgsql;
 
         // System-level check before starting
         \Log::info("RESTORE: Source Driver detected as {$sourceDriver}. Destination: {$dbConnection}. Translation needed: " . ($needsTranslation ? 'YES' : 'NO'));
@@ -185,7 +190,6 @@ class SystemRestoreJob implements ShouldQueue
         $executedCount = 0;
         $failedCount = 0;
         $lastError = null;
-        $isPgsql = $dbConnection === 'pgsql';
 
         if ($dbConnection === 'mysql') {
             DB::statement('SET FOREIGN_KEY_CHECKS=0');
