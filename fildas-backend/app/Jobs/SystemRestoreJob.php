@@ -152,13 +152,6 @@ class SystemRestoreJob implements ShouldQueue
     private function runSqlRestore($sqlPath)
     {
         $dbConnection = config('database.default');
-        $this->wipeApplicationTables();
-        $this->updateStatus(['status' => 'running', 'message' => "Environment cleared. Starting Turbo Injection...", 'progress' => 65]);
-
-        // Increase limits for large data processing
-        ini_set('memory_limit', '512M');
-        set_time_limit(600);
-
         $sql = file_get_contents($sqlPath);
         if ($sql === false) {
             throw new \Exception("Failed to read SQL backup file.");
@@ -188,6 +181,8 @@ class SystemRestoreJob implements ShouldQueue
         $statements = preg_split("/;[ \t]*\r?\n/", $sql);
         $total = count($statements);
         $executedCount = 0;
+        $failedCount = 0;
+        $lastError = null;
         $isPgsql = $dbConnection === 'pgsql';
 
         if ($dbConnection === 'mysql') {
@@ -196,6 +191,9 @@ class SystemRestoreJob implements ShouldQueue
 
         // Use a single transaction for managed-safe dependency handling
         DB::beginTransaction();
+
+        $this->wipeApplicationTables();
+        $this->updateStatus(['status' => 'running', 'message' => "Environment cleared. Starting Turbo Injection...", 'progress' => 65]);
         
         if ($isPgsql) {
             // Force PostgreSQL to wait until the final COMMIT before checking any foreign keys
@@ -218,6 +216,8 @@ class SystemRestoreJob implements ShouldQueue
                     DB::unprepared($finalSql);
                     $executedCount++;
                 } catch (\Throwable $e) {
+                    $failedCount++;
+                    $lastError = $e->getMessage();
                     \Log::warning("RESTORE: Statement injection failed. Attempting atomic recovery...");
                     $this->attemptAtomicRecovery($finalSql);
                 }
@@ -230,6 +230,14 @@ class SystemRestoreJob implements ShouldQueue
                         'progress' => 70 + (int) (($index / $total) * 20)
                     ]);
                 }
+            }
+
+            if ($executedCount === 0 && $total > 0) {
+                throw new \Exception("Critical Failure: All {$total} SQL statements failed to inject. Last error: " . $lastError);
+            }
+
+            if ($failedCount > ($total / 2)) {
+                throw new \Exception("Reliability Threshold Failed: {$failedCount} out of {$total} statements failed. Restore aborted to protect data integrity.");
             }
 
             DB::commit();
