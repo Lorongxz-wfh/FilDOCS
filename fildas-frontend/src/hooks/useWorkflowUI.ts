@@ -1,4 +1,5 @@
 import { useMemo, useCallback, useEffect, useState, useRef } from "react";
+import { getUserRole } from "../lib/roleFilters";
 import { useToast } from "../components/ui/toast/ToastContext";
 import {
   getCurrentUserOfficeId,
@@ -177,9 +178,9 @@ export function useWorkflowUI({
     getDocumentPreviewLink(localVersion.id)
       .then((r) => {
         if (alive) {
-          // Append cache-buster to the URL to force iframe reload
-          const buster = `pb=${nonce}`;
-          const url = r.url.includes("?") ? `${r.url}&${buster}` : `${r.url}?${buster}`;
+          // The backend already appends v={updatedAt} to the URL for cache-busting.
+          // Appending extra parameters like 'pb=' here invalidates Laravel's Signed Route signature.
+          const url = r.url;
           
           previewUrlCacheRef.current[localVersion.preview_path!] = url;
           setSignedPreviewUrl(url);
@@ -425,12 +426,17 @@ export function useWorkflowUI({
 
   const assignedOfficeId = currentTask?.assigned_office_id ?? null;
   const canAct = useMemo(() => {
-    const isAdmin = adminDebugMode;
+    const role = String(getUserRole()).toUpperCase();
+    const isAdminRole = role === "ADMIN" || role === "SYSADMIN";
+    
+    // Strict assignment check: can only act if task is assigned to my office
     const isAssigned = !!assignedOfficeId && Number(myOfficeId) === Number(assignedOfficeId);
-    if (!isAssigned && !isAdmin && assignedOfficeId) {
-      console.debug(`[Workflow] Permission denied: myOfficeId(${myOfficeId}) !== assignedOfficeId(${assignedOfficeId})`);
-    }
-    return isAdmin || isAssigned;
+    
+    // Admin Dev Mode bypass
+    if (isAdminRole && adminDebugMode) return true;
+    
+    // QA users and standard Admins can see everything but only act if specifically assigned
+    return isAssigned;
   }, [adminDebugMode, assignedOfficeId, myOfficeId]);
 
   // ── Signing state ─────────────────────────────────────────────────────
