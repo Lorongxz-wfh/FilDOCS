@@ -84,7 +84,6 @@ type Props = {
   onOpenPreview: () => Promise<void>;
   onClickReplace: () => void;
   onClickTemplates?: () => void;
-  onReloadPreview?: () => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>) => Promise<void> | void;
   onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragLeave: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -116,7 +115,6 @@ const WorkflowPreviewPanel: React.FC<Props> = ({
   onOpenPreview,
   onClickReplace,
   onClickTemplates,
-  onReloadPreview,
   onDrop,
   onDragOver,
   onDragLeave,
