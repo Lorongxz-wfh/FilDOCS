@@ -108,49 +108,82 @@ class DocumentController extends Controller
                 }
             }
 
-            // 3. Single-Pass SQL Aggregation (Hardened for PostgreSQL)
-            // Qualify all columns and handle null bindings for strict engines.
-            $stats = $visibleDocsQuery
-                ->leftJoin('document_versions as lv', 'lv.id', '=', 'documents.latest_version_id')
-                ->selectRaw("
-                    COUNT(CASE 
-                        WHEN (documents.created_at >= ? OR ? IS NULL) 
-                        AND (documents.created_at <= ? OR ? IS NULL) 
-                        THEN 1 END) as total,
-                    COUNT(CASE 
-                        WHEN lv.status = 'Distributed' 
-                        AND (lv.distributed_at >= ? OR ? IS NULL) 
-                        AND (lv.distributed_at <= ? OR ? IS NULL) 
-                        THEN 1 END) as distributed_count,
-                    COUNT(CASE 
-                        WHEN lv.status IN ('Draft', 'Office Draft') 
-                        AND (documents.created_at >= ? OR ? IS NULL) 
-                        AND (documents.created_at <= ? OR ? IS NULL) 
-                        THEN 1 END) as draft_count,
-                    COUNT(CASE 
-                        WHEN (LOWER(lv.status) LIKE '%review%' OR LOWER(lv.status) LIKE '%check%') 
-                        AND (documents.created_at >= ? OR ? IS NULL) 
-                        AND (documents.created_at <= ? OR ? IS NULL) 
-                        THEN 1 END) as review_count,
-                    COUNT(CASE 
-                        WHEN (LOWER(lv.status) LIKE '%approval%') 
-                        AND (documents.created_at >= ? OR ? IS NULL) 
-                        AND (documents.created_at <= ? OR ? IS NULL) 
-                        THEN 1 END) as approval_count,
-                    COUNT(CASE 
-                        WHEN (LOWER(lv.status) LIKE '%registration%' OR LOWER(lv.status) LIKE '%distribution%') 
-                        AND (documents.created_at >= ? OR ? IS NULL) 
-                        AND (documents.created_at <= ? OR ? IS NULL) 
-                        THEN 1 END) as finalization_count
-                ", [
-                    $df, $df, $dt, $dt, // total
-                    $df, $df, $dt, $dt, // distributed
-                    $df, $df, $dt, $dt, // draft
-                    $df, $df, $dt, $dt, // review
-                    $df, $df, $dt, $dt, // approval
-                    $df, $df, $dt, $dt, // finalization
-                ])
-                ->first();
+            // 3. Multi-Pass Aggregation (Cleaner and safer for different SQL engines)
+            // Total docs in range
+            $total = (clone $visibleDocsQuery)
+                ->where(function ($q) use ($df, $dt) {
+                    if ($df) $q->where('documents.created_at', '>=', $df);
+                    if ($dt) $q->where('documents.created_at', '<=', $dt . ' 23:59:59');
+                })
+                ->count();
+            
+            // Distributed count
+            $distributed = (clone $visibleDocsQuery)
+                ->whereHas('latestVersion', function ($v) use ($df, $dt) {
+                    $v->where('status', 'Distributed');
+                    if ($df) $v->where('distributed_at', '>=', $df);
+                    if ($dt) $v->where('distributed_at', '<=', $dt . ' 23:59:59');
+                })
+                ->count();
+
+            // Drafts (v0 or revision drafts)
+            $drafts = (clone $visibleDocsQuery)
+                ->whereHas('latestVersion', function ($v) {
+                    $v->whereIn('status', ['Draft', 'Office Draft']);
+                })
+                ->where(function ($q) use ($df, $dt) {
+                    if ($df) $q->where('documents.created_at', '>=', $df);
+                    if ($dt) $q->where('documents.created_at', '<=', $dt . ' 23:59:59');
+                })
+                ->count();
+
+            // Review / Check
+            $reviews = (clone $visibleDocsQuery)
+                ->whereHas('latestVersion', function ($v) {
+                    $v->where(function ($vv) {
+                        $vv->where('status', 'like', '%Review%')
+                           ->orWhere('status', 'like', '%Check%');
+                    });
+                })
+                ->where(function ($q) use ($df, $dt) {
+                    if ($df) $q->where('documents.created_at', '>=', $df);
+                    if ($dt) $q->where('documents.created_at', '<=', $dt . ' 23:59:59');
+                })
+                ->count();
+
+            // Approval
+            $approvals = (clone $visibleDocsQuery)
+                ->whereHas('latestVersion', function ($v) {
+                    $v->where('status', 'like', '%Approval%');
+                })
+                ->where(function ($q) use ($df, $dt) {
+                    if ($df) $q->where('documents.created_at', '>=', $df);
+                    if ($dt) $q->where('documents.created_at', '<=', $dt . ' 23:59:59');
+                })
+                ->count();
+
+            // Finalization (Registration / Distribution step)
+            $finalizations = (clone $visibleDocsQuery)
+                ->whereHas('latestVersion', function ($v) {
+                    $v->where(function ($vv) {
+                        $vv->where('status', 'like', '%Registration%')
+                           ->orWhere('status', 'like', '%Distribution%');
+                    });
+                })
+                ->where(function ($q) use ($df, $dt) {
+                    if ($df) $q->where('documents.created_at', '>=', $df);
+                    if ($dt) $q->where('documents.created_at', '<=', $dt . ' 23:59:59');
+                })
+                ->count();
+
+            $stats = (object) [
+                'total' => $total,
+                'distributed_count' => $distributed,
+                'draft_count' => $drafts,
+                'review_count' => $reviews,
+                'approval_count' => $approvals,
+                'finalization_count' => $finalizations,
+            ];
 
             $total       = (int) ($stats->total ?? 0);
             $distributed = (int) ($stats->distributed_count ?? 0);
