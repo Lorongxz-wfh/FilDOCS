@@ -46,6 +46,14 @@ const RequestQueueCard: React.FC<RequestQueueCardProps> = ({ item, onClick }) =>
           <span className="text-[10px] sm:text-[11px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider block">
             Action needed
           </span>
+        ) : (item.status?.toLowerCase() === "closed") ? (
+          <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+            Closed
+          </span>
+        ) : (item.status?.toLowerCase() === "cancelled") ? (
+          <span className="text-[10px] sm:text-[11px] font-bold text-rose-500/50 dark:text-rose-400/50 uppercase tracking-wider block">
+            Cancelled
+          </span>
         ) : (
           <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
             Ongoing

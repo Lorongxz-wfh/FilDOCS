@@ -86,8 +86,8 @@ const WorkQueueHubPage: React.FC = () => {
         }).catch(() => ({ data: [] })),
         getWorkQueue().catch(() => ({ assigned: [], monitoring: [] })),
         (isQaAdmin
-          ? listDocumentRequestIndividual({ per_page: 15, request_status: "open" })
-          : listDocumentRequestInbox({ per_page: 15 })
+          ? listDocumentRequestIndividual({ per_page: 15, status: "open" })
+          : listDocumentRequestInbox({ per_page: 15, status: "open" })
         ).catch(() => ({ data: [], total: 0 })),
         getDocumentRequestStats().catch(() => null),
       ]);
