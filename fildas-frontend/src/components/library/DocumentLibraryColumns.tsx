@@ -75,6 +75,7 @@ export function buildCreatedColumns(onDelete?: (id: number) => void): TableColum
           <MiddleTruncate 
             text={doc.title}
             className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
+            title={doc.title}
           />
           {doc.tags && doc.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1.5">
@@ -91,7 +92,7 @@ export function buildCreatedColumns(onDelete?: (id: number) => void): TableColum
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
-      render: (doc) => <NormalText secondary>{doc.code}</NormalText>,
+      render: (doc) => <span className="text-[11px] font-mono font-bold text-slate-400 bg-slate-50 dark:bg-surface-400/30 px-1.5 py-0.5 rounded-sm border border-slate-100 dark:border-surface-400/50 whitespace-nowrap">{doc.code || "—"}</span>,
     },
     {
       key: "type",
@@ -201,6 +202,7 @@ export function buildSharedColumns(onDelete?: (id: number) => void): TableColumn
           <MiddleTruncate 
             text={doc.title}
             className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
+            title={doc.title}
           />
           {doc.tags && doc.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1.5">
@@ -217,7 +219,7 @@ export function buildSharedColumns(onDelete?: (id: number) => void): TableColumn
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
-      render: (doc) => <NormalText secondary>{doc.code}</NormalText>,
+      render: (doc) => <span className="text-[11px] font-mono font-bold text-slate-400 bg-slate-50 dark:bg-surface-400/30 px-1.5 py-0.5 rounded-sm border border-slate-100 dark:border-surface-400/50 whitespace-nowrap">{doc.code || "—"}</span>,
     },
     {
       key: "type",
@@ -392,6 +394,7 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
           <MiddleTruncate 
             text={item.title}
             className="text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors"
+            title={item.title}
           />
           {item.subtitle && (
               <MiddleTruncate 
@@ -414,7 +417,7 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
-      render: (item: any) => <NormalText secondary>{item.code}</NormalText>,
+      render: (item: any) => <span className="text-[11px] font-mono font-bold text-slate-400 bg-slate-50 dark:bg-surface-400/30 px-1.5 py-0.5 rounded-sm border border-slate-100 dark:border-surface-400/50 whitespace-nowrap">{item.code || "—"}</span>,
     },
     {
       key: "office",

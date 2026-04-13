@@ -27,8 +27,11 @@ export async function listNotifications(params?: {
     // 304: not modified, return cached payload (must exist)
     if (res.status === 304) {
       if (cached) return cached.payload;
-      // Fallback: if no cache exists, treat as empty (should be rare)
-      return { data: [], meta: undefined, links: undefined };
+      return { 
+        data: [], 
+        meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 }, 
+        links: { first: null, last: null, prev: null, next: null } 
+      };
     }
 
     const normalized = normalizePaginated<NotificationItem>(res.data);

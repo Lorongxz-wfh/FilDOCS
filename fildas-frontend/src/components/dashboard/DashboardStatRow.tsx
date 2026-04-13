@@ -179,7 +179,7 @@ const DashboardStatRow: React.FC<Props> = ({
               } ${isActionNeeded && item.value > 0
                 ? "ring-1 ring-rose-500/20 bg-rose-50/15 dark:ring-rose-500/40 dark:bg-rose-500/5 p-2.5 sm:p-3.5"
                 : "p-2 sm:p-3.5"
-              } ${isPulsing ? "animate-pulse-highlight" : ""}`}
+              } ${isPulsing ? "animate-pulse-highlight ring-emerald-500/30" : ""}`}
           >
             {/* Action Needed - Horizontal Banner for Mobile, Vertical for Desktop */}
             {isActionNeeded ? (

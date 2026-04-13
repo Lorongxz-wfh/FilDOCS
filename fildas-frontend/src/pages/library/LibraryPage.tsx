@@ -601,12 +601,12 @@ export default function LibraryPage() {
                   renderRowDetails={undefined}
                   gridTemplateColumns={
                     tab === "created"
-                      ? "45px 90px 80px minmax(200px, 1fr) 80px 80px 80px 45px 100px 40px"
+                      ? "45px 100px 90px minmax(160px, 1.2fr) 150px 80px 110px 50px 120px 40px"
                       : tab === "shared"
-                      ? "45px 90px 80px minmax(200px, 1fr) 80px 80px 80px 45px 100px"
+                      ? "45px 100px 90px minmax(160px, 1.2fr) 150px 80px 110px 50px 120px"
                       : tab === "requested"
                       ? "45px minmax(200px, 1fr) 100px 100px" + (isAdmin || isQA(role) ? " 40px" : "")
-                      : "45px minmax(180px, 1fr) 100px 120px 100px 45px" + (adminDebugMode ? " 40px" : "")
+                      : "45px minmax(160px, 1.2fr) 150px 140px 110px 50px" + (adminDebugMode ? " 40px" : "")
                   }
                   sortBy={sortBy}
                   sortDir={sortDir}

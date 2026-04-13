@@ -12,6 +12,7 @@ import {
   type WorkflowActionCode,
   type DocumentMessage,
   type ActivityLogItem,
+  type OfficeUser,
 } from "../services/documents";
 import { useRealtimeUpdates } from "./useRealtimeUpdates";
 
@@ -50,7 +51,7 @@ export function useDocumentWorkflow({
   const [isChangingStatus, setIsChangingStatus] = useState(false);
 
   // Impersonation
-  const [routingUsers, setRoutingUsers] = useState<any[]>([]);
+  const [routingUsers, setRoutingUsers] = useState<OfficeUser[]>([]);
   const [actingAsUserId, setActingAsUserId] = useState<number | undefined>(undefined);
   const [isLoadingRoutingUsers, setIsLoadingRoutingUsers] = useState(false);
 

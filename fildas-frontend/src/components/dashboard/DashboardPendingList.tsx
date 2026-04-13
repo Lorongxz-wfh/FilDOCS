@@ -36,7 +36,10 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
 
       {/* List container with fade */}
       <div className="relative h-[240px] overflow-hidden">
-        <div className={`divide-y divide-slate-100 dark:divide-surface-400 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"}`}>
+        <div 
+          key={items.length} // Force re-mount animation if count changes
+          className={`divide-y divide-slate-100 dark:divide-surface-400 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"} ${!loading && hasData ? "animate-pulse-highlight" : ""}`}
+        >
           {loading && !hasData ? (
             <div className="flex flex-col h-full bg-white dark:bg-surface-500">
               <div className="px-5 py-4 border-b border-slate-100 dark:border-surface-400">
@@ -47,7 +50,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
               </div>
             </div>
           ) : items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+            <div className="flex flex-col items-center justify-center py-12 text-center px-4 animate-in">
               <div className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/40">
                 <CheckCircle className="h-4.5 w-4.5 text-emerald-500" />
               </div>
@@ -59,10 +62,10 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
               </p>
             </div>
           ) : (
-            items.slice(0, 5).map((x) => {
+            items.slice(0, 5).map((x, i) => {
               const isRequest = x.type === "request";
               const Icon = isRequest ? Megaphone : FileText;
-
+ 
               const handleClick = () => {
                 if (x.type === "document") {
                   navigate(`/documents/${x.item.document.id}?version_id=${x.item.version.id}`);
@@ -76,7 +79,8 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
                   key={`${x.type}-${x.id}`}
                   type="button"
                   onClick={handleClick}
-                  className="flex w-full items-center gap-2.5 sm:gap-3 p-3.5 sm:px-4 sm:py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-surface-400 min-w-0"
+                  style={{ animationDelay: `${i * 40}ms` }}
+                  className="flex w-full items-center gap-2.5 sm:gap-3 p-3.5 sm:px-4 sm:py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-surface-400 min-w-0 animate-live-entry fill-mode-backwards"
                 >
                   {/* Icon */}
                   <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded ${isRequest ? 'bg-amber-50 dark:bg-amber-950/30' : 'bg-slate-100 dark:bg-surface-400'}`}>

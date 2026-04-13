@@ -66,8 +66,20 @@ export interface Document {
 
 export type Paginated<T> = {
   data: T[];
-  meta?: any;
-  links?: any;
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from?: number;
+    to?: number;
+  };
+  links: {
+    first: string | null;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+  };
 };
 
 /** 
@@ -95,7 +107,7 @@ export interface NotificationItem {
   event: string;
   title: string;
   body: string | null;
-  meta: any | null;
+  meta: Record<string, unknown> | null;
   read_at: string | null;
   created_at: string;
   updated_at: string;
@@ -187,8 +199,25 @@ export type PendingAction =
       title: string;
       code?: string | null;
       status: string;
-      item: any; // DocumentRequestRow from inbox (has recipient_id/status)
+      item: DocumentRequestRow;
     };
+
+export interface DocumentRequestRow {
+  id: number;
+  title: string;
+  code: string | null;
+  type: "multi-office" | "multi-doc";
+  request_status: "open" | "closed" | "cancelled";
+  direction: "incoming" | "outgoing";
+  recipient_id?: number | null;
+  recipient_status?: "pending" | "submitted" | "accepted" | "rejected";
+  source_office?: Office;
+  target_office?: Office;
+  document_count: number;
+  progress_pct: number;
+  created_at: string;
+  deadline_at: string | null;
+}
 
 export type ComplianceClusterDatum = {
   cluster: string;
@@ -403,7 +432,7 @@ export interface ActivityLogItem {
   target_office_id: number | null;
   event: string;
   label: string | null;
-  meta: any | null;
+  meta: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 

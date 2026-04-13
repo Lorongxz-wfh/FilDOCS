@@ -146,7 +146,7 @@ const NotifCard: React.FC<{
 
           <div className="mt-3 flex items-center gap-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
             <span className="text-slate-600 dark:text-slate-300 font-bold">
-              {n.meta?.author_name || n.event?.replace(/_/g, ' ') || "System"}
+              {(n.meta?.author_name as string) || n.event?.replace(/_/g, ' ') || "System"}
             </span>
             <span className="opacity-30">·</span>
             <span>

@@ -17,7 +17,7 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const base =
-  "cursor-pointer inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-brand-500/40";
+  "cursor-pointer inline-flex items-center justify-center font-semibold rounded-md transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-brand-500";
 
 const variants: Record<Variant, string> = {
   primary:

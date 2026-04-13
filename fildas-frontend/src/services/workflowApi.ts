@@ -5,6 +5,7 @@ import type {
   WorkflowActionResult,
   AvailableActionsResponse,
   WorkflowTask,
+  OfficeUser,
 } from "./types";
 
 export async function getDocumentRouteSteps(
@@ -119,12 +120,12 @@ export async function listWorkflowTasks(
 
 export async function listRoutingUsers(
   versionId: number,
-): Promise<any[]> {
+): Promise<OfficeUser[]> {
   try {
     const api = await getApi();
     const res = await api.get(`/document-versions/${versionId}/routing-users`);
     const data = res.data;
-    return (Array.isArray(data) ? data : data?.data ?? []) as any[];
+    return (Array.isArray(data) ? data : data?.data ?? []) as OfficeUser[];
   } catch (e: any) {
     const status = e?.response?.status;
     const msg =

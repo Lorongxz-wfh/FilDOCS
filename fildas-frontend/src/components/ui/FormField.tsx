@@ -47,16 +47,16 @@ const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
       : type;
 
     const borderCls = hasError
-      ? "border-rose-400 dark:border-rose-600 focus:border-rose-500 focus:ring-rose-100 dark:focus:ring-rose-900/30"
+      ? "border-rose-400 dark:border-rose-600 focus:border-rose-500 focus:ring-rose-500/20"
       : isValid
-        ? "border-emerald-400 dark:border-emerald-600 focus:border-emerald-500 focus:ring-emerald-100 dark:focus:ring-emerald-900/30"
-        : "border-slate-200 dark:border-surface-400 focus:border-brand-400 dark:focus:border-brand-300 focus:ring-brand-100 dark:focus:ring-brand-900/30";
+        ? "border-emerald-400 dark:border-emerald-600 focus:border-emerald-500 focus:ring-emerald-500/20"
+        : "border-slate-200 dark:border-surface-400 focus:border-brand-400 dark:focus:border-brand-300 focus:ring-brand-500/20";
 
     const inputBase = [
       "w-full rounded-md border bg-white dark:bg-surface-600",
       "text-sm text-slate-900 dark:text-slate-100",
       "placeholder-slate-400 dark:placeholder-slate-500",
-      "outline-none focus:ring-2 transition",
+      "outline-none focus:ring-2 transition-all",
       "disabled:opacity-50 disabled:cursor-not-allowed",
       borderCls,
       Icon ? "pl-9" : "pl-3",

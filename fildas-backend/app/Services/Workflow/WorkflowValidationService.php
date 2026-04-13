@@ -17,7 +17,9 @@ class WorkflowValidationService
         DocumentVersion $version,
         WorkflowTask $task,
         string $action,
+        \App\Models\User $user,
     ): void {
+        $this->assertOfficeIsolation($task, $user);
         $this->assertDraftHasFile($version, $task, $action);
         $this->assertSigningRequirement($version, $task, $action);
         $this->assertRevisionHasNewFile($version, $task, $action);
@@ -26,6 +28,23 @@ class WorkflowValidationService
     // ──────────────────────────────────────────────────────────────────────
     // GUARDS
     // ──────────────────────────────────────────────────────────────────────
+
+    /**
+     * Users (unless admin) can only perform actions on tasks assigned to their office.
+     */
+    private function assertOfficeIsolation(WorkflowTask $task, \App\Models\User $user): void
+    {
+        $roleName = strtolower(trim($user->role?->name ?? ''));
+        if (in_array($roleName, ['admin', 'sysadmin', 'system admin'], true)) {
+            return;
+        }
+
+        if ((int) $task->assigned_office_id !== (int) $user->office_id) {
+            throw new \InvalidArgumentException(
+                "This task is assigned to a different office. You do not have permission to perform this action."
+            );
+        }
+    }
 
     /**
      * Document workflows must have at least one file uploaded before forwarding from draft.
@@ -51,15 +70,18 @@ class WorkflowValidationService
 
     /**
      * During approval phase, a forward action requires a signed file.
+     * This includes the initial transition from "Review Check" to the first Approval step.
      */
     private function assertSigningRequirement(
         DocumentVersion $version,
         WorkflowTask $task,
         string $action,
     ): void {
+        $startingOrInApproval = $this->isApprovalStep($task->step) || $this->isReviewFinalCheckStep($task->step);
+
         if (
-            $this->isApprovalStep($task->step) &&
-            $this->isForwardActionDuringApproval($action) &&
+            $startingOrInApproval &&
+            $this->isForwardActionToOrDuringApproval($action) &&
             empty($version->signed_file_path)
         ) {
             throw new \InvalidArgumentException(
@@ -87,7 +109,7 @@ class WorkflowValidationService
             in_array($action, $draftForwardActions, true) &&
             (int) $version->version_number > 0
         ) {
-            $hasNewFile = ActivityLog::where('document_version_id', $version->id)
+            $hasNewFile = \App\Models\ActivityLog::where('document_version_id', $version->id)
                 ->whereIn('event', ['version.file_replaced', 'version.file_uploaded'])
                 ->exists();
 
@@ -103,6 +125,15 @@ class WorkflowValidationService
     // STEP / ACTION CLASSIFIERS
     // ──────────────────────────────────────────────────────────────────────
 
+    private function isReviewFinalCheckStep(string $step): bool
+    {
+        return in_array($step, [
+            WorkflowSteps::STEP_QA_REVIEW_FINAL_CHECK,
+            WorkflowSteps::STEP_OFFICE_REVIEW_FINAL_CHECK,
+            WorkflowSteps::STEP_CUSTOM_REVIEW_BACK_TO_OWNER,
+        ], true);
+    }
+
     private function isApprovalStep(string $step): bool
     {
         return in_array($step, [
@@ -113,24 +144,25 @@ class WorkflowValidationService
             WorkflowSteps::STEP_OFFICE_VP_APPROVAL,
             WorkflowSteps::STEP_OFFICE_PRES_APPROVAL,
             WorkflowSteps::STEP_CUSTOM_OFFICE_APPROVAL,
-            // Review-final-check steps are NOT included here — the creator is performing
-            // a content double-check at that point, not a formal approval action.
-            // Signing is enforced by the frontend guard for the creator's own transition.
+            // Note: Approval Final Check steps don't usually require another signature upload 
+            // unless the logic demands it, but we can include them if they should block forward.
         ], true);
     }
 
-    private function isForwardActionDuringApproval(string $action): bool
+    private function isForwardActionToOrDuringApproval(string $action): bool
     {
         return in_array($action, [
+            // Transitions INTO approval
+            WorkflowSteps::ACTION_QA_START_OFFICE_APPROVAL,
+            WorkflowSteps::ACTION_OFFICE_START_APPROVAL,
+            WorkflowSteps::ACTION_CUSTOM_START_APPROVAL,
+
+            // Transitions WITHIN approval
             WorkflowSteps::ACTION_QA_OFFICE_FORWARD_TO_VP_APPR,
             WorkflowSteps::ACTION_QA_VP_FORWARD_TO_PRESIDENT,
             WorkflowSteps::ACTION_OFFICE_HEAD_FORWARD_TO_VP_APPR,
             WorkflowSteps::ACTION_OFFICE_VP_FORWARD_TO_PRESIDENT,
-            WorkflowSteps::ACTION_CUSTOM_FORWARD,
-            // Start-approval actions from the pre-approval creator check
-            WorkflowSteps::ACTION_QA_START_OFFICE_APPROVAL,
-            WorkflowSteps::ACTION_OFFICE_START_APPROVAL,
-            WorkflowSteps::ACTION_CUSTOM_START_APPROVAL,
+            WorkflowSteps::ACTION_CUSTOM_FORWARD, // Custom forward is used for next recipient
         ], true);
     }
 }

@@ -103,8 +103,8 @@ export default function SelectDropdown({
       ? "border-rose-300 dark:border-rose-800 bg-rose-50/30 dark:bg-rose-950/20"
       : "border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600",
     open
-      ? "ring-1 ring-brand-500 border-brand-500 dark:border-brand-400 shadow-sm"
-      : "hover:border-slate-300 dark:hover:border-surface-300 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 dark:focus:border-brand-400",
+      ? "ring-2 ring-brand-500 border-brand-500 dark:border-brand-400 shadow-sm"
+      : "hover:border-slate-300 dark:hover:border-surface-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:focus:border-brand-400",
     disabled
       ? "opacity-50 cursor-not-allowed text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-surface-700"
       : "cursor-pointer text-slate-700 dark:text-slate-200",

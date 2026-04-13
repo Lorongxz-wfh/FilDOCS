@@ -198,9 +198,9 @@ const WorkflowFlowTimeline: React.FC<Props> = ({ logs, isLoading, versionNumber 
       <div className="relative pl-10 space-y-4 before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-px before:bg-slate-200 dark:before:bg-surface-400">
         {groupedLogs.map((log: any, index) => {
           const isLatest = index === 0;
-          const fromStatus = log.meta?.from_status;
-          const toStatus = log.meta?.to_status;
-          const note = log.meta?.note;
+          const fromStatus = log.meta?.from_status as string;
+          const toStatus = log.meta?.to_status as string;
+          const note = log.meta?.note as string;
           const isExpanded = expandedLogId === log.id;
           
           let displayLabel = log.label;
@@ -290,7 +290,7 @@ const WorkflowFlowTimeline: React.FC<Props> = ({ logs, isLoading, versionNumber 
                   <div className="mt-4 pt-3 border-t border-slate-100 dark:border-surface-400/50 animate-in slide-in-from-top-2 duration-300">
                     <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">Phase Actions</p>
                     <div className="space-y-4 pl-3 relative before:absolute before:left-[5.5px] before:top-1 before:bottom-1 before:w-[1.5px] before:bg-slate-100 dark:before:bg-surface-400/30">
-                      {log.subActions.map((sub: ActivityLogItem) => (
+                      {log.subActions.map((sub: any) => (
                         <div key={sub.id} className="relative flex items-start gap-3 group/sub">
                           <div className="absolute -left-[3.5px] top-1 h-3 w-3 rounded-full border border-white dark:border-surface-600 bg-slate-200 dark:bg-surface-400 flex items-center justify-center z-10 group-hover/sub:bg-brand-400 group-hover/sub:scale-110 transition-all">
                             <div className="scale-75 text-slate-500 dark:text-slate-300 group-hover/sub:text-white">
@@ -321,7 +321,7 @@ const WorkflowFlowTimeline: React.FC<Props> = ({ logs, isLoading, versionNumber 
 
                             {sub.meta?.message && (
                                <p className="mt-1.5 text-[10px] text-slate-500 dark:text-slate-300 bg-slate-50 dark:bg-surface-600/40 rounded px-2 py-1 italic border-l-2 border-slate-200 dark:border-surface-400 line-clamp-2">
-                                  "{sub.meta.message}"
+                                  "{(sub.meta as any).message}"
                                </p>
                             )}
                           </div>

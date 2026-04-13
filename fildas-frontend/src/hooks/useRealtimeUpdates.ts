@@ -48,32 +48,66 @@ export function useRealtimeUpdates({
   React.useEffect(() => { onWorkflowUpdateRef.current = onWorkflowUpdate; }, [onWorkflowUpdate]);
   React.useEffect(() => { onDocumentMessageRef.current = onDocumentMessage; }, [onDocumentMessage]);
 
+  // ── Buffered Event Handlers (Anti-Gravity) ─────────────────────────────
+  const eventBuffer = React.useRef<{ type: string; data: any }[]>([]);
+  const eventTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const processEventBuffer = React.useCallback(() => {
+    if (eventBuffer.current.length === 0) return;
+
+    const items = [...eventBuffer.current];
+    eventBuffer.current = [];
+    eventTimeout.current = null;
+
+    // Staggered sequence: 25ms delay between each distinct event type processing
+    items.forEach((item, index) => {
+      setTimeout(() => {
+        switch (item.type) {
+          case "notification":
+            if (onNotificationRef.current) {
+              onNotificationRef.current(item.data);
+              window.dispatchEvent(new Event("notifications:refresh"));
+            }
+            break;
+          case "workflow":
+            if (onWorkflowUpdateRef.current) onWorkflowUpdateRef.current(item.data);
+            break;
+          case "workspace":
+            if (onWorkspaceChangeRef.current) onWorkspaceChangeRef.current(item.data);
+            break;
+          case "message":
+            if (onDocumentMessageRef.current) onDocumentMessageRef.current(item.data);
+            break;
+          case "request-message":
+            if (onRequestMessageRef.current) onRequestMessageRef.current(item.data);
+            break;
+        }
+      }, index * 25);
+    });
+  }, []);
+
+  const queueEvent = React.useCallback(
+    (type: string, data: any) => {
+      eventBuffer.current.push({ type, data });
+      if (!eventTimeout.current) {
+        eventTimeout.current = setTimeout(processEventBuffer, 150); // Small buffer window
+      }
+    },
+    [processEventBuffer]
+  );
+
   // ── Private user channel — notifications ──────────────────────────────
   React.useEffect(() => {
     if (!userId) return;
 
     const channel = echo.private(`user.${userId}`);
-
-    // We check the ref inside the listener so the effect itself doesn't
-    // need to re-run (and re-auth) when the function reference changes.
-    channel.listen(".notification.created", (data: any) => {
-      if (onNotificationRef.current) {
-        onNotificationRef.current(data);
-        // Also fire the existing polling event so NotificationBell updates
-        window.dispatchEvent(new Event("notifications:refresh"));
-      }
-    });
-
-    channel.listen(".workflow.updated", (data: any) => {
-      if (onWorkflowUpdateRef.current) {
-        onWorkflowUpdateRef.current(data);
-      }
-    });
+    channel.listen(".notification.created", (data: any) => queueEvent("notification", data));
+    channel.listen(".workflow.updated", (data: any) => queueEvent("workflow", data));
 
     return () => {
       echo.leave(`user.${userId}`);
     };
-  }, [userId]); // Stable deps
+  }, [userId, queueEvent]);
 
   // ── Presence announcements channel ────────────────────────────────────
   const announcementBuffer = React.useRef<Announcement[]>([]);
@@ -86,18 +120,16 @@ export function useRealtimeUpdates({
     announcementBuffer.current = [];
     announcementTimeout.current = null;
 
-    // Staggered delivery: 20ms delay between each item for a "waterfall" effect
     items.forEach((ann, index) => {
       setTimeout(() => {
         if (onAnnouncementRef.current) onAnnouncementRef.current(ann);
-      }, index * 20);
+      }, index * 40); // Slightly slower stagger for heavy UI announcements
     });
-  }, []); // Stable dep
+  }, []);
 
   React.useEffect(() => {
     if (!onAnnouncement) return;
 
-    // Staggered join (Priority 2) - Higher delay to allow stats to finish
     const timer = setTimeout(() => {
       const channel = echo.join("announcements");
       channel.listen(".announcement.created", (data: Announcement) => {
@@ -119,49 +151,38 @@ export function useRealtimeUpdates({
     if (!requestId) return;
 
     const channel = echo.private(`request.${requestId}`);
-    channel.listen(".message.posted", (data: any) => {
-      if (onRequestMessageRef.current) onRequestMessageRef.current(data);
-    });
+    channel.listen(".message.posted", (data: any) => queueEvent("request-message", data));
 
     return () => {
       if (requestId) echo.leave(`request.${requestId}`);
     };
-  }, [requestId]);
+  }, [requestId, queueEvent]);
 
   // ── Private workspace channel — stats refresh ────────────────────────
   React.useEffect(() => {
     if (!onWorkspaceChange) return;
 
-    // Staggered join (Priority 3) - Maximum delay to clear initial waterfall
     const timer = setTimeout(() => {
       const channel = echo.private("workspace");
-      channel.listen(".workspace.changed", (data: any) => {
-        if (onWorkspaceChangeRef.current) onWorkspaceChangeRef.current(data);
-      });
+      channel.listen(".workspace.changed", (data: any) => queueEvent("workspace", data));
     }, 4000);
 
     return () => {
       clearTimeout(timer);
       echo.leave("workspace");
     };
-  }, [!!onWorkspaceChange]);
+  }, [!!onWorkspaceChange, queueEvent]);
 
   // ── Private document channel — workflow updates + comment messages ───
   React.useEffect(() => {
     if (!documentVersionId) return;
 
     const channel = echo.private(`document.${documentVersionId}`);
-
-    channel.listen(".workflow.updated", (data: any) => {
-      if (onWorkflowUpdateRef.current) onWorkflowUpdateRef.current(data);
-    });
-
-    channel.listen(".message.posted", (data: any) => {
-      if (onDocumentMessageRef.current) onDocumentMessageRef.current(data);
-    });
+    channel.listen(".workflow.updated", (data: any) => queueEvent("workflow", data));
+    channel.listen(".message.posted", (data: any) => queueEvent("message", data));
 
     return () => {
       if (documentVersionId) echo.leave(`document.${documentVersionId}`);
     };
-  }, [documentVersionId]);
+  }, [documentVersionId, queueEvent]);
 }

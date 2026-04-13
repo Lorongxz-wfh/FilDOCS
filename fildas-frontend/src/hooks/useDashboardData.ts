@@ -15,6 +15,7 @@ import {
   listDocumentRequests,
   listDocumentRequestInbox,
 } from "../services/documentRequests";
+import { type DocumentRequestRow } from "../services/types";
 import { isQA, isAuditor, type UserRole } from "../lib/roleFilters";
 import type { PendingAction } from "../services/types";
 import { useRealtimeUpdates } from "./useRealtimeUpdates";
@@ -152,20 +153,20 @@ export function useDashboardData(role: UserRole): DashboardData {
              setReport(reportRes);
              setPendingRequestsCount(reqRes?.meta?.total ?? 0);
 
-             const docs = (queueRes.status === "fulfilled" ? queueRes.value.assigned : []).map(
-               (x: any) => ({
+             const docs = (queueRes.status === "fulfilled" ? (queueRes.value.assigned as WorkQueueItem[]) : []).map(
+               (x) => ({
                  type: "document",
                  id: x.version.id,
                  title: x.document.title,
-                 code: x.document.code || (x.document as any).reserved_code,
+                 code: x.document.code ?? null,
                  status: x.version.status,
                  item: x,
                } as PendingAction)
              );
 
              const reqs = (reqRes?.data ?? [])
-               .filter((r: any) => r.status === "open")
-               .map((r: any) => ({
+               .filter((r: DocumentRequestRow) => r.request_status === "open")
+               .map((r: DocumentRequestRow) => ({
                  type: "request",
                  id: r.id,
                  title: r.title,
@@ -229,20 +230,20 @@ export function useDashboardData(role: UserRole): DashboardData {
             });
             setPendingRequestsInboxCount(inboxRes?.meta?.total ?? 0);
 
-            const docs = (queueRes.status === "fulfilled" ? queueRes.value.assigned : []).map(
-              (x: any) => ({
+            const docs = (queueRes.status === "fulfilled" ? (queueRes.value.assigned as WorkQueueItem[]) : []).map(
+              (x) => ({
                 type: "document",
                 id: x.version.id,
                 title: x.document.title,
-                code: x.document.code || (x.document as any).reserved_code,
+                code: x.document.code ?? null,
                 status: x.version.status,
                 item: x,
               } as PendingAction)
             );
 
             const reqs = (inboxRes?.data ?? [])
-              .filter((r: any) => r.recipient_status === "pending" || r.recipient_status === "rejected")
-              .map((r: any) => ({
+              .filter((r: DocumentRequestRow) => r.recipient_status === "pending" || r.recipient_status === "rejected")
+              .map((r: DocumentRequestRow) => ({
                 type: "request",
                 id: r.id,
                 title: r.title,

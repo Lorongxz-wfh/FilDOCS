@@ -19,33 +19,34 @@ export const API_BASE =
   (import.meta.env.VITE_API_BASE_URL as string) || "http://127.0.0.1:8001/api";
 
 export function normalizePaginated<T>(payload: any): Paginated<T> {
-  if (!payload) return { data: [] };
+  const emptyMeta = { current_page: 1, last_page: 1, per_page: 25, total: 0 };
+  const emptyLinks = { first: null, last: null, prev: null, next: null };
+
+  if (!payload) return { data: [], meta: emptyMeta, links: emptyLinks };
 
   const data = payload.data || payload.items || payload.results || payload.messages || (Array.isArray(payload) ? payload : null);
 
   if (Array.isArray(data)) {
-    // If it was already a paginated object, extract meta
     const meta = payload.meta ?? {
-      current_page: payload.current_page,
-      last_page: payload.last_page,
-      per_page: payload.per_page,
-      total: payload.total,
+      current_page: payload.current_page ?? 1,
+      last_page: payload.last_page ?? 1,
+      per_page: payload.per_page ?? 25,
+      total: payload.total ?? 0,
       from: payload.from,
       to: payload.to,
     };
     return {
       data: data as T[],
-      meta: payload.current_page ? meta : undefined,
-      links: payload.links,
+      meta: meta,
+      links: payload.links ?? emptyLinks,
     };
   }
 
-  // If it's a single object that looks like the expected type, wrap it
   if (typeof payload === "object" && (payload.id || payload.event || payload.message)) {
-    return { data: [payload] as T[] };
+    return { data: [payload] as T[], meta: emptyMeta, links: emptyLinks };
   }
 
-  return { data: [] };
+  return { data: [], meta: emptyMeta, links: emptyLinks };
 }
 
 export type NotifCacheEntry = {
