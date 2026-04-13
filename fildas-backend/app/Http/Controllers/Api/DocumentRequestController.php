@@ -57,12 +57,15 @@ class DocumentRequestController extends Controller
 
         if (!$isQa) {
             $activeQuery->where(function ($q) use ($user, $officeId) {
+                // If I created it, it stays active until the batch is closed/cancelled
                 $q->where('r.created_by_user_id', $user->id)
+                  // If I received it, it stays active only if I haven't finished it yet
                   ->orWhereExists(function ($sub) use ($officeId) {
                       $sub->select(DB::raw(1))
                           ->from('document_request_recipients as rr')
                           ->whereColumn('rr.request_id', 'r.id')
-                          ->where('rr.office_id', $officeId);
+                          ->where('rr.office_id', $officeId)
+                          ->whereNotIn('rr.status', ['accepted', 'cancelled']);
                   });
             });
         }
@@ -161,12 +164,17 @@ class DocumentRequestController extends Controller
 
             if (!$isQa) {
                 $q->where(function ($query) use ($user, $officeId) {
+                    // I created it (outgoing)
                     $query->where('r.created_by_user_id', (int)$user->id)
+                          // I received it (incoming) AND I haven't finished it
                           ->orWhereExists(function ($sub) use ($officeId) {
                               $sub->select(DB::raw(1))
                                   ->from('document_request_recipients as rr_access')
                                   ->whereColumn('rr_access.request_id', 'r.id')
-                                  ->where('rr_access.office_id', $officeId);
+                                  ->where('rr_access.office_id', $officeId)
+                                  ->when(request('status') === 'open', function($sq) {
+                                      $sq->whereNotIn('rr_access.status', ['accepted', 'cancelled']);
+                                  });
                           });
                 });
             }
@@ -454,7 +462,13 @@ class DocumentRequestController extends Controller
                     ]);
             }
 
-            if (!empty($data['status'])) $q->where('r.status', $data['status']);
+            if (!empty($data['status'])) {
+                $q->where('r.status', $data['status']);
+                if ($data['status'] === 'open' && !$isAdmin) {
+                    // For recipients, 'open' should only mean things they haven't finished
+                    $q->whereNotIn('rr.status', ['accepted', 'cancelled']);
+                }
+            }
             if (!empty($data['direction']) && $data['direction'] !== 'all') {
                 if ($data['direction'] === 'outgoing') {
                     $q->where('r.created_by_user_id', (int)$user->id);

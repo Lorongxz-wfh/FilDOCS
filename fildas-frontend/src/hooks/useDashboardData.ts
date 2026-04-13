@@ -142,7 +142,8 @@ export function useDashboardData(role: UserRole): DashboardData {
                   bucket: period === "this_week" ? "daily" : period === "today" ? "daily" : "monthly"
                 }),
                 listDocumentRequests({ 
-                  per_page: 1,
+                  per_page: 8,
+                  status: "open",
                   date_from: dateFrom,
                   date_to: dateTo
                 })
@@ -221,7 +222,8 @@ export function useDashboardData(role: UserRole): DashboardData {
           // Priority 2: Inbox & Actions
           setTimeout(async () => {
             const inboxRes = await listDocumentRequestInbox({ 
-              per_page: 5,
+              per_page: 8,
+              status: "open",
               date_from: dateFrom,
               date_to: dateTo
             });

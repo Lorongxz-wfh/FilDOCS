@@ -247,6 +247,32 @@ class DocumentRequestService
                 'updated_at'        => $now,
             ]);
 
+            // Auto-close batch if all recipients are fulfilled (accepted or cancelled)
+            $allDone = !DB::table('document_request_recipients')
+                ->where('request_id', $recipient->request_id)
+                ->whereNotIn('status', ['accepted', 'cancelled'])
+                ->exists();
+
+            if ($allDone) {
+                DB::table('document_requests')
+                    ->where('id', $recipient->request_id)
+                    ->where('status', 'open')
+                    ->update(['status' => 'closed', 'updated_at' => $now]);
+                
+                $this->logActivity('document_request.closed', 'Automatically closed document request batch', $actor->id, $actor->office_id, [
+                    'document_request_id' => $recipient->request_id,
+                    'auto'                => true,
+                ]);
+
+                DB::table('document_request_messages')->insert([
+                    'document_request_id' => $recipient->request_id,
+                    'type'                => 'system',
+                    'message'             => "Request batch automatically CLOSED (fulfillment complete).",
+                    'created_at'          => $now,
+                    'updated_at'          => $now,
+                ]);
+            }
+
             $this->logActivity('document_request.submission.reviewed', "Reviewed submission as {$data['decision']}", $actor->id, $actor->office_id, [
                 'document_request_id'    => $recipient->request_id,
                 'document_request_title' => $requestRow->title,
