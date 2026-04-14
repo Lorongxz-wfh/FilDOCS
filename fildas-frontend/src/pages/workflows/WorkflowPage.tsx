@@ -151,38 +151,15 @@ const WorkflowPage: React.FC = () => {
   );
 
   const handleManualRefresh = React.useCallback(async () => {
-    const prevStatus = selectedVersion?.status;
-    const prevVersionCount = allVersions.length;
-    const prevUpdatedAt = selectedVersion?.updated_at;
-
     try {
       await refreshAndSelectBest({
         preferVersionId: selectedVersion?.id,
       });
-
       setDocRefreshTrigger((prev) => prev + 1);
-
-      const statusChanged = selectedVersion?.status !== prevStatus;
-      const newVersionAdded = allVersions.length > prevVersionCount;
-      const contentUpdated = selectedVersion?.updated_at !== prevUpdatedAt;
-
-      if (statusChanged || newVersionAdded || contentUpdated) {
-        toast.push({ type: "success", title: "Refreshed", message: "Document workspace updated." });
-      } else {
-        toast.push({ type: "info", title: "Refreshed", message: "Document is up to date." });
-      }
-    } catch {
-      toast.push({ type: "error", title: "Refresh failed", message: "Could not sync workspace." });
+    } catch (e) {
+      console.error("Manual refresh failed", e);
     }
-  }, [refreshAndSelectBest, selectedVersion?.id, selectedVersion?.status, selectedVersion?.updated_at, allVersions.length, toast]);
-
-  useEffect(() => {
-    if (initialMountRef.current) {
-      initialMountRef.current = false;
-      return;
-    }
-    handleManualRefresh();
-  }, [refreshKey, handleManualRefresh]);
+  }, [refreshAndSelectBest, selectedVersion?.id]);
 
   const [error, setError] = useState<string | null>(null);
   const [reviseModalOpen, setReviseModalOpen] = useState(false);

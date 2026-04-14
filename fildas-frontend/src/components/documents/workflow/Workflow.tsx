@@ -82,13 +82,9 @@ const Workflow: React.FC<WorkflowProps> = ({
     if (refreshTrigger > 0 && refreshTrigger !== lastHandledRefreshRef.current) {
       lastHandledRefreshRef.current = refreshTrigger;
       actions.syncAll();
-      if (state.localVersion) {
-        invalidatePreviewCache(state.localVersion.id);
-        actions.setPreviewNonce((n) => n + 1); // Force iframe to remount and refetch the URL
-      }
-      onChanged?.(); // Pull latest version
+      // Note: onChanged and previewNonce are now handled by useWorkflowUI's updated_at watcher
     }
-  }, [refreshTrigger, actions, state.localVersion, onChanged]);
+  }, [refreshTrigger, actions]);
 
   // ── Automatic Real-time Sync ───────────────────────────────
   React.useEffect(() => {
