@@ -119,8 +119,7 @@ const WorkflowPage: React.FC = () => {
     useState(false);
   const [docRefreshTrigger, setDocRefreshTrigger] = useState(0);
 
-  const { refreshKey } = useRefresh();
-  const initialMountRef = Object.assign(React.useRef(true), {});
+
 
   const refreshAndSelectBest = React.useCallback(
     async (opts?: { preferVersionId?: number | null }) => {
@@ -150,16 +149,7 @@ const WorkflowPage: React.FC = () => {
     [id, setSearchParams],
   );
 
-  const handleManualRefresh = React.useCallback(async () => {
-    try {
-      await refreshAndSelectBest({
-        preferVersionId: selectedVersion?.id,
-      });
-      setDocRefreshTrigger((prev) => prev + 1);
-    } catch (e) {
-      console.error("Manual refresh failed", e);
-    }
-  }, [refreshAndSelectBest, selectedVersion?.id]);
+
 
   const [error, setError] = useState<string | null>(null);
   const [reviseModalOpen, setReviseModalOpen] = useState(false);
