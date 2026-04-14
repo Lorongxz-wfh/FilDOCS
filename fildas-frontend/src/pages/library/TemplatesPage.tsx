@@ -183,7 +183,7 @@ const TemplatesPage: React.FC = () => {
     loadTemplates();
   }, [loadTemplates]);
 
-  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+  useSmartRefresh(async () => {
     await loadTemplates(false);
     return { changed: true }; 
   });

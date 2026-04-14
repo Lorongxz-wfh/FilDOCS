@@ -430,7 +430,7 @@ const AnnouncementsPage: React.FC = () => {
   const [dateFilter, setDateFilter] = React.useState<DateFilter>("all");
   const [search, setSearch] = React.useState("");
   
-  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+  const { refresh } = useSmartRefresh(async () => {
     setLoading(true);
     try {
       const first = await listAllAnnouncements(1);

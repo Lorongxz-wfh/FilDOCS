@@ -1,7 +1,7 @@
 import React from "react";
 import Skeleton from "../ui/loader/Skeleton";
 import type { AdminDashboardStats } from "../../services/documents";
-import { Users, Building2, FileText, Activity } from "lucide-react";
+import { Users, FileText, Activity } from "lucide-react";
 
 type Props = { data: AdminDashboardStats | null; loading: boolean };
 

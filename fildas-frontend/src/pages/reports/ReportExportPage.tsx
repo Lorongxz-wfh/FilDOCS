@@ -235,7 +235,7 @@ const ReportExportPage: React.FC = () => {
     { in_review: 0, approved: 0, returned: 0 },
   );
 
-  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+  useSmartRefresh(async () => {
     setRefreshKey((k) => k + 1);
     return { changed: true, message: "Analytical data synchronized." };
   });

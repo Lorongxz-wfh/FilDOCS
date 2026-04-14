@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircle2, Circle, Clock, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Skeleton from "../../ui/loader/Skeleton";
 import Tooltip from "../../ui/Tooltip";
 import type { FlowStep, Phase, PhaseId } from "./config/flowConfig";
@@ -112,41 +113,15 @@ const WorkflowProgressCard: React.FC<Props> = ({
       );
     }
 
-    if (phaseSteps.length === 1) {
-      const step = phaseSteps[0];
-      const isCurrent = step.id === currentStep.id;
-      const completionInfo = getStepCompletionInfo(step.id);
-
-      return (
-        <div className="flex justify-center">
-          <div className="flex w-56 flex-col items-center text-center">
-            <Tooltip content={completionInfo}>
-              <div
-                className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold shadow-sm transition-all ${isCurrent
-                    ? "bg-sky-600 text-white"
-                    : completionInfo
-                      ? "bg-emerald-500 text-white cursor-help"
-                      : "bg-white text-slate-600 border border-slate-200 dark:bg-surface-500 dark:text-slate-300 dark:border-surface-300"
-                  }`}
-              >
-                1
-              </div>
-            </Tooltip>
-            <span
-              className={`mt-2 text-xs font-medium leading-snug ${isCurrent ? "text-slate-900 dark:text-slate-100 font-semibold" : "text-slate-600 dark:text-slate-400"
-                }`}
-              title={step.label}
-            >
-              {step.label}
-            </span>
-          </div>
-        </div>
-      );
-    }
-
     return (
-      <div className="overflow-x-auto -mx-1 px-1">
-        <div className="flex w-max items-start gap-2 mx-auto">
+      <motion.div 
+        key={selectedPhaseId}
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-x-auto -mx-1 px-1"
+      >
+        <div className="flex w-max items-start gap-2 mx-auto min-h-[64px] py-2">
           {phaseSteps.map((step, si, arr) => {
             const stepIndex = activeFlowSteps.findIndex((s) => s.id === step.id);
             const stepIsCurrent = step.id === currentStep.id;
@@ -158,20 +133,21 @@ const WorkflowProgressCard: React.FC<Props> = ({
               <React.Fragment key={`${step.id}-${si}`}>
                 <div className="flex flex-col items-center" style={{ width: "80px" }}>
                   <Tooltip content={completionInfo}>
-                    <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold shadow-sm transition-all ${stepIsCurrent
-                          ? "bg-sky-600 text-white"
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold shadow-sm transition-all duration-300 ${stepIsCurrent
+                          ? "bg-sky-600 text-white ring-2 ring-sky-100 dark:ring-sky-900/30"
                           : completionInfo || stepIsCompleted
                             ? "bg-emerald-500 text-white cursor-help"
                             : "bg-white text-slate-600 border border-slate-200 dark:bg-surface-500 dark:text-slate-300 dark:border-surface-300"
                         }`}
                     >
                       {si + 1}
-                    </div>
+                    </motion.div>
                   </Tooltip>
                   <span
-                    className={`mt-1.5 text-center text-xs font-medium leading-tight line-clamp-2 ${stepIsCurrent
-                        ? "text-slate-900 dark:text-slate-100 font-semibold"
+                    className={`mt-1.5 text-center text-[10px] font-medium leading-tight line-clamp-2 transition-colors duration-300 ${stepIsCurrent
+                        ? "text-slate-900 dark:text-slate-100 font-bold"
                         : stepIsCompleted
                           ? "text-slate-700 dark:text-slate-300"
                           : "text-slate-400 dark:text-slate-500"
@@ -184,7 +160,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
                 {si < arr.length - 1 && (
                   <div className="flex items-center mt-3.5 shrink-0">
                     <div
-                      className={`h-1 w-5 rounded-full ${stepIsCompleted || !!completionInfo
+                      className={`h-1 w-5 rounded-full transition-colors duration-500 ${stepIsCompleted || !!completionInfo
                           ? "bg-emerald-400"
                           : stepIsCurrent
                             ? "bg-sky-400 dark:bg-sky-700"
@@ -194,10 +170,10 @@ const WorkflowProgressCard: React.FC<Props> = ({
                     <svg
                       viewBox="0 0 20 20"
                       fill="currentColor"
-                      className={`ml-0.5 h-3 w-3 ${stepIsCompleted || !!completionInfo
+                      className={`ml-0.5 h-3 w-3 transition-colors duration-500 ${stepIsCompleted || !!completionInfo
                           ? "text-emerald-400"
                           : stepIsCurrent
-                            ? "text-sky-400 dark:text-sky-700"
+                            ? "text-sky-400 dark:bg-sky-700"
                             : "text-slate-300 dark:text-surface-300"
                         }`}
                     >
@@ -209,12 +185,12 @@ const WorkflowProgressCard: React.FC<Props> = ({
             );
           })}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl rounded-2xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden">
+    <div className="mx-auto w-full max-w-5xl rounded-2xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden shadow-sm shadow-slate-200/50 dark:shadow-none">
       {/* ── Header bar — always visible, click to toggle ── */}
       <button
         type="button"
@@ -248,9 +224,11 @@ const WorkflowProgressCard: React.FC<Props> = ({
                 {!isTasksReady ? (
                   <div className="h-full w-1/3 rounded-full bg-slate-300 dark:bg-surface-300 animate-pulse" />
                 ) : (
-                  <div
-                    className="h-full rounded-full bg-sky-600 transition-all duration-500"
-                    style={{ width: `${progressPct}%` }}
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPct}%` }}
+                    transition={{ duration: 0.8, ease: "circOut" }}
+                    className="h-full rounded-full bg-sky-600"
                   />
                 )}
               </div>
@@ -391,11 +369,19 @@ const WorkflowProgressCard: React.FC<Props> = ({
                         </svg>
                       </button>
 
-                      {isOpen && (
-                        <div className="border-t border-slate-100 dark:border-surface-400 bg-slate-50/60 dark:bg-surface-600/50 px-3 py-3">
-                          {renderStepBubbles(phaseSteps)}
-                        </div>
-                      )}
+                      <AnimatePresence>
+                        {isOpen && (
+                          <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="border-t border-slate-100 dark:border-surface-400 bg-slate-50/60 dark:bg-surface-600/50 px-3 py-3 overflow-hidden"
+                          >
+                            {renderStepBubbles(phaseSteps)}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   );
                 })}
@@ -449,19 +435,20 @@ const WorkflowProgressCard: React.FC<Props> = ({
                 ))}
               </div>
             ) : (
-              <div className="mt-3 flex items-stretch gap-1.5">
+              <div className="mt-4 flex items-stretch gap-1.5">
                 {phases.map((phase, index) => {
                   const isCurrent = index === currentPhaseIndex;
                   const isCompleted = index < currentPhaseIndex;
+                  const isSelected = selectedPhaseId === phase.id;
 
                   return (
                     <React.Fragment key={phase.id}>
                       <button
                         type="button"
                         onClick={() => setSelectedPhaseId(phase.id)}
-                        className={`flex-1 min-w-0 rounded-lg border px-3 py-2 text-left transition-colors cursor-pointer ${isCurrent
-                            ? "border-sky-600/50 bg-sky-50 dark:border-sky-600/40 dark:bg-sky-500/10"
-                            : selectedPhaseId === phase.id
+                        className={`flex-1 min-w-0 rounded-lg border px-3 py-2 text-left transition-all duration-300 cursor-pointer ${isCurrent
+                            ? "border-sky-600/50 bg-sky-50 dark:border-sky-600/40 dark:bg-sky-500/10 shadow-sm shadow-sky-600/10"
+                            : isSelected
                               ? "border-slate-400 bg-slate-100 dark:border-slate-400 dark:bg-surface-400/60"
                               : isCompleted
                                 ? "border-slate-200 bg-slate-50/60 dark:border-surface-400 dark:bg-surface-600 hover:border-slate-300 dark:hover:border-slate-300"
@@ -471,7 +458,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <span
-                              className={`h-2.5 w-2.5 shrink-0 rounded-full ${isCurrent
+                              className={`h-2.5 w-2.5 shrink-0 rounded-full transition-colors duration-500 ${isCurrent
                                   ? "bg-sky-600 dark:bg-sky-300"
                                   : isCompleted
                                     ? "bg-slate-400 dark:bg-slate-500"
@@ -479,8 +466,8 @@ const WorkflowProgressCard: React.FC<Props> = ({
                                 }`}
                             />
                             <span
-                              className={`text-xs font-semibold truncate ${isCurrent
-                                  ? "text-slate-900 dark:text-slate-100 font-semibold"
+                              className={`text-xs font-bold truncate transition-colors duration-500 ${isCurrent
+                                  ? "text-slate-900 dark:text-slate-100"
                                   : isCompleted
                                     ? "text-slate-600 dark:text-slate-200"
                                     : "text-slate-500 dark:text-slate-400"
@@ -492,19 +479,13 @@ const WorkflowProgressCard: React.FC<Props> = ({
                           </div>
                           {isCurrent && (
                             <Circle
-                              className="shrink-0 h-4 w-4 text-sky-600 dark:text-sky-300 animate-pulse"
-                              strokeWidth={2}
+                              className="shrink-0 h-3.5 w-3.5 text-sky-600 dark:text-sky-300 animate-pulse"
+                              strokeWidth={2.5}
                             />
                           )}
                           {!isCurrent && isCompleted && (
                             <CheckCircle2
-                              className="shrink-0 h-4 w-4 text-slate-400 dark:text-slate-500 fill-slate-50 dark:fill-surface-500"
-                              strokeWidth={2}
-                            />
-                          )}
-                          {!isCurrent && !isCompleted && (
-                            <Circle
-                              className="shrink-0 h-4 w-4 text-slate-300 dark:text-surface-300"
+                              className="shrink-0 h-3.5 w-3.5 text-slate-400 dark:text-slate-500"
                               strokeWidth={2}
                             />
                           )}
@@ -514,11 +495,11 @@ const WorkflowProgressCard: React.FC<Props> = ({
                       {index < phases.length - 1 && (
                         <div className="flex items-center shrink-0">
                           <svg
-                            className={`h-4 w-4 ${isCompleted
+                            className={`h-3 w-3 ${isCompleted
                                 ? "text-slate-300 dark:text-slate-600"
                                 : isCurrent
                                   ? "text-sky-300 dark:text-sky-400"
-                                  : "text-slate-300 dark:text-surface-300"
+                                  : "text-slate-200 dark:text-surface-300"
                               }`}
                             fill="currentColor"
                             viewBox="0 0 20 20"
@@ -554,9 +535,9 @@ const WorkflowProgressCard: React.FC<Props> = ({
               </div>
             ) : (
               <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/40 p-3 dark:border-surface-400 dark:bg-surface-600/40">
-                <p className="text-center text-xs font-semibold mb-3 uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                <p className="text-center text-[10px] font-bold mb-2 uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   {selectedPhaseId === currentPhaseId
-                    ? "Current"
+                    ? "Current Steps"
                     : `${phases.find((p) => p.id === selectedPhaseId)?.label} steps`}
                 </p>
                 {renderStepBubbles(

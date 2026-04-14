@@ -15,6 +15,8 @@ type Props = {
   isLoadingRoutingUsers?: boolean;
 };
 
+import { motion, AnimatePresence } from "framer-motion";
+
 // Replaces window.prompt/confirm with proper modals
 const WorkflowActionBar: React.FC<Props> = ({
   actions,
@@ -107,32 +109,41 @@ const WorkflowActionBar: React.FC<Props> = ({
       )}
 
       <div className="flex flex-wrap gap-2">
-        {actions.map((a) => {
-          const isThis = processingKey === a.key;
-          const isBusy = isChangingStatus || !!processingKey;
-          return (
-            <Button
-              key={a.key}
-              type="button"
-              size="sm"
-              variant={a.variant === "danger" ? "danger" : "primary"}
-              disabled={isBusy || !canAct}
-              onClick={() => handleClick(a)}
-              className={
-                !canAct && !isBusy ? "opacity-40 cursor-not-allowed" : ""
-              }
-            >
-              {isThis ? (
-                <span className="flex items-center gap-1.5">
-                  <Loader2 className="animate-spin h-3 w-3" />
-                  Processing…
-                </span>
-              ) : (
-                a.label
-              )}
-            </Button>
-          );
-        })}
+        <AnimatePresence mode="popLayout">
+          {actions.map((a) => {
+            const isThis = processingKey === a.key;
+            const isBusy = isChangingStatus || !!processingKey;
+            return (
+              <motion.div
+                key={a.key}
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+              >
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={a.variant === "danger" ? "danger" : "primary"}
+                  disabled={isBusy || !canAct}
+                  onClick={() => handleClick(a)}
+                  className={
+                    !canAct && !isBusy ? "opacity-40 cursor-not-allowed" : ""
+                  }
+                >
+                  {isThis ? (
+                    <span className="flex items-center gap-1.5">
+                      <Loader2 className="animate-spin h-3 w-3" />
+                      Processing…
+                    </span>
+                  ) : (
+                    a.label
+                  )}
+                </Button>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
 
       {/* Confirm / Reject modal */}

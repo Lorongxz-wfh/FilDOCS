@@ -58,8 +58,8 @@ export function useWorkflowUI({
 
   // ── Sign modal ───────────────────────────────────────────────
   const [signingOpen, setSigningOpen] = useState(false);
-  const [signingInBackground, setSigningInBackground] = useState(false);
   const [signingEditMode, setSigningEditMode] = useState(false);
+  const [signingInBackground, setSigningInBackground] = useState(false);
   const [removingSignature, setRemovingSignature] = useState(false);
 
   // ── Delete/cancel confirmation state ─────────────────────────
@@ -116,12 +116,6 @@ export function useWorkflowUI({
     const ed = String((version as any)?.effective_date ?? "").slice(0, 10);
     setLocalEffectiveDate(ed);
     setInitialEffectiveDate(ed);
-    // We no longer auto-set approverHasUploaded to true based on hasSignedFile.
-    // This ensures that each new actor sees the 'Need to Sign' banner rather than 
-    // inheriting the 'Success' state of the previous actor.
-    // if (hasSignedFile) {
-    //   setApproverHasUploaded(true);
-    // }
   }, [
     document?.id,
     version?.id,
@@ -288,11 +282,15 @@ export function useWorkflowUI({
     );
   }, [workflow.activityLogs, myOfficeId, localVersion?.id]);
 
+  // Derive approverHasUploaded from either local state or logs
+  const [localApproverUploaded, setLocalApproverUploaded] = useState(false);
+  const approverHasUploaded = useMemo(() => localApproverUploaded || hasLoggedSignature, [localApproverUploaded, hasLoggedSignature]);
+
+  // Reset local uploaded state when version changes
   useEffect(() => {
-    if (hasLoggedSignature) {
-      setApproverHasUploaded(true);
-    }
-  }, [hasLoggedSignature]);
+    setLocalApproverUploaded(false);
+    setApproverHasDownloaded(false);
+  }, [localVersion?.id, localVersion?.status]);
 
   useDocumentAutoSave({
     documentId: document?.id ?? 0,
@@ -325,10 +323,8 @@ export function useWorkflowUI({
 
         // If the upload happened during the approval phase (i.e. the approver
         // uploaded their signed copy), unblock the Forward button immediately.
-        // Without this, approverHasUploaded only becomes true after a page
-        // refresh restores it via the activity log (hasLoggedSignature).
         if (v?.signed_file_path) {
-          setApproverHasUploaded(true);
+          setLocalApproverUploaded(true);
         }
       },
       [workflow.syncAll, handleActionResult, onChangedRef]
@@ -475,19 +471,11 @@ export function useWorkflowUI({
   
 
   const [approverHasDownloaded, setApproverHasDownloaded] = useState(false);
-  const [approverHasUploaded, setApproverHasUploaded] = useState(false);
+  // const [approverHasUploaded, setApproverHasUploaded] = useState(false); // Now derived above
   const approverNeedsSignedUpload = isActiveApprover && (!approverHasDownloaded || !approverHasUploaded);
 
   // Reset signing state whenever the document moves to a new step
-  const prevStatusRef = useRef<string | null>(null);
-  useEffect(() => {
-    const currentStatus = localVersion?.status ?? null;
-    if (currentStatus && prevStatusRef.current && currentStatus !== prevStatusRef.current) {
-      setApproverHasDownloaded(false);
-      setApproverHasUploaded(false);
-    }
-    prevStatusRef.current = currentStatus;
-  }, [localVersion?.status]);
+  // Handled in the useEffect above for localApproverUploaded
 
   const isDraftStatus = localVersion?.status === "Draft" || localVersion?.status === "Office Draft";
   const needsFileReplacement = isDraftStatus && canAct && !!(localVersion as any)?.needs_file_replacement;
@@ -851,7 +839,7 @@ export function useWorkflowUI({
     setPreviewNonce,
     setActiveSideTab,
     setApproverHasDownloaded,
-    setApproverHasUploaded,
+    setApproverHasUploaded: setLocalApproverUploaded,
     setIsRegisterModalOpen,
     setIsDistributeModalOpen,
     setActiveWorkflowCode,
@@ -879,7 +867,7 @@ export function useWorkflowUI({
     setPreviewNonce,
     setActiveSideTab,
     setApproverHasDownloaded,
-    setApproverHasUploaded,
+    setLocalApproverUploaded,
     setIsRegisterModalOpen,
     setIsDistributeModalOpen,
     setActiveWorkflowCode,

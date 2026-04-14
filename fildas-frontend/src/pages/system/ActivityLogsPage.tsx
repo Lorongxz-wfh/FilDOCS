@@ -38,7 +38,7 @@ const ActivityLogsPage: React.FC = () => {
     scope: isOfficeHead ? "office" : "all",
   });
 
-  const { refresh, isRefreshing } = useSmartRefresh(internalRefresh);
+  useSmartRefresh(internalRefresh);
 
   const handleRowNavigate = async (row: any) => {
     if (row.meta?.document_request_id) {

@@ -164,11 +164,9 @@ export default function RequestBatchPage() {
     return () => window.clearInterval(id);
   }, [load]);
 
-  const [refreshing, setRefreshing] = React.useState(false);
   const prevProgressRef = React.useRef<string>("");
 
   const handleRefresh = React.useCallback(async (): Promise<string | false> => {
-    setRefreshing(true);
     const prevProgress = prevProgressRef.current;
     try {
       await load();
@@ -181,7 +179,7 @@ export default function RequestBatchPage() {
     } catch {
       throw new Error("Refresh failed.");
     } finally {
-      setRefreshing(false);
+      // silent
     }
   }, [load, req?.progress]);
 

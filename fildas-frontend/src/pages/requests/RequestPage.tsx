@@ -145,56 +145,16 @@ export default function RequestPage() {
   const [qaNote, setQaNote] = React.useState("");
   const [reviewing, setReviewing] = React.useState(false);
 
-  const [refreshing, setRefreshing] = React.useState(false);
   
   const { refreshKey } = useRefresh();
   const initialMountRef = Object.assign(React.useRef(true), {});
 
-  const handleManualRefresh = React.useCallback(async () => {
-    setRefreshing(true);
-    const before = msgCountRef.current;
-    try {
-      await Promise.all([load(), loadMessages()]);
-      const after = msgCountRef.current;
-      const diff = after - before;
-      if (diff > 0) return `${diff} new message${diff === 1 ? "" : "s"} received.`;
-      return "Already up to date.";
-    } catch {
-      // throw new Error("Refresh failed.");
-    } finally {
-      setRefreshing(false);
-    }
-  }, [load, loadMessages]);
-
-  React.useEffect(() => {
-    if (initialMountRef.current) {
-      initialMountRef.current = false;
-      return;
-    }
-    handleManualRefresh();
-  }, [refreshKey, handleManualRefresh]);
 
   const msgCountRef = React.useRef(messages.length);
   React.useEffect(() => {
     msgCountRef.current = messages.length;
   }, [messages.length]);
 
-  const handleRefresh = async (): Promise<string | false> => {
-    setRefreshing(true);
-    const before = msgCountRef.current;
-    try {
-      await Promise.all([load(), loadMessages()]);
-      const after = msgCountRef.current;
-      const diff = after - before;
-      if (diff > 0)
-        return `${diff} new message${diff === 1 ? "" : "s"} received.`;
-      return "Already up to date.";
-    } catch {
-      throw new Error("Refresh failed.");
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   // ── Edit panel (QA only) ───────────────────────────────────────────────────
   const [editOpen, setEditOpen] = React.useState(false);
@@ -368,6 +328,29 @@ export default function RequestPage() {
       if (!silent) setActivityLoading(false);
     }
   }, [requestId, leftTab]);
+
+  const handleManualRefresh = React.useCallback(async () => {
+    const before = msgCountRef.current;
+    try {
+      await Promise.all([load(), loadMessages()]);
+      const after = msgCountRef.current;
+      const diff = after - before;
+      if (diff > 0) return `${diff} new message${diff === 1 ? "" : "s"} received.`;
+      return "Already up to date.";
+    } catch {
+      // silent
+    } finally {
+      // silent
+    }
+  }, [load, loadMessages]);
+
+  React.useEffect(() => {
+    if (initialMountRef.current) {
+      initialMountRef.current = false;
+      return;
+    }
+    handleManualRefresh();
+  }, [refreshKey, handleManualRefresh]);
 
   React.useEffect(() => {
     if (leftTab === "activity") {

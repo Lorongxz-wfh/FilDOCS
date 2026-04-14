@@ -206,7 +206,6 @@ const InboxPage: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
   const [loadingMore, setLoadingMore] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [reloadTick, setReloadTick] = React.useState(0);
   const [markingAll, setMarkingAll] = React.useState(false);
   const [confirmClearAll, setConfirmClearAll] = React.useState(false);
@@ -233,8 +232,6 @@ const InboxPage: React.FC = () => {
       try {
         if (page === 1 && !silent) setLoading(true);
         else if (page > 1) setLoadingMore(true);
-        if (silent) setIsRefreshing(true);
-        setError(null);
         const res = await listNotifications({ page, perPage: 50 });
         if (!alive) return;
         setItems((prev) => page === 1 ? res.data : [...prev, ...res.data]);
@@ -244,8 +241,7 @@ const InboxPage: React.FC = () => {
       } finally {
         if (alive) { 
           setLoading(false); 
-          setLoadingMore(false); 
-          setIsRefreshing(false);
+          setLoadingMore(false);
         }
       }
     }

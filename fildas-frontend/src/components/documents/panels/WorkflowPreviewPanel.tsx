@@ -1,6 +1,8 @@
 import React from "react";
 import UploadProgress from "../../ui/loader/UploadProgress";
 import { Download, Maximize2, Upload, X, FileX, Loader2, RefreshCw, FileSearch } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import LiveValuePulse from "../../ui/LiveValuePulse";
 
 // ── Preview modal ────────────────────────────────────────────────────────────
 function PreviewModal({
@@ -148,26 +150,27 @@ const WorkflowPreviewPanel: React.FC<Props> = ({
         {/* Toolbar */}
         <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-2 dark:border-surface-400 dark:bg-surface-600">
           <div className="flex items-center gap-3 min-w-0">
-            {/* Status Pill */}
-            {hasPreview && signedPreviewUrl ? (
-              <div className="flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Ready
-              </div>
-            ) : isProcessing ? (
-              <div className="flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
-                <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                Processing
-              </div>
-            ) : isError ? (
-              <div className="flex items-center gap-1.5 rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
-                Error
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600 border border-slate-200 dark:bg-surface-400 dark:text-slate-400 dark:border-surface-300">
-                Idle
-              </div>
-            )}
+            <LiveValuePulse value={hasPreview ? (signedPreviewUrl ? 'ready' : 'loading') : (isProcessing ? 'processing' : (isError ? 'error' : 'idle'))}>
+              {hasPreview && signedPreviewUrl ? (
+                <div className="flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Ready
+                </div>
+              ) : isProcessing ? (
+                <div className="flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                  <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                  Processing
+                </div>
+              ) : isError ? (
+                <div className="flex items-center gap-1.5 rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
+                  Error
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600 border border-slate-200 dark:bg-surface-400 dark:text-slate-400 dark:border-surface-300">
+                  Idle
+                </div>
+              )}
+            </LiveValuePulse>
 
             <div className="hidden sm:flex items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
@@ -260,64 +263,93 @@ const WorkflowPreviewPanel: React.FC<Props> = ({
           onDragOver={(e) => { if (!isExternalUploading) onDragOver(e); }}
           onDragLeave={onDragLeave}
         >
-          {hasPreview && signedPreviewUrl ? (
-            <div className="h-full w-full">
-              <iframe
-                key={`${versionId}-${previewNonce}`}
-                src={signedPreviewUrl}
-                title="Document preview"
-                className="h-full w-full border-0"
-                onLoad={() => setIsPreviewLoading(false)}
-                onError={() => setIsPreviewLoading(false)}
-              />
-            </div>
-          ) : isProcessing || (filePath && previewPath && !signedPreviewUrl) ? (
-            /* Standard Skeleton */
-            <div className="absolute inset-0 flex flex-col p-6 gap-4">
-              <div className="h-4 w-1/4 rounded bg-slate-200 dark:bg-surface-400 animate-pulse" />
-              <div className="h-32 w-full rounded bg-slate-100 dark:bg-surface-500 animate-pulse" />
-              <div className="h-4 w-3/4 rounded bg-slate-100 dark:bg-surface-500 animate-pulse" />
-              <div className="h-4 w-full rounded bg-slate-100 dark:bg-surface-500 animate-pulse" />
-              <div className="mt-auto flex flex-col items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 text-slate-300 dark:text-surface-400 animate-spin mb-2" />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  {isProcessing ? "Processing File..." : "Loading Viewer..."}
+          <AnimatePresence mode="popLayout">
+            {hasPreview && signedPreviewUrl ? (
+              <motion.div
+                key="preview-content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="h-full w-full"
+              >
+                <iframe
+                  key={`${versionId}-${previewNonce}`}
+                  src={signedPreviewUrl}
+                  title="Document preview"
+                  className="h-full w-full border-0"
+                  onLoad={() => setIsPreviewLoading(false)}
+                  onError={() => setIsPreviewLoading(false)}
+                />
+              </motion.div>
+            ) : isProcessing || (filePath && previewPath && !signedPreviewUrl) ? (
+              /* Standard Skeleton */
+              <motion.div
+                key="preview-skeleton"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0 flex flex-col p-6 gap-4"
+              >
+                <div className="h-4 w-1/4 rounded bg-slate-200 dark:bg-surface-400 animate-pulse" />
+                <div className="h-32 w-full rounded bg-slate-100 dark:bg-surface-500 animate-pulse" />
+                <div className="h-4 w-3/4 rounded bg-slate-100 dark:bg-surface-500 animate-pulse" />
+                <div className="h-4 w-full rounded bg-slate-100 dark:bg-surface-500 animate-pulse" />
+                <div className="mt-auto flex flex-col items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 text-slate-300 dark:text-surface-400 animate-spin mb-2" />
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    {isProcessing ? "Processing File..." : "Loading Viewer..."}
+                  </p>
+                </div>
+              </motion.div>
+            ) : isError ? (
+              <motion.div
+                key="preview-error"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="flex h-full flex-col items-center justify-center p-8 text-center bg-slate-50 dark:bg-surface-600"
+              >
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-rose-100 bg-rose-50 dark:border-rose-500/20 dark:bg-rose-500/10">
+                  <FileX className="h-6 w-6 text-rose-500" />
+                </div>
+                <h4 className="mb-1 text-sm font-bold text-slate-900 dark:text-slate-100">Preview Failed</h4>
+                <p className="max-w-[240px] text-xs text-slate-500 dark:text-slate-400">
+                  The preview engine encountered an error.
                 </p>
-              </div>
-            </div>
-          ) : isError ? (
-            <div className="flex h-full flex-col items-center justify-center p-8 text-center bg-slate-50 dark:bg-surface-600">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-rose-100 bg-rose-50 dark:border-rose-500/20 dark:bg-rose-500/10">
-                <FileX className="h-6 w-6 text-rose-500" />
-              </div>
-              <h4 className="mb-1 text-sm font-bold text-slate-900 dark:text-slate-100">Preview Failed</h4>
-              <p className="max-w-[240px] text-xs text-slate-500 dark:text-slate-400">
-                The preview engine encountered an error.
-              </p>
-              {onRegeneratePreview && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onRegeneratePreview(); }}
-                  disabled={isRegeneratingPreview}
-                  className="mt-6 flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-200 dark:hover:bg-surface-400"
-                >
-                  <RefreshCw size={12} className={isRegeneratingPreview ? "animate-spin" : ""} />
-                  {isRegeneratingPreview ? "Regenerating..." : "Retry Analysis"}
-                </button>
-              )}
-            </div>
-          ) : (
-            /* Upload Placeholder */
-            <div className="flex h-full flex-col items-center justify-center p-8 text-center bg-slate-50 dark:bg-surface-600 m-4 rounded-md border border-dashed border-slate-300 dark:border-surface-400 transition-colors hover:border-slate-400 dark:hover:border-surface-300">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-slate-200 text-slate-500 dark:bg-surface-400 dark:text-slate-300">
-                <Upload size={24} strokeWidth={2} />
-              </div>
-              <h4 className="mb-1 text-sm font-bold text-slate-900 dark:text-slate-100">Attach Document</h4>
-              <p className="max-w-[200px] text-xs text-slate-500 dark:text-slate-400">
-                Drafts require an attached file to begin the workflow. Drop PDF, Office, or Powerpoint here.
-              </p>
-            </div>
-          )}
+                {onRegeneratePreview && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onRegeneratePreview(); }}
+                    disabled={isRegeneratingPreview}
+                    className="mt-6 flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-200 dark:hover:bg-surface-400"
+                  >
+                    <RefreshCw size={12} className={isRegeneratingPreview ? "animate-spin" : ""} />
+                    {isRegeneratingPreview ? "Regenerating..." : "Retry Analysis"}
+                  </button>
+                )}
+              </motion.div>
+            ) : (
+              /* Upload Placeholder */
+              <motion.div
+                key="preview-placeholder"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex h-full flex-col items-center justify-center p-8 text-center bg-slate-50 dark:bg-surface-600 m-4 rounded-md border border-dashed border-slate-300 dark:border-surface-400 transition-colors hover:border-slate-400 dark:hover:border-surface-300"
+              >
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-slate-200 text-slate-500 dark:bg-surface-400 dark:text-slate-300">
+                  <Upload size={24} strokeWidth={2} />
+                </div>
+                <h4 className="mb-1 text-sm font-bold text-slate-900 dark:text-slate-100">Attach Document</h4>
+                <p className="max-w-[200px] text-xs text-slate-500 dark:text-slate-400">
+                  Drafts require an attached file to begin the workflow. Drop PDF, Office, or Powerpoint here.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {isUploading && (
             <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 dark:bg-surface-500/80 p-6">

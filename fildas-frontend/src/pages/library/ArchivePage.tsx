@@ -15,7 +15,6 @@ import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import { usePageBurstRefresh } from "../../hooks/usePageBurstRefresh";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
-import { PageActions } from "../../components/ui/PageActions";
 import SelectDropdown from "../../components/ui/SelectDropdown";
 import { DateRangePicker } from "../../components/ui/DateRangePicker";
 import { useBulkActions } from "../../hooks/useBulkActions";
@@ -226,7 +225,7 @@ export default function ArchivePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, officeFilter, reasonFilter]);
 
-  const { refreshing } = usePageBurstRefresh(() => loadData(false));
+  usePageBurstRefresh(() => loadData(false));
 
   const columns = useMemo(() => {
     return buildArchiveColumns(adminDebugMode ? (id: number) => setDeletingId(id) : undefined);

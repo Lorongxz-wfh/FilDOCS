@@ -923,6 +923,14 @@ class DocumentController extends Controller
             'is_signed'      => $isDuringApproval,
         ], $version->document_id, $version->id);
 
+        try {
+            broadcast(new \App\Events\WorkflowUpdated($version->id, [
+                'document_version_id' => $version->id,
+                'event'               => $event,
+                'is_signed'           => $isDuringApproval,
+            ]));
+        } catch (\Throwable) {}
+
         return response()->json($freshVersion->fresh(), 200);
     }
 
@@ -972,6 +980,13 @@ class DocumentController extends Controller
             $version->id
         );
 
+        try {
+            broadcast(new \App\Events\WorkflowUpdated($version->id, [
+                'document_version_id' => $version->id,
+                'event'               => 'version.in_app_signature_applied',
+            ]));
+        } catch (\Throwable) {}
+
         return response()->json($freshVersion->fresh(), 200);
     }
 
@@ -1006,6 +1021,13 @@ class DocumentController extends Controller
             $version->id
         );
 
+        try {
+            broadcast(new \App\Events\WorkflowUpdated($version->id, [
+                'document_version_id' => $version->id,
+                'event'               => 'version.in_app_signature_removed',
+            ]));
+        } catch (\Throwable) {}
+
         return response()->json($version->fresh(), 200);
     }
 
@@ -1038,6 +1060,13 @@ class DocumentController extends Controller
 
         // Bust the cached signed preview URL so the next request fetches a fresh one
         Cache::forget("preview_link:v{$version->id}:uid{$request->user()?->id}:ttl60");
+
+        try {
+            broadcast(new \App\Events\WorkflowUpdated($version->id, [
+                'document_version_id' => $version->id,
+                'event'               => 'version.preview_regenerated',
+            ]));
+        } catch (\Throwable) {}
 
         return response()->json($version->fresh(), 200);
     }

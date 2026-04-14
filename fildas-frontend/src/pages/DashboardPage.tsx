@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "../components/ui/loader/Skeleton";
-import { PageActions } from "../components/ui/PageActions";
 import DatePresetSwitcher, { type PresetOption } from "../components/ui/DatePresetSwitcher";
 import Button from "../components/ui/Button";
 
@@ -568,7 +567,7 @@ const DashboardPage: React.FC = () => {
 
   // Page burst refresh deprecated in favor of clean single WebSocket updates.
 
-  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+  useSmartRefresh(async () => {
     // Page-wide synchronized refresh
     const [dashResult] = await Promise.all([
       dashData.reload(),

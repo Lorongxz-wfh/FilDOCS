@@ -98,7 +98,7 @@ export function OfficeManagerPage() {
     [qDebounced, statusFilter, typeFilter, sortBy, sortDir],
   );
 
-  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+   useSmartRefresh(async () => {
     const prevItems = [...items];
     const data = await load(1, true);
     

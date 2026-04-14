@@ -52,6 +52,7 @@ import {
 import { normalizeError } from "../../lib/normalizeError";
 import WorkflowVersionCompareModal from "../../components/documents/modals/WorkflowVersionCompareModal";
 import { GitCompare } from "lucide-react";
+import LiveValuePulse from "../../components/ui/LiveValuePulse";
 
 const WorkflowPage: React.FC = () => {
   const params = useParams();
@@ -116,13 +117,39 @@ const WorkflowPage: React.FC = () => {
   const [isLoadingSelectedVersion, setIsLoadingSelectedVersion] =
     useState(false);
   const [docRefreshTrigger, setDocRefreshTrigger] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { refreshKey } = useRefresh();
   const initialMountRef = Object.assign(React.useRef(true), {});
 
+  const refreshAndSelectBest = React.useCallback(
+    async (opts?: { preferVersionId?: number | null }) => {
+      const [docData, versions] = await Promise.all([
+        getDocument(id),
+        getDocumentVersions(id),
+      ]);
+      const sorted = [...versions].sort(
+        (a, b) => Number(b.version_number) - Number(a.version_number),
+      );
+      setDocument(docData);
+      setAllVersions(sorted);
+      const preferId = opts?.preferVersionId ?? null;
+      const best =
+        (preferId ? sorted.find((v) => v.id === preferId) : null) ??
+        sorted[0] ??
+        null;
+      setSelectedVersion(best);
+      setSearchParams((prev) => {
+        const p = new URLSearchParams(prev);
+        if (best) p.set("version_id", String(best.id));
+        else p.delete("version_id");
+        p.delete("version");
+        return p;
+      });
+    },
+    [id, setSearchParams],
+  );
+
   const handleManualRefresh = React.useCallback(async () => {
-    setIsRefreshing(true);
     const prevStatus = selectedVersion?.status;
     const prevVersionCount = allVersions.length;
     try {
@@ -137,8 +164,8 @@ const WorkflowPage: React.FC = () => {
       const newVersionAdded = allVersions.length > prevVersionCount;
       if (statusChanged || newVersionAdded) return "Document workspace updated.";
       return "No changes found.";
-    } finally {
-      setIsRefreshing(false);
+    } catch {
+      return "Refresh failed.";
     }
   }, [refreshAndSelectBest, selectedVersion?.id, selectedVersion?.status, allVersions.length]);
 
@@ -245,33 +272,6 @@ const WorkflowPage: React.FC = () => {
       setProcessingKey(null);
     }
   };
-const refreshAndSelectBest = React.useCallback(
-    async (opts?: { preferVersionId?: number | null }) => {
-      const [docData, versions] = await Promise.all([
-        getDocument(id),
-        getDocumentVersions(id),
-      ]);
-      const sorted = [...versions].sort(
-        (a, b) => Number(b.version_number) - Number(a.version_number),
-      );
-      setDocument(docData);
-      setAllVersions(sorted);
-      const preferId = opts?.preferVersionId ?? null;
-      const best =
-        (preferId ? sorted.find((v) => v.id === preferId) : null) ??
-        sorted[0] ??
-        null;
-      setSelectedVersion(best);
-      setSearchParams((prev) => {
-        const p = new URLSearchParams(prev);
-        if (best) p.set("version_id", String(best.id));
-        else p.delete("version_id");
-        p.delete("version");
-        return p;
-      });
-    },
-    [id, setSearchParams],
-  );
 
   useEffect(() => {
     let alive = true;
@@ -448,9 +448,25 @@ const refreshAndSelectBest = React.useCallback(
               {loading ? (
                 <Skeleton className="h-4 w-48 mt-0.5" />
               ) : (
-                <span className="min-w-0 whitespace-normal wrap-break-word font-bold text-slate-800 dark:text-white leading-snug">
-                  {headerState?.title ?? document?.title}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="min-w-0 whitespace-normal wrap-break-word font-bold text-slate-800 dark:text-white leading-snug">
+                    {headerState?.title ?? document?.title}
+                  </span>
+                  {!loading && headerState?.status && (
+                    <LiveValuePulse value={headerState.status}>
+                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-800 ring-1 ring-inset ring-slate-200 dark:bg-surface-400 dark:text-slate-200 dark:ring-surface-300">
+                        {headerState.status}
+                      </span>
+                    </LiveValuePulse>
+                  )}
+                  {!loading && headerState?.versionNumber !== undefined && (
+                    <LiveValuePulse value={headerState.versionNumber} pulseColor="bg-emerald-500/20">
+                      <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-400 dark:ring-emerald-400/20">
+                        v{headerState.versionNumber}
+                      </span>
+                    </LiveValuePulse>
+                  )}
+                </div>
               )}
             </div>
           </div>

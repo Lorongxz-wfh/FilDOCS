@@ -121,7 +121,7 @@ const UserManagerPage: React.FC = () => {
   );
 
   // Background refresh logic
-  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+  useSmartRefresh(async () => {
     const prevRows = [...rows];
     
     const [res] = await Promise.all([

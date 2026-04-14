@@ -195,7 +195,7 @@ export default function WorkflowListPage() {
     }
   }, [qDebounced, statusParam, phaseFilter, officeFilter, dateFrom, dateTo, sortBy, sortDir, page]);
 
-  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+  useSmartRefresh(async () => {
     const prevFirstId = firstDocIdRef.current;
     const result = await loadData(false, true);
     const newFirstId = result?.data?.[0]?.id ?? null;

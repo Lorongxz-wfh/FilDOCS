@@ -36,7 +36,6 @@ import { Tabs } from "../components/ui/Tabs";
 import Button from "../components/ui/Button";
 import Modal from "../components/ui/Modal";
 import SelectDropdown from "../components/ui/SelectDropdown";
-import { PageActions } from "../components/ui/PageActions";
 import { inputCls } from "../utils/formStyles";
 import { useToast } from "../components/ui/toast/ToastContext";
 import { useThemeContext } from "../lib/ThemeContext";
@@ -54,7 +53,6 @@ const ProfileSettingsPage: React.FC = () => {
   // ── States ────────────────────────────────────────────────────────────────
   const [logs, setLogs] = useState<ActivityLogRow[]>([]);
   const [logsLoading, setLogsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Filters
@@ -120,7 +118,6 @@ const ProfileSettingsPage: React.FC = () => {
   }, [activeTab, category, timeFilter]);
 
   const handleRefresh = async () => {
-    setRefreshing(true);
     try {
       // 1. Refresh Activity Logs
       await fetchLogs();
@@ -137,7 +134,7 @@ const ProfileSettingsPage: React.FC = () => {
     } catch (err) {
       push({ type: "error", title: "Refresh Failed", message: "Could not synchronize all page data." });
     } finally {
-      setRefreshing(false);
+      // silent
     }
   };
 
@@ -224,9 +221,7 @@ const ProfileSettingsPage: React.FC = () => {
       title="Profile & Settings"
       fullHeight
       onBack={() => navigate(-1)}
-      right={
-        <PageActions />
-      }
+      right={null}
       contentClassName="flex flex-col min-h-0 h-full overflow-hidden bg-slate-50/50 dark:bg-black/10"
     >
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 h-full max-h-full min-h-0 p-4 md:p-6 overflow-hidden">

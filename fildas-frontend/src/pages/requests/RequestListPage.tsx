@@ -325,7 +325,7 @@ export default function RequestListPage() {
     }
   }, [tab, qDebounced, batchStatus, itemStatus, isQaAdmin, sortBy, sortDir, direction, officeFilter, canCreate, page]);
 
-  const { refresh: refreshRequests, isRefreshing } = useSmartRefresh(async () => {
+  useSmartRefresh(async () => {
     const prevFirstId = firstIdRef.current;
     const result = await loadData(false, true);
     const newFirstId = result?.data?.[0]?.request_id || result?.data?.[0]?.id || null;

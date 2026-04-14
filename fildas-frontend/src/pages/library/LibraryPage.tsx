@@ -360,7 +360,7 @@ export default function LibraryPage() {
     }
   }, [tab, qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, isAdmin, myOfficeId, role]);
 
-  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+  useSmartRefresh(async () => {
     await loadData(false, true);
 
     if (activeTab === "deleted") {

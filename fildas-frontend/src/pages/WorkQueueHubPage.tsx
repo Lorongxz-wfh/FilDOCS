@@ -24,7 +24,7 @@ import { useAdminDebugMode } from "../hooks/useAdminDebugMode";
 import { useRealtimeUpdates } from "../hooks/useRealtimeUpdates";
 import { friendlyEvent } from "../utils/activityFormatters";
 import PageFrame from "../components/layout/PageFrame";
-import { PageActions, CreateAction } from "../components/ui/PageActions";
+import { CreateAction } from "../components/ui/PageActions";
 import { useSmartRefresh } from "../hooks/useSmartRefresh";
 import { markWorkQueueSession } from "../lib/guards/RequireFromWorkQueue";
 import { FileText, ClipboardList, LayoutTemplate } from "lucide-react";
@@ -185,7 +185,7 @@ const WorkQueueHubPage: React.FC = () => {
   const requestActionNeeded = requestStats?.action_required ?? 0;
 
 
-  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+  useSmartRefresh(async () => {
     const changed = await loadAll(true);
     return {
       changed,

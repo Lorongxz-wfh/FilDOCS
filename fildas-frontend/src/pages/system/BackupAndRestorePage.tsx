@@ -237,7 +237,7 @@ export default function BackupAndRestorePage() {
     }
   }, []);
 
-  const { refresh, isRefreshing } = useSmartRefresh(async () => {
+  const { refresh } = useSmartRefresh(async () => {
     try {
       await Promise.all([fetchSummary(), fetchSystemBackups()]);
       return { changed: true, message: "Backup registry synchronized." };
