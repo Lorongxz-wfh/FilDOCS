@@ -1,4 +1,5 @@
 import React from "react";
+import { getAssetUrl } from "../../../services/api";
 import WorkflowProgressCard from "./WorkflowProgressCard";
 import WorkflowRightPanel from "../panels/WorkflowRightPanel";
 import WorkflowPreviewWrapper from "../panels/WorkflowPreviewWrapper";
@@ -66,7 +67,9 @@ const Workflow: React.FC<WorkflowProps> = ({
 }) => {
   const { push } = useToast();
   const me = React.useMemo(() => getAuthUser(), []);
-  const currentUserSignatureUrl = me?.signature_url ?? null;
+  const currentUserSignatureUrl = React.useMemo(() => 
+    getAssetUrl(me?.signature_url || me?.signature_path || null)
+  , [me]);
   const [templatesPanelOpen, setTemplatesPanelOpen] = React.useState(false);
 
   const { state, actions } = useWorkflowUI({

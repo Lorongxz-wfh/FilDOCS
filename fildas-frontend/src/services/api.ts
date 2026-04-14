@@ -96,3 +96,17 @@ export async function ensureCsrfCookie() {
 // Exporting named 'api' and default to ensure compatibility across all imports
 export { api };
 export default api;
+
+/**
+ * Resolves a relative backend path to a fully qualified URL.
+ */
+export const getAssetUrl = (path: string | null | undefined): string | null => {
+  if (!path) return null;
+  if (path.startsWith("http") || path.startsWith("data:") || path.startsWith("blob:")) return path;
+  
+  // Prefix with the backend origin (removing /api from BASE_URL)
+  const origin = BASE_URL.replace("/api", "");
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  
+  return `${origin}${cleanPath}`;
+};

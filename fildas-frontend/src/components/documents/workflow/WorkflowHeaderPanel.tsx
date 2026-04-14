@@ -105,7 +105,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
         )}
         
         {/* 1. Approver Signing Banner (Uniform Blue) */}
-        {approverNeedsSignedUpload && !approverHasUploaded && (
+        {canAct && approverNeedsSignedUpload && !approverHasUploaded && (
           <motion.div
             key="approver-sign"
             initial={{ opacity: 0, height: 0, y: -20 }}
@@ -173,7 +173,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
         )}
 
         {/* 2. QA Creator Signing Banner (Pre-Approval) */}
-        {isPreApprovalCreatorCheck && !hasSignedFile && (
+        {canAct && isPreApprovalCreatorCheck && !hasSignedFile && (
           <motion.div
             key="creator-sign"
             initial={{ opacity: 0, height: 0, y: -20 }}
@@ -218,7 +218,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
         )}
 
         {/* 3. Success Banner (Signed State - Persistent) */}
-        {((isPreApprovalCreatorCheck && hasSignedFile) || (isActiveApprover && approverHasUploaded)) && (
+        {canAct && ((isPreApprovalCreatorCheck && hasSignedFile) || (isActiveApprover && approverHasUploaded)) && (
           <motion.div
             key="signed-success"
             initial={{ opacity: 0, height: 0, y: -20 }}
