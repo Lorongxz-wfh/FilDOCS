@@ -432,8 +432,6 @@ const Workflow: React.FC<WorkflowProps> = ({
           onConfirm={async () => {
             if (!state.activeWorkflowCode || !state.localVersion) return;
             
-            // Close immediately for instant feedback
-            actions.setIsRegisterModalOpen(false);
             // Immediate feedback: start spinner while async logic runs
             actions.setActiveWorkflowCode(state.activeWorkflowCode);
             actions.workflow.setIsChangingStatus(true);
@@ -451,6 +449,7 @@ const Workflow: React.FC<WorkflowProps> = ({
               );
               if (res) {
                 actions.handleActionResult(res);
+                actions.setIsRegisterModalOpen(false);
                 push({
                   type: "success",
                   title: "Document Registered",
@@ -480,8 +479,6 @@ const Workflow: React.FC<WorkflowProps> = ({
           onConfirm={async (selectedOfficeIds) => {
             if (!state.activeWorkflowCode || !state.localVersion) return;
             
-            // Close immediately for instant feedback
-            actions.setIsDistributeModalOpen(false);
             // Immediate feedback: start spinner while async logic runs
             actions.setActiveWorkflowCode(state.activeWorkflowCode);
             actions.workflow.setIsChangingStatus(true);
@@ -494,6 +491,7 @@ const Workflow: React.FC<WorkflowProps> = ({
               const res = await actions.workflow.submitAction(state.activeWorkflowCode as any);
               if (res) {
                 actions.handleActionResult(res);
+                actions.setIsDistributeModalOpen(false);
                 push({ type: "success", title: "Document Distributed", message: res.message || "Distribution complete." });
                 if (onChanged) await onChanged();
               }
