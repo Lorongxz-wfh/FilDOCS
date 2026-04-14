@@ -24,10 +24,12 @@ import {
   changePassword, 
   uploadProfilePhoto, 
   uploadSignature, 
+  removeSignature,
   updateThemePreference,
   fetchProfile,
   type ProfileUpdatePayload 
 } from "../services/profile";
+import api from "../services/api";
 import { ActivityTimeline, type ActivityLogRow } from "../components/profile/ActivityTimeline";
 import { TwoFactorManager } from "../components/profile/TwoFactorManager";
 import { ProfileInfoCard } from "../components/profile/ProfileInfoCard";
@@ -124,7 +126,10 @@ const ProfileSettingsPage: React.FC = () => {
       
       // 2. Refresh User Profile Data
       const freshUser = await fetchProfile();
-      localStorage.setItem("auth_user", JSON.stringify({ ...JSON.parse(localStorage.getItem("auth_user") || "{}"), ...freshUser }));
+      const existing = JSON.parse(localStorage.getItem("auth_user") || "{}");
+      // Omit theme_preference to prevent overwriting local user preference
+      const { theme_preference, ...userData } = freshUser;
+      localStorage.setItem("auth_user", JSON.stringify({ ...existing, ...userData }));
       window.dispatchEvent(new Event("auth_user_updated"));
 
       // 3. Trigger children refresh (Sessions)
@@ -168,7 +173,9 @@ const ProfileSettingsPage: React.FC = () => {
     setSavingProfile(true);
     try {
       const updated = await updateProfile(profileForm);
-      localStorage.setItem("auth_user", JSON.stringify({ ...JSON.parse(localStorage.getItem("auth_user") || "{}"), ...updated }));
+      const existing = JSON.parse(localStorage.getItem("auth_user") || "{}");
+      const { theme_preference, ...userData } = updated;
+      localStorage.setItem("auth_user", JSON.stringify({ ...existing, ...userData }));
       window.dispatchEvent(new Event("auth_user_updated"));
       push({ type: "success", title: "Updated", message: "Profile information updated." });
       setIsEditModalOpen(false);
@@ -185,7 +192,9 @@ const ProfileSettingsPage: React.FC = () => {
     if (!file) return;
     try {
       const updated = await uploadProfilePhoto(file);
-      localStorage.setItem("auth_user", JSON.stringify({ ...JSON.parse(localStorage.getItem("auth_user") || "{}"), ...updated }));
+      const existing = JSON.parse(localStorage.getItem("auth_user") || "{}");
+      const { theme_preference, ...userData } = updated;
+      localStorage.setItem("auth_user", JSON.stringify({ ...existing, ...userData }));
       window.dispatchEvent(new Event("auth_user_updated"));
       push({ type: "success", title: "Photo Updated", message: "Your profile photo has been updated." });
     } catch (err) {
@@ -373,7 +382,36 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
   const [pw, setPw] = useState({ current_password: "", password: "", password_confirmation: "" });
   const [pwLoading, setPwLoading] = useState(false);
   const sigInputRef = useRef<HTMLInputElement>(null);
-  const [sigUrl, setSigUrl] = useState(user?.signature_url);
+  const [sigUrl, setSigUrl] = useState<string | null>(null);
+  const [sigLoading, setSigLoading] = useState(false);
+
+  // Authenticated Signature Fetching
+  const fetchSigBlob = async () => {
+    if (!user?.signature_path) {
+      setSigUrl(null);
+      return;
+    }
+    setSigLoading(true);
+    try {
+      const response = await api.get("/profile/signature-file", { responseType: "blob" });
+      const url = URL.createObjectURL(response.data);
+      setSigUrl(url);
+    } catch (err) {
+      console.error("Failed to fetch signature blob:", err);
+      setSigUrl(null);
+    } finally {
+      setSigLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSigBlob();
+    return () => {
+      if (sigUrl && sigUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(sigUrl);
+      }
+    };
+  }, [user?.signature_path]);
 
   // Notifications
   const [prefs, setPrefs] = useState({
@@ -415,8 +453,28 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
     if (!file) return;
     try {
       const updated = await uploadSignature(file);
-      setSigUrl(updated.signature_url);
-      push({ type: "success", message: "Signature updated." });
+      
+      // Sync global state while protecting local theme
+      const existing = JSON.parse(localStorage.getItem("auth_user") || "{}");
+      const { theme_preference, ...userData } = updated;
+      localStorage.setItem("auth_user", JSON.stringify({ ...existing, ...userData }));
+      window.dispatchEvent(new Event("auth_user_updated"));
+      
+      push({ type: "success", message: "Signature updated and synced." });
+    } catch (err) { push({ type: "error", message: normalizeError(err) }); }
+  };
+
+  const handleSigRemove = async () => {
+    try {
+      const updated = await removeSignature();
+      
+      // Sync global state while protecting local theme
+      const existing = JSON.parse(localStorage.getItem("auth_user") || "{}");
+      const { theme_preference, ...userData } = updated;
+      localStorage.setItem("auth_user", JSON.stringify({ ...existing, ...userData }));
+      window.dispatchEvent(new Event("auth_user_updated"));
+      
+      push({ type: "success", message: "Signature removed." });
     } catch (err) { push({ type: "error", message: normalizeError(err) }); }
   };
 
@@ -557,13 +615,32 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
           <Section title="E-Signature" icon={<PenLine className="h-4 w-4" />} description="Use your uploaded signature to sign documents and evidence requests.">
             <div className="flex flex-col sm:flex-row items-center gap-6 p-5 rounded-md border border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/50">
                 <div className="h-24 w-52 border border-dashed border-slate-300 dark:border-surface-400 rounded-md flex items-center justify-center bg-white dark:bg-surface-600 shadow-inner overflow-hidden">
-                    {sigUrl ? <img src={sigUrl} className="max-h-full object-contain p-2" alt="Sig" /> : <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest opacity-50">No Signature</p>}
+                    {sigLoading ? (
+                      <div className="animate-pulse flex flex-col items-center gap-2">
+                         <div className="h-2 w-20 bg-slate-100 rounded" />
+                         <div className="h-2 w-16 bg-slate-100 rounded" />
+                      </div>
+                    ) : sigUrl ? (
+                      <img src={sigUrl} className="max-h-full object-contain p-2" alt="Sig" />
+                    ) : (
+                      <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest opacity-50">No Signature</p>
+                    )}
                 </div>
                 <div className="flex flex-col gap-3">
                     <p className="text-[11px] text-slate-500 leading-relaxed max-w-xs">Supported formats: PNG, JPG (transparent recommended). Max size 1MB.</p>
                     <div className="flex items-center gap-3">
                         <Button variant="outline" size="sm" onClick={() => sigInputRef.current?.click()} className="font-bold text-[11px]">Upload New Signature</Button>
                         <input ref={sigInputRef} type="file" className="hidden" accept="image/*" onChange={handleSigUpload} />
+                        {sigUrl && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-bold text-[11px]"
+                            onClick={handleSigRemove}
+                          >
+                            Remove Signature
+                          </Button>
+                        )}
                     </div>
                 </div>
             </div>

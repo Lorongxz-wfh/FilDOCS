@@ -16,6 +16,12 @@ class ProfileController extends Controller
 {
     use LogsActivityTrait;
 
+    // GET /api/profile
+    public function show(Request $request)
+    {
+        return response()->json(['user' => $this->userPayload($request->user())]);
+    }
+
     // PATCH /api/profile
     public function update(Request $request)
     {

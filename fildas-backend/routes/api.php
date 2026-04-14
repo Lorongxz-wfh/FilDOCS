@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\Admin\SystemHealthController;
 use App\Http\Controllers\Api\Admin\SystemBackupController;
 use App\Http\Controllers\Api\BulkActionController;
 use App\Http\Controllers\Api\SessionController;
+use App\Http\Controllers\Api\OnboardingController;
 
 
 // ── Public ─────────────────────────────────────────────────────────────────
@@ -195,6 +196,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::get('/search', \App\Http\Controllers\Api\SearchController::class);
 
     // ── Profile ────────────────────────────────────────────────────────────────
+    Route::get('/profile',                               [\App\Http\Controllers\Api\ProfileController::class, 'show']);
     Route::patch('/profile',                              [\App\Http\Controllers\Api\ProfileController::class, 'update']);
     Route::post('/profile/password',                      [\App\Http\Controllers\Api\ProfileController::class, 'changePassword']);
     Route::post('/profile/photo',                         [\App\Http\Controllers\Api\ProfileController::class, 'uploadPhoto']);
@@ -204,6 +206,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::delete('/profile/signature',                   [\App\Http\Controllers\Api\ProfileController::class, 'removeSignature']);
     Route::patch('/profile/notification-preferences',     [\App\Http\Controllers\Api\ProfileController::class, 'updateNotificationPreferences']);
     Route::patch('/profile/theme-preference',             [\App\Http\Controllers\Api\ProfileController::class, 'updateThemePreference']);
+    Route::patch('/profile/onboarding',                   [OnboardingController::class, 'update']);
 
     // ── Two-Factor Authentication ──────────────────────────────────────────────
     Route::get('/profile/two-factor/setup',               [\App\Http\Controllers\Api\TwoFactorController::class, 'setup']);

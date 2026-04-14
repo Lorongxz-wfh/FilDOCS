@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../../components/layout/PageFrame";
 import {
@@ -8,216 +7,168 @@ import {
   Settings,
   ChevronRight,
   MessageSquare,
-  ShieldCheck,
-  User,
+  Sparkles,
 } from "lucide-react";
-import { getUserRole, isQA } from "../../lib/roleFilters";
-
-export type HelpPerspective = "QA" | "OFFICE";
+import OnboardingChecklist from "../../components/support/OnboardingChecklist";
 
 export const HELP_CATEGORIES = [
   {
     slug: "getting-started",
     title: "Getting Started",
-    description: "Understand the basics and set up your workspace efficiently.",
+    description: "Foundations of navigation, access, and profile identity.",
     icon: BookOpen,
-    iconBg: "bg-sky-100 dark:bg-sky-950/30",
-    iconColor: "text-sky-600 dark:text-sky-400",
-    qaArticles: [
-      "QA Role Overview",
-      "System Documentation ownership",
-      "Registration & Distribution basics",
-    ],
-    officeArticles: [
-      "Office Role Overview",
-      "Creating your first document",
-      "Responding to tasks",
+    iconBg: "bg-slate-100 dark:bg-surface-400",
+    iconColor: "text-slate-900 dark:text-slate-100",
+    chapters: [
+      { id: "1.1", title: "System Overview" },
+      { id: "1.2", title: "Login and Authentication" },
+      { id: "1.3", title: "Two-Factor Authentication" },
+      { id: "1.4", title: "Profile and Account Settings" },
+      { id: "1.5", title: "Navigation and Dashboard" },
     ],
   },
   {
-    slug: "pages-explanation",
-    title: "Pages & Navigation",
-    description: "A complete tour of the sidebar and what each module does.",
-    icon: Layout,
-    iconBg: "bg-emerald-100 dark:bg-emerald-950/30",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    qaArticles: [
-      "Dashboard: System Metrics",
-      "Work Queue: Managing all flows",
-      "Library: Global document access",
-    ],
-    officeArticles: [
-      "Dashboard: Office Metrics",
-      "Work Queue: Your pending tasks",
-      "Library: Office-specific records",
-    ],
-  },
-  {
-    slug: "main-uses",
-    title: "Main Uses & Flow",
-    description: "Deep dive into the 5-phase workflow and document requests.",
+    slug: "document-workflow",
+    title: "Document Workflow",
+    description: "Comprehensive guides to the 5-phase document lifecycle.",
     icon: Zap,
-    iconBg: "bg-amber-100 dark:bg-amber-950/30",
-    iconColor: "text-amber-600 dark:text-amber-400",
-    qaArticles: [
-      "QA-start workflow deep dive",
-      "Handling registration tasks",
-      "Managing custom routing",
-    ],
-    officeArticles: [
-      "Office-start workflow deep dive",
-      "Handling review/approval tasks",
-      "Responding to document requests",
+    iconBg: "bg-slate-100 dark:bg-surface-400",
+    iconColor: "text-slate-900 dark:text-slate-100",
+    chapters: [
+      { id: "2.1", title: "How the Workflow Works" },
+      { id: "2.2", title: "Draft Phase" },
+      { id: "2.3", title: "Review Phase" },
+      { id: "2.4", title: "Approval Phase" },
+      { id: "2.5", title: "Finalization Phase" },
+      { id: "2.6", title: "Completed and Revision" },
     ],
   },
   {
-    slug: "account",
-    title: "Account & Settings",
-    description: "Manage your profile, security, and notification preferences.",
-    icon: Settings,
-    iconBg: "bg-violet-100 dark:bg-violet-950/30",
-    iconColor: "text-violet-600 dark:text-violet-400",
-    qaArticles: [
-      "Updating QA Profile",
-      "Notification preferences",
-      "Security & Passwords",
+    slug: "documents-and-requests",
+    title: "Documents and Requests",
+    description: "Managing the document library, templates, and requests.",
+    icon: Layout,
+    iconBg: "bg-slate-100 dark:bg-surface-400",
+    iconColor: "text-slate-900 dark:text-slate-100",
+    chapters: [
+      { id: "3.1", title: "Document Library" },
+      { id: "3.2", title: "Archive" },
+      { id: "3.3", title: "Templates" },
+      { id: "3.4", title: "Document Requests" },
     ],
-    officeArticles: [
-      "Updating Office Profile",
-      "Notification preferences",
-      "Security & Passwords",
+  },
+  {
+    slug: "reports-logs-notifications",
+    title: "Reports and Logs",
+    description: "Analytics, activity tracking, and system support.",
+    icon: Settings,
+    iconBg: "bg-slate-100 dark:bg-surface-400",
+    iconColor: "text-slate-900 dark:text-slate-100",
+    chapters: [
+      { id: "4.1", title: "Reports and Analytics" },
+      { id: "4.2", title: "Activity Logs" },
+      { id: "4.3", title: "Notifications" },
+      { id: "4.4", title: "Announcements" },
+      { id: "4.5", title: "Support and Help" },
     ],
   },
 ];
 
 export default function HelpPage() {
   const navigate = useNavigate();
-  const userRole = getUserRole();
-  const [perspective, setPerspective] = useState<HelpPerspective>(
-    isQA(userRole) ? "QA" : "OFFICE"
-  );
 
   return (
-    <PageFrame title="Help & Support" contentClassName="max-w-4xl mx-auto">
-      {/* Perspective Toggle */}
-      <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl bg-slate-50 dark:bg-surface-600 p-1.5 border border-slate-200 dark:border-surface-400">
-        <div className="flex w-full sm:w-auto p-1">
-          <button
-            type="button"
-            onClick={() => setPerspective("QA")}
-            className={`flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-xs font-semibold transition-all ${
-              perspective === "QA"
-                ? "bg-white dark:bg-surface-400 text-brand-600 dark:text-brand-400 shadow-sm ring-1 ring-slate-200 dark:ring-surface-300"
-                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-            }`}
-          >
-            <ShieldCheck className="h-4 w-4" />
-            QA Perspective
-          </button>
-          <button
-            type="button"
-            onClick={() => setPerspective("OFFICE")}
-            className={`flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-xs font-semibold transition-all ${
-              perspective === "OFFICE"
-                ? "bg-white dark:bg-surface-400 text-brand-600 dark:text-brand-400 shadow-sm ring-1 ring-slate-200 dark:ring-surface-300"
-                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-            }`}
-          >
-            <User className="h-4 w-4" />
-            Office Perspective
-          </button>
-        </div>
-        <div className="px-4 py-2 sm:py-0">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            Viewing as <span className="text-brand-500">{perspective} Staff</span>
-          </p>
-        </div>
-      </div>
+    <PageFrame title="User Manual & Support" contentClassName="max-w-6xl mx-auto">
+      <div className="flex flex-col lg:flex-row gap-10">
+        
+        {/* Main Content Area */}
+        <div className="flex-1 min-w-0 space-y-12">
+          
+          {/* Welcome Header */}
+          <section className="space-y-4">
+             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-500/10 border border-brand-100 dark:border-brand-500/20">
+                <Sparkles className="h-3.5 w-3.5 text-brand-500" />
+                <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">FilDOCS Professional Manual</span>
+             </div>
+             <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+               Knowledge Base Center
+             </h1>
+             <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-xl">
+               Welcome to the central documentation hub. This manual is designed to turn new users into workflow experts. Choose a category below to begin your journey.
+             </p>
+          </section>
 
-      <div className="mb-6">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-          How can we help?
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Explore documentation tailored for the{" "}
-          <span className="font-semibold text-slate-700 dark:text-slate-300">
-            {perspective === "QA" ? "Quality Assurance" : "Office Staff"}
-          </span>{" "}
-          workflow.
-        </p>
-      </div>
-
-      {/* Category grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {HELP_CATEGORIES.map((cat) => {
-          const Icon = cat.icon;
-          const articles =
-            perspective === "QA" ? cat.qaArticles : cat.officeArticles;
-          return (
-            <button
-              key={cat.slug}
-              type="button"
-              onClick={() => navigate(`/help/${cat.slug}?v=${perspective}`)}
-              className="group text-left rounded-2xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 p-6 hover:border-brand-400 dark:hover:border-brand-600 hover:shadow-xl transition-all duration-300"
-            >
-              <div className="flex items-start gap-4">
-                <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110 ${cat.iconBg}`}
+          {/* Category Grid */}
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {HELP_CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              return (
+                <button
+                  key={cat.slug}
+                  type="button"
+                  onClick={() => navigate(`/help/${cat.slug}`)}
+                  className="group relative flex flex-col p-6 rounded-2xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 hover:border-brand-400 dark:hover:border-brand-600 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-500 overflow-hidden text-left"
                 >
-                  <Icon className={`h-6 w-6 ${cat.iconColor}`} />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-base font-bold text-slate-900 dark:text-slate-100">
-                      {cat.title}
-                    </p>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 transition group-hover:translate-x-1 group-hover:text-brand-500" />
+                  <div className={`h-12 w-12 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 group-hover:rotate-3 ${cat.iconBg} mb-4`}>
+                    <Icon className={`h-6 w-6 ${cat.iconColor}`} />
                   </div>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                  
+                  <div className="flex items-center justify-between gap-4 mb-2">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{cat.title}</h3>
+                    <ChevronRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-brand-500" />
+                  </div>
+                  
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
                     {cat.description}
                   </p>
 
-                  <ul className="mt-4 space-y-2">
-                    {articles.map((article) => (
-                      <li
-                        key={article}
-                        className="flex items-center gap-2.5 text-[11px] font-medium text-slate-600 dark:text-slate-400"
-                      >
-                        <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400/50" />
-                        {article}
-                      </li>
+                  <div className="mt-auto flex flex-wrap gap-2">
+                    {cat.chapters.map((chap) => (
+                      <span key={chap.id} className="px-2 py-0.5 rounded-md bg-slate-50 dark:bg-surface-400 text-[10px] font-medium text-slate-500 dark:text-slate-300 border border-slate-100 dark:border-surface-300 group-hover:border-brand-100 dark:group-hover:border-brand-500/20 transition-colors">
+                        Chapter {chap.id}
+                      </span>
                     ))}
-                  </ul>
-                </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+                  </div>
 
-      {/* Footer CTA */}
-      <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6 rounded-2xl border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-8 py-6">
-        <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-surface-400 shadow-sm">
-            <MessageSquare className="h-5 w-5 text-brand-500" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Still have questions?
-            </p>
-            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              Our support team is ready to help you with any issues.
-            </p>
+                  {/* Decorative background accent */}
+                  <div className="absolute top-0 right-0 -mr-8 -mt-8 h-24 w-24 rounded-full bg-brand-500/5 blur-2xl group-hover:bg-brand-500/10 transition-all" />
+                </button>
+              );
+            })}
+          </section>
+
+          {/* Footer Support */}
+          <div className="p-8 rounded-2xl border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 flex flex-col md:flex-row items-center justify-between gap-6">
+             <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-white dark:bg-surface-400 shadow-sm flex items-center justify-center">
+                   <MessageSquare className="h-6 w-6 text-brand-500" />
+                </div>
+                <div>
+                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Help is just a click away.</p>
+                   <p className="text-xs text-slate-500 dark:text-slate-400">Can't find what you need in the manual? Contact technical support.</p>
+                </div>
+             </div>
+             <button
+               onClick={() => navigate("/report-issue")}
+               className="w-full md:w-auto px-8 py-3 bg-slate-900 dark:bg-brand-500 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors"
+             >
+               Open Support Ticket
+             </button>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate("/report-issue")}
-          className="w-full sm:w-auto rounded-xl bg-slate-900 dark:bg-brand-500 px-6 py-3 text-xs font-bold text-white transition hover:bg-slate-800 dark:hover:bg-brand-600 shadow-lg shadow-slate-200 dark:shadow-none"
-        >
-          Contact Support
-        </button>
+
+        {/* Sidebar / Checklist Area */}
+        <aside className="w-full lg:w-80 space-y-6">
+          <OnboardingChecklist />
+          
+          <div className="p-5 rounded-2xl border border-dashed border-slate-200 dark:border-surface-400">
+             <p className="text-[11px] font-black uppercase text-slate-400 mb-3 tracking-widest">Mastery Tip</p>
+             <p className="text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed italic">
+               "The most successful users check their **Work Queue** twice daily – once in the morning to see new tasks, and once before leaving to ensure the chain isn't stalled."
+             </p>
+          </div>
+        </aside>
+
       </div>
     </PageFrame>
   );

@@ -40,6 +40,7 @@ class User extends Authenticatable
         'email_requests',
         'theme_preference',
         'must_change_password',
+        'onboarding_progress',
     ];
 
     /**
@@ -127,6 +128,7 @@ class User extends Authenticatable
             'email_approvals'    => 'boolean',
             'email_requests'     => 'boolean',
             'must_change_password' => 'boolean',
+            'onboarding_progress'  => 'array',
         ];
     }
 
