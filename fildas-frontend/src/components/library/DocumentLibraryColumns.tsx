@@ -11,7 +11,11 @@ import WorkflowTagBadge from "../documents/ui/WorkflowTagBadge";
 // ── Reusable Cells ────────────────────────────────────────────────────────────
 
 function NormalText({ children, secondary = false }: { children: React.ReactNode; secondary?: boolean }) {
-  const content = typeof children === "object" && children !== null ? (children as any).code || (children as any).name || "—" : children;
+  // If children is an object but NOT an array (which JSX fragments/multiple nodes represent as arrays), 
+  // try to extract standard naming properties. Otherwise, treat as raw content.
+  const content = typeof children === "object" && children !== null && !Array.isArray(children) 
+    ? (children as any).code || (children as any).name || "—" 
+    : children;
   return (
     <span className={`text-xs ${secondary ? "text-slate-500 dark:text-slate-400" : "font-medium text-slate-700 dark:text-slate-100"}`}>
       {content || "—"}
@@ -116,7 +120,7 @@ export function buildCreatedColumns(onDelete?: (id: number) => void): TableColum
         align: "center",
         skeletonShape: "narrow",
         render: (doc: any) => (
-          <NormalText secondary>v{doc.version_number ?? doc.version}</NormalText>
+          <NormalText secondary>{`v${doc.version_number ?? doc.version ?? 0}`}</NormalText>
         ),
     },
     {
@@ -243,7 +247,7 @@ export function buildSharedColumns(onDelete?: (id: number) => void): TableColumn
         align: "center",
         skeletonShape: "narrow",
         render: (doc: any) => (
-          <NormalText secondary>v{doc.version_number ?? doc.version}</NormalText>
+          <NormalText secondary>{`v${doc.version_number ?? doc.version ?? 0}`}</NormalText>
         ),
     },
     {

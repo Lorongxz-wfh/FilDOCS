@@ -6,7 +6,7 @@ import { getUserRole, isQA, isSysAdmin } from "../../lib/roleFilters";
 import type { Office } from "../../services/types";
 import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
 import { useToast } from "../../components/ui/toast/ToastContext";
-import { CheckSquare, Download, Trash2, LayoutList, Activity, CheckCircle2 } from "lucide-react";
+import { CheckSquare, Download, Trash2, LayoutList, CheckCircle2 } from "lucide-react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import PageFrame from "../../components/layout/PageFrame";
@@ -25,15 +25,14 @@ import BulkActionBar from "../../components/ui/BulkActionBar";
 import BulkDownloadModal from "../../components/ui/BulkDownloadModal";
 import axios from "../../services/api";
 
-type WFTab = "all" | "active" | "distributed";
+type WFTab = "all" | "distributed";
 
 const TABS: { key: WFTab; label: string; icon: React.ReactNode }[] = [
   { key: "all", label: "All", icon: <LayoutList className="h-3.5 w-3.5" /> },
-  { key: "active", label: "Active", icon: <Activity className="h-3.5 w-3.5" /> },
   { key: "distributed", label: "Distributed", icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
 ];
 
-const TERMINAL_STATUSES = new Set(["distributed", "cancelled", "superseded"]);
+
 
 export default function WorkflowListPage() {
   const navigate = useNavigate();
@@ -167,6 +166,7 @@ export default function WorkflowListPage() {
         page: targetPage,
         perPage: 12,
         q: qDebounced.trim() || undefined,
+        space: tab === "all" ? "workqueue" : "library",
         status: statusParam,
         phase: phaseFilter || undefined,
         owner_office_id: officeFilter ? Number(officeFilter) : undefined,
@@ -208,11 +208,8 @@ export default function WorkflowListPage() {
   }, [tab, qDebounced, phaseFilter, officeFilter, dateFrom, dateTo, sortBy, sortDir]);
 
   const displayRows = useMemo(() => {
-    if (tab === "active") {
-      return rows.filter((d) => !TERMINAL_STATUSES.has(d.status?.toLowerCase() ?? ""));
-    }
     return rows;
-  }, [rows, tab]);
+  }, [rows]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -435,7 +432,7 @@ export default function WorkflowListPage() {
                 }
                 navigate(`/documents/${doc.id}`, { state: { from: "/workflows" } });
               }}
-              hasMore={tab !== "active" && hasMore}
+              hasMore={hasMore}
               onLoadMore={() => loadData(true)}
               sortBy={sortBy}
               sortDir={sortDir}

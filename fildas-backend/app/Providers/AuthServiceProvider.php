@@ -22,7 +22,6 @@ class AuthServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Log::info('AuthServiceProvider booted');
         $this->registerPolicies();
     }
 }

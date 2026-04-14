@@ -222,9 +222,11 @@ class DocumentController extends Controller
             }
 
             return response()->json([
+                'total'             => $totalAllTime,
                 'all_time_total'    => $totalAllTime,
                 'new_arrivals'      => $newArrivals,
-                'pending'           => $myActionNeeded,
+                'pending'           => $pendingWorkflows,
+                'my_pending'        => $myActionNeeded,
                 'pending_workflows' => $pendingWorkflows,
                 'distributed'       => $distributed,
                 'by_phase' => [

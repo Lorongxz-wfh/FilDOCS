@@ -303,6 +303,7 @@ class DocumentIndexService
                 'documents.doctype',
                 'documents.owner_office_id',
                 'documents.review_office_id',
+                'documents.latest_version_id',
                 'documents.visibility_scope',
                 'documents.school_year',
                 'documents.semester',
