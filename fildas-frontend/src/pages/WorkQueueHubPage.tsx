@@ -98,7 +98,13 @@ const WorkQueueHubPage: React.FC = () => {
       setRecentActivity(newActivity);
       setAssignedItems(newAssigned);
       setMonitoringItems((q as any)?.monitoring ?? []);
-      setRequestItems((r as any)?.data ?? []);
+      
+      const rawRequests = (r as any)?.data ?? [];
+      const uniqueRequests = rawRequests.filter((item: any, index: number, self: any[]) =>
+        index === self.findIndex((t) => (t.id || t.request_id) === (item.id || item.request_id))
+      );
+      setRequestItems(uniqueRequests);
+
       setRequestStats(r_stats as any);
 
       // Detect if data actually changed using refs to avoid loop
@@ -322,7 +328,7 @@ const WorkQueueHubPage: React.FC = () => {
                 <div className="flex flex-col gap-1.5 focus-within:z-20">
                   {requestItems.map((item: any) => (
                     <RequestQueueCard
-                      key={item.id || item.request_id}
+                      key={`req-${item.id || item.request_id}`}
                       item={item}
                       onClick={(id) => navigate(`/document-requests/${id}`)}
                     />

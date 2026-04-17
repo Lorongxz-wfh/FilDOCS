@@ -14,6 +14,7 @@ import StageDelayChart from "../components/charts/StageDelayChart";
 import DashboardStatRow from "../components/dashboard/DashboardStatRow";
 import DashboardPendingList from "../components/dashboard/DashboardPendingList";
 import DashboardRecentActivity from "../components/dashboard/DashboardRecentActivity";
+import { Card, CardHeader, CardBody } from "../components/ui/Card";
 
 // Admin-only components
 import AdminStatGrid from "../components/dashboard/AdminStatGrid";
@@ -56,52 +57,7 @@ const DASHBOARD_PRESETS: PresetOption[] = [
 // ─── Shared announcements prop ─────────────────────────────────────────────
 type AnnouncementsHook = ReturnType<typeof useAnnouncements>;
 
-// ─── Card ─────────────────────────────────────────────────────────────────
-const Card: React.FC<{
-  title: string;
-  sub?: string;
-  action?: { label: string; onClick: () => void };
-  children: React.ReactNode;
-  className?: string;
-  loading?: boolean;
-  hasData?: boolean;
-}> = ({ title, sub, action, children, className = "" }) => {
-
-  return (
-    <div
-      className={`flex flex-col rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden ${className}`}
-    >
-      <div className={`shrink-0 flex items-start justify-between gap-3 border-b border-slate-100 dark:border-surface-400 p-3 sm:px-4 sm:py-3`}>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
-              {title}
-            </p>
-          </div>
-          {sub && (
-            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-              {sub}
-            </p>
-          )}
-        </div>
-        {action && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="xs"
-            onClick={action.onClick}
-            className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
-          >
-            {action.label} →
-          </Button>
-        )}
-      </div>
-      <div className={`flex-1 flex flex-col p-3 sm:p-4 transition-opacity duration-200`}>
-        {children}
-      </div>
-    </div>
-  );
-};
+// ─── Dashboard Helper Components Removed (Migrated to src/components/ui/Card.tsx) ────────────────
 
 // ─── QA Dashboard ─────────────────────────────────────────────────────────
 const QADashboard: React.FC<
@@ -136,7 +92,6 @@ const QADashboard: React.FC<
         />
 
         <DashboardStatRow
-          stats={stats}
           pendingCount={pending.length}
           pendingWorkflowsCount={stats?.pending_workflows ?? 0}
           openRequestsCount={pendingRequestsCount}
@@ -155,59 +110,80 @@ const QADashboard: React.FC<
             onScroll={onCarouselScroll}
             className="flex sm:grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0"
           >
-            <Card
-              title="Document volume"
-              sub="Created vs distributed trend"
-              action={{
-                label: "View reports",
-                onClick: () => navigate("/reports"),
-              }}
-              className="min-w-[88vw] sm:min-w-0 snap-center lg:col-span-2"
-              loading={loading}
-              hasData={!!report.volume_series?.length}
-            >
-              <VolumeTrendChart
-                data={report.volume_series}
-                height={window.innerWidth < 640 ? 150 : 200}
-                loading={loading}
+            <Card className="min-w-[88vw] sm:min-w-0 snap-center lg:col-span-2">
+              <CardHeader 
+                title="Document volume" 
+                subtitle="Created vs distributed trend" 
+                right={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => navigate("/reports")}
+                    className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+                  >
+                    View reports →
+                  </Button>
+                }
               />
+              <CardBody>
+                <VolumeTrendChart
+                  data={report.volume_series}
+                  height={window.innerWidth < 640 ? 150 : 200}
+                  loading={loading}
+                />
+              </CardBody>
             </Card>
 
-            <Card
-              title="Pipeline state"
-              sub="Docs by current phase"
-              action={{
-                label: "View library",
-                onClick: () => navigate("/documents"),
-              }}
-              className="min-w-[88vw] sm:min-w-0 snap-center"
-              loading={loading}
-              hasData={!!report.phase_distribution?.length}
-            >
-              <PhaseDistributionChart
-                data={report.phase_distribution ?? []}
-                variant="donut"
-                height={window.innerWidth < 640 ? 150 : 200}
-                loading={loading}
+            <Card className="min-w-[88vw] sm:min-w-0 snap-center">
+              <CardHeader 
+                title="Pipeline state" 
+                subtitle="Docs by current phase" 
+                right={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => navigate("/documents")}
+                    className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+                  >
+                    View library →
+                  </Button>
+                }
               />
+              <CardBody>
+                <PhaseDistributionChart
+                  data={report.phase_distribution ?? []}
+                  variant="donut"
+                  height={window.innerWidth < 640 ? 150 : 200}
+                  loading={loading}
+                />
+              </CardBody>
             </Card>
 
-            <Card
-              title="Stage delay"
-              sub="Median hold time per workflow phase"
-              action={{
-                label: "View reports",
-                onClick: () => navigate("/reports"),
-              }}
-              className="min-w-[88vw] sm:min-w-0 snap-center lg:hidden"
-              loading={loading}
-              hasData={!!report.stage_delays_by_phase?.length}
-            >
-              <StageDelayChart
-                data={report.stage_delays_by_phase ?? []}
-                height={150}
-                loading={loading}
+            <Card className="min-w-[88vw] sm:min-w-0 snap-center lg:hidden">
+              <CardHeader 
+                title="Stage delay" 
+                subtitle="Median hold time per workflow phase" 
+                right={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => navigate("/reports")}
+                    className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+                  >
+                    View reports →
+                  </Button>
+                }
               />
+              <CardBody>
+                <StageDelayChart
+                  data={report.stage_delays_by_phase ?? []}
+                  height={150}
+                  loading={loading}
+                />
+              </CardBody>
             </Card>
           </div>
 
@@ -226,21 +202,29 @@ const QADashboard: React.FC<
         {/* Desktop-only Stage Delay if not in carousel-span above */}
         <div className="hidden lg:grid grid-cols-1 gap-4 lg:grid-cols-2">
           <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
-          <Card
-            title="Stage delay"
-            sub="Median hold time per workflow phase"
-            action={{
-              label: "View reports",
-              onClick: () => navigate("/reports"),
-            }}
-            loading={loading}
-            hasData={!!report.stage_delays_by_phase?.length}
-          >
-            <StageDelayChart
-              data={report.stage_delays_by_phase ?? []}
-              height={200}
-              loading={loading}
+          <Card>
+            <CardHeader 
+              title="Stage delay" 
+              subtitle="Median hold time per workflow phase" 
+              right={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => navigate("/reports")}
+                  className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+                >
+                  View reports →
+                </Button>
+              }
             />
+            <CardBody>
+              <StageDelayChart
+                data={report.stage_delays_by_phase ?? []}
+                height={200}
+                loading={loading}
+              />
+            </CardBody>
           </Card>
         </div>
 
@@ -249,14 +233,7 @@ const QADashboard: React.FC<
           <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
         </div>
 
-        <Card
-          title="Recent activity"
-          sub="Latest actions in the system."
-          loading={loading}
-          hasData={!!recentActivity?.length}
-        >
-          <DashboardRecentActivity logs={recentActivity} loading={loading} />
-        </Card>
+        <DashboardRecentActivity logs={recentActivity} loading={loading} />
       </div>
     );
   };
@@ -307,7 +284,6 @@ const OfficeDashboard: React.FC<
         />
 
         <DashboardStatRow
-          stats={stats}
           pendingCount={pending.length}
           pendingWorkflowsCount={stats?.pending_workflows ?? 0}
           openRequestsCount={pendingRequestsCount}
@@ -328,24 +304,31 @@ const OfficeDashboard: React.FC<
               onScroll={onCarouselScroll}
               className="flex sm:grid grid-cols-1 gap-4 lg:grid-cols-1 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0 h-full"
             >
-              <Card
-                title="My document summary"
-                sub="Status of documents created by your office."
-                action={{
-                  label: "Open library",
-                  onClick: () => navigate("/documents"),
-                }}
-                className="min-w-[88vw] sm:min-w-0 snap-center h-full"
-                loading={loading}
-                hasData={!!stats}
-              >
-                <StatusDonutChart
-                  segments={donutSegments}
-                  centerValue={stats?.total ?? 0}
-                  centerLabel="total"
-                  size={160}
-                  loading={loading}
+              <Card className="min-w-[88vw] sm:min-w-0 snap-center h-full">
+                <CardHeader 
+                  title="My document summary" 
+                  subtitle="Status of documents created by your office." 
+                  right={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => navigate("/documents")}
+                      className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+                    >
+                      Open library →
+                    </Button>
+                  }
                 />
+                <CardBody>
+                  <StatusDonutChart
+                    segments={donutSegments}
+                    centerValue={stats?.total ?? 0}
+                    centerLabel="total"
+                    size={160}
+                    loading={loading}
+                  />
+                </CardBody>
               </Card>
             </div>
 
@@ -366,14 +349,7 @@ const OfficeDashboard: React.FC<
         </div>
 
         {/* Recent activity */}
-        <Card
-          title="Recent activity"
-          sub="Latest actions on your office's documents."
-          loading={loading}
-          hasData={!!recentActivity?.length}
-        >
-          <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
-        </Card>
+        <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
       </div>
     );
   };
@@ -392,79 +368,95 @@ const AdminDashboard: React.FC<
       onDeleted={() => announcements.reload()}
     />
 
-    <Card
-      title="Admin overview"
-      sub="System-wide document statistics"
-      loading={loading}
-      hasData={!!adminStats}
-    >
-      <AdminStatGrid data={adminStats} loading={loading && !adminStats} />
+    <Card>
+      <CardHeader 
+        title="Admin overview" 
+        subtitle="System-wide document statistics" 
+      />
+      <CardBody>
+        <AdminStatGrid data={adminStats} loading={loading && !adminStats} />
+      </CardBody>
     </Card>
 
     {/* Charts Carousel/Grid */}
     <div className="flex sm:grid grid-cols-1 gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0">
-      <Card
-        title="Documents by phase"
-        sub="Current workflow stage of all documents."
-        action={{
-          label: "Open library",
-          onClick: () => navigate("/documents"),
-        }}
-        className="min-w-[85vw] sm:min-w-0 snap-center lg:col-span-2"
-        loading={loading}
-        hasData={!!adminStats?.documents.by_phase}
-      >
-        <AdminDocumentPhaseChart
-          byPhase={adminStats?.documents.by_phase}
-          height={window.innerWidth < 640 ? 160 : 200}
-          loading={loading}
+      <Card className="min-w-[85vw] sm:min-w-0 snap-center lg:col-span-2">
+        <CardHeader 
+          title="Documents by phase" 
+          subtitle="Current workflow stage of all documents." 
+          right={
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              onClick={() => navigate("/documents")}
+              className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+            >
+              Open library →
+            </Button>
+          }
         />
+        <CardBody>
+          <AdminDocumentPhaseChart
+            byPhase={adminStats?.documents.by_phase}
+            height={window.innerWidth < 640 ? 160 : 200}
+            loading={loading}
+          />
+        </CardBody>
       </Card>
 
-      <Card
-        title="Action Breakdown"
-        sub="System activity distribution."
-        action={{
-          label: "View reports",
-          onClick: () => navigate("/reports"),
-        }}
-        className="min-w-[85vw] sm:min-w-0 snap-center"
-        loading={loading}
-        hasData={!!adminStats?.activity.distribution?.length}
-      >
-        <ActivityDistributionChart
-          data={adminStats?.activity.distribution ?? []}
-          height={window.innerWidth < 640 ? 160 : 200}
-          loading={loading}
+      <Card className="min-w-[85vw] sm:min-w-0 snap-center">
+        <CardHeader 
+          title="Action Breakdown" 
+          subtitle="System activity distribution." 
+          right={
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              onClick={() => navigate("/reports")}
+              className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+            >
+              View reports →
+            </Button>
+          }
         />
+        <CardBody>
+          <ActivityDistributionChart
+            data={adminStats?.activity.distribution ?? []}
+            height={window.innerWidth < 640 ? 160 : 200}
+            loading={loading}
+          />
+        </CardBody>
       </Card>
     </div>
 
-    <Card
-      title="System Activity Trend"
-      sub="Categorized system actions last 14 days."
-      action={{
-        label: "View full report",
-        onClick: () => navigate("/reports"),
-      }}
-      loading={loading}
-      hasData={!!adminStats?.activity.daily_trend?.length}
-    >
-      <DailyActivityStackedBarChart
-        data={adminStats?.activity.daily_trend ?? []}
-        height={200}
-        loading={loading && !adminStats?.activity.daily_trend?.length}
+    <Card>
+      <CardHeader 
+        title="System Activity Trend" 
+        subtitle="Categorized system actions last 14 days." 
+        right={
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            onClick={() => navigate("/reports")}
+            className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+          >
+            View full report →
+          </Button>
+        }
       />
+      <CardBody>
+        <DailyActivityStackedBarChart
+          data={adminStats?.activity.daily_trend ?? []}
+          height={200}
+          loading={loading && !adminStats?.activity.daily_trend?.length}
+        />
+      </CardBody>
     </Card>
 
-    <Card
-      title="Recent activity"
-      sub="Latest actions across the system."
-      loading={loading}
-      hasData={!!recentActivity?.length}
-    >
-      <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
-    </Card>
+    <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
   </div>
 );
 
@@ -485,73 +477,62 @@ const AuditorDashboard: React.FC<
 
       {/* Stat card */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <button
-          type="button"
+        <Card 
           onClick={() => navigate("/documents")}
-          className={`min-w-0 rounded-md border border-slate-200 bg-white px-4 py-3.5 text-left transition-all hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:hover:bg-surface-400 ${loading && stats ? "opacity-60" : "opacity-100"}`}
+          hoverable
         >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
-                Distributed Documents
-              </p>
-              {loading && stats && (
-                <div className="h-4 w-8 flex items-center">
-                  <Skeleton className="h-3 w-full" />
-                </div>
-              )}
+          <CardBody>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Distributed Documents
+                </p>
+                {loading && stats && (
+                  <Skeleton className="h-3 w-8" />
+                )}
+              </div>
+              <FolderOpen className="h-4 w-4 text-emerald-400" />
             </div>
-            <span className="shrink-0 text-emerald-400 dark:text-emerald-400">
-              <FolderOpen className="h-4 w-4" />
-            </span>
-          </div>
-          {loading && !stats ? (
-            <div
-              className="shrink-0 rounded-full border-[14px] border-slate-100 dark:border-surface-400"
-              style={{ width: 160, height: 160 }}
-            />
-          ) : (
-            <p className="mt-2.5 text-2xl font-display font-bold tabular-nums leading-none text-slate-900 dark:text-slate-100">
-              {stats?.distributed ?? 0}
+            {loading && !stats ? (
+              <div className="h-8 w-16 bg-slate-100 dark:bg-surface-400 animate-pulse mt-2 rounded" />
+            ) : (
+              <p className="mt-2 text-2xl font-display font-bold text-slate-900 dark:text-slate-100">
+                {stats?.distributed ?? 0}
+              </p>
+            )}
+            <p className="mt-1 text-xs text-slate-400">
+              open library to view documents
             </p>
-          )}
-          <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-            open library to view documents
-          </p>
-        </button>
+          </CardBody>
+        </Card>
       </div>
 
       {/* Info + global activity feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="rounded-md border border-slate-200 bg-white px-8 py-10 text-center dark:border-surface-400 dark:bg-surface-500">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-500 dark:bg-sky-950/30 dark:text-sky-400">
-            <FolderOpen className="h-7 w-7" />
-          </div>
-          <h2 className="mt-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Read-only Auditor access
-          </h2>
-          <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-            Browse and download all fully distributed documents across all offices.
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate("/documents")}
-            className="cursor-pointer mt-5 rounded border border-transparent bg-brand-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand-600 dark:hover:bg-brand-400"
-          >
-            Go to Library
-          </button>
-        </div>
+        <Card className="text-center">
+          <CardBody className="py-10">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-500 dark:bg-sky-950/30 dark:text-sky-400">
+              <FolderOpen className="h-7 w-7" />
+            </div>
+            <h2 className="mt-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Read-only Auditor access
+            </h2>
+            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+              Browse and download all fully distributed documents across all offices.
+            </p>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => navigate("/documents")}
+              className="mt-5 mx-auto"
+            >
+              Go to Library
+            </Button>
+          </CardBody>
+        </Card>
 
-        <div className="lg:col-span-2">
-          <Card
-            title="System-wide activity"
-            sub="Live feed of global document actions."
-            loading={loading}
-            hasData={!!recentActivity?.length}
-          >
-            <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
-          </Card>
-        </div>
+        <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
       </div>
     </div>
   );

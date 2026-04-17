@@ -1,7 +1,7 @@
 import React from "react";
 import Skeleton from "../ui/loader/Skeleton";
-import type { DocumentStats } from "../../services/documents";
 import { Bell, FileText, Clock, Inbox } from "lucide-react";
+import { Card, CardBody } from "../ui/Card";
 
 type StatItem = {
   label: string;
@@ -14,7 +14,6 @@ type StatItem = {
 };
 
 type Props = {
-  stats: DocumentStats | null;
   pendingCount: number;
   pendingWorkflowsCount: number;
   openRequestsCount: number;
@@ -25,7 +24,6 @@ type Props = {
 };
 
 const DashboardStatRow: React.FC<Props> = ({
-  stats,
   pendingCount,
   pendingWorkflowsCount,
   openRequestsCount,
@@ -114,82 +112,50 @@ const DashboardStatRow: React.FC<Props> = ({
   }, [items]);
 
   return (
-    <div
-      className="grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
-    >
+    <div className="grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
       {items.map((item, idx) => {
         const isActionNeeded = item.label === "Action needed";
         const isLastAndNeedsSpan = (idx === items.length - 1) && (items.length % 2 === 0);
         const mobileColSpan = (isActionNeeded || isLastAndNeedsSpan) ? "col-span-2" : "col-span-1";
-        const clickable = !!item.onClick;
         const isPulsing = pulseIndices.has(idx);
 
         return (
-          <div
+          <Card
             key={item.label}
-            className={`min-w-0 rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 transition-all ${mobileColSpan} sm:col-span-1 ${clickable ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-surface-400" : ""
-              } ${isActionNeeded && item.value > 0
-                ? "ring-1 ring-rose-500/20 bg-rose-50/15 dark:ring-rose-500/40 dark:bg-rose-500/5 p-2.5 sm:p-3.5"
-                : "p-2 sm:p-3.5"
-              } ${isPulsing ? "animate-pulse-highlight ring-emerald-500/30" : ""}`}
+            onClick={item.onClick}
+            className={`
+              transition-all duration-200 min-h-0 ${mobileColSpan} sm:col-span-1
+              ${isActionNeeded && item.value > 0 ? "ring-1 ring-rose-500/20 bg-rose-50/15 dark:ring-rose-500/40 dark:bg-rose-500/5 border-rose-200 dark:border-rose-900/50" : ""}
+              ${isPulsing ? "animate-pulse-highlight ring-emerald-500/30" : ""}
+            `}
           >
-            {/* Action Needed - Horizontal Banner for Mobile, Vertical for Desktop */}
-            {isActionNeeded ? (
-              <div className="flex flex-col h-full">
-                <div className={`flex items-center justify-between sm:flex-col sm:items-start w-full h-full gap-2`}>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className={`shrink-0 ${item.iconColor} sm:scale-110 scale-100`}>
-                      {item.icon}
-                    </span>
-                    <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 leading-tight truncate">
-                      {item.label}
-                    </p>
-                  </div>
-
-                  <div className="h-7 sm:h-8 flex items-center sm:mt-1.5">
-                    {loading ? (
-                      <Skeleton className="h-6 w-10 sm:h-7 sm:w-14" />
-                    ) : (
-                      <p className={`text-xl sm:text-2xl font-display font-bold tabular-nums leading-none transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
-                        {item.value}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {item.sub && (
-                  <p className={`hidden sm:block mt-2 text-[11px] text-slate-500 dark:text-slate-500 italic truncate transition-opacity duration-200 ${loading && stats ? "opacity-60" : "opacity-100"}`}>
-                    {item.sub}
+            <CardBody className="h-full justify-between gap-1 sm:gap-2">
+              <div className="flex flex-col gap-1.5 sm:gap-2">
+                <div className="flex items-center gap-2">
+                  <span className={`shrink-0 ${item.iconColor} sm:scale-110`}>{item.icon}</span>
+                  <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+                    {item.label}
                   </p>
-                )}
-              </div>
-            ) : (
-              /* Secondary KPIs - Compact for Mobile */
-              <div className="flex flex-col">
-                <div className={`flex items-center justify-between sm:justify-start sm:flex-col sm:items-start gap-1 sm:gap-2`}>
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className={`shrink-0 ${item.iconColor} sm:scale-100 scale-90`}>{item.icon}</span>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 leading-tight truncate">
-                      {item.label}
-                    </p>
-                  </div>
-
-                  <div className="h-5 sm:h-7 flex items-center mt-1 sm:mt-1.5">
-                    {loading ? (
-                      <Skeleton className="h-4 sm:h-6 w-10 sm:w-14" />
-                    ) : (
-                      <p className={`text-lg sm:text-2xl font-display font-bold tabular-nums leading-none transition-all ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
-                        {item.value || 0}
-                      </p>
-                    )}
-                  </div>
                 </div>
 
-                <p className={`hidden sm:block mt-1.5 text-[11px] text-slate-500 dark:text-slate-500 italic truncate transition-opacity duration-200 ${loading && stats ? "opacity-60" : "opacity-100"}`}>
+                <div className="flex items-center">
+                  {loading ? (
+                    <Skeleton className="h-6 w-10 sm:h-8 sm:w-16" />
+                  ) : (
+                    <p className={`text-xl sm:text-3xl font-display font-bold tabular-nums leading-none transition-transform duration-300 ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
+                      {item.value}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {item.sub && (
+                <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 italic truncate uppercase border-t border-slate-50 dark:border-surface-400 pt-1.5 mt-1 sm:mt-2">
                   {item.sub}
                 </p>
-              </div>
-            )}
-          </div>
+              )}
+            </CardBody>
+          </Card>
         );
       })}
     </div>
