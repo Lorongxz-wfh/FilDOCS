@@ -36,7 +36,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
 
       {/* List container with fade */}
       <div className="relative flex-1 min-h-[240px] overflow-hidden">
-        <div 
+        <div
           key={items.length} // Force re-mount animation if count changes
           className={`divide-y divide-slate-100 dark:divide-surface-400 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"} ${!loading && hasData ? "animate-pulse-highlight" : ""}`}
         >
@@ -65,7 +65,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
             items.slice(0, 5).map((x, i) => {
               const isRequest = x.type === "request";
               const Icon = isRequest ? Megaphone : FileText;
- 
+
               const handleClick = () => {
                 if (x.type === "document") {
                   navigate(`/documents/${x.item.document.id}?version_id=${x.item.version.id}`);

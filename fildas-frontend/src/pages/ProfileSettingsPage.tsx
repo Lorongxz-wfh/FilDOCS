@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/layout/PageFrame";
 import { useAuthUser } from "../hooks/useAuthUser";
-import { 
-  History, 
-  Settings as SettingsIcon, 
-  KeyRound, 
-  Bell, 
-  Volume2, 
-  PenLine, 
+import {
+  History,
+  Settings as SettingsIcon,
+  KeyRound,
+  Bell,
+  Volume2,
+  PenLine,
   Wrench,
   Monitor,
   Layout,
@@ -16,18 +16,18 @@ import {
   Moon,
   Laptop,
 } from "lucide-react";
-import { 
-  listActivityLogs 
+import {
+  listActivityLogs
 } from "../services/documents";
-import { 
-  updateProfile, 
-  changePassword, 
-  uploadProfilePhoto, 
-  uploadSignature, 
+import {
+  updateProfile,
+  changePassword,
+  uploadProfilePhoto,
+  uploadSignature,
   removeSignature,
   updateThemePreference,
   fetchProfile,
-  type ProfileUpdatePayload 
+  type ProfileUpdatePayload
 } from "../services/profile";
 import api from "../services/api";
 import { ActivityTimeline, type ActivityLogRow } from "../components/profile/ActivityTimeline";
@@ -100,8 +100,8 @@ const ProfileSettingsPage: React.FC = () => {
     setLogsLoading(true);
     const { from, to } = getTimeParams();
     try {
-      const res = await listActivityLogs({ 
-        scope: "mine", 
+      const res = await listActivityLogs({
+        scope: "mine",
         per_page: 50,
         category: category === "all" ? undefined : (category as any),
         date_from: from,
@@ -123,7 +123,7 @@ const ProfileSettingsPage: React.FC = () => {
     try {
       // 1. Refresh Activity Logs
       await fetchLogs();
-      
+
       // 2. Refresh User Profile Data
       const freshUser = await fetchProfile();
       const existing = JSON.parse(localStorage.getItem("auth_user") || "{}");
@@ -234,81 +234,81 @@ const ProfileSettingsPage: React.FC = () => {
       contentClassName="flex flex-col min-h-0 h-full overflow-hidden bg-slate-50/50 dark:bg-black/10"
     >
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 h-full max-h-full min-h-0 p-4 md:p-6 overflow-hidden">
-        
+
         {/* Left Side: Profile Card (Detached) */}
         <aside className="md:col-span-4 lg:col-span-3 h-full min-h-0">
-          <ProfileInfoCard 
-            user={user} 
+          <ProfileInfoCard
+            user={user}
             onEdit={() => setIsEditModalOpen(true)}
             onPhotoClick={() => document.getElementById("profile-photo-upload")?.click()}
           />
-          <input 
-            id="profile-photo-upload" 
-            type="file" 
-            accept="image/*" 
-            className="hidden" 
-            onChange={handlePhotoUpload} 
+          <input
+            id="profile-photo-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoUpload}
           />
         </aside>
 
         {/* Right Side: Shared Content Area */}
         <main className="md:col-span-8 lg:col-span-9 flex flex-col min-w-0 h-full min-h-0">
-           {/* Content Card with Integrated Header */}
-           <div className="flex-1 flex flex-col min-h-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-sm overflow-hidden">
-             
-             {/* Card Header (Integrated Tabs + Filters) */}
-             <div className="px-6 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-surface-400">
-                <div className="-mb-px">
-                   <Tabs
-                      id="profile-tabs"
-                      tabs={tabs}
-                      activeTab={activeTab}
-                      onChange={setActiveTab}
-                      className="border-none bg-transparent"
-                    />
-                </div>
+          {/* Content Card with Integrated Header */}
+          <div className="flex-1 flex flex-col min-h-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-sm overflow-hidden">
 
-                {activeTab === "activity" && (
-                   <div className="flex flex-col sm:flex-row items-center gap-4">
-                      {/* Activity Category Dropdown */}
-                      <SelectDropdown 
-                        value={category}
-                        onChange={setCategory}
-                        options={categories}
-                        placeholder="All Activity"
-                        className="w-full sm:w-48"
-                        clearable={false}
-                      />
-
-                      {/* Time Period Filter */}
-                      <SelectDropdown 
-                        value={timeFilter}
-                        onChange={setTimeFilter}
-                        options={timeOptions}
-                        placeholder="All Time"
-                        className="w-full sm:w-48"
-                        clearable={false}
-                      />
-                   </div>
-                )}
-             </div>
-
-              <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 custom-scrollbar">
-                {activeTab === "activity" ? (
-                   <div className="max-w-4xl mx-auto py-6 px-4">
-                      <ActivityTimeline items={logs} loading={logsLoading} />
-                   </div>
-                ) : activeTab === "settings" ? (
-                   <div className="max-w-4xl mx-auto py-6 px-4 space-y-10">
-                      <SettingsLayout user={user} push={push} />
-                   </div>
-                ) : (
-                   <div className="max-w-4xl mx-auto py-6 px-4">
-                      <SessionManager refreshTrigger={refreshTrigger} />
-                   </div>
-                )}
+            {/* Card Header (Integrated Tabs + Filters) */}
+            <div className="px-6 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-surface-400">
+              <div className="-mb-px">
+                <Tabs
+                  id="profile-tabs"
+                  tabs={tabs}
+                  activeTab={activeTab}
+                  onChange={setActiveTab}
+                  className="border-none bg-transparent"
+                />
               </div>
-           </div>
+
+              {activeTab === "activity" && (
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {/* Activity Category Dropdown */}
+                  <SelectDropdown
+                    value={category}
+                    onChange={setCategory}
+                    options={categories}
+                    placeholder="All Activity"
+                    className="w-full sm:w-48"
+                    clearable={false}
+                  />
+
+                  {/* Time Period Filter */}
+                  <SelectDropdown
+                    value={timeFilter}
+                    onChange={setTimeFilter}
+                    options={timeOptions}
+                    placeholder="All Time"
+                    className="w-full sm:w-48"
+                    clearable={false}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 custom-scrollbar">
+              {activeTab === "activity" ? (
+                <div className="max-w-4xl mx-auto py-6 px-4">
+                  <ActivityTimeline items={logs} loading={logsLoading} />
+                </div>
+              ) : activeTab === "settings" ? (
+                <div className="max-w-4xl mx-auto py-6 px-4 space-y-10">
+                  <SettingsLayout user={user} push={push} />
+                </div>
+              ) : (
+                <div className="max-w-4xl mx-auto py-6 px-4">
+                  <SessionManager refreshTrigger={refreshTrigger} />
+                </div>
+              )}
+            </div>
+          </div>
         </main>
       </div>
 
@@ -319,56 +319,56 @@ const ProfileSettingsPage: React.FC = () => {
         widthClassName="max-w-xl"
         footer={
           <div className="flex justify-end gap-3">
-             <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-             <Button loading={savingProfile} onClick={handleProfileSubmit}>Save Changes</Button>
+            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+            <Button loading={savingProfile} onClick={handleProfileSubmit}>Save Changes</Button>
           </div>
         }
       >
         <form onSubmit={handleProfileSubmit} className="space-y-4">
-           <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400">First Name</label>
-                 <input className={inputCls} value={profileForm.first_name} onChange={e => setProfileForm(p => ({ ...p, first_name: e.target.value }))} required />
-              </div>
-              <div className="space-y-1.5">
-                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Last Name</label>
-                 <input className={inputCls} value={profileForm.last_name} onChange={e => setProfileForm(p => ({ ...p, last_name: e.target.value }))} required />
-              </div>
-           </div>
-           <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Middle Name</label>
-                 <input className={inputCls} value={profileForm.middle_name || ""} onChange={e => setProfileForm(p => ({ ...p, middle_name: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Suffix</label>
-                 <input className={inputCls} placeholder="Jr., III, etc." value={profileForm.suffix || ""} onChange={e => setProfileForm(p => ({ ...p, suffix: e.target.value }))} />
-              </div>
-           </div>
-           <div className="space-y-1.5 pt-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Email Address</label>
-              <input type="email" className={inputCls} value={profileForm.email} onChange={e => setProfileForm(p => ({ ...p, email: e.target.value }))} required />
-           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">First Name</label>
+              <input className={inputCls} value={profileForm.first_name} onChange={e => setProfileForm(p => ({ ...p, first_name: e.target.value }))} required />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Last Name</label>
+              <input className={inputCls} value={profileForm.last_name} onChange={e => setProfileForm(p => ({ ...p, last_name: e.target.value }))} required />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Middle Name</label>
+              <input className={inputCls} value={profileForm.middle_name || ""} onChange={e => setProfileForm(p => ({ ...p, middle_name: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Suffix</label>
+              <input className={inputCls} placeholder="Jr., III, etc." value={profileForm.suffix || ""} onChange={e => setProfileForm(p => ({ ...p, suffix: e.target.value }))} />
+            </div>
+          </div>
+          <div className="space-y-1.5 pt-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Email Address</label>
+            <input type="email" className={inputCls} value={profileForm.email} onChange={e => setProfileForm(p => ({ ...p, email: e.target.value }))} required />
+          </div>
 
-           {isEmailChanged && (
-             <div className="p-4 rounded-md border border-rose-100 bg-rose-50/50 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-               <div className="flex items-center gap-2 text-rose-600">
-                 <KeyRound className="h-4 w-4" />
-                 <span className="text-xs font-bold uppercase tracking-wider">Security Verification</span>
-               </div>
-               <p className="text-[11px] text-rose-500 leading-tight">
-                 You are changing your primary email address. To authorize this sensitive action, please enter your current password.
-               </p>
-               <input 
-                 type="password" 
-                 className={`${inputCls} bg-white dark:bg-surface-500 border-rose-200 focus:border-rose-400 focus:ring-rose-400/20`}
-                 placeholder="Enter current password" 
-                 value={profileForm.current_password || ""} 
-                 onChange={e => setProfileForm(p => ({ ...p, current_password: e.target.value }))}
-                 required={isEmailChanged}
-               />
-             </div>
-           )}
+          {isEmailChanged && (
+            <div className="p-4 rounded-md border border-rose-100 bg-rose-50/50 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center gap-2 text-rose-600">
+                <KeyRound className="h-4 w-4" />
+                <span className="text-xs font-bold uppercase tracking-wider">Security Verification</span>
+              </div>
+              <p className="text-[11px] text-rose-500 leading-tight">
+                You are changing your primary email address. To authorize this sensitive action, please enter your current password.
+              </p>
+              <input
+                type="password"
+                className={`${inputCls} bg-white dark:bg-surface-500 border-rose-200 focus:border-rose-400 focus:ring-rose-400/20`}
+                placeholder="Enter current password"
+                value={profileForm.current_password || ""}
+                onChange={e => setProfileForm(p => ({ ...p, current_password: e.target.value }))}
+                required={isEmailChanged}
+              />
+            </div>
+          )}
         </form>
       </Modal>
     </PageFrame>
@@ -429,10 +429,10 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validatePassword(pw.password)) {
-      return push({ 
-        type: "error", 
-        title: "Weak Password", 
-        message: "Please meet all complexity requirements: 8+ characters, uppercase, numbers, and symbols." 
+      return push({
+        type: "error",
+        title: "Weak Password",
+        message: "Please meet all complexity requirements: 8+ characters, uppercase, numbers, and symbols."
       });
     }
     if (pw.password !== pw.password_confirmation) return push({ type: "error", message: "Passwords do not match." });
@@ -453,13 +453,13 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
     if (!file) return;
     try {
       const updated = await uploadSignature(file);
-      
+
       // Sync global state while protecting local theme
       const existing = JSON.parse(localStorage.getItem("auth_user") || "{}");
       const { theme_preference, ...userData } = updated;
       localStorage.setItem("auth_user", JSON.stringify({ ...existing, ...userData }));
       window.dispatchEvent(new Event("auth_user_updated"));
-      
+
       push({ type: "success", message: "Signature updated and synced." });
     } catch (err) { push({ type: "error", message: normalizeError(err) }); }
   };
@@ -467,13 +467,13 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
   const handleSigRemove = async () => {
     try {
       const updated = await removeSignature();
-      
+
       // Sync global state while protecting local theme
       const existing = JSON.parse(localStorage.getItem("auth_user") || "{}");
       const { theme_preference, ...userData } = updated;
       localStorage.setItem("auth_user", JSON.stringify({ ...existing, ...userData }));
       window.dispatchEvent(new Event("auth_user_updated"));
-      
+
       push({ type: "success", message: "Signature removed." });
     } catch (err) { push({ type: "error", message: normalizeError(err) }); }
   };
@@ -495,21 +495,21 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
       {isAdmin && (
         <div className="space-y-8 p-6 rounded-xl border border-brand-100 dark:border-brand-900/40 bg-brand-50/20 dark:bg-brand-500/5 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
           <PillarHeader title="Developer & Administrative Tools" />
-          <Section 
-            title="Developer Debug Mode" 
-            icon={<Wrench className="h-4 w-4" />} 
+          <Section
+            title="Developer Debug Mode"
+            icon={<Wrench className="h-4 w-4" />}
             description="Toggle advanced permissions and testing tools. When enabled, you can act on behalf of any office to test workflow logic."
           >
             <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-brand-200/50 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 overflow-hidden shadow-sm">
-              <ToggleRow 
-                label="Enable Debug Mode" 
-                desc="Bypass role/office restrictions for testing purposes." 
-                checked={localStorage.getItem(`pref_debug_mode_${user?.id}`) === "1"} 
+              <ToggleRow
+                label="Enable Debug Mode"
+                desc="Bypass role/office restrictions for testing purposes."
+                checked={localStorage.getItem(`pref_debug_mode_${user?.id}`) === "1"}
                 onChange={v => {
                   localStorage.setItem(`pref_debug_mode_${user?.id}`, v ? "1" : "0");
                   window.dispatchEvent(new CustomEvent("admin_debug_mode_changed"));
                   push({ type: "success", title: "Debug Mode", message: v ? "Enabled" : "Disabled" });
-                }} 
+                }}
               />
             </div>
           </Section>
@@ -519,44 +519,49 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
       {/* ── Pillar 1: Configuration & Appearance ───────────────────────────── */}
       <div className="space-y-8">
         <PillarHeader title="Interface & Configuration" />
-        
+
         {/* Theme section */}
-        <Section 
-          title="Default Theme" 
-          icon={<Layout className="h-4 w-4" />} 
+        <Section
+          title="Default Theme"
+          icon={<Layout className="h-4 w-4" />}
           description="Choose your account's default appearance. This will be applied regardless of which device you use."
         >
           <div className="flex p-1 bg-slate-100 dark:bg-surface-400 rounded-lg max-w-sm">
-              {[
-                { id: "light", label: "Light", icon: <Sun className="h-3.5 w-3.5" /> },
-                { id: "dark", label: "Dark", icon: <Moon className="h-3.5 w-3.5" /> },
-                { id: "system", label: "System", icon: <Monitor className="h-3.5 w-3.5" /> }
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => handleThemeChange(opt.id as any)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-bold transition-all ${
-                    currentTheme === opt.id 
-                      ? "bg-white dark:bg-surface-600 text-brand-500 shadow-sm" 
-                      : "text-slate-500 hover:text-slate-700 dark:text-slate-100"
+            {[
+              { id: "light", label: "Light", icon: <Sun className="h-3.5 w-3.5" /> },
+              { id: "dark", label: "Dark", icon: <Moon className="h-3.5 w-3.5" /> },
+              { id: "system", label: "System", icon: <Monitor className="h-3.5 w-3.5" /> }
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => handleThemeChange(opt.id as any)}
+                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-bold transition-all ${currentTheme === opt.id
+                    ? "bg-white dark:bg-surface-600 text-brand-500 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700 dark:text-slate-100"
                   }`}
-                >
-                  {opt.icon}
-                  {opt.label}
-                </button>
-              ))}
+              >
+                {opt.icon}
+                {opt.label}
+              </button>
+            ))}
           </div>
         </Section>
 
-        {/* Notifications section */}
-        <Section 
-          title="Notifications & Sound" 
-          icon={<Bell className="h-4 w-4" />} 
-          description="System-critical emails (Action Required, Document Updates) are mandatory to ensure workflow accountability."
+        {/* Audio section */}
+        <Section
+          title="System Sounds"
+          icon={<Volume2 className="h-4 w-4" />}
+          description="Manage audio feedback for system alerts and incoming messages."
         >
-            <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-slate-100 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 overflow-hidden shadow-sm">
-               <ToggleRow label="In-App Notification Sound" desc="Play a subtle chime when new notifications arrive." icon={<Volume2 className="h-3.5 w-3.5" />} checked={prefs.sound_notif} onChange={v => handleToggle("sound_notif", v)} />
-            </div>
+          <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-slate-100 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 overflow-hidden shadow-sm">
+            <ToggleRow 
+              label="Incoming Message Chime" 
+              desc="Play a subtle sound when a new message arrives in the work queue." 
+              icon={<Bell className="h-3.5 w-3.5" />} 
+              checked={prefs.sound_notif} 
+              onChange={v => handleToggle("sound_notif", v)} 
+            />
+          </div>
         </Section>
       </div>
 
@@ -565,41 +570,41 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
       {/* ── Pillar 2: Security & Identity ─────────────────────────────────── */}
       <div className="space-y-8">
         <PillarHeader title="Security & Access" />
-        
+
         {/* Password section */}
         <Section title="Authentication" icon={<KeyRound className="h-4 w-4" />} description="Protect your account by using a strong password and multi-factor verification.">
           <div className="space-y-8">
-              <TwoFactorManager user={user} />
-              
-              <div className="pt-4 border-t border-slate-100 dark:border-surface-400">
-                <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-400 mb-4">Change Password</h5>
-                <form onSubmit={handlePasswordSubmit} className="space-y-5">
-                    <div className="space-y-1.5 max-w-sm">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Current Password</label>
-                      <input type="password" className={inputCls} value={pw.current_password} onChange={e => setPw(p => ({ ...p, current_password: e.target.value }))} required />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                          <label className="text-xs font-bold uppercase tracking-wider text-slate-400">New Password</label>
-                          <input type="password" className={inputCls} value={pw.password} onChange={e => setPw(p => ({ ...p, password: e.target.value }))} required />
-                      </div>
-                      <div className="space-y-1.5">
-                          <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Confirm New Password</label>
-                          <input type="password" className={inputCls} value={pw.password_confirmation} onChange={e => setPw(p => ({ ...p, password_confirmation: e.target.value }))} required />
-                      </div>
-                    </div>
-                    
-                    {pw.password && (
-                      <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                        <PasswordRequirements password={pw.password} />
-                      </div>
-                    )}
+            <TwoFactorManager user={user} />
 
-                    <div className="flex justify-start">
-                      <Button loading={pwLoading} size="sm" className="font-bold">Update Password</Button>
-                    </div>
-                </form>
-              </div>
+            <div className="pt-4 border-t border-slate-100 dark:border-surface-400">
+              <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-400 mb-4">Change Password</h5>
+              <form onSubmit={handlePasswordSubmit} className="space-y-5">
+                <div className="space-y-1.5 max-w-sm">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Current Password</label>
+                  <input type="password" className={inputCls} value={pw.current_password} onChange={e => setPw(p => ({ ...p, current_password: e.target.value }))} required />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">New Password</label>
+                    <input type="password" className={inputCls} value={pw.password} onChange={e => setPw(p => ({ ...p, password: e.target.value }))} required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Confirm New Password</label>
+                    <input type="password" className={inputCls} value={pw.password_confirmation} onChange={e => setPw(p => ({ ...p, password_confirmation: e.target.value }))} required />
+                  </div>
+                </div>
+
+                {pw.password && (
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                    <PasswordRequirements password={pw.password} />
+                  </div>
+                )}
+
+                <div className="flex justify-start">
+                  <Button loading={pwLoading} size="sm" className="font-bold">Update Password</Button>
+                </div>
+              </form>
+            </div>
           </div>
         </Section>
       </div>
@@ -614,35 +619,35 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
         {!isAuditor(getUserRole()) && (
           <Section title="E-Signature" icon={<PenLine className="h-4 w-4" />} description="Use your uploaded signature to sign documents and evidence requests.">
             <div className="flex flex-col sm:flex-row items-center gap-6 p-5 rounded-md border border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/50">
-                <div className="h-24 w-52 border border-dashed border-slate-300 dark:border-surface-400 rounded-md flex items-center justify-center bg-white dark:bg-surface-600 shadow-inner overflow-hidden">
-                    {sigLoading ? (
-                      <div className="animate-pulse flex flex-col items-center gap-2">
-                         <div className="h-2 w-20 bg-slate-100 rounded" />
-                         <div className="h-2 w-16 bg-slate-100 rounded" />
-                      </div>
-                    ) : sigUrl ? (
-                      <img src={sigUrl} className="max-h-full object-contain p-2" alt="Sig" />
-                    ) : (
-                      <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest opacity-50">No Signature</p>
-                    )}
+              <div className="h-24 w-52 border border-dashed border-slate-300 dark:border-surface-400 rounded-md flex items-center justify-center bg-white dark:bg-surface-600 shadow-inner overflow-hidden">
+                {sigLoading ? (
+                  <div className="animate-pulse flex flex-col items-center gap-2">
+                    <div className="h-2 w-20 bg-slate-100 rounded" />
+                    <div className="h-2 w-16 bg-slate-100 rounded" />
+                  </div>
+                ) : sigUrl ? (
+                  <img src={sigUrl} className="max-h-full object-contain p-2" alt="Sig" />
+                ) : (
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest opacity-50">No Signature</p>
+                )}
+              </div>
+              <div className="flex flex-col gap-3">
+                <p className="text-[11px] text-slate-500 leading-relaxed max-w-xs">Supported formats: PNG, JPG (transparent recommended). Max size 1MB.</p>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" size="sm" onClick={() => sigInputRef.current?.click()} className="font-bold text-[11px]">Upload New Signature</Button>
+                  <input ref={sigInputRef} type="file" className="hidden" accept="image/*" onChange={handleSigUpload} />
+                  {sigUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-bold text-[11px]"
+                      onClick={handleSigRemove}
+                    >
+                      Remove Signature
+                    </Button>
+                  )}
                 </div>
-                <div className="flex flex-col gap-3">
-                    <p className="text-[11px] text-slate-500 leading-relaxed max-w-xs">Supported formats: PNG, JPG (transparent recommended). Max size 1MB.</p>
-                    <div className="flex items-center gap-3">
-                        <Button variant="outline" size="sm" onClick={() => sigInputRef.current?.click()} className="font-bold text-[11px]">Upload New Signature</Button>
-                        <input ref={sigInputRef} type="file" className="hidden" accept="image/*" onChange={handleSigUpload} />
-                        {sigUrl && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-bold text-[11px]"
-                            onClick={handleSigRemove}
-                          >
-                            Remove Signature
-                          </Button>
-                        )}
-                    </div>
-                </div>
+              </div>
             </div>
           </Section>
         )}
@@ -663,13 +668,13 @@ const PillarHeader: React.FC<{ title: string }> = ({ title }) => (
 const Section: React.FC<{ icon: any; title: string; description: string; children: any }> = ({ icon, title, description, children }) => (
   <div className="space-y-4">
     <div className="flex items-center gap-3">
-       <div className="h-8 w-8 rounded bg-slate-100 dark:bg-surface-400 flex items-center justify-center text-slate-500">
-          {icon}
-       </div>
-       <div>
-          <h4 className="text-[14.5px] font-bold text-slate-800 dark:text-slate-100">{title}</h4>
-          <p className="text-[12px] text-slate-500 dark:text-slate-400">{description}</p>
-       </div>
+      <div className="h-8 w-8 rounded bg-slate-100 dark:bg-surface-400 flex items-center justify-center text-slate-500">
+        {icon}
+      </div>
+      <div>
+        <h4 className="text-[14.5px] font-bold text-slate-800 dark:text-slate-100">{title}</h4>
+        <p className="text-[12px] text-slate-500 dark:text-slate-400">{description}</p>
+      </div>
     </div>
     <div className="pl-11">
       {children}
@@ -679,19 +684,19 @@ const Section: React.FC<{ icon: any; title: string; description: string; childre
 
 const ToggleRow: React.FC<{ label: string; desc: string; checked: boolean; onChange: (v: boolean) => void; icon?: any }> = ({ label, desc, checked, onChange, icon }) => (
   <div className="flex items-center justify-between p-4 px-5 group">
-     <div className="flex items-center gap-3">
-        {icon && <div className="text-slate-400 group-hover:text-brand-500 transition-colors">{icon}</div>}
-        <div>
-           <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{label}</p>
-           <p className="text-xs text-slate-500 dark:text-slate-400">{desc}</p>
-        </div>
-     </div>
-     <button 
-        onClick={() => onChange(!checked)}
-        className={`w-9 h-5 rounded-full transition-colors relative ${checked ? "bg-brand-500" : "bg-slate-200 dark:bg-surface-300"}`}
-      >
-        <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-all ${checked ? "translate-x-4" : ""}`} />
-     </button>
+    <div className="flex items-center gap-3">
+      {icon && <div className="text-slate-400 group-hover:text-brand-500 transition-colors">{icon}</div>}
+      <div>
+        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{label}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{desc}</p>
+      </div>
+    </div>
+    <button
+      onClick={() => onChange(!checked)}
+      className={`w-9 h-5 rounded-full transition-colors relative ${checked ? "bg-brand-500" : "bg-slate-200 dark:bg-surface-300"}`}
+    >
+      <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-all ${checked ? "translate-x-4" : ""}`} />
+    </button>
   </div>
 );
 

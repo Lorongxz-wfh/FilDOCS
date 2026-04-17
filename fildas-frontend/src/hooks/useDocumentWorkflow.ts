@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useVisibilityPolling } from "./useVisibilityPolling";
 import { getAuthUser } from "../lib/auth";
 import {
   listWorkflowTasks,
@@ -11,10 +10,12 @@ import {
   type WorkflowTask,
   type WorkflowActionCode,
   type DocumentMessage,
-  type ActivityLogItem,
   type OfficeUser,
 } from "../services/documents";
 import { useRealtimeUpdates } from "./useRealtimeUpdates";
+import { useWorkflowMessaging } from "./workflow/useWorkflowMessaging";
+import { useWorkflowActivity } from "./workflow/useWorkflowActivity";
+import { useWorkflowPolling } from "./workflow/useWorkflowPolling";
 
 type Options = {
   versionId: number;
@@ -27,12 +28,6 @@ type Options = {
   adminDebugMode?: boolean;
 };
 
-// Polling intervals
-const IDLE_POLL_MS = 10_000; // 10s idle
-const BURST_POLL_MS = 5_000; // 5s burst after action
-const BURST_EXPIRE_MS = 15_000; // revert after 15s
-const MSG_POLL_MS = 10_000; // 10s message poll
-
 export function useDocumentWorkflow({
   versionId,
   documentId,
@@ -43,63 +38,28 @@ export function useDocumentWorkflow({
   qaOfficeId,
   adminDebugMode = false,
 }: Options) {
+  const myUserId = useMemo(() => getAuthUser()?.id ?? null, []);
+
+  // 1. Core Workflow State (Tasks & Actions)
   const [tasks, setTasks] = useState<WorkflowTask[]>([]);
-  const [availableActions, setAvailableActions] = useState<
-    WorkflowActionCode[]
-  >([]);
+  const [availableActions, setAvailableActions] = useState<WorkflowActionCode[]>([]);
   const [isTasksReady, setIsTasksReady] = useState(false);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
+  const [taskChanged, setTaskChanged] = useState(false);
 
-  // Impersonation
+  const prevOpenTaskOfficeRef = useRef<number | null>(null);
+  const prevActionsRef = useRef<string>("");
+  const isFirstTaskLoadRef = useRef(true);
+
+  // 2. Impersonation State
   const [routingUsers, setRoutingUsers] = useState<OfficeUser[]>([]);
   const [actingAsUserId, setActingAsUserId] = useState<number | undefined>(undefined);
   const [isLoadingRoutingUsers, setIsLoadingRoutingUsers] = useState(false);
 
-  const [messages, setMessages] = useState<DocumentMessage[]>([]);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  // 3. Sub-Hooks (Modularized Logic)
+  const messaging = useWorkflowMessaging(versionId, myUserId);
+  const activity = useWorkflowActivity(versionId, documentId);
 
-  const [activityLogs, setActivityLogs] = useState<ActivityLogItem[]>([]);
-  const [isLoadingActivityLogs, setIsLoadingActivityLogs] = useState(false);
-
-  const [isBurstPolling, setIsBurstPolling] = useState(false);
-  const burstPollRef = useRef<number | null>(null);
-  const burstTimeoutRef = useRef<number | null>(null);
-  const idlePollRef = useRef<number | null>(null);
-  const msgPollRef = useRef<number | null>(null);
-
-  // Change detection refs
-  const [newMessageCount, setNewMessageCount] = useState(0);
-  const [taskChanged, setTaskChanged] = useState(false);
-  const prevMessageCountRef = useRef<number>(0);
-  const prevOpenTaskOfficeRef = useRef<number | null>(null);
-  const prevActionsRef = useRef<string>("");
-  const isFirstTaskLoadRef = useRef(true);
-  const isFirstMessageLoadRef = useRef(true);
-  const myUserIdRef = useRef<number | null>(null);
-  const hasLoadedMessagesRef = useRef(false);
-  const hasLoadedLogsRef = useRef(false);
-
-  useEffect(() => {
-    myUserIdRef.current = getAuthUser()?.id ?? null;
-  }, []);
-
-  // ── Stop all polling ────────────────────────────────────────────────────
-  const stopAllPolling = useCallback(() => {
-    setIsBurstPolling(false);
-    if (burstPollRef.current) window.clearInterval(burstPollRef.current);
-    if (burstTimeoutRef.current) window.clearTimeout(burstTimeoutRef.current);
-    if (idlePollRef.current) window.clearInterval(idlePollRef.current);
-    if (msgPollRef.current) window.clearInterval(msgPollRef.current);
-    burstPollRef.current =
-      burstTimeoutRef.current =
-      idlePollRef.current =
-      msgPollRef.current =
-        null;
-  }, []);
-
-  const stopBurstPolling = stopAllPolling;
-
-  // ── Core: fetch tasks + actions together in one round-trip-pair ─────────
   const refreshTasksAndActions = useCallback(
     async (id: number, opts?: { isPolling?: boolean }) => {
       try {
@@ -133,260 +93,93 @@ export function useDocumentWorkflow({
         const openTask = t.find((tk) => tk.status === "open") ?? null;
         prevOpenTaskOfficeRef.current = openTask?.assigned_office_id ?? null;
         prevActionsRef.current = actions.join(",");
-      } catch {
+      } catch (err) {
         if (!opts?.isPolling) {
           setTasks([]);
           setAvailableActions([]);
         }
-        // Always mark ready even on error — prevents infinite loading skeleton
-        setIsTasksReady(true);
       } finally {
         setIsTasksReady(true);
       }
     },
-    [adminDebugMode],
+    [adminDebugMode]
   );
 
-  // ── Message polling helper ───────────────────────────────────────────────
-  const pollMessages = useCallback((id: number) => {
-    listDocumentMessages(id)
-      .then((m) => {
-        setMessages(m);
-        if (!isFirstMessageLoadRef.current) {
-          const incoming = m.filter(
-            (msg) => Number(msg.sender_user_id) !== Number(myUserIdRef.current),
-          );
-          const newCount = incoming.length - prevMessageCountRef.current;
-          if (newCount > 0) setNewMessageCount((prev) => prev + newCount);
-          prevMessageCountRef.current = incoming.length;
-        } else {
-          isFirstMessageLoadRef.current = false;
-          const incoming = m.filter(
-            (msg) => Number(msg.sender_user_id) !== Number(myUserIdRef.current),
-          );
-          prevMessageCountRef.current = incoming.length;
+  const polling = useWorkflowPolling({
+    versionId,
+    refreshTasks: refreshTasksAndActions,
+    refreshLogs: activity.refreshLogsSilent,
+    refreshMessages: messaging.pollMessages,
+    isTerminal
+  });
+
+  // 3. Action Wrappers (Parameterless for consumers)
+  const refreshTasks = useCallback((opts?: { isPolling?: boolean }) => 
+    refreshTasksAndActions(versionId, opts), [versionId, refreshTasksAndActions]);
+  
+  const refreshLogs = useCallback(() => 
+    activity.refreshLogsSilent(versionId), [versionId, activity]);
+    
+  const refreshMessages = useCallback(() => 
+    messaging.pollMessages(versionId), [versionId, messaging]);
+
+  // 4. Submission Logic
+  const submitAction = useCallback(
+    async (code: WorkflowActionCode, note?: string) => {
+      setIsChangingStatus(true);
+      try {
+        const res = await submitWorkflowAction(
+          versionId,
+          code,
+          note,
+          adminDebugMode,
+          actingAsUserId
+        );
+        window.dispatchEvent(new Event("notifications:refresh"));
+
+        // Immediate background sync
+        await refreshTasksAndActions(res.version.id);
+        polling.startBurstPolling(res.version.id);
+
+        Promise.all([
+          listDocumentMessages(res.version.id),
+          listActivityLogs({
+            scope: "document",
+            document_version_id: res.version.id,
+            per_page: 50,
+          }),
+        ]).then(([msgs, logs]) => {
+          messaging.setMessages(msgs);
+          activity.setActivityLogs(logs.data);
+        }).catch(() => {});
+
+        if (onChanged) void Promise.resolve(onChanged()).catch(() => {});
+        if (qaOfficeId && myOfficeId !== qaOfficeId) {
+          onAfterActionClose?.();
         }
-      })
-      .catch((err) => {
-        console.warn("[useDocumentWorkflow] Polling messages failed:", err.message);
-      });
-  }, []);
-
-  // ── Activity logs: silent background refresh (used by polling) ────────────
-  const silentRefreshLogs = useCallback(
-    (id: number) => {
-      listActivityLogs({ scope: "document", document_version_id: id, per_page: 50 })
-        .then((p) => setActivityLogs(p.data))
-        .catch(() => {});
+        return res;
+      } finally {
+        setIsChangingStatus(false);
+      }
     },
-    [],
+    [versionId, adminDebugMode, actingAsUserId, polling, messaging, activity, refreshTasksAndActions, onChanged, qaOfficeId, myOfficeId, onAfterActionClose]
   );
 
-  // ── Idle polling ────────────────────────────────────────────────────────
-  const startIdlePolling = useCallback(
-    (id: number) => {
-      if (idlePollRef.current) window.clearInterval(idlePollRef.current);
-      idlePollRef.current = window.setInterval(() => {
-        refreshTasksAndActions(id, { isPolling: true }).catch(() => {});
-        silentRefreshLogs(id);
-      }, IDLE_POLL_MS);
-    },
-    [refreshTasksAndActions, silentRefreshLogs],
-  );
-
-  // ── Visibility-aware catch-up ────────────────────────────────────────────
-  useVisibilityPolling(
-    useCallback(() => {
-      if (!versionId || versionId === 0) return;
-      refreshTasksAndActions(versionId, { isPolling: true }).catch(() => {});
-    }, [versionId, refreshTasksAndActions]),
-    IDLE_POLL_MS,
-  );
-
-  // ── Burst polling after action ───────────────────────────────────────────
-  const startBurstPolling = useCallback(
-    (id: number) => {
-      if (idlePollRef.current) window.clearInterval(idlePollRef.current);
-      idlePollRef.current = null;
-      if (burstPollRef.current) window.clearInterval(burstPollRef.current);
-
-      setIsBurstPolling(true);
-      burstPollRef.current = window.setInterval(() => {
-        refreshTasksAndActions(id, { isPolling: true }).catch(() => {});
-        silentRefreshLogs(id);
-      }, BURST_POLL_MS);
-
-      if (burstTimeoutRef.current) window.clearTimeout(burstTimeoutRef.current);
-      burstTimeoutRef.current = window.setTimeout(() => {
-        if (burstPollRef.current) window.clearInterval(burstPollRef.current);
-        burstPollRef.current = null;
-        setIsBurstPolling(false);
-        startIdlePolling(id);
-      }, BURST_EXPIRE_MS);
-    },
-    [refreshTasksAndActions, startIdlePolling, silentRefreshLogs],
-  );
-
-  // ── Initial load ─────────────────────────────────────────────────────────
+  // 5. Initial Lifecycle
   useEffect(() => {
-    if (!versionId || versionId === 0) {
+    if (!versionId || versionId === 0 || isTerminal) {
       setIsTasksReady(true);
-      return;
-    }
-    if (isTerminal) {
-      // Terminal: mark ready immediately, skip task/action fetch
-      setIsTasksReady(true);
-      setAvailableActions([]);
+      if (isTerminal) setAvailableActions([]);
       return;
     }
     let alive = true;
     setIsTasksReady(false);
-    setAvailableActions([]);
+    refreshTasksAndActions(versionId).finally(() => {
+      if (alive) setIsTasksReady(true);
+    });
+    return () => { alive = false; };
+  }, [versionId, isTerminal, refreshTasksAndActions]);
 
-    (async () => {
-      try {
-        const [t, actions] = await Promise.all([
-          listWorkflowTasks(versionId),
-          getAvailableActions(versionId, adminDebugMode),
-        ]);
-        if (!alive) return;
-        setTasks(t);
-        setAvailableActions(actions);
-      } catch {
-        if (!alive) return;
-        setTasks([]);
-        setAvailableActions([]);
-      } finally {
-        if (alive) setIsTasksReady(true);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [versionId, isTerminal, adminDebugMode]);
-
-  // ── Start idle + message polling on mount ────────────────────────────────
-  useEffect(() => {
-    if (!versionId || versionId === 0) return;
-    if (isTerminal) return; // no polling for terminal statuses
-
-    startIdlePolling(versionId);
-
-    // Message poll — separate interval, slower cadence
-    if (msgPollRef.current) window.clearInterval(msgPollRef.current);
-    msgPollRef.current = window.setInterval(() => {
-      pollMessages(versionId);
-    }, MSG_POLL_MS);
-
-    return () => stopAllPolling();
-  }, [versionId, isTerminal, startIdlePolling, stopAllPolling, pollMessages]);
-
-  // ── Real-time Integration ──────────────────────────────────────────────
-  useRealtimeUpdates({
-    documentVersionId: versionId,
-    onWorkflowUpdate: (data: any) => {
-      // Trigger instant refresh of tasks/actions, and background refresh of logs/messages
-      const isSig = data?.event === "version.in_app_signature_applied" || data?.event === "version.in_app_signature_removed";
-      const isPreview = data?.event === "version.preview_regenerated";
-
-      refreshTasksAndActions(versionId, { isPolling: true }).catch(() => {});
-      silentRefreshLogs(versionId);
-      pollMessages(versionId);
-
-      // Force taskChanged pulse if it's a signature or preview event so UI unblocks buttons or refreshes iframe
-      if (isSig || isPreview) setTaskChanged(true);
-
-      // Notify parent if needed
-      if (onChanged) void Promise.resolve(onChanged()).catch(() => {});
-    },
-    onDocumentMessage: (incoming: DocumentMessage) => {
-      // Push message into state immediately — no poll round-trip needed.
-      // Deduplication guard prevents duplicates if the polling also picks it up.
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === incoming.id)) return prev;
-        return [...prev, incoming];
-      });
-      // Bump unread badge only for messages from others
-      if (Number(incoming.sender_user_id) !== Number(myUserIdRef.current)) {
-        setNewMessageCount((c) => c + 1);
-      }
-    },
-    requestId: null,
-  });
-
-  // ── Reset load guards when versionId changes ────────────────────────────
-  // ── Messages: load once ──────────────────────────────────────────────────
-  useEffect(() => {
-    if (!versionId || versionId === 0) {
-      setMessages([]);
-      setIsLoadingMessages(false);
-      return;
-    }
-    
-    let alive = true;
-    setIsLoadingMessages(true);
-    hasLoadedMessagesRef.current = false;
-    
-    // Clear messages ONLY if we are truly moving to a new ID
-    setMessages([]);
-
-    listDocumentMessages(versionId)
-      .then((m) => {
-        if (!alive) return;
-        
-        // Final Safety: Only set messages if the versionId we fetched for 
-        // still matches the versionId in the state.
-        setMessages(m);
-        
-        hasLoadedMessagesRef.current = true;
-        const incoming = m.filter(
-          (msg) => Number(msg.sender_user_id) !== Number(myUserIdRef.current),
-        );
-        prevMessageCountRef.current = incoming.length;
-        isFirstMessageLoadRef.current = false;
-      })
-      .catch((err) => {
-        console.error("[useDocumentWorkflow] Failed to load messages:", err);
-        if (alive) setMessages([]);
-      })
-      .finally(() => {
-        if (alive) setIsLoadingMessages(false);
-      });
-
-    return () => {
-      alive = false;
-    };
-  }, [versionId]);
-
-  // ── Activity logs: load once ─────────────────────────────────────────────
-  useEffect(() => {
-    if (!versionId || versionId === 0) return;
-    let alive = true;
-    setIsLoadingActivityLogs(true);
-    listActivityLogs({
-      scope: "document",
-      document_id: documentId || undefined,
-      document_version_id: !documentId ? versionId : undefined,
-      per_page: 50,
-    })
-      .then((p) => {
-        if (!alive) return;
-        setActivityLogs(p.data);
-        hasLoadedLogsRef.current = true;
-      })
-      .catch(() => {
-        if (alive) setActivityLogs([]);
-      })
-      .finally(() => {
-        if (alive) setIsLoadingActivityLogs(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [versionId]);
-
-  // ── Routing users for Admin Impersonation ────────────────────────────────
   useEffect(() => {
     if (!versionId || !adminDebugMode) {
       setRoutingUsers([]);
@@ -396,97 +189,42 @@ export function useDocumentWorkflow({
     let alive = true;
     setIsLoadingRoutingUsers(true);
     listRoutingUsers(versionId)
-      .then((users) => {
-        if (!alive) return;
-        setRoutingUsers(users);
-      })
-      .catch(() => {
-        if (alive) setRoutingUsers([]);
-      })
-      .finally(() => {
-        if (alive) setIsLoadingRoutingUsers(false);
-      });
-    return () => {
-      alive = false;
-    };
+      .then((users) => { if (alive) setRoutingUsers(users); })
+      .catch(() => { if (alive) setRoutingUsers([]); })
+      .finally(() => { if (alive) setIsLoadingRoutingUsers(false); });
+    return () => { alive = false; };
   }, [versionId, adminDebugMode]);
 
-  // ── Submit action ────────────────────────────────────────────────────────
-  const submitAction = useCallback(
-    async (code: WorkflowActionCode, note?: string) => {
-      setIsChangingStatus(true);
-      try {
-        const res = await submitWorkflowAction(
-          versionId, 
-          code, 
-          note, 
-          adminDebugMode,
-          actingAsUserId
-        );
-        window.dispatchEvent(new Event("notifications:refresh"));
+  // 6. Real-time Integration
+  useRealtimeUpdates({
+    documentVersionId: versionId,
+    onWorkflowUpdate: (data: any) => {
+      const isSig = data?.event === "version.in_app_signature_applied" || data?.event === "version.in_app_signature_removed";
+      const isPreview = data?.event === "version.preview_regenerated";
 
-        // Refresh tasks immediately
-        await refreshTasksAndActions(res.version.id);
-        startBurstPolling(res.version.id);
+      refreshTasksAndActions(versionId, { isPolling: true });
+      activity.refreshLogsSilent(versionId);
+      messaging.pollMessages(versionId);
 
-        // Refresh messages + logs in background (non-blocking)
-        Promise.all([
-          listDocumentMessages(res.version.id),
-          listActivityLogs({
-            scope: "document",
-            document_version_id: res.version.id,
-            per_page: 50,
-          }),
-        ])
-          .then(([msgs, logs]) => {
-            setMessages(msgs);
-            setActivityLogs(logs.data);
-          })
-          .catch(() => {});
-
-        if (onChanged) void Promise.resolve(onChanged()).catch(() => {});
-
-        if (qaOfficeId && myOfficeId !== qaOfficeId) {
-          onAfterActionClose?.();
-        }
-
-        return res;
-      } finally {
-        setIsChangingStatus(false);
-      }
+      if (isSig || isPreview) setTaskChanged(true);
+      if (onChanged) void Promise.resolve(onChanged()).catch(() => {});
     },
-    [
-      versionId,
-      myOfficeId,
-      qaOfficeId,
-      actingAsUserId,
-    ],
-  );
-
-  const refreshMessages = useCallback(async () => {
-    if (!versionId || versionId === 0) return;
-    const m = await listDocumentMessages(versionId);
-    setMessages(m);
-  }, [versionId]);
-
-  const clearNewMessageCount = useCallback(() => setNewMessageCount(0), []);
-  const clearTaskChanged = useCallback(() => setTaskChanged(false), []);
+    onDocumentMessage: (incoming: DocumentMessage) => {
+      messaging.pushMessage(incoming);
+    },
+    requestId: null,
+  });
 
   const syncAll = useCallback(async () => {
     if (!versionId || versionId === 0) return;
     await Promise.all([
       refreshTasksAndActions(versionId),
-      pollMessages(versionId),
-      listActivityLogs({
-        scope: "document",
-        document_id: documentId || undefined,
-        document_version_id: !documentId ? versionId : undefined,
-        category: "workflow",
-        per_page: 50,
-      }).then(p => setActivityLogs(p.data)).catch(() => {})
+      messaging.pollMessages(versionId),
+      activity.fetchLogs(versionId, documentId)
     ]);
-  }, [versionId, documentId, refreshTasksAndActions, pollMessages]);
+  }, [versionId, documentId, refreshTasksAndActions, messaging, activity]);
 
+  // 7. Memoized API (matching original hook exactly)
   return useMemo(() => ({
     tasks,
     setTasks,
@@ -494,49 +232,30 @@ export function useDocumentWorkflow({
     isTasksReady,
     isChangingStatus,
     setIsChangingStatus,
-    messages,
-    setMessages,
-    isLoadingMessages,
-    activityLogs,
-    isLoadingActivityLogs,
-    isBurstPolling,
-    stopBurstPolling,
+    ...messaging,
+    ...activity,
+    ...polling,
     submitAction,
-    refreshMessages,
-    refreshTasksAndActions,
-    newMessageCount,
-    clearNewMessageCount,
-    taskChanged,
-    clearTaskChanged,
-    syncAll,
 
+    // Parameterless Refresh Actions
+    refreshTasks,
+    refreshMessages,
+    refreshLogs,
+    refreshTasksAndActions: refreshTasks, // Legacy Alias
+    
+    syncAll,
+    taskChanged,
+    clearTaskChanged: () => setTaskChanged(false),
+ 
     // Impersonation
     routingUsers,
     actingAsUserId,
     setActingAsUserId,
     isLoadingRoutingUsers,
   }), [
-     tasks,
-     availableActions,
-     isTasksReady,
-     isChangingStatus,
-     setIsChangingStatus,
-     messages,
-     isLoadingMessages,
-     activityLogs,
-     isLoadingActivityLogs,
-     isBurstPolling,
-     stopBurstPolling,
-     submitAction,
-     refreshMessages,
-     refreshTasksAndActions,
-     newMessageCount,
-     clearNewMessageCount,
-     taskChanged,
-     clearTaskChanged,
-     syncAll,
-     routingUsers,
-     actingAsUserId,
-     isLoadingRoutingUsers,
+    tasks, availableActions, isTasksReady, isChangingStatus, taskChanged,
+    messaging, activity, polling, submitAction, syncAll,
+    refreshTasks, refreshMessages, refreshLogs,
+    routingUsers, actingAsUserId, isLoadingRoutingUsers
   ]);
 }

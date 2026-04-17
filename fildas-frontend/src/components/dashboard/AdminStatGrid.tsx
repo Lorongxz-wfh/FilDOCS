@@ -74,7 +74,7 @@ const AdminStatGrid: React.FC<Props> = ({ data, loading }) => {
                 {item.icon}
               </span>
             </div>
-            
+
             <div className="mt-1 sm:mt-2.5">
               {loading && !data ? (
                 <Skeleton className="h-5 sm:h-7 w-12 sm:w-14" />

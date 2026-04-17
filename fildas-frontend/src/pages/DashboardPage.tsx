@@ -34,21 +34,21 @@ import {
 } from "lucide-react";
 
 const DASHBOARD_PRESETS: PresetOption[] = [
-  { 
-    value: "today", 
-    label: "Today", 
+  {
+    value: "today",
+    label: "Today",
     mobileIcon: <Calendar className="h-4 w-4 stroke-[2.5]" />,
     mobileBadge: "1"
   },
-  { 
-    value: "this_week", 
-    label: "Week", 
+  {
+    value: "this_week",
+    label: "Week",
     mobileIcon: <Calendar className="h-4 w-4 stroke-[2.5]" />,
     mobileBadge: "7"
   },
-  { 
-    value: "all", 
-    label: "All", 
+  {
+    value: "all",
+    label: "All",
     mobileIcon: <CalendarDays className="h-4 w-4 stroke-[2.5]" />
   },
 ];

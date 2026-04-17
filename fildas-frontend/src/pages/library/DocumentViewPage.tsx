@@ -100,10 +100,10 @@ export default function DocumentViewPage() {
   const versionId = versionIdParam ? Number(versionIdParam) : null;
 
   const parentCrumbs: { label: string; to?: string }[] =
-    (location.state as any)?.breadcrumbs ?? (isRequestMode 
+    (location.state as any)?.breadcrumbs ?? (isRequestMode
       ? [{ label: "Library", to: "/documents" }, { label: "Requested", to: "/documents?tab=requested" }]
       : [{ label: "Library", to: "/documents" }]);
-  
+
   if (!isRequestMode && (!Number.isFinite(docId) || docId <= 0)) return <Navigate to="/documents" replace />;
   if (isRequestMode && (!Number.isFinite(requestId) || requestId <= 0)) return <Navigate to="/documents" replace />;
 
@@ -152,9 +152,9 @@ export default function DocumentViewPage() {
         }
         setDoc(data.request); // Map request object to doc state
         setRecipient(data.recipient);
-        
-        const accepted = data.accepted_submission ?? 
-                         (Array.isArray(data.submissions) ? data.submissions.find((s: any) => s.status === "accepted") : null);
+
+        const accepted = data.accepted_submission ??
+          (Array.isArray(data.submissions) ? data.submissions.find((s: any) => s.status === "accepted") : null);
         setVersion(accepted ?? null); // Map accepted submission to version state
       } else {
         const [docData, versions] = await Promise.all([
@@ -162,7 +162,7 @@ export default function DocumentViewPage() {
           getDocumentVersions(docId),
         ]);
         setDoc(docData);
-        
+
         if (versionId) {
           const v = versions.find(x => x.id === versionId);
           setVersion(v ?? versions[0] ?? null);
@@ -225,8 +225,8 @@ export default function DocumentViewPage() {
     }
   }, [version?.id, requestId, recipientId, itemId, isRequestMode, isItemView]);
 
-  React.useEffect(() => { 
-    if (sideTab === "comments") loadMessages(); 
+  React.useEffect(() => {
+    if (sideTab === "comments") loadMessages();
   }, [loadMessages, sideTab]);
 
   React.useEffect(() => {
@@ -251,11 +251,11 @@ export default function DocumentViewPage() {
       if (!docId) return;
       setTimelineLoading(true);
       try {
-        const p = await listActivityLogs({ 
-          scope: "document", 
-          document_id: docId, 
-          per_page: 50, 
-          category: "workflow" 
+        const p = await listActivityLogs({
+          scope: "document",
+          document_id: docId,
+          per_page: 50,
+          category: "workflow"
         });
         setTimeline(p.data);
       } catch { /* silent */ }
@@ -285,9 +285,9 @@ export default function DocumentViewPage() {
 
   const adminDebugMode = useAdminDebugMode();
   const isAdminUser = isAdmin(role as any);
-  const canShare = (isOwner || isQA(role) || isSysAdmin(role)) && 
-                   version?.status === "Distributed" && 
-                   (!isAdminUser || adminDebugMode);
+  const canShare = (isOwner || isQA(role) || isSysAdmin(role)) &&
+    version?.status === "Distributed" &&
+    (!isAdminUser || adminDebugMode);
 
   // ── Post comment ─────────────────────────────────────────────────────────────
   const postComment = async () => {
@@ -388,16 +388,16 @@ export default function DocumentViewPage() {
             </Button>
           )}
           {isRequestMode ? (
-             <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                responsive
-                onClick={() => navigate(`/document-requests/${requestId}${isItemView ? `/items/${itemId}` : `/recipients/${recipientId}`}`)}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                <span>Open Tasks</span>
-              </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              responsive
+              onClick={() => navigate(`/document-requests/${requestId}${isItemView ? `/items/${itemId}` : `/recipients/${recipientId}`}`)}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span>Open Tasks</span>
+            </Button>
           ) : (
             canOpenFlow && (
               <Button
@@ -417,11 +417,11 @@ export default function DocumentViewPage() {
       contentClassName="!p-0 lg:overflow-hidden lg:h-full"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:h-full min-h-0 p-4 sm:p-5">
-        
+
         {/* ── LEFT — Preview ── */}
         <aside className="lg:col-span-8 flex flex-col lg:min-h-0 lg:order-1 order-2">
           <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 flex flex-col h-[600px] lg:h-full overflow-hidden shadow-sm">
-            
+
             {/* Preview toolbar */}
             <div className="shrink-0 px-4 py-2.5 border-b border-slate-100 dark:border-surface-400 flex items-center justify-between gap-3 bg-slate-50/50 dark:bg-surface-600/50">
               <div className="flex items-center gap-2 min-w-0">
@@ -497,7 +497,7 @@ export default function DocumentViewPage() {
 
         {/* ── RIGHT — Sidebar ── */}
         <section className="lg:col-span-4 flex flex-col gap-3 lg:min-h-0 lg:overflow-hidden lg:order-2 order-1">
-          
+
           {/* Metadata Card */}
           <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shrink-0 shadow-sm">
             <button
@@ -514,7 +514,7 @@ export default function DocumentViewPage() {
                 </p>
                 <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
                   {isRequestMode ? (
-                     <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate uppercase tracking-wider">
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate uppercase tracking-wider">
                       {isItemView ? "Individual Item" : "Office Submission"}
                     </p>
                   ) : (
@@ -548,7 +548,7 @@ export default function DocumentViewPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-x-4">
                     {isRequestMode ? (
-                       <Field label="Due Date" value={formatDate(isItemView ? ((doc as any).item_due_at ?? (doc as any).due_at) : (recipient?.due_at ?? (doc as any).due_at))} />
+                      <Field label="Due Date" value={formatDate(isItemView ? ((doc as any).item_due_at ?? (doc as any).due_at) : (recipient?.due_at ?? (doc as any).due_at))} />
                     ) : (
                       <Field label="Category" value={<TypeBadge type={doc.doctype} />} />
                     )}
@@ -566,11 +566,10 @@ export default function DocumentViewPage() {
             <div className="shrink-0 flex border-b border-slate-100 dark:border-surface-400">
               <button
                 onClick={() => setSideTab("comments")}
-                className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                  sideTab === "comments"
+                className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${sideTab === "comments"
                     ? "text-brand-600 bg-brand-50/50 dark:text-brand-400 dark:bg-brand-950/10 border-b-2 border-brand-500"
                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-center gap-1.5">
                   <MessageSquare className="h-3 w-3" />
@@ -579,11 +578,10 @@ export default function DocumentViewPage() {
               </button>
               <button
                 onClick={() => setSideTab("activity")}
-                className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                  sideTab === "activity"
+                className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors ${sideTab === "activity"
                     ? "text-brand-600 bg-brand-50/50 dark:text-brand-400 dark:bg-brand-950/10 border-b-2 border-brand-500"
                     : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-center gap-1.5">
                   <Activity className="h-3 w-3" />
@@ -621,7 +619,7 @@ export default function DocumentViewPage() {
                     )}
                     <div ref={messagesEndRef} />
                   </div>
-                  
+
                   <div className="shrink-0 p-3 border-t border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/30">
                     {postErr && <p className="mb-1 text-[10px] text-rose-500">{postErr}</p>}
                     <div className="flex items-center gap-2">

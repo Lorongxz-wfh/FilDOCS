@@ -78,18 +78,22 @@ class DocumentMessageController extends Controller
             'sender'              => $msg->sender ? [
                 'id'                 => $msg->sender->id,
                 'full_name'          => $msg->sender->full_name,
-                'profile_photo_path' => $msg->sender->profile_photo_path ?? null,
-                'profile_photo_url'  => $msg->sender->profile_photo_url ?? null,
+                'profile_photo_path' => (str_starts_with($msg->sender->profile_photo_path ?? '', 'data:')) ? null : $msg->sender->profile_photo_path,
+                'profile_photo_url'  => (str_starts_with($msg->sender->profile_photo_url ?? '', 'data:')) ? null : $msg->sender->profile_photo_url,
                 'role'               => $msg->sender->role
                     ? ['id' => $msg->sender->role->id, 'name' => $msg->sender->role->name]
                     : null,
             ] : null,
         ];
 
-        broadcast(new \App\Events\DocumentMessagePosted(
-            versionId: $version->id,
-            message: $payload,
-        ));
+        try {
+            broadcast(new \App\Events\DocumentMessagePosted(
+                versionId: $version->id,
+                message: $payload,
+            ));
+        } catch (\Exception $e) {
+            \Log::warning("[DocumentMessageController] Pusher broadcast failed: " . $e->getMessage());
+        }
 
         return response()->json($msg, 201);
     }

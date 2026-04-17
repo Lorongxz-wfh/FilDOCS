@@ -115,14 +115,14 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
           <div className="space-y-4">
             {logs.slice(0, 10).map((log, idx) => {
               const meta = getEventMeta(log.event);
-              
+
               // Target name resolution
-              const targetName = log.document 
+              const targetName = log.document
                 ? (log.document.code ? `${log.document.code} — ${log.document.title}` : log.document.title)
                 : (Object(log).document_request?.title || log.meta?.document_request_title || log.meta?.filename || log.meta?.original_filename || "System Action");
 
               // Actor name resolution
-              const actorName = log.actor_user 
+              const actorName = log.actor_user
                 ? `${log.actor_user.first_name} ${log.actor_user.last_name}${Object(log.actor_user).role?.name ? ` (${Object(log.actor_user).role.name})` : ""}`
                 : (log.actor_office?.code || "System");
 

@@ -33,6 +33,7 @@ const WorkflowCommentsPanel: React.FC<Props> = ({
   const [draft, setDraft] = React.useState("");
   const [isSending, setIsSending] = React.useState(false);
   const [sendError, setSendError] = React.useState(false);
+  const [optimisticText, setOptimisticText] = React.useState("");
 
   // Scroll
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -78,7 +79,7 @@ const WorkflowCommentsPanel: React.FC<Props> = ({
   React.useEffect(() => {
     const myCount = messages.filter((m) => Number(m.sender_user_id) === Number(myUserId)).length;
     if (myCount > prevMyCountRef.current && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTop = scrollRef.current.scrollTop + 500; // Small nudge
     }
     prevMyCountRef.current = myCount;
   }, [messages, myUserId]);
@@ -97,20 +98,24 @@ const WorkflowCommentsPanel: React.FC<Props> = ({
     const text = draft.trim();
     if (!text || isSending) return;
 
+    setOptimisticText(text);
     setIsSending(true);
     setSendError(false);
     setDraft("");
 
     // Scroll to bottom immediately
     window.requestAnimationFrame(() => {
-      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
     });
 
     try {
       await onSend(text);
+      setOptimisticText("");
     } catch {
-      // Restore draft on failure so the user doesn't lose their message
       setDraft(text);
+      setOptimisticText("");
       setSendError(true);
     } finally {
       setIsSending(false);
@@ -142,27 +147,46 @@ const WorkflowCommentsPanel: React.FC<Props> = ({
             <div className="p-3">
               <SkeletonList variant="comments" rows={skeletonCount} />
             </div>
-          ) : messages.length === 0 ? (
+          ) : messages.length === 0 && !optimisticText ? (
             <div className="flex flex-col items-center justify-center h-full py-12 gap-1.5 text-center">
               <p className="text-xs font-medium text-slate-400 dark:text-slate-500">No comments yet.</p>
               <p className="text-[11px] text-slate-300 dark:text-slate-600">Be the first to leave a note.</p>
             </div>
           ) : (
             <div className="p-2 space-y-3">
-              {messages.map((m) => (
-                <WorkflowCommentBubble
-                  key={m.id}
-                  senderName={m.sender?.full_name ?? "Unknown"}
-                  roleName={m.sender?.role?.name}
-                  message={m.message}
-                  when={formatWhen(m.created_at)}
-                  isMine={Number(m.sender_user_id) === Number(myUserId)}
-                  isNew={newMessageIds.has(m.id)}
-                  type={m.type}
-                  avatarUrl={getAvatarUrl(m.sender?.profile_photo_url || m.sender?.profile_photo_path)}
-                  avatarLetter={m.sender?.full_name?.charAt(0).toUpperCase()}
-                />
-              ))}
+              {messages.map((m) => {
+                const isMe = Number(m.sender_user_id) === Number(myUserId);
+                return (
+                  <WorkflowCommentBubble
+                    key={m.id}
+                    senderName={isMe ? (me?.full_name ?? "Me") : (m.sender?.full_name ?? "Unknown")}
+                    roleName={m.sender?.role?.name}
+                    message={m.message}
+                    when={formatWhen(m.created_at)}
+                    isMine={isMe}
+                    isNew={newMessageIds.has(m.id)}
+                    type={m.type}
+                    avatarUrl={getAvatarUrl(isMe ? (me?.profile_photo_url || me?.profile_photo_path) : (m.sender?.profile_photo_url || m.sender?.profile_photo_path))}
+                    avatarLetter={isMe ? me?.full_name?.charAt(0).toUpperCase() : m.sender?.full_name?.charAt(0).toUpperCase()}
+                  />
+                );
+              })}
+
+              {/* Optimistic Message */}
+              {optimisticText && (
+                <div key="optimistic-comment-bubble" className="opacity-60 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <WorkflowCommentBubble
+                    senderName={me?.full_name ?? "Me"}
+                    message={optimisticText}
+                    when="Sending..."
+                    isMine={true}
+                    isNew={false}
+                    type="comment"
+                    avatarUrl={getAvatarUrl(me?.profile_photo_url || me?.profile_photo_path)}
+                    avatarLetter={me?.full_name?.charAt(0).toUpperCase()}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
