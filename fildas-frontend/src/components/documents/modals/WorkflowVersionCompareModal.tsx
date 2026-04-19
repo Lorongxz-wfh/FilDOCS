@@ -130,7 +130,7 @@ export default function WorkflowVersionCompareModal({
         {/* Selectors */}
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 bg-slate-50 dark:bg-surface-600 p-4 rounded-xl border border-slate-200 dark:border-surface-400">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Base Version (Before)
             </label>
             <SelectDropdown
@@ -150,7 +150,7 @@ export default function WorkflowVersionCompareModal({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Target Version (After)
             </label>
             <SelectDropdown

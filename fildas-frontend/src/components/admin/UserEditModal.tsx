@@ -637,7 +637,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
         <div className="mt-6 pt-5 border-t border-slate-100 dark:border-surface-400">
           <div className="flex items-center gap-2 mb-3">
             <KeyRound className="h-4 w-4 text-slate-400" />
-            <h5 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Manual Password Reset</h5>
+            <h5 className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Manual Password Reset</h5>
           </div>
           
           <div className="grid grid-cols-1 gap-3">

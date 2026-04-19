@@ -334,7 +334,7 @@ const SearchBar: React.FC<SearchBarProps> = () => {
     if (!items.length) return null;
     return (
       <div className="border-t first:border-t-0 border-slate-100 dark:border-surface-400">
-        <p className="px-3.5 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+        <p className="px-3.5 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
           {label}
         </p>
         <div className="px-1.5 pb-1.5">
@@ -351,17 +351,17 @@ const SearchBar: React.FC<SearchBarProps> = () => {
                 className={[
                   "flex w-full items-center gap-3 px-2.5 py-2 rounded-md text-left transition-all duration-150",
                   isActive
-                    ? "bg-slate-100 dark:bg-surface-400 shadow-sm"
+                    ? "bg-slate-100 dark:bg-surface-400 "
                     : "hover:bg-slate-50 dark:hover:bg-surface-400/50",
                 ].join(" ")}
               >
                 <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${TYPE_ICON_BG[item.type] ?? TYPE_ICON_BG.page} shadow-sm border border-white/20 dark:border-black/10`}
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${TYPE_ICON_BG[item.type] ?? TYPE_ICON_BG.page}  border border-white/20 dark:border-black/10`}
                 >
                   <ResultIcon item={item} />
                 </span>
                 <span className="flex-1 min-w-0">
-                  <span className="block truncate text-xs font-bold text-slate-800 dark:text-slate-100">
+                  <span className="block truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
                     {item.title}
                   </span>
                   {item.description && (
@@ -372,7 +372,7 @@ const SearchBar: React.FC<SearchBarProps> = () => {
                 </span>
                 <div className="shrink-0 flex items-center gap-2">
                   {item.meta && (
-                    <span className="rounded bg-slate-50 dark:bg-surface-600 border border-slate-200 dark:border-surface-300 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+                    <span className="rounded bg-slate-50 dark:bg-surface-600 border border-slate-200 dark:border-surface-300 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
                       {item.meta}
                     </span>
                   )}
@@ -439,7 +439,7 @@ const SearchBar: React.FC<SearchBarProps> = () => {
             </button>
           )}
           {!query && (
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-1.5 py-0.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 shadow-xs tabular-nums">
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500  tabular-nums">
               <span className="text-[9px] opacity-70">Ctrl</span> K
             </kbd>
           )}
@@ -527,21 +527,21 @@ const SearchBar: React.FC<SearchBarProps> = () => {
           {/* Footer Shortcuts */}
           {totalResults > 0 && (
             <div className="shrink-0 flex items-center justify-between border-t border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-black/5 px-4 py-2">
-              <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight">
+              <div className="flex items-center gap-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-tight">
                 <span className="flex items-center gap-1.5">
                   <span className="flex gap-1">
-                    <kbd className="rounded bg-white dark:bg-surface-400 shadow-xs px-1 py-0.5 border border-slate-200 dark:border-surface-300">↑</kbd>
-                    <kbd className="rounded bg-white dark:bg-surface-400 shadow-xs px-1 py-0.5 border border-slate-200 dark:border-surface-300">↓</kbd>
+                    <kbd className="rounded bg-white dark:bg-surface-400  px-1 py-0.5 border border-slate-200 dark:border-surface-300">↑</kbd>
+                    <kbd className="rounded bg-white dark:bg-surface-400  px-1 py-0.5 border border-slate-200 dark:border-surface-300">↓</kbd>
                   </span>
                   Navigate
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <kbd className="rounded bg-white dark:bg-surface-400 shadow-xs px-1 py-0.5 border border-slate-200 dark:border-surface-300">↵</kbd>
+                  <kbd className="rounded bg-white dark:bg-surface-400  px-1 py-0.5 border border-slate-200 dark:border-surface-300">↵</kbd>
                   Select
                 </span>
               </div>
               {loading && (
-                <span className="text-[10px] font-bold text-brand-500 dark:text-brand-400 animate-pulse uppercase tracking-wider">
+                <span className="text-[10px] font-semibold text-brand-500 dark:text-brand-400 animate-pulse uppercase tracking-wider">
                   Updating...
                 </span>
               )}

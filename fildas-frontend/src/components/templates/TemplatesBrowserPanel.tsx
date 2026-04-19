@@ -13,9 +13,8 @@ import {
 } from "../../services/previews";
 import { useToast } from "../ui/toast/ToastContext";
 import SkeletonList from "../ui/loader/SkeletonList";
-import TemplateGridCard from "./TemplateGridCard";
 
-type ViewMode = "list" | "grid";
+
 
 type Props = {
   open: boolean;
@@ -32,14 +31,7 @@ const TemplatesBrowserPanel: React.FC<Props> = ({ open, onClose }) => {
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [scope, setScope] = useState<"all" | "global" | "mine">("all");
-  const [viewMode, setViewMode] = useState<ViewMode>(
-    () => (localStorage.getItem("templates_view") as ViewMode) ?? "grid",
-  );
 
-  const setView = (mode: ViewMode) => {
-    setViewMode(mode);
-    localStorage.setItem("templates_view", mode);
-  };
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim().toLowerCase()), 300);
@@ -231,61 +223,7 @@ const TemplatesBrowserPanel: React.FC<Props> = ({ open, onClose }) => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {/* List/Grid toggle — only show when on list view (not detail) */}
-            {!selected && (
-              <div className="flex items-center rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 p-1 gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => setView("list")}
-                  title="List view"
-                  className={[
-                    "rounded-md p-1 transition",
-                    viewMode === "list"
-                      ? "bg-slate-100 dark:bg-surface-400 text-slate-800 dark:text-slate-100"
-                      : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300",
-                  ].join(" ")}
-                >
-                  <svg
-                    className="h-3.5 w-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                    />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setView("grid")}
-                  title="Grid view"
-                  className={[
-                    "rounded-md p-1 transition",
-                    viewMode === "grid"
-                      ? "bg-slate-100 dark:bg-surface-400 text-slate-800 dark:text-slate-100"
-                      : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300",
-                  ].join(" ")}
-                >
-                  <svg
-                    className="h-3.5 w-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
-                    />
-                  </svg>
-                </button>
-              </div>
-            )}
+
             <button
               type="button"
               onClick={onClose}
@@ -318,7 +256,7 @@ const TemplatesBrowserPanel: React.FC<Props> = ({ open, onClose }) => {
                       className={[
                         "rounded-md px-3 py-1 text-xs font-medium capitalize transition",
                         scope === s
-                          ? "bg-white dark:bg-surface-500 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-surface-400"
+                          ? "bg-white dark:bg-surface-500 text-slate-900 dark:text-slate-100  border border-slate-200 dark:border-surface-400"
                           : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200",
                       ].join(" ")}
                     >
@@ -348,18 +286,7 @@ const TemplatesBrowserPanel: React.FC<Props> = ({ open, onClose }) => {
                   </button>
                 </div>
               ) : loadingList ? (
-                viewMode === "grid" ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="rounded-xl bg-slate-100 dark:bg-surface-600 animate-pulse aspect-3/4"
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <SkeletonList rows={5} rowClassName="h-16 rounded-xl" />
-                )
+                <SkeletonList rows={5} rowClassName="h-16 rounded-xl" />
               ) : filtered.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-6 py-10 text-center">
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -368,18 +295,7 @@ const TemplatesBrowserPanel: React.FC<Props> = ({ open, onClose }) => {
                       : "No templates match your search."}
                   </p>
                 </div>
-              ) : viewMode === "grid" ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-4">
-                  {filtered.map((t) => (
-                    <TemplateGridCard
-                      key={t.id}
-                      template={t}
-                      onSelect={setSelected}
-                      onDeleteClick={() => {}}
-                      isDeleting={false}
-                    />
-                  ))}
-                </div>
+
               ) : (
                 <div className="space-y-2">
                   {filtered.map((t) => (
@@ -387,11 +303,11 @@ const TemplatesBrowserPanel: React.FC<Props> = ({ open, onClose }) => {
                       key={t.id}
                       type="button"
                       onClick={() => setSelected(t)}
-                      className="w-full text-left flex items-start gap-3 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3 transition hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-sm"
+                      className="w-full text-left flex items-start gap-3 rounded-xl border border-slate-200 dark:border-surface-400 bg-transparent px-4 py-3 transition hover:border-sky-300 dark:hover:border-sky-700 hover:bg-slate-50/50 dark:hover:bg-surface-400/30"
                     >
                       <div className="shrink-0 pt-0.5">
                         <span
-                          className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-bold tracking-wide ${templateFileTypeColor(t.mime_type)}`}
+                          className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold tracking-wide ${templateFileTypeColor(t.mime_type)}`}
                         >
                           {templateFileTypeLabel(t.mime_type)}
                         </span>
@@ -451,7 +367,7 @@ const TemplatesBrowserPanel: React.FC<Props> = ({ open, onClose }) => {
             <div className="shrink-0 border-b border-slate-200 dark:border-surface-400 px-5 py-4 space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
                 <span
-                  className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-bold tracking-wide ${templateFileTypeColor(selected.mime_type)}`}
+                  className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold tracking-wide ${templateFileTypeColor(selected.mime_type)}`}
                 >
                   {templateFileTypeLabel(selected.mime_type)}
                 </span>

@@ -87,7 +87,7 @@ const VolumeTrendChart: React.FC<{ data: VolumeSeries[]; height?: number; loadin
             iconSize={6}
             wrapperStyle={{ 
               fontSize: 10, 
-              fontWeight: 700, 
+              fontWeight: 600, 
               paddingTop: 16,
               textTransform: 'uppercase', 
               letterSpacing: '0.05em',

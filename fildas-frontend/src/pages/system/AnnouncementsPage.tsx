@@ -147,7 +147,7 @@ const CreateModal: React.FC<{
     >
       <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 shadow-xl overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-surface-400 px-6 py-4 bg-slate-50 dark:bg-surface-600">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Publish New Announcement
           </p>
           <button
@@ -162,7 +162,7 @@ const CreateModal: React.FC<{
         <form onSubmit={handleSubmit}>
           <div className="px-6 py-6 space-y-5">
             <div>
-              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 Title
               </label>
               <input
@@ -177,7 +177,7 @@ const CreateModal: React.FC<{
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 Message Content
               </label>
               <textarea
@@ -189,14 +189,14 @@ const CreateModal: React.FC<{
                 placeholder="Full announcement details…"
                 className={`${inputCls} resize-none`}
               />
-              <p className="mt-1 text-right text-[10px] font-bold text-slate-400">
+              <p className="mt-1 text-right text-[10px] font-semibold text-slate-400">
                 {body.length} / 2000
               </p>
             </div>
 
             <div className="flex items-end gap-4">
               <div className="flex-1">
-                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Priority level
                 </label>
                 <SelectDropdown
@@ -211,7 +211,7 @@ const CreateModal: React.FC<{
                 />
               </div>
               <div className="flex-1">
-                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Auto-expire date
                 </label>
                 <input
@@ -246,7 +246,7 @@ const CreateModal: React.FC<{
                   </svg>
                 )}
               </div>
-              <span className="text-[11px] font-bold uppercase tracking-tight text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-semibold uppercase tracking-tight text-slate-500 dark:text-slate-400">
                 Pin to top of feed
               </span>
             </label>
@@ -262,14 +262,14 @@ const CreateModal: React.FC<{
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+              className="px-4 py-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting || !title.trim() || !body.trim()}
-              className="rounded-md bg-brand-500 px-6 py-2 text-[11px] font-bold uppercase tracking-widest text-white hover:bg-brand-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md active:scale-95"
+              className="rounded-md bg-brand-500 px-6 py-2 text-[11px] font-semibold uppercase tracking-widest text-white hover:bg-brand-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md active:scale-95"
             >
               {submitting ? "Publishing..." : "Publish Feed"}
             </button>
@@ -295,7 +295,7 @@ const AnnouncementCard: React.FC<{
 
   return (
     <div
-      className={`group relative flex items-stretch rounded-xl border bg-white dark:bg-surface-500 transition-all duration-250 ${isArchived ? "opacity-50 border-slate-200 grayscale dark:border-surface-400 shadow-sm" : isExpired ? "opacity-75 border-slate-200 dark:border-surface-400 shadow-sm" : "border-slate-200 dark:border-surface-400 shadow-sm hover:border-brand-200 dark:hover:border-brand-900/50"}`}
+      className={`group relative flex items-stretch rounded-xl border bg-white dark:bg-surface-500 transition-all duration-250 ${isArchived ? "opacity-50 border-slate-200 grayscale dark:border-surface-400 " : isExpired ? "opacity-75 border-slate-200 dark:border-surface-400 " : "border-slate-200 dark:border-surface-400  hover:border-brand-200 dark:hover:border-brand-900/50"}`}
     >
       <div
         className={`w-1 shrink-0 rounded-l-sm transition-colors ${isArchived || isExpired ? "bg-slate-300 dark:bg-slate-600" : (TYPE_BAR[a.type] || "bg-slate-300")}`}
@@ -311,11 +311,11 @@ const AnnouncementCard: React.FC<{
               <Pin className="h-3 w-3 text-brand-500 dark:text-brand-400 shrink-0 fill-current" />
             )}
             {isArchived ? (
-              <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-tight bg-slate-100 text-slate-500 dark:bg-surface-400 dark:text-slate-400">
+              <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-tight bg-slate-100 text-slate-500 dark:bg-surface-400 dark:text-slate-400">
                 <Archive className="h-2.5 w-2.5" /> Archived
               </span>
             ) : isExpired ? (
-              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-tight bg-slate-100 text-slate-500 dark:bg-surface-400 dark:text-slate-400">
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-tight bg-slate-100 text-slate-500 dark:bg-surface-400 dark:text-slate-400">
                 Expired
               </span>
             ) : (
@@ -329,8 +329,8 @@ const AnnouncementCard: React.FC<{
           />
 
           {/* STANDARDIZED META ROW — EXACTLY LIKE INBOX CARD */}
-          <div className="mt-3 flex items-center gap-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            <span className="text-slate-600 dark:text-slate-300 font-bold">{a.created_by}</span>
+          <div className="mt-3 flex items-center gap-2 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            <span className="text-slate-600 dark:text-slate-300 font-semibold">{a.created_by}</span>
             <span className="opacity-30">·</span>
             <span>
               {new Date(a.created_at).toLocaleDateString(undefined, {
@@ -397,11 +397,11 @@ const MonthGroup: React.FC<{
 }> = ({ label, count, children }) => (
   <div className="space-y-4">
     <div className="flex items-center gap-3">
-      <p className="shrink-0 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+      <p className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
         {label}
       </p>
       <div className="h-px flex-1 bg-slate-200 dark:bg-surface-400" />
-      <p className="shrink-0 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+      <p className="shrink-0 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
         {count} {count === 1 ? "entry" : "entries"}
       </p>
     </div>
@@ -557,7 +557,7 @@ const AnnouncementsPage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => navigate("/inbox")}
-            className="text-[11px] font-bold uppercase tracking-widest"
+            className="text-[11px] font-semibold uppercase tracking-widest"
           >
             <Bell className="h-3.5 w-3.5 sm:mr-2" />
             <span className="hidden sm:inline">Inbox</span>
@@ -578,12 +578,12 @@ const AnnouncementsPage: React.FC = () => {
           <div className="flex flex-col gap-1.5 shrink-0">
             <div className="flex items-center gap-2">
               <Megaphone className="h-4 w-4 text-brand-500 fill-brand-500/10" strokeWidth={1.5} />
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
                 Announcement
               </h2>
             </div>
             {!loading && (
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 {total} total items · {activeItems.length} active · {archivedItems.length} archived
               </p>
             )}
@@ -604,7 +604,7 @@ const AnnouncementsPage: React.FC = () => {
                     }}
                     className={`relative flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
                       activeTab === t.key
-                        ? "bg-brand-500 text-white shadow-sm"
+                        ? "bg-brand-500 text-white "
                         : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                     }`}
                   >
@@ -620,9 +620,9 @@ const AnnouncementsPage: React.FC = () => {
                     key={f}
                     type="button"
                     onClick={() => setDateFilter(f)}
-                    className={`rounded px-2.5 py-1.5 text-[11px] font-bold transition-colors uppercase tracking-tight ${
+                    className={`rounded px-2.5 py-1.5 text-[11px] font-semibold transition-colors uppercase tracking-tight ${
                       dateFilter === f
-                        ? "bg-brand-500 text-white shadow-sm"
+                        ? "bg-brand-500 text-white "
                         : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                     }`}
                   >
@@ -640,7 +640,7 @@ const AnnouncementsPage: React.FC = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search..."
-                className={`${inputCls} !py-1.5 !pl-9 shadow-sm !text-xs !px-8`}
+                className={`${inputCls} !py-1.5 !pl-9  !text-xs !px-8`}
               />
               {search && (
                 <button
@@ -666,7 +666,7 @@ const AnnouncementsPage: React.FC = () => {
                 Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
-                    className="rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 px-4 py-4 space-y-3 shadow-sm"
+                    className="rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 px-4 py-4 space-y-3 "
                   >
                     <Skeleton className="h-5 w-1/2" />
                     <Skeleton className="h-3 w-full" />

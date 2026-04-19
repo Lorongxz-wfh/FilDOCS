@@ -99,7 +99,7 @@ const ResetPasswordPage: React.FC = () => {
                 <AlertCircle className="h-6 w-6 text-rose-500 dark:text-rose-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                   Invalid Reset Link
                 </h2>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -126,7 +126,7 @@ const ResetPasswordPage: React.FC = () => {
                 <CheckCircle2 className="h-6 w-6 text-emerald-500 dark:text-emerald-400" />
               </div>
               <div>
-                <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                   Password Reset
                 </h2>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -146,7 +146,7 @@ const ResetPasswordPage: React.FC = () => {
             </div>
           ) : (
             <>
-              <h2 className="text-[1.6rem] font-bold tracking-tight text-slate-900 dark:text-slate-100 text-center">
+              <h2 className="text-[1.6rem] font-semibold tracking-tight text-slate-900 dark:text-slate-100 text-center">
                 Set New Password
               </h2>
               <p className="mt-1 text-sm text-slate-400 dark:text-slate-400 text-center">

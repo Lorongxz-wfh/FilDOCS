@@ -58,11 +58,11 @@ const ReportFilters: React.FC<ReportFiltersProps> = ({
     <div className="flex flex-col gap-5 p-4">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-surface-400">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Active Filters
           </span>
           {activeFilterCount > 0 && (
-            <span className="rounded-full bg-brand-500 text-white px-1.5 py-0.5 text-[10px] font-bold leading-none">
+            <span className="rounded-full bg-brand-500 text-white px-1.5 py-0.5 text-[10px] font-semibold leading-none">
               {activeFilterCount}
             </span>
           )}
@@ -71,7 +71,7 @@ const ReportFilters: React.FC<ReportFiltersProps> = ({
           <button
             type="button"
             onClick={onClear}
-            className="text-[10px] font-bold text-brand-500 dark:text-brand-400 hover:underline"
+            className="text-[10px] font-semibold text-brand-500 dark:text-brand-400 hover:underline"
           >
             Clear all
           </button>

@@ -44,7 +44,7 @@ export default function BulkActionBar({
               <X size={16} />
             </button>
             <div className="flex flex-col">
-              <span className="text-sm font-bold">{selectedCount} Selected</span>
+              <span className="text-sm font-semibold">{selectedCount} Selected</span>
               <span className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Batch Action</span>
             </div>
           </div>
@@ -62,13 +62,13 @@ export default function BulkActionBar({
                   onClick={action.onClick}
                   disabled={isDisabled}
                   loading={action.loading}
-                  className={`whitespace-nowrap flex items-center gap-1.5 h-9 px-3 text-xs font-bold ring-offset-slate-900 transition-all ${
+                  className={`whitespace-nowrap flex items-center gap-1.5 h-9 px-3 text-xs font-semibold ring-offset-slate-900 transition-all ${
                     action.variant === "danger" 
-                      ? "bg-rose-600 hover:bg-rose-700 text-white border-none shadow-sm shadow-rose-900/20" 
+                      ? "bg-rose-600 hover:bg-rose-700 text-white border-none  shadow-rose-900/20" 
                       : action.variant === "warning"
-                        ? "bg-amber-500 hover:bg-amber-600 text-white border-none shadow-sm shadow-amber-900/20"
+                        ? "bg-amber-500 hover:bg-amber-600 text-white border-none  shadow-amber-900/20"
                         : action.variant === "primary"
-                          ? "bg-brand-600 hover:bg-brand-700 text-white border-none shadow-sm shadow-brand-900/20"
+                          ? "bg-brand-600 hover:bg-brand-700 text-white border-none  shadow-brand-900/20"
                           : "bg-white/10 hover:bg-white/20 text-white border border-white/10"
                   }`}
                 >

@@ -32,7 +32,7 @@ const DatePresetSwitcher: React.FC<DatePresetSwitcherProps> = ({
             key={p.value}
             type="button"
             onClick={() => onChange(p.value)}
-            className={`relative px-3 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider transition-all rounded-sm min-w-[50px] flex items-center justify-center z-0 ${
+            className={`relative px-3 py-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider transition-all rounded-sm min-w-[50px] flex items-center justify-center z-0 ${
               isActive
                 ? "text-brand-600 font-extrabold dark:text-brand-400"
                 : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
@@ -41,7 +41,7 @@ const DatePresetSwitcher: React.FC<DatePresetSwitcherProps> = ({
             {isActive && (
               <motion.div
                 layoutId={layoutId}
-                className="absolute inset-0 bg-white dark:bg-surface-400 shadow-sm rounded-sm -z-10"
+                className="absolute inset-0 bg-white dark:bg-surface-400  rounded-sm -z-10"
                 transition={{ type: "spring", bounce: 0.1, duration: 0.3 }}
               />
             )}

@@ -38,7 +38,7 @@ const TagBadge: React.FC<TagBadgeProps> = ({ name, className = "" }) => {
   return (
     <span 
       className={[
-        "inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wider transition-all duration-200 select-none whitespace-nowrap",
+        "inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wider transition-all duration-200 select-none whitespace-nowrap",
         bg,
         text,
         border,

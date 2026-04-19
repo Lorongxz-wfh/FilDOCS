@@ -44,13 +44,13 @@ const TemplateCard: React.FC<Props> = ({
 
   return (
     <div
-      className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3 transition hover:shadow-sm hover:border-sky-300 dark:hover:border-sky-700 cursor-pointer"
+      className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 py-3 transition hover: hover:border-sky-300 dark:hover:border-sky-700 cursor-pointer"
       onClick={() => onSelect(template)}
     >
       {/* File type badge */}
       <div className="shrink-0 pt-0.5">
         <span
-          className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold tracking-wide ${typeColor}`}
+          className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold tracking-wide ${typeColor}`}
         >
           {typeLabel}
         </span>

@@ -120,7 +120,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-1 hover:bg-slate-100 dark:hover:bg-surface-400 rounded-md transition-colors">
         <ChevronLeft size={16} className="text-slate-500" />
       </button>
-      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-widest">
+      <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-widest">
         {format(currentMonth, "MMMM yyyy")}
       </span>
       <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-1 hover:bg-slate-100 dark:hover:bg-surface-400 rounded-md transition-colors">
@@ -135,7 +135,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
     for (let i = 0; i < 7; i++) {
       days.push(
-        <div key={i} className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter text-center py-2">
+        <div key={i} className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter text-center py-2">
           {format(addDays(startDate, i), "EEE").substring(0, 2)}
         </div>
       );
@@ -174,9 +174,9 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             )}
             <span className={`relative z-10 w-8 h-8 flex items-center justify-center text-xs font-semibold rounded-md transition-colors ${
               selected 
-                ? "bg-brand-500 text-white shadow-sm ring-2 ring-brand-500/20" 
+                ? "bg-brand-500 text-white  ring-2 ring-brand-500/20" 
                 : inRange 
-                  ? "text-brand-600 dark:text-brand-400 font-bold" 
+                  ? "text-brand-600 dark:text-brand-400 font-semibold" 
                   : today
                     ? "text-brand-500 ring-1 ring-brand-500/50"
                     : "text-slate-600 dark:text-slate-300 group-hover:bg-slate-100 dark:group-hover:bg-surface-400"
@@ -200,7 +200,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     <div className={`relative inline-block ${className}`} ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 h-8 border border-slate-200 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-300 transition-all shadow-xs"
+        className="flex items-center gap-2 px-3 h-8 border border-slate-200 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-300 transition-all "
       >
         <CalendarIcon size={14} className="text-slate-400" />
         {tempRange.from ? (
@@ -232,7 +232,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 <button
                   key={p}
                   onClick={() => handlePreset(p as any)}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-surface-400 rounded-lg transition-all border border-transparent hover:border-slate-200 dark:hover:border-surface-400"
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-surface-400 rounded-lg transition-all border border-transparent hover:border-slate-200 dark:hover:border-surface-400"
                 >
                   <Clock size={12} className="opacity-50" />
                   {p === "today" ? "Today" : `Last ${p}`}
@@ -243,23 +243,23 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             <div className="flex-1 flex flex-col">
               <div className="p-3 border-b border-slate-100 dark:border-surface-400/30 grid grid-cols-2 gap-3 bg-slate-50/50 dark:bg-white/5">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">From</label>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">From</label>
                   <input 
                     type="text" 
                     placeholder="YYYY-MM-DD"
                     value={tempRange.from}
                     onChange={(e) => setTempRange({...tempRange, from: e.target.value})}
-                    className="w-full h-8 px-2 bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-md text-xs font-mono font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/20 outline-none"
+                    className="w-full h-8 px-2 bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-md text-xs font-mono font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/20 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">To</label>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">To</label>
                   <input 
                     type="text" 
                     placeholder="Open Range"
                     value={tempRange.to}
                     onChange={(e) => setTempRange({...tempRange, to: e.target.value})}
-                    className="w-full h-8 px-2 bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-md text-xs font-mono font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/20 outline-none"
+                    className="w-full h-8 px-2 bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-md text-xs font-mono font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/20 outline-none"
                   />
                 </div>
               </div>
@@ -269,10 +269,10 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
               {renderCells()}
 
               <div className="p-3 bg-slate-50 dark:bg-surface-500/30 border-t border-slate-100 dark:border-surface-400/30 flex items-center justify-between">
-                <Button size="sm" variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-slate-500" onClick={() => setTempRange({ from: "", to: "" })}>Clear</Button>
+                <Button size="sm" variant="ghost" className="text-[10px] font-semibold uppercase tracking-widest text-slate-500" onClick={() => setTempRange({ from: "", to: "" })}>Clear</Button>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => setIsOpen(false)} className="text-xs font-bold">Cancel</Button>
-                  <Button size="sm" variant="primary" onClick={() => { onSelect(tempRange); setIsOpen(false); }} className="text-xs font-bold px-5" disabled={!tempRange.from}>Apply</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setIsOpen(false)} className="text-xs font-semibold">Cancel</Button>
+                  <Button size="sm" variant="primary" onClick={() => { onSelect(tempRange); setIsOpen(false); }} className="text-xs font-semibold px-5" disabled={!tempRange.from}>Apply</Button>
                 </div>
               </div>
             </div>

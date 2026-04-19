@@ -88,7 +88,7 @@ export default function HelpPage() {
           <section className="space-y-4">
              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-500/10 border border-brand-100 dark:border-brand-500/20">
                 <Sparkles className="h-3.5 w-3.5 text-brand-500" />
-                <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">FilDOCS Professional Manual</span>
+                <span className="text-[10px] font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">FilDOCS Professional Manual</span>
              </div>
              <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                Knowledge Base Center
@@ -114,7 +114,7 @@ export default function HelpPage() {
                   </div>
                   
                   <div className="flex items-center justify-between gap-4 mb-2">
-                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{cat.title}</h3>
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{cat.title}</h3>
                     <ChevronRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-brand-500" />
                   </div>
                   
@@ -140,17 +140,17 @@ export default function HelpPage() {
           {/* Footer Support */}
           <div className="p-8 rounded-2xl border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 flex flex-col md:flex-row items-center justify-between gap-6">
              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-white dark:bg-surface-400 shadow-sm flex items-center justify-center">
+                <div className="h-12 w-12 rounded-full bg-white dark:bg-surface-400  flex items-center justify-center">
                    <MessageSquare className="h-6 w-6 text-brand-500" />
                 </div>
                 <div>
-                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Help is just a click away.</p>
+                   <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Help is just a click away.</p>
                    <p className="text-xs text-slate-500 dark:text-slate-400">Can't find what you need in the manual? Contact technical support.</p>
                 </div>
              </div>
              <button
                onClick={() => navigate("/report-issue")}
-               className="w-full md:w-auto px-8 py-3 bg-slate-900 dark:bg-brand-500 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors"
+               className="w-full md:w-auto px-8 py-3 bg-slate-900 dark:bg-brand-500 text-white text-xs font-semibold rounded-xl hover:bg-slate-800 transition-colors"
              >
                Open Support Ticket
              </button>

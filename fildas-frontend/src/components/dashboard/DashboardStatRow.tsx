@@ -129,11 +129,11 @@ const DashboardStatRow: React.FC<Props> = ({
               ${isPulsing ? "animate-pulse-highlight ring-emerald-500/30" : ""}
             `}
           >
-            <CardBody className="h-full justify-between gap-1 sm:gap-2">
+            <CardBody className="h-full justify-between gap-1 py-2 sm:py-2.5 px-3 sm:px-4">
               <div className="flex flex-col gap-1.5 sm:gap-2">
                 <div className="flex items-center gap-2">
                   <span className={`shrink-0 ${item.iconColor} sm:scale-110`}>{item.icon}</span>
-                  <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+                  <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
                     {item.label}
                   </p>
                 </div>
@@ -142,18 +142,13 @@ const DashboardStatRow: React.FC<Props> = ({
                   {loading ? (
                     <Skeleton className="h-6 w-10 sm:h-8 sm:w-16" />
                   ) : (
-                    <p className={`text-xl sm:text-3xl font-display font-bold tabular-nums leading-none transition-transform duration-300 ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
+                    <p className={`text-xl sm:text-3xl font-semibold tabular-nums leading-none transition-transform duration-300 ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
                       {item.value}
                     </p>
                   )}
                 </div>
               </div>
 
-              {item.sub && (
-                <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 italic truncate uppercase border-t border-slate-50 dark:border-surface-400 pt-1.5 mt-1 sm:mt-2">
-                  {item.sub}
-                </p>
-              )}
             </CardBody>
           </Card>
         );

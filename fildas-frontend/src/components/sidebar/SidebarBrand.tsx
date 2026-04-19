@@ -32,7 +32,7 @@ const SidebarBrand: React.FC<SidebarBrandProps> = ({
         onClick={(collapsed && !mobileOpen) ? toggle : () => navigate("/dashboard")}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="h-7 w-7 overflow-hidden rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-white/10 shrink-0 shadow-xs">
+          <div className="h-7 w-7 overflow-hidden rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-white/10 shrink-0 ">
             <img
               src={logoUrl}
               alt="FCU Logo"
@@ -42,7 +42,7 @@ const SidebarBrand: React.FC<SidebarBrandProps> = ({
           
           {(!collapsed || mobileOpen) && (
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[17px] font-bold tracking-tight text-neutral-900 dark:text-surface-50 truncate">
+              <span className="text-[17px] font-semibold tracking-tight text-neutral-900 dark:text-surface-50 truncate">
                 FilDOCS
               </span>
               {(() => {
@@ -100,7 +100,7 @@ const SidebarBrand: React.FC<SidebarBrandProps> = ({
           <button
             type="button"
             onClick={onMobileClose}
-            className="cursor-pointer shrink-0 flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 dark:border-surface-300 bg-white dark:bg-surface-500 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-surface-400 transition-all shadow-sm"
+            className="cursor-pointer shrink-0 flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 dark:border-surface-300 bg-white dark:bg-surface-500 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-surface-400 transition-all "
           >
             <Menu className="h-4.5 w-4.5" />
           </button>
@@ -108,7 +108,7 @@ const SidebarBrand: React.FC<SidebarBrandProps> = ({
           <button
             type="button"
             onClick={toggle}
-            className="cursor-pointer shrink-0 flex items-center justify-center h-6 w-6 rounded-md border border-neutral-200 dark:border-surface-300 bg-white dark:bg-surface-500 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-surface-400 hover:text-neutral-700 dark:hover:text-neutral-200 shadow-sm transition-colors"
+            className="cursor-pointer shrink-0 flex items-center justify-center h-6 w-6 rounded-md border border-neutral-200 dark:border-surface-300 bg-white dark:bg-surface-500 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-surface-400 hover:text-neutral-700 dark:hover:text-neutral-200  transition-colors"
           >
             <PanelLeftClose className="h-3.5 w-3.5" />
           </button>

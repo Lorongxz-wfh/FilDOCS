@@ -102,7 +102,7 @@ const WorkflowFunnelChart: React.FC<{
               </div>
 
               {/* Count */}
-              <span className={`w-10 shrink-0 text-right text-sm font-bold tabular-nums ${cfg.text}`}>
+              <span className={`w-10 shrink-0 text-right text-sm font-semibold tabular-nums ${cfg.text}`}>
                 {count}
               </span>
             </div>

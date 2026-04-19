@@ -165,7 +165,7 @@ const WorkflowParticipantsTab: React.FC<Props> = ({
                   className={`h-2 w-2 shrink-0 rounded-full ${statusDot[p.status] ?? "bg-slate-300"}`}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
                     {p.label}
                     {p.sublabel && (
                       <span className="ml-1 text-[10px] font-normal text-slate-400 dark:text-slate-500 uppercase tracking-tight">
@@ -174,7 +174,7 @@ const WorkflowParticipantsTab: React.FC<Props> = ({
                     )}
                   </p>
                 </div>
-                <span className="shrink-0 rounded bg-slate-200 dark:bg-surface-400 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+                <span className="shrink-0 rounded bg-slate-200 dark:bg-surface-400 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
                   {p.role}
                 </span>
               </div>

@@ -16,7 +16,7 @@ const ActivityDiff: React.FC<ActivityDiffProps> = ({ changes, className = "" }) 
       {changes.map((c, i) => (
         <div 
           key={i} 
-          className="rounded border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-600 text-[11px] overflow-hidden shadow-sm"
+          className="rounded border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-600 text-[11px] overflow-hidden "
         >
           <div className="px-2 py-0.5 bg-slate-100 dark:bg-surface-500 text-slate-500 dark:text-slate-400 font-medium border-b border-slate-200 dark:border-surface-400">
             {FIELD_LABEL[c.field] ?? c.field}

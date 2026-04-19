@@ -152,21 +152,21 @@ const WorkflowPreviewPanel: React.FC<Props> = ({
           <div className="flex items-center gap-3 min-w-0">
             <LiveValuePulse value={hasPreview ? (signedPreviewUrl ? 'ready' : 'loading') : (isProcessing ? 'processing' : (isError ? 'error' : 'idle'))}>
               {hasPreview && signedPreviewUrl ? (
-                <div className="flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
+                <div className="flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                   Ready
                 </div>
               ) : isProcessing ? (
-                <div className="flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                <div className="flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
                   <Loader2 className="h-2.5 w-2.5 animate-spin" />
                   Processing
                 </div>
               ) : isError ? (
-                <div className="flex items-center gap-1.5 rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
+                <div className="flex items-center gap-1.5 rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
                   Error
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600 border border-slate-200 dark:bg-surface-400 dark:text-slate-400 dark:border-surface-300">
+                <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-600 border border-slate-200 dark:bg-surface-400 dark:text-slate-400 dark:border-surface-300">
                   Idle
                 </div>
               )}
@@ -227,7 +227,7 @@ const WorkflowPreviewPanel: React.FC<Props> = ({
                   <button
                     type="button"
                     onClick={onClickTemplates}
-                    className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-300 dark:hover:bg-surface-400"
+                    className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-300 dark:hover:bg-surface-400"
                   >
                     <FileSearch size={12} />
                     Templates
@@ -239,7 +239,7 @@ const WorkflowPreviewPanel: React.FC<Props> = ({
                   onClick={() => {
                     if (!isUploading && !isExternalUploading) onClickReplace();
                   }}
-                  className="flex items-center gap-2 rounded-md bg-slate-800 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-900 disabled:opacity-50 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-700 dark:border-surface-400"
+                  className="flex items-center gap-2 rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-900 disabled:opacity-50 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-700 dark:border-surface-400"
                 >
                   {filePath ? <RefreshCw size={12} /> : <Upload size={12} />}
                   {filePath ? "Replace" : "Upload"}
@@ -298,7 +298,7 @@ const WorkflowPreviewPanel: React.FC<Props> = ({
                 <div className="h-4 w-full rounded bg-slate-100 dark:bg-surface-500 animate-pulse" />
                 <div className="mt-auto flex flex-col items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 text-slate-300 dark:text-surface-400 animate-spin mb-2" />
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
                     {isProcessing ? "Processing File..." : "Loading Viewer..."}
                   </p>
                 </div>
@@ -315,7 +315,7 @@ const WorkflowPreviewPanel: React.FC<Props> = ({
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-rose-100 bg-rose-50 dark:border-rose-500/20 dark:bg-rose-500/10">
                   <FileX className="h-6 w-6 text-rose-500" />
                 </div>
-                <h4 className="mb-1 text-sm font-bold text-slate-900 dark:text-slate-100">Preview Failed</h4>
+                <h4 className="mb-1 text-sm font-semibold text-slate-900 dark:text-slate-100">Preview Failed</h4>
                 <p className="max-w-[240px] text-xs text-slate-500 dark:text-slate-400">
                   The preview engine encountered an error.
                 </p>
@@ -324,7 +324,7 @@ const WorkflowPreviewPanel: React.FC<Props> = ({
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onRegeneratePreview(); }}
                     disabled={isRegeneratingPreview}
-                    className="mt-6 flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-200 dark:hover:bg-surface-400"
+                    className="mt-6 flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-surface-400 dark:bg-surface-500 dark:text-slate-200 dark:hover:bg-surface-400"
                   >
                     <RefreshCw size={12} className={isRegeneratingPreview ? "animate-spin" : ""} />
                     {isRegeneratingPreview ? "Regenerating..." : "Retry Analysis"}
@@ -343,7 +343,7 @@ const WorkflowPreviewPanel: React.FC<Props> = ({
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-slate-200 text-slate-500 dark:bg-surface-400 dark:text-slate-300">
                   <Upload size={24} strokeWidth={2} />
                 </div>
-                <h4 className="mb-1 text-sm font-bold text-slate-900 dark:text-slate-100">Attach Document</h4>
+                <h4 className="mb-1 text-sm font-semibold text-slate-900 dark:text-slate-100">Attach Document</h4>
                 <p className="max-w-[200px] text-xs text-slate-500 dark:text-slate-400">
                   Drafts require an attached file to begin the workflow. Drop PDF, Office, or Powerpoint here.
                 </p>
@@ -355,7 +355,7 @@ const WorkflowPreviewPanel: React.FC<Props> = ({
             <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 dark:bg-surface-500/80 p-6">
               <div className="w-full max-w-sm rounded-md bg-white p-6 border border-slate-200 dark:border-surface-400 dark:bg-surface-600">
                 <div className="mb-4 flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-300">
                     Uploading...
                   </p>
                   <span className="text-xs font-mono text-slate-400">{uploadProgress}%</span>

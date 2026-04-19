@@ -140,7 +140,7 @@ export default function DocFrame({
 
               {/* Version label + dropdown inline, pushed to right */}
               <div className="flex items-center gap-2 ml-auto overflow-visible">
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 shrink-0">
+                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 shrink-0">
                   Version
                 </span>
                 <div className="overflow-visible">{rightHeader}</div>
@@ -215,7 +215,7 @@ export default function DocFrame({
               <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-surface-400">
                 <div className="flex items-center gap-2">
                   <div className="h-1 w-8 rounded-full bg-slate-200 dark:bg-surface-400 absolute left-1/2 -top-2 -translate-x-1/2" />
-                  <span className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">
+                  <span className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-tight">
                     Document Hub
                   </span>
                 </div>

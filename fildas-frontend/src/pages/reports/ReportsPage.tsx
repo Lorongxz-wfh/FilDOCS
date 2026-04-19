@@ -185,7 +185,7 @@ const ReportsPage: React.FC = () => {
             onClick={() => navigate("/reports/export")}
           >
             <BarChart3 className="h-3.5 w-3.5" />
-            <span className="font-bold">Export reports</span>
+            <span className="font-semibold">Export reports</span>
           </Button>
         </PageActions>
       }
@@ -210,7 +210,7 @@ const ReportsPage: React.FC = () => {
             <SlidersHorizontal size={12} />
             <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
-              <span className={`ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold leading-none ${filtersOpen ? "bg-white text-brand-600" : "bg-brand-500 text-white"}`}>
+              <span className={`ml-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none ${filtersOpen ? "bg-white text-brand-600" : "bg-brand-500 text-white"}`}>
                 {activeFilterCount}
               </span>
             )}
@@ -341,7 +341,7 @@ const ReportsPage: React.FC = () => {
           <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setFiltersOpen(false)} />
           <div className="relative w-full max-w-xs bg-white dark:bg-surface-500 h-full overflow-y-auto">
              <div className="p-4 border-b border-slate-200 dark:border-surface-400 flex items-center justify-between">
-                <h3 className="font-bold text-sm">Filters</h3>
+                <h3 className="font-semibold text-sm">Filters</h3>
                 <button onClick={() => setFiltersOpen(false)} className="text-slate-400 hover:text-slate-600">×</button>
              </div>
              <ReportFilters

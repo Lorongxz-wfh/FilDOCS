@@ -61,7 +61,7 @@ const VersionsDropdown: React.FC<Props> = ({
           }
           setOpen((v) => !v);
         }}
-        className="flex items-center gap-2 rounded-md border border-slate-300 dark:border-surface-300 bg-slate-100 dark:bg-surface-500 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-surface-400 shadow-sm transition"
+        className="flex items-center gap-2 rounded-md border border-slate-300 dark:border-surface-300 bg-slate-100 dark:bg-surface-500 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-surface-400  transition"
       >
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
           v{selectedVersion?.version_number ?? "—"}
@@ -116,7 +116,7 @@ const VersionsDropdown: React.FC<Props> = ({
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                        <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
                           v{v.version_number}
                         </span>
                         {isSel && (

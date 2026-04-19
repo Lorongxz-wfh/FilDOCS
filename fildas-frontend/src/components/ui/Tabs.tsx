@@ -52,7 +52,7 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onChange, className
             {isActive && (
               <motion.div
                 layoutId={`tab-indicator-${id}`}
-                className="absolute bottom-0 left-1 right-1 h-0.5 bg-brand-500 z-10 rounded-t-full shadow-[0_-1px_4px_rgba(14,165,233,0.3)]"
+                className="absolute bottom-0 left-1 right-1 h-0.5 bg-brand-500 z-10 rounded-sm"
                 transition={{ type: "spring", bounce: 0, duration: 0.25 }}
               />
             )}

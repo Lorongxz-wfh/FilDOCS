@@ -85,7 +85,7 @@ const WorkflowActionBar: React.FC<Props> = ({
       {adminDebugMode && routingUsers.length > 0 && (
         <div className="flex items-center gap-3 p-2.5 rounded-lg border border-brand-200 bg-brand-50/50 dark:border-brand-900/30 dark:bg-brand-900/10">
           <div className="flex flex-col">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">
               Dev Mode Impersonation
             </label>
             <div className="flex items-center gap-2 mt-1">

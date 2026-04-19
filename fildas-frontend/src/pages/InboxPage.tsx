@@ -71,11 +71,11 @@ const MonthGroup: React.FC<{
 }> = ({ label, count, children }) => (
   <div className="space-y-4">
     <div className="flex items-center gap-3">
-      <p className="shrink-0 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+      <p className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
         {label}
       </p>
       <div className="h-px flex-1 bg-slate-200 dark:bg-surface-400" />
-      <p className="shrink-0 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+      <p className="shrink-0 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
         {count} {count === 1 ? "item" : "items"}
       </p>
     </div>
@@ -103,7 +103,7 @@ const NotifCard: React.FC<{
 
   return (
     <div
-      className={`group relative flex items-stretch rounded-xl border bg-white dark:bg-surface-500 transition-all duration-250 ${isUnread ? "border-brand-100 dark:border-brand-900/30 shadow-sm" : "border-slate-200 dark:border-surface-400 shadow-sm opacity-80"}`}
+      className={`group relative flex items-stretch rounded-xl border bg-white dark:bg-surface-500 transition-all duration-250 ${isUnread ? "border-brand-100 dark:border-brand-900/30 " : "border-slate-200 dark:border-surface-400  opacity-80"}`}
     >
       <div className={`w-1 shrink-0 rounded-l-sm transition-colors ${barColor}`} />
 
@@ -127,12 +127,12 @@ const NotifCard: React.FC<{
         >
           <div className="flex items-center gap-2 flex-wrap">
             <div className={`text-sm font-semibold leading-tight transition-colors ${isUnread ? "text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-400"}`}>
-              {isSecurity && <span className="text-rose-600 dark:text-rose-400 font-bold mr-1">Security:</span>}
-              {isAnnouncement && !cleanTitle.toLowerCase().startsWith("announcement") && <span className="text-brand-600 dark:text-brand-400 font-bold mr-1">Announcement:</span>}
+              {isSecurity && <span className="text-rose-600 dark:text-rose-400 font-semibold mr-1">Security:</span>}
+              {isAnnouncement && !cleanTitle.toLowerCase().startsWith("announcement") && <span className="text-brand-600 dark:text-brand-400 font-semibold mr-1">Announcement:</span>}
               {cleanTitle}
             </div>
             {isUnread && (
-              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400">
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider bg-brand-50 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400">
                 New
               </span>
             )}
@@ -145,8 +145,8 @@ const NotifCard: React.FC<{
             />
           )}
 
-          <div className="mt-3 flex items-center gap-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            <span className="text-slate-600 dark:text-slate-300 font-bold">
+          <div className="mt-3 flex items-center gap-2 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            <span className="text-slate-600 dark:text-slate-300 font-semibold">
               {(n.meta?.author_name as string) || n.event?.replace(/_/g, ' ') || "System"}
             </span>
             <span className="opacity-30">·</span>
@@ -347,7 +347,7 @@ const InboxPage: React.FC = () => {
       onBack={handleBack}
       subtitle={
         unreadCount > 0 ? (
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
             {unreadCount} PENDING ACTION{unreadCount !== 1 ? "S" : ""}
           </span>
         ) : undefined
@@ -358,15 +358,15 @@ const InboxPage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => navigate("/announcements")}
-            className="text-[11px] font-bold uppercase tracking-widest"
+            className="text-[11px] font-semibold uppercase tracking-widest"
           >
             <Megaphone className="h-3.5 w-3.5 sm:mr-2" />
             <span className="hidden sm:inline">Announcement</span>
           </Button>
-          <Button variant="outline" size="sm" disabled={markingAll || loading || unreadCount === 0} onClick={handleMarkAllRead} className="text-[11px] font-bold uppercase tracking-widest">
+          <Button variant="outline" size="sm" disabled={markingAll || loading || unreadCount === 0} onClick={handleMarkAllRead} className="text-[11px] font-semibold uppercase tracking-widest">
             {markingAll ? "Marking…" : "Mark all read"}
           </Button>
-          <Button variant="outline" size="sm" disabled={loading || items.length === 0} onClick={handleClearAll} className={`text-[11px] font-bold uppercase tracking-widest ${confirmClearAll ? "text-rose-600 border-rose-200" : ""}`}>
+          <Button variant="outline" size="sm" disabled={loading || items.length === 0} onClick={handleClearAll} className={`text-[11px] font-semibold uppercase tracking-widest ${confirmClearAll ? "text-rose-600 border-rose-200" : ""}`}>
              {confirmClearAll ? "Confirm?" : "Clear all"}
           </Button>
         </PageActions>
@@ -378,12 +378,12 @@ const InboxPage: React.FC = () => {
           <div className="flex flex-col gap-1.5 shrink-0">
              <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-brand-500 fill-brand-500/10" strokeWidth={1.5} />
-                <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
                   Inbox
                 </h2>
              </div>
              {!loading && (
-               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+               <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   {unreadCount} unread · {filtered.length} visible items
                </p>
              )}
@@ -392,15 +392,15 @@ const InboxPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
             <div className="flex items-center rounded-md border border-slate-200 bg-slate-100 p-0.5 dark:border-surface-300 dark:bg-surface-600">
               {TABS.map((t) => (
-                <button key={t.key} type="button" onClick={() => setTab(t.key)} className={`relative flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors ${tab === t.key ? "bg-brand-500 text-white shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400"}`}>
+                <button key={t.key} type="button" onClick={() => setTab(t.key)} className={`relative flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors ${tab === t.key ? "bg-brand-500 text-white " : "text-slate-500 hover:text-slate-700 dark:text-slate-400"}`}>
                   {t.label}
-                  {t.key === "unread" && unreadCount > 0 && <span className="flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-white/20 text-[10px] font-bold">{unreadCount}</span>}
+                  {t.key === "unread" && unreadCount > 0 && <span className="flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-white/20 text-[10px] font-semibold">{unreadCount}</span>}
                 </button>
               ))}
             </div>
             <div className="relative flex-1 max-w-[240px]">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className={`${inputCls} !py-1.5 !pl-9 shadow-sm !text-xs !px-8`} />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className={`${inputCls} !py-1.5 !pl-9  !text-xs !px-8`} />
               {search && <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300"><X className="h-3.5 w-3.5" /></button>}
             </div>
           </div>
@@ -410,7 +410,7 @@ const InboxPage: React.FC = () => {
               {loading ? (
                  <div className="space-y-4">
                    {Array.from({ length: 4 }).map((_, i) => (
-                     <div key={i} className="rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 p-4 space-y-3 shadow-sm">
+                     <div key={i} className="rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 p-4 space-y-3 ">
                        <Skeleton className="h-4 w-1/3" />
                        <Skeleton className="h-3 w-full" />
                        <Skeleton className="h-2 w-1/2" />

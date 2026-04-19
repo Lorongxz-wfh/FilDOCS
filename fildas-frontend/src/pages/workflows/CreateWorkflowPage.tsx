@@ -131,6 +131,7 @@ export default function CreateWorkflowPage() {
   const [tagsInput, setTagsInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [effectiveDate, setEffectiveDate] = useState("");
+  const [retentionDate, setRetentionDate] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [tempPreview, setTempPreview] = useState<TempPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -249,6 +250,8 @@ export default function CreateWorkflowPage() {
         description,
         effective_date:
           isQA && effectiveDate.trim() ? effectiveDate.trim() : null,
+        retention_date:
+          retentionDate.trim() ? retentionDate.trim() : null,
         ...(isAdminUser && actingOfficeId ? { acting_as_office_id: actingOfficeId } : {}),
       });
       if (tags.length > 0) {
@@ -288,13 +291,13 @@ export default function CreateWorkflowPage() {
             onClick={() => setTemplatesPanelOpen(true)}
             title="Browse Templates"
           >
-            <span className="font-bold">Templates</span>
+            <span className="font-semibold">Templates</span>
           </Button>
         }
       >
         {/* ── Flow summary bar ─────────────────────────────────────────────── */}
         {flow && (
-          <div className="flex items-center gap-0 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
+          <div className="flex items-center gap-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
             {/* Label */}
             <div className="shrink-0 hidden sm:flex items-center px-4 py-2.5 border-r border-slate-200 dark:border-surface-400">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
@@ -351,9 +354,9 @@ export default function CreateWorkflowPage() {
         {flow && (
           <div className="flex flex-col lg:grid lg:grid-cols-5 gap-4 flex-1 min-h-0">
             {/* Left: form */}
-            <div className="lg:col-span-3 lg:overflow-y-auto lg:max-h-[calc(100vh-220px)]">
-              <form id="create-doc-form" onSubmit={handleSubmit}>
-                <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
+            <div className="lg:col-span-3 flex flex-col min-h-0">
+              <form id="create-doc-form" onSubmit={handleSubmit} className="flex flex-col h-full min-h-0">
+                <div className="flex flex-col h-full min-h-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden ">
                   <div className="px-5 py-4 border-b border-slate-200 dark:border-surface-400">
                     <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                       Document details
@@ -367,7 +370,8 @@ export default function CreateWorkflowPage() {
                     </p>
                   </div>
 
-                  <div className="px-5 py-5 flex flex-col gap-5">
+                  {/* Scrollable Body */}
+                  <div className="flex-1 overflow-y-auto min-h-0 px-5 py-5 flex flex-col gap-5 bg-slate-50/10 dark:bg-transparent">
                     {isAdminUser && (
                       <Field label="Acting as office" required hint="Document will be created on behalf of this office.">
                         <SelectDropdown
@@ -450,6 +454,19 @@ export default function CreateWorkflowPage() {
                         />
                       </Field>
 
+                      <Field
+                        label="Retention period"
+                        hint="Automated archiving date (optional)."
+                      >
+                        <input
+                          type="date"
+                          value={retentionDate}
+                          onChange={(e) => setRetentionDate(e.target.value)}
+                          min={new Date().toISOString().split("T")[0]}
+                          className={inputCls}
+                        />
+                      </Field>
+
                       <Field label="Tags" hint="Press Enter or click Add.">
                         <div className="flex gap-2">
                           <input
@@ -511,28 +528,11 @@ export default function CreateWorkflowPage() {
                       </Field>
                     </div>
 
-                    <Field
-                      label="Attach file"
-                      hint="Word, Excel, PowerPoint, or PDF (max 10 MB). You can also upload this later during the draft phase."
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="file"
-                          disabled={loading || previewLoading}
-                          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                          className="block w-full text-sm text-slate-700 dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 dark:file:bg-surface-400 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-600 dark:file:text-slate-300 hover:file:bg-slate-200 dark:hover:file:bg-surface-300 disabled:opacity-60"
-                        />
-                        {loading && (
-                          <div className="shrink-0 flex items-center gap-1.5">
-                            <div className="h-3.5 w-3.5 rounded-full border-2 border-slate-300 dark:border-surface-400 border-t-brand-400 animate-spin" />
-                            <span className="text-[11px] text-slate-400">Saving…</span>
-                          </div>
-                        )}
-                      </div>
-                    </Field>
 
+
+                    {/* Error Banner */}
                     {error && (
-                      <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/15 px-4 py-3 text-xs text-rose-700 dark:text-rose-300">
+                      <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/15 mx-5 mb-5 px-4 py-3 text-xs text-rose-700 dark:text-rose-300">
                         <p className="font-medium">{error}</p>
                         {fieldErrors && (
                           <ul className="mt-1 list-disc pl-4 space-y-0.5">
@@ -548,30 +548,31 @@ export default function CreateWorkflowPage() {
                         )}
                       </div>
                     )}
+                  </div>
 
-                    <div className="flex items-center justify-end gap-2 pt-1">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="md"
-                        onClick={() => {
-                          cleanupTempPreview(tempPreview);
-                          navigate(-1);
-                        }}
-                        disabled={loading}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        variant="primary"
-                        size="md"
-                        loading={loading}
-                        className="px-6 font-bold"
-                      >
-                        Save document
-                      </Button>
-                    </div>
+                  {/* Sticky Footer */}
+                  <div className="shrink-0 px-5 py-4 border-t border-slate-200 dark:border-surface-400 bg-slate-50/30 dark:bg-surface-600/20 flex items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="md"
+                      onClick={() => {
+                        cleanupTempPreview(tempPreview);
+                        navigate(-1);
+                      }}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="md"
+                      loading={loading}
+                      className="px-6 font-semibold"
+                    >
+                      Save document
+                    </Button>
                   </div>
                 </div>
               </form>
@@ -579,24 +580,44 @@ export default function CreateWorkflowPage() {
 
             {/* Right: preview */}
             <div className="lg:col-span-2 flex flex-col min-h-0">
-              <div className="rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden flex flex-col h-full">
-                <div className="px-5 py-4 border-b border-slate-200 dark:border-surface-400">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Preview
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    PDF is instant · Office files convert first
-                  </p>
+              <div className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden flex flex-col h-full ">
+                <div className="px-5 py-3 border-b border-slate-200 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/10 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                      Attachment & Preview
+                    </p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate font-medium">
+                      {file ? file.name : "No file attached — PDF/Word/Excel"}
+                    </p>
+                  </div>
+                  <div className="shrink-0 flex items-center gap-2">
+                    <input
+                      type="file"
+                      id="create-upload-btn"
+                      className="hidden"
+                      disabled={loading || previewLoading}
+                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                    />
+                    {loading && (
+                      <div className="h-4 w-4 rounded-full border-2 border-slate-200 dark:border-surface-400 border-t-brand-500 animate-spin" />
+                    )}
+                    <label
+                      htmlFor="create-upload-btn"
+                      className="cursor-pointer rounded-lg border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-tight text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition "
+                    >
+                      {file ? "Change File" : "Attach File"}
+                    </label>
+                  </div>
                 </div>
-                <div className="flex-1 p-4 min-h-0">
+                <div className="flex-1 min-h-0">
                   {!file ? (
-                    <div className="flex h-full items-center justify-center rounded-md border-2 border-dashed border-slate-200 dark:border-surface-400">
+                    <div className="flex h-full items-center justify-center border-2 border-dashed border-slate-200 dark:border-surface-400">
                       <p className="text-sm text-slate-400 dark:text-slate-500">
                         Attach a file to preview it here
                       </p>
                     </div>
                   ) : previewLoading ? (
-                    <div className="h-full w-full rounded-md bg-slate-100 dark:bg-surface-400 animate-pulse flex flex-col gap-3 p-5">
+                    <div className="h-full w-full bg-slate-100 dark:bg-surface-400 animate-pulse flex flex-col gap-3 p-5">
                       <div className="h-3.5 w-3/4 rounded bg-slate-200 dark:bg-surface-300" />
                       <div className="h-3.5 w-full rounded bg-slate-200 dark:bg-surface-300" />
                       <div className="h-3.5 w-5/6 rounded bg-slate-200 dark:bg-surface-300" />
@@ -605,7 +626,7 @@ export default function CreateWorkflowPage() {
                       <div className="h-3.5 w-4/5 rounded bg-slate-200 dark:bg-surface-300" />
                     </div>
                   ) : previewError ? (
-                    <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/15 p-4 text-xs text-rose-700 dark:text-rose-300">
+                    <div className="border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/15 p-4 text-xs text-rose-700 dark:text-rose-300">
                       {previewError}
                       <p className="mt-1 opacity-70">
                         You can still save without a preview.
@@ -615,7 +636,7 @@ export default function CreateWorkflowPage() {
                     <iframe
                       title="Document preview"
                       src={tempPreview.url}
-                      className="h-full w-full rounded-md border border-slate-200 dark:border-surface-400"
+                      className="h-full w-full border-0"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center">

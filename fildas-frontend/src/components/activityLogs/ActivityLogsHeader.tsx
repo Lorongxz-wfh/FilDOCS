@@ -30,7 +30,7 @@ const ActivityLogsHeader: React.FC<Props> = ({
         />
       )}
 
-      <div className="flex bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 rounded-sm p-0.5 shadow-sm overflow-hidden shrink-0">
+      <div className="flex bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 rounded-sm p-0.5  overflow-hidden shrink-0">
         <button
           type="button"
           onClick={() => setTab("log")}
@@ -58,7 +58,7 @@ const ActivityLogsHeader: React.FC<Props> = ({
       <button
         type="button"
         onClick={() => navigate("/my-activity")}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-400 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-300 transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-400 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-300 transition-colors"
       >
         <User className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">My activity</span>

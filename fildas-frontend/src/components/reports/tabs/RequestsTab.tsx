@@ -25,7 +25,6 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
           loading={requestsLoading}
           label="Total requests"
           value={requestsReport?.kpis.total ?? 0}
-          sub="All requests submitted"
           icon={<Send size={16} className="text-sky-600 dark:text-sky-400" />}
           iconBg="bg-sky-50 dark:bg-sky-900/30"
         />
@@ -33,7 +32,6 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
           loading={requestsLoading}
           label="Accepted"
           value={requestsReport?.kpis.closed ?? 0}
-          sub="Requests fulfilled and closed"
           icon={<CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />}
           iconBg="bg-emerald-50 dark:bg-emerald-900/30"
         />
@@ -41,7 +39,6 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
           loading={requestsLoading}
           label="Pending"
           value={requestsReport?.kpis.open ?? 0}
-          sub="Currently open requests"
           icon={<Activity size={16} className="text-amber-600 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/30"
         />
@@ -49,7 +46,6 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
           loading={requestsLoading}
           label="Overdue"
           value={requestsReport?.kpis.overdue ?? 0}
-          sub="Past expected response date"
           icon={<AlertCircle size={16} className="text-rose-500 dark:text-rose-400" />}
           iconBg="bg-rose-50 dark:bg-rose-900/30"
         />
@@ -61,7 +57,6 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
           loading={requestsLoading}
           label="Cancelled"
           value={requestsReport?.kpis.cancelled ?? 0}
-          sub="Requests withdrawn by requester"
           icon={<Ban size={16} className="text-slate-500 dark:text-slate-400" />}
           iconBg="bg-slate-100 dark:bg-surface-400"
         />
@@ -69,7 +64,6 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
           loading={requestsLoading}
           label="Acceptance rate"
           value={`${requestsReport?.kpis.acceptance_rate ?? 0}%`}
-          sub="Accepted out of total submitted"
           icon={<TrendingUp size={16} className="text-violet-600 dark:text-violet-400" />}
           iconBg="bg-violet-50 dark:bg-violet-900/30"
         />
@@ -77,7 +71,6 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
           loading={requestsLoading}
           label="Avg resubmissions"
           value={requestsReport?.kpis.avg_resubmissions ?? 0}
-          sub="Avg attempts per request"
           icon={<RotateCcw size={16} className="text-amber-600 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/30"
         />
@@ -108,7 +101,11 @@ const RequestsTab: React.FC<RequestsTabProps> = ({
             subtitle="Open · Closed · Cancelled breakdown"
             loading={requestsLoading}
           >
-            <PhaseDistributionChart data={requestsReport?.status_distribution ?? []} variant="donut" height={220} />
+            <PhaseDistributionChart
+              data={requestsReport?.status_distribution ?? []}
+              variant="donut"
+              height={220}
+            />
           </ReportChartCard>
         </div>
       </div>

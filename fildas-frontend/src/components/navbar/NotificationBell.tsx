@@ -156,9 +156,9 @@ const NotificationBell: React.FC = () => {
           <div className="flex items-center justify-between px-3.5 py-3 border-b border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/20">
             <div className="flex items-center gap-2">
               <Megaphone className="h-4 w-4 text-brand-500 fill-brand-500/10" strokeWidth={1.5} />
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Announcement</h3>
+              <h3 className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Announcement</h3>
             </div>
-            <button onClick={() => { setIsOpen(false); navigate("/announcements"); }} className="text-[10px] font-bold text-brand-600 hover:text-brand-500 uppercase tracking-tight">View All</button>
+            <button onClick={() => { setIsOpen(false); navigate("/announcements"); }} className="text-[10px] font-semibold text-brand-600 hover:text-brand-500 uppercase tracking-tight">View All</button>
           </div>
 
           <div className="px-3.5 py-4 space-y-4">
@@ -166,13 +166,13 @@ const NotificationBell: React.FC = () => {
              {(announcements.length > 0 || isAnnLoading) && (
                <button
                  onClick={() => { setIsOpen(false); navigate("/announcements"); }}
-                 className="w-full text-left group flex items-stretch rounded-lg border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-600 overflow-hidden hover:border-brand-500 dark:hover:border-brand-400 transition-all shadow-sm"
+                 className="w-full text-left group flex items-stretch rounded-lg border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-600 overflow-hidden hover:border-brand-500 dark:hover:border-brand-400 transition-all "
                >
                  <div className="w-1 bg-brand-500" />
                  <div className="flex-1 px-3 py-2.5 min-w-0">
                     {announcements.length > 0 ? (
                       <>
-                        <p className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">{announcements[0].title}</p>
+                        <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">{announcements[0].title}</p>
                         <p className="mt-1 line-clamp-1 text-[11px] text-slate-500 dark:text-slate-400 leading-tight" dangerouslySetInnerHTML={{ __html: announcements[0].body }} />
                       </>
                     ) : (
@@ -187,8 +187,8 @@ const NotificationBell: React.FC = () => {
 
              <div className="space-y-3">
                <div className="flex items-center justify-between">
-                 <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Recent Activity</h4>
-                 <button onClick={() => { setIsOpen(false); navigate("/inbox"); }} className="group flex items-center gap-1 text-[9px] font-bold text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 uppercase transition-colors">
+                 <h4 className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Recent Activity</h4>
+                 <button onClick={() => { setIsOpen(false); navigate("/inbox"); }} className="group flex items-center gap-1 text-[9px] font-semibold text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 uppercase transition-colors">
                     Inbox <ArrowRight className="h-2.5 w-2.5 transition-transform group-hover:translate-x-0.5" />
                  </button>
                </div>
@@ -230,11 +230,11 @@ const NotificationBell: React.FC = () => {
                          </div>
                          <div className="min-w-0 flex-1">
                            <div className={`text-xs leading-tight font-semibold ${isUnseen ? "text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-400"}`}>
-                             {isSecurity && <span className="text-rose-600 dark:text-rose-400 font-bold mr-1">Security:</span>}
-                             {isAnnouncement && !cleanTitle.toLowerCase().startsWith("announcement") && <span className="text-brand-600 dark:text-brand-400 font-bold mr-1">Announcement:</span>}
+                             {isSecurity && <span className="text-rose-600 dark:text-rose-400 font-semibold mr-1">Security:</span>}
+                             {isAnnouncement && !cleanTitle.toLowerCase().startsWith("announcement") && <span className="text-brand-600 dark:text-brand-400 font-semibold mr-1">Announcement:</span>}
                              {cleanTitle}
                            </div>
-                           <p className="mt-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{formatRelative(n.created_at)}</p>
+                           <p className="mt-1 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{formatRelative(n.created_at)}</p>
                          </div>
                          {isUnseen && <div className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-500" />}
                        </button>
@@ -257,7 +257,7 @@ const NotificationBell: React.FC = () => {
                     setIsMarkingRead(false);
                   }
                 }}
-                className={`w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${isMarkingRead || visibleItems.length === 0 ? "bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-surface-600 dark:text-slate-600" : "bg-brand-600 text-white hover:bg-brand-700 shadow-sm shadow-brand-500/20 active:scale-[0.98]"}`}
+                className={`w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-[10px] font-semibold uppercase tracking-widest transition-all ${isMarkingRead || visibleItems.length === 0 ? "bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-surface-600 dark:text-slate-600" : "bg-brand-600 text-white hover:bg-brand-700  shadow-brand-500/20 active:scale-[0.98]"}`}
               >
                 {isMarkingRead ? <InlineSpinner className="h-3 w-3 border-2 border-white/30 border-t-white" /> : <CheckCircle className="h-3 w-3" />}
                 Mark all as read

@@ -28,7 +28,7 @@ const SidebarAction: React.FC<SidebarActionProps> = ({
           type="button"
           onClick={() => setNewOpen(!newOpen)}
           className={[
-            "cursor-pointer flex items-center rounded-md text-sm font-semibold transition-all duration-150 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white shadow-sm",
+            "cursor-pointer flex items-center rounded-md text-sm font-semibold transition-all duration-150 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white ",
             collapsed ? "justify-center w-full px-0 h-9" : "gap-2 px-3 h-9",
           ].join(" ")}
         >

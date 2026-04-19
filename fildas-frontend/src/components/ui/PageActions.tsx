@@ -29,14 +29,14 @@ export function CreateAction({
     <Button
       variant="primary"
       size="sm"
-      responsive
+      reveal
       onClick={onClick}
       disabled={disabled}
       loading={loading}
       className={className}
     >
       <Plus className="h-3.5 w-3.5" />
-      <span className="font-bold">{label}</span>
+      <span>{label}</span>
     </Button>
   );
 }
@@ -47,9 +47,9 @@ export function CreateAction({
  */
 export function ArchiveAction({ onClick }: { onClick: () => void }) {
   return (
-    <Button variant="outline" size="sm" responsive onClick={onClick}>
+    <Button variant="outline" size="sm" reveal onClick={onClick}>
       <Archive className="h-3.5 w-3.5" />
-      <span className="font-bold">Archive</span>
+      <span>Archive</span>
     </Button>
   );
 }
@@ -72,13 +72,13 @@ export function ExportAction({
     <Button
       variant="outline"
       size="sm"
-      responsive
+      reveal
       onClick={onClick}
       loading={loading}
       disabled={disabled}
     >
       <FileDown className="h-3.5 w-3.5" />
-      <span className="font-bold">{label}</span>
+      <span>{label}</span>
     </Button>
   );
 }
@@ -101,13 +101,13 @@ export function UploadAction({
     <Button
       variant="primary"
       size="sm"
-      responsive
+      reveal
       onClick={onClick}
       disabled={disabled}
       loading={loading}
     >
       <Upload className="h-3.5 w-3.5" />
-      <span className="font-bold">{label}</span>
+      <span>{label}</span>
     </Button>
   );
 }
@@ -130,13 +130,13 @@ export function DeleteAction({
     <Button
       variant="danger"
       size="sm"
-      responsive
+      reveal
       onClick={onClick}
       disabled={disabled}
       loading={loading}
     >
       <Trash2 className="h-3.5 w-3.5" />
-      <span className="font-bold">{label}</span>
+      <span>{label}</span>
     </Button>
   );
 }
@@ -163,13 +163,13 @@ export function ActionButton({
     <Button
       variant={variant}
       size="sm"
-      responsive
+      reveal
       onClick={onClick}
       disabled={disabled}
       loading={loading}
     >
       <Icon className="h-3.5 w-3.5" />
-      <span className="font-bold">{label}</span>
+      <span>{label}</span>
     </Button>
   );
 }
@@ -187,12 +187,12 @@ export function ExportSplitAction({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 rounded-sm overflow-hidden divide-x divide-slate-200 dark:divide-surface-400 shadow-sm shrink-0">
+    <div className="flex bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 rounded-sm overflow-hidden divide-x divide-slate-200 dark:divide-surface-400  shrink-0">
       <button
         type="button"
         onClick={() => onExport("csv")}
         disabled={loading || disabled}
-        className="px-3 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors disabled:opacity-50"
+        className="px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors disabled:opacity-50"
       >
         CSV
       </button>
@@ -200,7 +200,7 @@ export function ExportSplitAction({
         type="button"
         onClick={() => onExport("pdf")}
         disabled={loading || disabled}
-        className="px-3 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors disabled:opacity-50"
+        className="px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors disabled:opacity-50"
       >
         PDF
       </button>

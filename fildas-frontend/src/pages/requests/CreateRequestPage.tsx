@@ -569,7 +569,7 @@ export default function CreateRequestPage() {
                         <div className="flex flex-col gap-1">
                           {exFile && (
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Or upload manually:</span>
+                              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Or upload manually:</span>
                             </div>
                           )}
                           <input
@@ -623,7 +623,7 @@ export default function CreateRequestPage() {
                               onClick={() => setExpandedIdx(isOpen ? -1 : idx)}
                               className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-surface-400 transition"
                             >
-                              <span className="shrink-0 text-xs font-bold text-slate-400 dark:text-slate-500 w-5">
+                              <span className="shrink-0 text-xs font-semibold text-slate-400 dark:text-slate-500 w-5">
                                 {idx + 1}.
                               </span>
                               <span

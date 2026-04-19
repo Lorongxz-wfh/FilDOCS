@@ -119,7 +119,7 @@ const StageDelayChart: React.FC<{
             />
             <span className="text-[11px] text-slate-500 dark:text-slate-400">{d.stage}</span>
             {d.stage === bottleneckStage && d.display_hours > 0 && (
-              <span className="rounded-full bg-rose-100 dark:bg-rose-900/30 px-1.5 py-px text-[11px] font-bold text-rose-600 dark:text-rose-400 leading-none">
+              <span className="rounded-full bg-rose-100 dark:bg-rose-900/30 px-1.5 py-px text-[11px] font-semibold text-rose-600 dark:text-rose-400 leading-none">
                 slowest
               </span>
             )}

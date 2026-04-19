@@ -78,7 +78,7 @@ const ReportStatCard: React.FC<Props> = ({
       )}
       <div className="min-w-0">
         <div
-          className={`text-2xl font-bold tabular-nums leading-none ${c.value}`}
+          className={`text-2xl font-semibold tabular-nums leading-none ${c.value}`}
         >
           {value}
         </div>

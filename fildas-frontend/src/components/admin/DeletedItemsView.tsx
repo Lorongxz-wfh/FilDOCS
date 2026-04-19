@@ -243,7 +243,7 @@ const DeletedItemsView: React.FC<DeletedItemsViewProps> = ({ type, onRestored, r
                  setIsSelectMode(!isSelectMode);
                  if (isSelectMode) clearSelection();
                }}
-               className={`flex items-center gap-2 px-3 h-9 rounded-lg border text-xs font-bold transition-all shadow-xs ${
+               className={`flex items-center gap-2 px-3 h-9 rounded-lg border text-xs font-semibold transition-all  ${
                  isSelectMode 
                    ? "bg-brand-600 border-brand-600 text-white" 
                    : "bg-white dark:bg-surface-500 border-slate-200 dark:border-surface-400 text-slate-700 dark:text-slate-300 hover:bg-slate-50"

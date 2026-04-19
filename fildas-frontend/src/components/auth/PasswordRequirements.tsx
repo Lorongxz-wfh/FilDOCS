@@ -22,7 +22,7 @@ export const PasswordRequirements: React.FC<PasswordRequirementsProps> = ({ pass
 
   return (
     <div className={`space-y-2 p-3 rounded-md bg-slate-50 dark:bg-surface-600 border border-slate-100 dark:border-surface-400 ${className}`}>
-      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Password Requirements</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Password Requirements</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
         {requirements.map((req, idx) => (
           <div key={idx} className="flex items-center gap-2">

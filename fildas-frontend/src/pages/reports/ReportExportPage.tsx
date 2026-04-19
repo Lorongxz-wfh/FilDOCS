@@ -587,7 +587,7 @@ const ReportExportPage: React.FC = () => {
             className="border-sky-200 text-sky-700 hover:bg-sky-50 dark:border-sky-900 dark:text-sky-400 dark:hover:bg-sky-950/30"
           >
             <FileArchive className="h-3.5 w-3.5" />
-            <span className="font-bold">Master ZIP</span>
+            <span className="font-semibold">Master ZIP</span>
           </Button>
 
           <Button
@@ -599,7 +599,7 @@ const ReportExportPage: React.FC = () => {
             onClick={handleExportAll}
           >
             <Download className="h-3.5 w-3.5" />
-            <span className="font-bold">
+            <span className="font-semibold">
               {exporting ? "Exporting…" : `Export (${selectedCount})`}
             </span>
           </Button>

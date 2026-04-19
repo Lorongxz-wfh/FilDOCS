@@ -216,7 +216,7 @@ const WorkflowFlowTimeline: React.FC<Props> = ({ logs, isLoading, versionNumber 
             <div key={log.id} className="relative group">
               {/* Timeline Connector Dot */}
               <div 
-                className={`absolute -left-10 top-0.5 flex h-9 w-9 items-center justify-center rounded-full border-2 bg-white dark:bg-surface-600 z-10 transition-all ${getEventBg(log.event)} ${isLatest ? 'ring-4 ring-brand-500/10 dark:ring-brand-500/20 scale-110 shadow-sm border-brand-200 dark:border-brand-500/40' : 'border-white dark:border-surface-400 shadow-sm'}`}
+                className={`absolute -left-10 top-0.5 flex h-9 w-9 items-center justify-center rounded-full border-2 bg-white dark:bg-surface-600 z-10 transition-all ${getEventBg(log.event)} ${isLatest ? 'ring-4 ring-brand-500/10 dark:ring-brand-500/20 scale-110  border-brand-200 dark:border-brand-500/40' : 'border-white dark:border-surface-400 '}`}
               >
                 {getEventIcon(log.event)}
               </div>
@@ -224,12 +224,12 @@ const WorkflowFlowTimeline: React.FC<Props> = ({ logs, isLoading, versionNumber 
               {/* Content Card */}
               <div 
                 onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                className={`rounded-xl border p-4 transition-all cursor-pointer ${isExpanded ? 'border-brand-200 bg-brand-50/20 dark:border-brand-500/20 dark:bg-brand-500/5 shadow-sm' : 'border-slate-100 bg-white dark:border-surface-400 dark:bg-surface-500 hover:border-slate-300 dark:hover:border-slate-400'}`}
+                className={`rounded-xl border p-4 transition-all cursor-pointer ${isExpanded ? 'border-brand-200 bg-brand-50/20 dark:border-brand-500/20 dark:bg-brand-500/5 ' : 'border-slate-100 bg-white dark:border-surface-400 dark:bg-surface-500 hover:border-slate-300 dark:hover:border-slate-400'}`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                       <p className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-none">
+                       <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-none">
                         {displayLabel}
                       </p>
                       <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
@@ -243,13 +243,13 @@ const WorkflowFlowTimeline: React.FC<Props> = ({ logs, isLoading, versionNumber 
                 {/* Transition Flow */}
                 {(fromStatus || log.event === "document.created") && toStatus && (
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200/60 bg-slate-50/50 text-slate-500 dark:bg-surface-400/40 dark:text-slate-400 dark:border-surface-300/20">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded border border-slate-200/60 bg-slate-50/50 text-slate-500 dark:bg-surface-400/40 dark:text-slate-400 dark:border-surface-300/20">
                       {fromStatus || "New"}
                     </span>
                     <CornerDownRight className="h-3 w-3 text-slate-300 dark:text-surface-400" />
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded border ${
-                      log.event === 'workflow.rejected' ? 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50 shadow-sm' : 
-                      log.event.includes('distributed') || log.event.includes('registered') ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50 shadow-sm' :
+                      log.event === 'workflow.rejected' ? 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50 ' : 
+                      log.event.includes('distributed') || log.event.includes('registered') ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50 ' :
                       'bg-brand-50 text-brand-600 border-brand-100 dark:bg-brand-500/10 dark:text-brand-300 dark:border-brand-500/30'
                     }`}>
                       {toStatus}
@@ -260,11 +260,11 @@ const WorkflowFlowTimeline: React.FC<Props> = ({ logs, isLoading, versionNumber 
                 {/* Actor Info (Only for actual transition) */}
                 {log.id !== -1 && (
                   <div className="mt-4 flex items-center gap-3 border-t border-slate-100 dark:border-surface-400/50 pt-4">
-                    <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-surface-400 flex items-center justify-center text-[11px] font-black text-slate-500 dark:text-slate-300 border border-white dark:border-surface-500 shadow-sm">
+                    <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-surface-400 flex items-center justify-center text-[11px] font-black text-slate-500 dark:text-slate-300 border border-white dark:border-surface-500 ">
                       {(log.actor_user?.first_name?.[0] || log.actor_user?.name?.[0] || '?').toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">
+                      <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate">
                         {log.actor_user?.full_name || log.actor_user?.name || "System"}
                       </p>
                       {log.actor_office && (
@@ -288,7 +288,7 @@ const WorkflowFlowTimeline: React.FC<Props> = ({ logs, isLoading, versionNumber 
                 {/* Micro-actions (Sub-logs) */}
                 {isExpanded && log.subActions && log.subActions.length > 0 && (
                   <div className="mt-4 pt-3 border-t border-slate-100 dark:border-surface-400/50 animate-in slide-in-from-top-2 duration-300">
-                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">Phase Actions</p>
+                    <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">Phase Actions</p>
                     <div className="space-y-4 pl-3 relative before:absolute before:left-[5.5px] before:top-1 before:bottom-1 before:w-[1.5px] before:bg-slate-100 dark:before:bg-surface-400/30">
                       {log.subActions.map((sub: any) => (
                         <div key={sub.id} className="relative flex items-start gap-3 group/sub">
@@ -299,7 +299,7 @@ const WorkflowFlowTimeline: React.FC<Props> = ({ logs, isLoading, versionNumber 
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2">
-                               <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                               <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
                                 {sub.label || sub.event}
                               </p>
                               <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500 whitespace-nowrap">

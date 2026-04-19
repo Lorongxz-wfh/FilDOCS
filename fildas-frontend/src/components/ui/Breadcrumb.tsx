@@ -10,7 +10,7 @@ export default function Breadcrumb({
 }) {
   if (!items.length) return null;
   return (
-    <nav className={`flex items-center gap-0.5 text-[11px] font-medium leading-none`} aria-label="Breadcrumb">
+    <nav className={`flex items-center gap-0.5 text-[11px] font-normal leading-none`} aria-label="Breadcrumb">
       {items.map((item, i) => {
         const isLast = i === items.length - 1;
         return (
@@ -19,13 +19,13 @@ export default function Breadcrumb({
               <span className="mx-1 text-slate-300 dark:text-slate-600 select-none">›</span>
             )}
             {isLast || !item.to ? (
-              <span className={`text-slate-700 dark:text-slate-200 font-bold truncate max-w-60`}>
+              <span className={`text-slate-500 dark:text-slate-500 truncate max-w-60`}>
                 {item.label}
               </span>
             ) : (
               <Link
                 to={item.to}
-                className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors truncate max-w-40"
+                className="text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 transition-colors truncate max-w-40"
               >
                 {item.label}
               </Link>

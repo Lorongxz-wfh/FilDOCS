@@ -16,8 +16,8 @@ function FieldChangeDiff({ changes }: { changes: FieldChange[] }) {
   return (
     <div className="mt-1.5 space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
       {changes.map((c, i) => (
-        <div key={i} className="rounded border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-600 text-[10px] overflow-hidden shadow-sm">
-          <div className="px-2 py-0.5 bg-slate-50 dark:bg-surface-500 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-surface-400">
+        <div key={i} className="rounded border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-600 text-[10px] overflow-hidden ">
+          <div className="px-2 py-0.5 bg-slate-50 dark:bg-surface-500 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-200 dark:border-surface-400">
             {FIELD_LABEL[c.field] ?? c.field}
           </div>
           <div className="flex divide-x divide-slate-200 dark:divide-surface-400">
@@ -50,7 +50,7 @@ const WorkflowActivityPanel: React.FC<Props> = ({ logs, loading }) => {
         <div className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-50 dark:bg-surface-400">
           <Activity size={20} className="text-slate-400" />
         </div>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 text-center">
           No activity recorded
         </p>
       </div>
@@ -73,17 +73,17 @@ const WorkflowActivityPanel: React.FC<Props> = ({ logs, loading }) => {
             key={log.id}
             className="group flex items-start gap-3 rounded-lg px-3 py-3 hover:bg-slate-50 dark:hover:bg-surface-400/20 transition-all border border-transparent hover:border-slate-100 dark:hover:border-surface-400"
           >
-            <div className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${dotCls} shadow-sm group-hover:scale-125 transition-transform`} />
+            <div className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${dotCls}  group-hover:scale-125 transition-transform`} />
             <div className="min-w-0 flex-1">
               <div className="flex flex-col gap-0.5">
                 <div className={`flex items-center gap-2 ${log.is_loop ? "py-0.5 px-1.5 rounded bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100/50 dark:border-amber-900/30 w-fit" : ""}`}>
                   {log.is_loop && <Undo2 className="h-3 w-3 text-amber-600 dark:text-amber-500 shrink-0" />}
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 uppercase tracking-tight">
                     {displayLabel}
                   </span>
                   
                   {log.duration_human && (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-surface-400 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-surface-300">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-surface-400 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-surface-300">
                       <Clock className="h-2.5 w-2.5" />
                       Held for {log.duration_human}
                     </span>

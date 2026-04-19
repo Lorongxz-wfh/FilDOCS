@@ -38,7 +38,7 @@ export default function FontSizeToggle() {
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5 dark:border-surface-400 dark:bg-surface-500 animate-pop-in-top">
-          <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-surface-300">
+          <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-surface-300">
             Font Scaling
           </div>
           {options.map((opt) => (

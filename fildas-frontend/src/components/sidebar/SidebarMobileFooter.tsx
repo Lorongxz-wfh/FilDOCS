@@ -44,7 +44,7 @@ const SidebarMobileFooter: React.FC<SidebarMobileFooterProps> = ({ onLogout, onM
         <NavLink
           to="/settings"
           onClick={onMobileClose}
-          className="flex-1 flex items-center gap-2.5 px-3 py-2 text-[12px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white bg-white dark:bg-surface-400 rounded-xl border border-slate-200 dark:border-white/10 active:scale-[0.98] transition-all"
+          className="flex-1 flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white bg-white dark:bg-surface-400 rounded-xl border border-slate-200 dark:border-white/10 active:scale-[0.98] transition-all"
         >
           <Settings className="h-4 w-4" />
           <span className="truncate">Settings</span>

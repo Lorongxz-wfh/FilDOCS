@@ -27,10 +27,10 @@ import { formatDate } from "../../utils/formatters";
 import MiddleTruncate from "../../components/ui/MiddleTruncate";
 import { StatusBadge, TypePill } from "../../components/ui/Badge";
 import Alert from "../../components/ui/Alert";
-import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SelectDropdown from "../../components/ui/SelectDropdown";
 import { useSmartRefresh } from "../../hooks/useSmartRefresh";
 import { motion, AnimatePresence } from "framer-motion";
+import { SlidersHorizontal, Search, X } from "lucide-react";
 import { useToast } from "../../components/ui/toast/ToastContext";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
@@ -73,11 +73,11 @@ const ProgressBar: React.FC<{ progress: DocumentRequestProgress | undefined | nu
           style={{ width: `${submittedPct}%` }}
         />
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-brand-500 dark:bg-brand-400 transition-all duration-500 shadow-sm"
+          className="absolute inset-y-0 left-0 rounded-full bg-brand-500 dark:bg-brand-400 transition-all duration-500 "
           style={{ width: `${acceptedPct}%` }}
         />
       </div>
-      <span className="shrink-0 text-[11px] font-bold text-slate-500 dark:text-slate-400 tabular-nums w-12 text-right">
+      <span className="shrink-0 text-[11px] font-semibold text-slate-500 dark:text-slate-400 tabular-nums w-12 text-right">
         {total > 0 ? Math.round((accepted / total) * 100) : 0}%
       </span>
     </div>
@@ -165,6 +165,8 @@ export default function RequestListPage() {
   const [loading, setLoading] = React.useState(false);
   const [initialLoading, setInitialLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [total, setTotal] = React.useState<number | null>(null);
+  const [showFilters, setShowFilters] = React.useState(false);
 
   const qDebounced = useDebouncedValue(q, 400);
   const navigate = useNavigate();
@@ -262,6 +264,7 @@ export default function RequestListPage() {
       setInitialLoading(true);
       hasMoreRef.current = true;
       setRows([]);
+      setTotal(null);
     }
 
     if (!hasMoreRef.current && isNextPage) return;
@@ -316,6 +319,7 @@ export default function RequestListPage() {
       hasMoreRef.current = more;
       setHasMore(more);
       setPage(targetPage);
+      if (data?.total !== undefined) setTotal(data.total);
       return { data: incoming };
     } catch (e: any) {
       setError(e?.response?.data?.message ?? e?.message ?? "Failed to load.");
@@ -371,7 +375,7 @@ export default function RequestListPage() {
         sortKey: "id",
         skeletonShape: "narrow",
         render: (row) => (
-          <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] font-semibold font-mono text-slate-400 dark:text-slate-500">
             #{row.id}
           </span>
         ),
@@ -381,7 +385,7 @@ export default function RequestListPage() {
         header: "Direction",
         skeletonShape: "narrow",
         render: (row) => (
-          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${row.direction === 'outgoing'
+          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${row.direction === 'outgoing'
             ? "bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400"
             : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
             }`}>
@@ -439,10 +443,10 @@ export default function RequestListPage() {
 
           return (
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
                 {isOutgoing ? "To" : "From"}
               </span>
-              <span className="text-xs font-bold text-brand-600 dark:text-brand-400 truncate max-w-35">
+              <span className="text-xs font-semibold text-brand-600 dark:text-brand-400 truncate max-w-35">
                 {isMulti ? "Multiple Offices" : (r.office_code || r.office?.code || r.creator_office_code || "—")}
               </span>
               {isMulti && (
@@ -510,7 +514,7 @@ export default function RequestListPage() {
         sortKey: "id",
         skeletonShape: "narrow",
         render: (r) => (
-          <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] font-semibold font-mono text-slate-400 dark:text-slate-500">
             #{r.request_id || r.id}
           </span>
         ),
@@ -520,7 +524,7 @@ export default function RequestListPage() {
         header: "Direction",
         skeletonShape: "narrow",
         render: (r) => (
-          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${r.direction === 'outgoing'
+          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${r.direction === 'outgoing'
             ? "bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400"
             : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
             }`}>
@@ -566,7 +570,7 @@ export default function RequestListPage() {
         skeletonShape: "narrow",
         render: (r) => (
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+            <span className="text-xs font-semibold text-brand-600 dark:text-brand-400">
               {r.office_code}
             </span>
             <span className="text-[10px] text-slate-500 dark:text-slate-500 truncate max-w-30]">
@@ -615,7 +619,10 @@ export default function RequestListPage() {
               { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
             ]}
             active={activeTab}
-            onChange={(val: any) => setActiveTab(val)}
+            onChange={(val: any) => {
+              setActiveTab(val);
+              setShowFilters(false);
+            }}
           />
         </div>
       )}
@@ -626,192 +633,164 @@ export default function RequestListPage() {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 pr-4">
-            <Tabs
-              tabs={REQ_TABS}
-              activeTab={tab}
-              onChange={(key) => {
-                setIsSelectMode(false);
-                clearSelection();
-                if (key === "batches") {
-                  setTab("batches");
-                  setQ("");
-                  setBatchStatus("");
-                  setItemStatus("");
-                  setDirection("all");
-                  setOfficeFilter("");
-                } else {
-                  setTab("all");
-                  setBatchStatus("");
-                  setItemStatus("");
-                }
-              }}
-              id="requests"
-              className="border-none"
-            />
-            {activeTab === "active" && (
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-transparent shrink-0 pr-4 gap-4 mb-2">
+            <div className="flex-1 flex items-center min-w-0">
+              <Tabs
+                tabs={REQ_TABS}
+                activeTab={tab}
+                onChange={(key) => {
+                  setIsSelectMode(false);
+                  clearSelection();
+                  setShowFilters(false);
+                  if (key === "batches") {
+                    setTab("batches");
+                    setQ("");
+                    setBatchStatus("");
+                    setItemStatus("");
+                    setDirection("all");
+                    setOfficeFilter("");
+                  } else {
+                    setTab("all");
+                    setBatchStatus("");
+                    setItemStatus("");
+                  }
+                }}
+                id="requests"
+                className="border-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="hidden lg:flex items-center relative w-72 h-8 ml-4">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  value={q}
+                  onChange={(e) => { setQ(e.target.value); setPage(1); }}
+                  placeholder="Search requests..."
+                  className="w-full pl-9 pr-8 h-8 text-[13px] bg-slate-50/50 border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-500 dark:bg-surface-500/50 dark:border-surface-400/50 dark:text-slate-200"
+                />
+                {q && (
+                  <button
+                    type="button"
+                    onClick={() => { setQ(""); setPage(1); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
               <Button
-                variant={isSelectMode ? "primary" : "ghost"}
+                variant={showFilters || activeFiltersCount > 0 ? "primary" : "outline"}
                 size="sm"
+                reveal
+                onClick={() => setShowFilters(!showFilters)}
+                className="h-8"
+              >
+                <SlidersHorizontal size={14} />
+                <span>Filters</span>
+                {activeFiltersCount > 0 && !showFilters && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-semibold text-white  ring-2 ring-white dark:ring-surface-600">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
+
+              <Button
+                variant={isSelectMode ? "primary" : "outline"}
+                size="sm"
+                reveal
                 onClick={() => {
                   setIsSelectMode(!isSelectMode);
                   if (isSelectMode) clearSelection();
                 }}
-                className="flex items-center gap-2 h-8"
+                className="h-8"
               >
                 <CheckSquare size={14} />
                 <span>{isSelectMode ? "Cancel" : "Select"}</span>
               </Button>
-            )}
+            </div>
           </div>
 
-          <SearchFilterBar
-            search={q}
-            setSearch={(val) => {
-              setQ(val);
-              setPage(1);
-            }}
-            placeholder="Search title/description…"
-            activeFiltersCount={activeFiltersCount}
-            onClear={() => {
-              setQ("");
-              setBatchStatus("");
-              setItemStatus("");
-              setDirection("all");
-              setOfficeFilter("");
-              setPage(1);
-            }}
-            mobileFilters={
-              <div className="flex flex-col gap-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1.5 col-span-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Direction</label>
-                    <SelectDropdown
-                      value={direction}
-                      onChange={(val) => {
-                        setDirection(val as any);
-                        setPage(1);
-                      }}
-                      searchable={true}
-                      className="w-full"
-                      options={[
-                        { value: "all", label: "All directions" },
-                        { value: "incoming", label: "Incoming" },
-                        { value: "outgoing", label: "Outgoing" },
-                      ]}
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 col-span-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Office</label>
-                    <SelectDropdown
-                      value={officeFilter}
-                      onChange={(val) => {
-                        setOfficeFilter(val as any);
-                        setPage(1);
-                      }}
-                      searchable={true}
-                      placeholder="All offices"
-                      className="w-full"
-                      options={[
-                        { value: "", label: "All offices" },
-                        ...offices.map((o) => ({ value: o.id, label: `${o.code} - ${o.name}` })),
-                      ].sort((a, b) => a.label === "All offices" ? -1 : b.label === "All offices" ? 1 : a.label.localeCompare(b.label))}
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 col-span-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Status</label>
-                    <SelectDropdown
-                      value={tab === "batches" ? batchStatus : itemStatus}
-                      onChange={(val) => {
-                        if (tab === "batches") setBatchStatus(val as any);
-                        else setItemStatus(val as any);
-                        setPage(1);
-                      }}
-                      searchable={true}
-                      placeholder="All statuses"
-                      className="w-full"
-                      options={
-                        tab === "batches"
-                          ? [
-                            { value: "", label: "All statuses" },
-                            { value: "open", label: "Open" },
-                            { value: "closed", label: "Closed" },
-                            { value: "cancelled", label: "Cancelled" },
-                          ].sort((a, b) => a.label === "All statuses" ? -1 : b.label === "All statuses" ? 1 : a.label.localeCompare(b.label))
-                          : [
-                            { value: "", label: "All statuses" },
-                            { value: "pending", label: "Pending" },
-                            { value: "submitted", label: "Submitted" },
-                            { value: "accepted", label: "Accepted" },
-                            { value: "rejected", label: "Rejected" },
-                          ].sort((a, b) => a.label === "All statuses" ? -1 : b.label === "All statuses" ? 1 : a.label.localeCompare(b.label))
-                      }
-                    />
-                  </div>
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden bg-slate-50/50 dark:bg-surface-600/50 border-b border-slate-200 dark:border-surface-400"
+              >
+                <div className="px-4 py-2.5 flex flex-wrap items-center gap-2">
+                  <SelectDropdown
+                    value={direction}
+                    onChange={(val) => { setDirection(val as any); setPage(1); }}
+                    className="w-40"
+                    options={[
+                      { value: "all", label: "All Directions" },
+                      { value: "incoming", label: "Incoming" },
+                      { value: "outgoing", label: "Outgoing" }
+                    ]}
+                  />
+                  <SelectDropdown
+                    value={officeFilter}
+                    onChange={(val) => { setOfficeFilter(val as any); setPage(1); }}
+                    searchable={true}
+                    placeholder="All Offices"
+                    className="w-48"
+                    options={[
+                      { value: "", label: "All Offices" },
+                      ...offices.map((o) => ({ value: o.id, label: `${o.code} - ${o.name}` }))
+                    ].sort((a, b) => a.label === "All Offices" ? -1 : b.label === "All Offices" ? 1 : a.label.localeCompare(b.label))}
+                  />
+                  <SelectDropdown
+                    value={tab === "batches" ? batchStatus : itemStatus}
+                    onChange={(val) => {
+                      if (tab === "batches") setBatchStatus(val as any);
+                      else setItemStatus(val as any);
+                      setPage(1);
+                    }}
+                    placeholder="All Statuses"
+                    className="w-40"
+                    options={
+                      tab === "batches"
+                        ? [
+                          { value: "", label: "All Statuses" },
+                          { value: "open", label: "Open" },
+                          { value: "closed", label: "Closed" },
+                          { value: "cancelled", label: "Cancelled" }
+                        ]
+                        : [
+                          { value: "", label: "All Statuses" },
+                          { value: "pending", label: "Pending" },
+                          { value: "submitted", label: "Submitted" },
+                          { value: "accepted", label: "Accepted" },
+                          { value: "rejected", label: "Rejected" }
+                        ]
+                    }
+                  />
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    reveal
+                    onClick={() => {
+                      setQ("");
+                      setBatchStatus("");
+                      setItemStatus("");
+                      setDirection("all");
+                      setOfficeFilter("");
+                      setPage(1);
+                    }}
+                    className="text-[11px] h-8"
+                  >
+                    <Trash2 size={14} />
+                    <span>Clear all</span>
+                  </Button>
                 </div>
-              </div>
-            }
-          >
-            <SelectDropdown
-              value={direction}
-              onChange={(val) => {
-                setDirection(val as any);
-                setPage(1);
-              }}
-              searchable={true}
-              className="w-40"
-              options={[
-                { value: "all", label: "All directions" },
-                { value: "incoming", label: "Incoming" },
-                { value: "outgoing", label: "Outgoing" },
-              ]}
-            />
-
-            <SelectDropdown
-              value={officeFilter}
-              onChange={(val) => {
-                setOfficeFilter(val as any);
-                setPage(1);
-              }}
-              searchable={true}
-              placeholder="All Offices"
-              className="w-48"
-              options={[
-                { value: "", label: "All Offices" },
-                ...offices.map((o) => ({ value: o.id, label: `${o.code} - ${o.name}` })),
-              ].sort((a, b) => a.label === "All Offices" ? -1 : b.label === "All Offices" ? 1 : a.label.localeCompare(b.label))}
-            />
-
-            <SelectDropdown
-              value={tab === "batches" ? batchStatus : itemStatus}
-              onChange={(val) => {
-                if (tab === "batches") setBatchStatus(val as any);
-                else setItemStatus(val as any);
-                setPage(1);
-              }}
-              searchable={true}
-              placeholder="Status"
-              className="w-40"
-              options={
-                tab === "batches"
-                  ? [
-                    { value: "", label: "All Status" },
-                    { value: "open", label: "Open" },
-                    { value: "closed", label: "Closed" },
-                    { value: "cancelled", label: "Cancelled" },
-                  ].sort((a, b) => a.label === "All Status" ? -1 : b.label === "All Status" ? 1 : a.label.localeCompare(b.label))
-                  : [
-                    { value: "", label: "All Status" },
-                    { value: "pending", label: "Pending" },
-                    { value: "submitted", label: "Submitted" },
-                    { value: "accepted", label: "Accepted" },
-                    { value: "rejected", label: "Rejected" },
-                  ].sort((a, b) => a.label === "All Status" ? -1 : b.label === "All Status" ? 1 : a.label.localeCompare(b.label))
-              }
-            />
-          </SearchFilterBar>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {error && !loading && <Alert variant="danger" className="mt-4 mx-4">{error}</Alert>}
 
@@ -831,13 +810,14 @@ export default function RequestListPage() {
                     className="h-full"
                     columns={batchColumns}
                     rows={rows}
+                    total={total ?? undefined}
                     rowKey={(r: any, idx) => r.id || `batch-${idx}`}
                     onRowClick={handleBatchRowClick}
                     loading={loading}
                     initialLoading={initialLoading}
                     emptyMessage={q || batchStatus ? "No requests match your filters." : "No requests found."}
                     hasMore={hasMore}
-                    onLoadMore={() => setPage((p) => p + 1)}
+                    onLoadMore={() => loadData(true)}
                     gridTemplateColumns={adminDebugMode ? "50px 80px 95px minmax(120px, 1fr) 160px 140px 75px 95px 40px" : "50px 80px 95px minmax(120px, 1fr) 160px 140px 75px 95px"}
                     selectable={isSelectMode}
                     selectedIds={selectedIds}
@@ -853,6 +833,7 @@ export default function RequestListPage() {
                     className="h-full"
                     columns={allColumns}
                     rows={rows}
+                    total={total ?? undefined}
                     rowKey={(r: any, idx) => r.recipient_id || r.item_id || `indiv-${idx}`}
                     onRowClick={(r) => {
                       if (r.row_type === "item") {
@@ -865,7 +846,7 @@ export default function RequestListPage() {
                     initialLoading={initialLoading}
                     emptyMessage="No individual requests found."
                     hasMore={hasMore}
-                    onLoadMore={() => setPage((p) => p + 1)}
+                    onLoadMore={() => loadData(true)}
                     gridTemplateColumns="50px 80px minmax(180px, 1fr) 80px 85px 100px 110px"
                     selectable={isSelectMode}
                     selectedIds={selectedIds}

@@ -72,7 +72,7 @@ export const WorkflowDistributeModal: React.FC<WorkflowDistributeModalProps> = (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
             <Users className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-widest">
+            <span className="text-xs font-semibold uppercase tracking-widest">
               Recipients ({selectedIds.length})
             </span>
           </div>
@@ -80,21 +80,21 @@ export const WorkflowDistributeModal: React.FC<WorkflowDistributeModalProps> = (
           <div className="flex items-center gap-4">
             <button
               onClick={handleSelectAll}
-              className="text-[10px] font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 uppercase tracking-tight transition"
+              className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 uppercase tracking-tight transition"
             >
               Select All
             </button>
             <span className="text-slate-200 dark:text-surface-400 text-[10px]">|</span>
             <button
               onClick={handleReset}
-              className="text-[10px] font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 uppercase tracking-tight transition"
+              className="text-[10px] font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 uppercase tracking-tight transition"
             >
               Reset
             </button>
             <span className="text-slate-200 dark:text-surface-400 text-[10px]">|</span>
             <button
               onClick={handleDeselectAll}
-              className="text-[10px] font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 uppercase tracking-tight transition"
+              className="text-[10px] font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 uppercase tracking-tight transition"
             >
               Clear
             </button>
@@ -102,7 +102,7 @@ export const WorkflowDistributeModal: React.FC<WorkflowDistributeModalProps> = (
         </div>
 
         {/* Office Selection List */}
-        <div className="h-[300px] border border-slate-200 dark:border-surface-400 rounded-xl overflow-hidden bg-white dark:bg-surface-500/30 shadow-sm">
+        <div className="h-[300px] border border-slate-200 dark:border-surface-400 rounded-xl overflow-hidden bg-white dark:bg-surface-500/30 ">
           <OfficeCheckList
             offices={selectableOffices}
             loading={false}

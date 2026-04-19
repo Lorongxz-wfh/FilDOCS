@@ -112,13 +112,13 @@ export default function MaintenanceBanner() {
 
   return (
     <div className="relative z-[100] animate-in slide-in-from-top-full duration-500">
-      <div className={`${isStarted ? 'bg-rose-600/90' : 'bg-amber-500/90'} backdrop-blur-md text-white px-4 py-2 border-b ${isStarted ? 'border-rose-700/20' : 'border-amber-600/20'} flex items-center justify-between shadow-sm`}>
+      <div className={`${isStarted ? 'bg-rose-600/90' : 'bg-amber-500/90'} backdrop-blur-md text-white px-4 py-2 border-b ${isStarted ? 'border-rose-700/20' : 'border-amber-600/20'} flex items-center justify-between `}>
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="bg-white/20 p-1.5 rounded-md shrink-0">
             {isStarted ? <ShieldAlert size={16} className="animate-pulse" /> : <Clock size={16} className="animate-pulse" />}
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 overflow-hidden">
-            <span className="text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
+            <span className="text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap">
               {isStarted ? "Ongoing Maintenance" : "Scheduled Maintenance"}
             </span>
             <span className="text-xs opacity-90 truncate max-w-md">
@@ -129,10 +129,10 @@ export default function MaintenanceBanner() {
 
         <div className="flex items-center gap-4 shrink-0">
           <div className={`flex items-center gap-2 ${isStarted ? 'bg-rose-950/20' : 'bg-black/10'} px-3 py-1 rounded-full border border-white/20`}>
-            <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest">
+            <span className="text-[10px] font-semibold opacity-70 uppercase tracking-widest">
               {isStarted ? "Status" : "Starts in"}
             </span>
-            <span className="text-sm font-mono font-bold">
+            <span className="text-sm font-mono font-semibold">
               {isStarted ? "ACTIVE" : timeLeft}
             </span>
           </div>
@@ -140,7 +140,7 @@ export default function MaintenanceBanner() {
           {isPrivileged && (
             <Link 
               to="/admin/system/health"
-              className="hidden md:flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-md border border-white/20 text-[11px] font-bold tracking-tight transition active:scale-95"
+              className="hidden md:flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-md border border-white/20 text-[11px] font-semibold tracking-tight transition active:scale-95"
             >
               <Settings size={12} />
               Manage

@@ -100,7 +100,7 @@ const AdminOfficeDropdown: React.FC<Props> = ({
           }}
           disabled={disabled}
           className={[
-            "block w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none transition",
+            "block w-full rounded-md border px-3 py-2 text-sm  outline-none transition",
             disabled
               ? "bg-slate-50 text-slate-500 dark:bg-surface-600 dark:text-slate-500"
               : "bg-white text-slate-900 dark:bg-surface-400 dark:text-slate-200",

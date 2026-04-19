@@ -116,7 +116,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ items, loadi
         
         {[1, 2, 3, 4].map(i => (
           <div key={i} className="relative flex items-start gap-5">
-            <div className="relative z-10 h-8 w-8 rounded-full bg-slate-50 dark:bg-surface-400 border-4 border-white dark:border-surface-500 shadow-sm shrink-0 flex items-center justify-center">
+            <div className="relative z-10 h-8 w-8 rounded-full bg-slate-50 dark:bg-surface-400 border-4 border-white dark:border-surface-500  shrink-0 flex items-center justify-center">
               <div className="h-3 w-3 rounded-full bg-slate-200 dark:bg-surface-300 animate-pulse" />
             </div>
             <div className="flex-1 space-y-3 py-1">
@@ -163,7 +163,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ items, loadi
             exit={{ opacity: 0, scale: 0.98 }}
             className="relative"
           >
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-6 bg-white dark:bg-surface-500 sticky top-0 py-1 z-20 w-fit pr-4">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-6 bg-white dark:bg-surface-500 sticky top-0 py-1 z-20 w-fit pr-4">
               {group.label}
             </h3>
             
@@ -192,7 +192,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ items, loadi
                       {/* Timeline marker with scale animation */}
                       <motion.div 
                         whileHover={{ scale: 1.1 }}
-                        className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-4 border-white dark:border-surface-500 text-white shadow-sm ring-1 ring-slate-100 dark:ring-surface-400/50 ${CATEGORY_COLORS[category]}`}
+                        className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-4 border-white dark:border-surface-500 text-white  ring-1 ring-slate-100 dark:ring-surface-400/50 ${CATEGORY_COLORS[category]}`}
                       >
                         <Icon className="h-3.5 w-3.5" />
                       </motion.div>
@@ -214,7 +214,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ items, loadi
                         )}
                         
                         {isClickable && (
-                           <div className="mt-2 flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider text-brand-500 dark:text-brand-400 group-hover:text-brand-600 transition-colors">
+                           <div className="mt-2 flex items-center gap-1 text-[10px] uppercase font-semibold tracking-wider text-brand-500 dark:text-brand-400 group-hover:text-brand-600 transition-colors">
                               <ExternalLink className="h-2.5 w-2.5" />
                               <span>View Details</span>
                            </div>

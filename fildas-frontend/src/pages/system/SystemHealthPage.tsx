@@ -76,8 +76,8 @@ function HealthCard({
         </div>
       </div>
       <div>
-        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{title}</h4>
-        <p className="text-lg font-bold text-slate-900 dark:text-slate-50">{label}</p>
+        <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{title}</h4>
+        <p className="text-lg font-semibold text-slate-900 dark:text-slate-50">{label}</p>
         {subLabel && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">{subLabel}</p>}
       </div>
     </div>
@@ -301,13 +301,13 @@ export default function SystemHealthPage() {
 
         {/* ── Diagnostic Report (Conditional) ── */}
         {diagnostics && (
-          <div className="rounded-xl border border-brand-200 bg-white p-5 dark:border-brand-500/20 dark:bg-surface-600/50 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-top-2 duration-500 shadow-sm">
+          <div className="rounded-xl border border-brand-200 bg-white p-5 dark:border-brand-500/20 dark:bg-surface-600/50 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-top-2 duration-500 ">
              <div className="flex items-center gap-4">
                <div className="p-3 bg-brand-500 text-white rounded-lg shadow-lg shadow-brand-500/20">
                  <Zap size={22} />
                </div>
                <div>
-                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">Infrastructure Diagnostic Report</h3>
+                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Infrastructure Diagnostic Report</h3>
                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">
                    Executed at {new Date(diagnostics.timestamp).toLocaleTimeString()}
                  </p>
@@ -316,27 +316,27 @@ export default function SystemHealthPage() {
              
              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 <div className="text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">DB Latency</p>
-                  <p className="text-sm font-bold text-slate-900 dark:text-slate-50 flex items-center justify-center gap-1">
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">DB Latency</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 flex items-center justify-center gap-1">
                     <Timer size={14} className="text-slate-400" />
                     {diagnostics.db_latency}ms
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cache I/O</p>
-                  <p className={`text-sm font-bold ${diagnostics.cache_io ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Cache I/O</p>
+                  <p className={`text-sm font-semibold ${diagnostics.cache_io ? 'text-emerald-500' : 'text-rose-500'}`}>
                     {diagnostics.cache_io ? 'VERIFIED' : 'FAILED'}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Storage I/O</p>
-                  <p className={`text-sm font-bold ${diagnostics.storage_io ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Storage I/O</p>
+                  <p className={`text-sm font-semibold ${diagnostics.storage_io ? 'text-emerald-500' : 'text-rose-500'}`}>
                     {diagnostics.storage_io ? 'VERIFIED' : 'FAILED'}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Broadcasting</p>
-                  <p className={`text-sm font-bold ${diagnostics.pusher ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Broadcasting</p>
+                  <p className={`text-sm font-semibold ${diagnostics.pusher ? 'text-emerald-500' : 'text-rose-500'}`}>
                     {diagnostics.pusher ? 'VERIFIED' : 'FAILED'}
                     <span className="text-[9px] block font-normal text-slate-400 uppercase mt-0.5">
                       Driver: {diagnostics.broadcasting_driver}
@@ -354,19 +354,19 @@ export default function SystemHealthPage() {
             <div className="rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/50 flex items-center gap-2">
                 <ShieldAlert size={18} className="text-brand-500" />
-                <h3 className="font-bold text-slate-900 dark:text-slate-50 font-heading">Maintenance Control</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-slate-50 font-heading">Maintenance Control</h3>
               </div>
               <div className="p-5 space-y-5">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-3">Operating Mode</label>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block mb-3">Operating Mode</label>
                   <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100 dark:bg-black/20 rounded-lg">
                     {(['off', 'soft', 'hard'] as const).map(mode => (
                       <button
                         key={mode}
                         onClick={() => setMMode(mode)}
-                        className={`py-2 px-3 rounded-md text-xs font-bold transition-all ${
+                        className={`py-2 px-3 rounded-md text-xs font-semibold transition-all ${
                           mMode === mode 
-                            ? "bg-white dark:bg-surface-400 text-brand-600 dark:text-brand-400 shadow-sm" 
+                            ? "bg-white dark:bg-surface-400 text-brand-600 dark:text-brand-400 " 
                             : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
                         }`}
                       >
@@ -382,7 +382,7 @@ export default function SystemHealthPage() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Message to Users</label>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block mb-2">Message to Users</label>
                   <textarea 
                     value={mMessage}
                     onChange={(e) => setMMessage(e.target.value)}
@@ -395,7 +395,7 @@ export default function SystemHealthPage() {
                 <button
                   onClick={handleUpdateMaintenance}
                   disabled={updating}
-                  className="w-full py-3 rounded-lg bg-brand-500 text-white text-xs font-bold hover:bg-brand-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-lg bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {updating ? <RefreshCw size={14} className="animate-spin" /> : <Activity size={14} />}
                   Apply Settings
@@ -404,11 +404,11 @@ export default function SystemHealthPage() {
             </div>
 
             {/* ── Maintenance Scheduler ── */}
-            <div className="rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden ">
               <div className="px-5 py-4 border-b border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock size={18} className="text-amber-500" />
-                  <h3 className="font-bold text-slate-900 dark:text-slate-50 font-heading">Maintenance Scheduler</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-50 font-heading">Maintenance Scheduler</h3>
                 </div>
                 {health?.maintenance.starts_at && (
                    <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
@@ -419,15 +419,15 @@ export default function SystemHealthPage() {
                 {health?.maintenance.starts_at ? (
                   <div className="space-y-4">
                     <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30">
-                       <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">Upcoming Deployment</p>
-                       <p className="text-sm font-bold text-slate-900 dark:text-slate-50">
+                       <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">Upcoming Deployment</p>
+                       <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">
                          Starting at {new Date(health.maintenance.starts_at).toLocaleTimeString()}
                        </p>
                     </div>
                     <button
                       onClick={handleCancelSchedule}
                       disabled={isCancelling}
-                      className="w-full py-2.5 rounded-lg border border-rose-200 text-rose-600 text-xs font-bold hover:bg-rose-50 transition disabled:opacity-50 flex items-center justify-center gap-2 dark:border-rose-900/30 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                      className="w-full py-2.5 rounded-lg border border-rose-200 text-rose-600 text-xs font-semibold hover:bg-rose-50 transition disabled:opacity-50 flex items-center justify-center gap-2 dark:border-rose-900/30 dark:text-rose-400 dark:hover:bg-rose-950/30"
                     >
                       {isCancelling ? <RefreshCw size={12} className="animate-spin" /> : <XCircle size={14} />}
                       Cancel Schedule
@@ -436,15 +436,15 @@ export default function SystemHealthPage() {
                 ) : (
                   <>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-3">Time Delay</label>
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block mb-3">Time Delay</label>
                       <div className="grid grid-cols-4 gap-2">
                         {[5, 10, 30, 60].map(mins => (
                           <button
                             key={mins}
                             onClick={() => setScheduledMinutes(mins)}
-                            className={`py-2 rounded-md text-[10px] font-bold transition-all border ${
+                            className={`py-2 rounded-md text-[10px] font-semibold transition-all border ${
                               scheduledMinutes === mins 
-                                ? "bg-amber-500 border-amber-600 text-white shadow-sm" 
+                                ? "bg-amber-500 border-amber-600 text-white " 
                                 : "border-slate-200 dark:border-surface-400 text-slate-500 hover:text-slate-700 dark:text-slate-400"
                             }`}
                           >
@@ -455,15 +455,15 @@ export default function SystemHealthPage() {
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-3">Grace Period Mode</label>
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block mb-3">Grace Period Mode</label>
                       <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-black/20 rounded-lg">
                         {(['soft', 'hard'] as const).map(mode => (
                           <button
                             key={mode}
                             onClick={() => setSchedulingMode(mode)}
-                            className={`py-1.5 rounded-md text-[10px] font-bold transition-all ${
+                            className={`py-1.5 rounded-md text-[10px] font-semibold transition-all ${
                               schedulingMode === mode 
-                                ? "bg-white dark:bg-surface-400 text-amber-600 dark:text-amber-400 shadow-sm" 
+                                ? "bg-white dark:bg-surface-400 text-amber-600 dark:text-amber-400 " 
                                 : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
                             }`}
                           >
@@ -476,7 +476,7 @@ export default function SystemHealthPage() {
                     <button
                       onClick={handleScheduleMaintenance}
                       disabled={isScheduling}
-                      className="w-full py-3 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
+                      className="w-full py-3 rounded-lg bg-amber-500 text-white text-xs font-semibold hover:bg-amber-600 transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
                     >
                       {isScheduling ? <RefreshCw size={14} className="animate-spin" /> : <Timer size={14} />}
                       Schedule & Broadcast
@@ -494,11 +494,11 @@ export default function SystemHealthPage() {
                        <Users size={18} />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-900 dark:text-slate-50">Active Users</p>
+                      <p className="text-xs font-semibold text-slate-900 dark:text-slate-50">Active Users</p>
                       <p className="text-[10px] text-slate-500">Live sessions (15m)</p>
                     </div>
                   </div>
-                  <span className="text-xl font-bold font-mono text-slate-900 dark:text-slate-50">{health?.active_sessions || 0}</span>
+                  <span className="text-xl font-semibold font-mono text-slate-900 dark:text-slate-50">{health?.active_sessions || 0}</span>
                </div>
                <div className="flex items-center justify-between py-4">
                   <div className="flex items-center gap-3">
@@ -506,11 +506,11 @@ export default function SystemHealthPage() {
                        <Server size={18} />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-900 dark:text-slate-50">PHP Version</p>
+                      <p className="text-xs font-semibold text-slate-900 dark:text-slate-50">PHP Version</p>
                       <p className="text-[10px] text-slate-500">Laravel v{health?.server_info.laravel_version}</p>
                     </div>
                   </div>
-                  <span className="text-sm font-bold font-mono text-slate-500 dark:text-slate-400">v{health?.server_info.php_version}</span>
+                  <span className="text-sm font-semibold font-mono text-slate-500 dark:text-slate-400">v{health?.server_info.php_version}</span>
                </div>
                <div className="flex items-center justify-between pt-4">
                   <div className="flex items-center gap-3">
@@ -518,11 +518,11 @@ export default function SystemHealthPage() {
                        <Clock size={18} />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-900 dark:text-slate-50">Server Time</p>
+                      <p className="text-xs font-semibold text-slate-900 dark:text-slate-50">Server Time</p>
                       <p className="text-[10px] text-slate-500">System timezone (UTC)</p>
                     </div>
                   </div>
-                  <span className="text-xs font-bold font-mono text-slate-500 dark:text-slate-400">
+                  <span className="text-xs font-semibold font-mono text-slate-500 dark:text-slate-400">
                     {health ? new Date(health.server_info.server_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--:--"}
                   </span>
                </div>
@@ -535,7 +535,7 @@ export default function SystemHealthPage() {
               <div className="px-4 py-3 bg-slate-800 border-b border-slate-700 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
                   <Terminal size={14} className="text-emerald-400" />
-                  <span className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">System Engine Logs</span>
+                  <span className="text-[11px] font-semibold text-slate-300 uppercase tracking-widest">System Engine Logs</span>
                 </div>
                 <button 
                   onClick={fetchLogs} 

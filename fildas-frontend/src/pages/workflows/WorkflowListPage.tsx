@@ -6,14 +6,13 @@ import { getUserRole, isQA, isSysAdmin } from "../../lib/roleFilters";
 import type { Office } from "../../services/types";
 import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
 import { useToast } from "../../components/ui/toast/ToastContext";
-import { CheckSquare, Download, Trash2, LayoutList, CheckCircle2 } from "lucide-react";
+import { CheckSquare, Download, Trash2, LayoutList, CheckCircle2, SlidersHorizontal, Search, X } from "lucide-react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import PageFrame from "../../components/layout/PageFrame";
 import Table, { type TableColumn } from "../../components/ui/Table";
 import Alert from "../../components/ui/Alert";
 import { DateRangePicker } from "../../components/ui/DateRangePicker";
-import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import { formatDate } from "../../utils/formatters";
 import SelectDropdown from "../../components/ui/SelectDropdown";
 import { Tabs } from "../../components/ui/Tabs";
@@ -59,6 +58,7 @@ export default function WorkflowListPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
 
   const [allOffices, setAllOffices] = useState<Office[]>([]);
   const hasMoreRef = useRef(true);
@@ -71,6 +71,7 @@ export default function WorkflowListPage() {
   const [bulkDownloadOpen, setBulkDownloadOpen] = useState(false);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [bulkConfirmDelete, setBulkConfirmDelete] = useState<number[] | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const handleDelete = async () => {
     if (!deletingId) return;
@@ -155,8 +156,9 @@ export default function WorkflowListPage() {
       setInitialLoading(true);
       hasMoreRef.current = true;
       setRows([]);
+      setTotal(null);
     }
-
+    
     if (!hasMoreRef.current && isNextPage) return;
     if (!silent) setLoading(true);
     setError(null);
@@ -188,6 +190,7 @@ export default function WorkflowListPage() {
       hasMoreRef.current = more;
       setHasMore(more);
       setPage(targetPage);
+      if (res.meta?.total !== undefined) setTotal(res.meta.total);
       return { data: incoming };
     } finally {
       setLoading(false);
@@ -236,7 +239,7 @@ export default function WorkflowListPage() {
         header: "ID",
         skeletonShape: "narrow",
         render: (doc) => (
-          <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] font-semibold font-mono text-slate-400 dark:text-slate-500">
             #{doc.id}
           </span>
         ),
@@ -270,7 +273,7 @@ export default function WorkflowListPage() {
       cols.push({
         key: "owner",
         header: "Office",
-        render: (doc: any) => <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{doc.office?.code || doc.ownerOffice?.code || "—"}</span>,
+        render: (doc: any) => <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{doc.office?.code || doc.ownerOffice?.code || "—"}</span>,
       });
     }
     cols.push(
@@ -351,57 +354,128 @@ export default function WorkflowListPage() {
       }
       contentClassName="flex flex-col min-h-0 gap-0 h-full overflow-hidden"
     >
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 pr-4">
-        <Tabs
-          tabs={TABS}
-          activeTab={tab}
-          onChange={(key) => { setTab(key as WFTab); setPage(1); }}
-          id="workflows"
-          className="border-none"
-        />
-        <Button
-          variant={isSelectMode ? "primary" : "ghost"}
-          size="sm"
-          onClick={() => {
-            setIsSelectMode(!isSelectMode);
-            if (isSelectMode) clearSelection();
-          }}
-          className="flex items-center gap-2 h-8"
-        >
-          <CheckSquare size={14} />
-          <span>{isSelectMode ? "Cancel" : "Select"}</span>
-        </Button>
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-transparent shrink-0 pr-4 gap-4 mb-2">
+        <div className="flex-1 flex items-center min-w-0">
+          <Tabs
+            tabs={TABS}
+            activeTab={tab}
+            onChange={(key) => { 
+              setTab(key as WFTab); 
+              setPage(1); 
+              setShowFilters(false);
+            }}
+            id="workflows"
+            className="border-none"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="hidden lg:flex items-center relative w-72 h-8 ml-4">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <input
+              value={q}
+              onChange={(e) => { setQ(e.target.value); setPage(1); }}
+              placeholder="Search workflows..."
+              className="w-full pl-9 pr-8 h-8 text-[13px] bg-slate-50/50 border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-500 dark:bg-surface-500/50 dark:border-surface-400/50 dark:text-slate-200"
+            />
+            {q && (
+              <button
+                type="button"
+                onClick={() => { setQ(""); setPage(1); }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <Button
+            variant={showFilters || activeFiltersCount > 0 ? "primary" : "outline"}
+            size="sm"
+            reveal
+            onClick={() => setShowFilters(!showFilters)}
+            className="h-8"
+          >
+            <SlidersHorizontal size={14} />
+            <span>Filters</span>
+            {activeFiltersCount > 0 && !showFilters && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-semibold text-white  ring-2 ring-white dark:ring-surface-600">
+                {activeFiltersCount}
+              </span>
+            )}
+          </Button>
+
+          <Button
+            variant={isSelectMode ? "primary" : "outline"}
+            size="sm"
+            reveal
+            onClick={() => {
+              setIsSelectMode(!isSelectMode);
+              if (isSelectMode) clearSelection();
+            }}
+            className="h-8"
+          >
+            <CheckSquare size={14} />
+            <span>{isSelectMode ? "Cancel" : "Select"}</span>
+          </Button>
+        </div>
       </div>
 
-      <SearchFilterBar
-        search={q}
-        setSearch={(val) => { setQ(val); setPage(1); }}
-        placeholder="Search title, code, office..."
-        activeFiltersCount={activeFiltersCount}
-        onClear={() => { setQ(""); setPhaseFilter(""); setOfficeFilter(""); setDateFrom(""); setDateTo(""); setPage(1); }}
-        mobileFilters={
-          <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-2 gap-2">
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden bg-slate-50/50 dark:bg-surface-600/50 border-b border-slate-200 dark:border-surface-400"
+          >
+            <div className="px-4 py-2.5 flex flex-wrap items-center gap-2">
               <SelectDropdown
                 value={phaseFilter}
                 onChange={(val) => { setPhaseFilter((val as string) || ""); setPage(1); }}
-                options={[{ value: "", label: "All Phases" }, { value: "draft", label: "Draft" }, { value: "review", label: "Review" }, { value: "approval", label: "Approval" }, { value: "finalization", label: "Finalization" }, { value: "distributed", label: "Distributed" }]}
+                className="w-40"
+                options={[
+                  { value: "", label: "All Phases" },
+                  { value: "draft", label: "Draft" },
+                  { value: "review", label: "Review" },
+                  { value: "approval", label: "Approval" },
+                  { value: "finalization", label: "Finalization" },
+                  { value: "distributed", label: "Distributed" }
+                ]}
               />
               <SelectDropdown
                 value={officeFilter}
                 onChange={(val) => { setOfficeFilter((val as string) || ""); setPage(1); }}
                 searchable={true}
+                className="w-48"
                 options={[{ value: "", label: "All Offices" }, ...officeOptions]}
               />
+              <DateRangePicker 
+                from={dateFrom} 
+                to={dateTo} 
+                onSelect={(r: any) => { setDateFrom(r.from); setDateTo(r.to); setPage(1); }} 
+              />
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setQ("");
+                  setPhaseFilter("");
+                  setOfficeFilter("");
+                  setDateFrom("");
+                  setDateTo("");
+                  setPage(1);
+                }}
+                className="text-[11px] h-8"
+              >
+                Clear all
+              </Button>
             </div>
-            <DateRangePicker from={dateFrom} to={dateTo} onSelect={(r: any) => { setDateFrom(r.from); setDateTo(r.to); setPage(1); }} />
-          </div>
-        }
-      >
-        <SelectDropdown value={phaseFilter} onChange={(val) => { setPhaseFilter((val as string) || ""); setPage(1); }} className="w-32" options={[{ value: "", label: "All Phases" }, { value: "draft", label: "Draft" }, { value: "review", label: "Review" }, { value: "approval", label: "Approval" }, { value: "finalization", label: "Finalization" }, { value: "distributed", label: "Distributed" }]} />
-        <SelectDropdown value={officeFilter} onChange={(val) => { setOfficeFilter((val as string) || ""); setPage(1); }} searchable={true} className="w-40" options={[{ value: "", label: "All Offices" }, ...officeOptions]} />
-        <DateRangePicker from={dateFrom} to={dateTo} onSelect={(r: any) => { setDateFrom(r.from); setDateTo(r.to); setPage(1); }} />
-      </SearchFilterBar>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
 
@@ -419,6 +493,7 @@ export default function WorkflowListPage() {
               bare
               columns={columns}
               rows={displayRows}
+              total={total ?? undefined}
               rowKey={(doc) => doc.id}
               initialLoading={initialLoading}
               loading={loading}

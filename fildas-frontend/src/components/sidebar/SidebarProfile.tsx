@@ -62,7 +62,7 @@ const ProfileDropdownContent: React.FC<ProfileDropdownContentProps> = ({
     collapsed ? "left-[calc(100%+8px)] bottom-0 w-64 animate-pop-in-left" : "left-2 right-2 bottom-full mb-2 animate-pop-in-bottom"
   ].join(" ")}>
     <div className="px-3.5 py-2 border-b border-neutral-100 dark:border-surface-400">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-surface-100/50">Account</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-surface-100/50">Account</p>
     </div>
     <div className="py-1">
       {[
@@ -81,7 +81,7 @@ const ProfileDropdownContent: React.FC<ProfileDropdownContentProps> = ({
     </div>
 
     <div className="px-3.5 py-2 border-t border-neutral-100 dark:border-surface-400 mt-1">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-surface-100/50">Support</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-surface-100/50">Support</p>
     </div>
 
     <div className="py-1">
@@ -134,7 +134,7 @@ const ProfileDropdownContent: React.FC<ProfileDropdownContentProps> = ({
           onClick={() => setProfileOpen(!profileOpen)}
           className={["flex w-full items-center gap-2.5 py-2 transition-all group rounded-lg", collapsed ? "justify-center" : "px-2 hover:bg-neutral-100 dark:hover:bg-surface-400", profileOpen ? "bg-neutral-100 dark:bg-surface-400" : ""].join(" ")}
         >
-          <div className="h-9 w-9 shrink-0 rounded-lg bg-neutral-100 dark:bg-surface-400 flex items-center justify-center border border-neutral-200 dark:border-surface-300 overflow-hidden shadow-sm transition-colors">
+          <div className="h-9 w-9 shrink-0 rounded-lg bg-neutral-100 dark:bg-surface-400 flex items-center justify-center border border-neutral-200 dark:border-surface-300 overflow-hidden  transition-colors">
             {!imgError && user?.profile_photo_url ? (
               <img src={user.profile_photo_url} alt={user.full_name} className="h-full w-full object-cover" onError={() => setImgError(true)} />
             ) : (
@@ -144,7 +144,7 @@ const ProfileDropdownContent: React.FC<ProfileDropdownContentProps> = ({
           {!collapsed && (
             <>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-[13px] font-bold text-neutral-900 dark:text-surface-50 truncate">{user?.full_name}</p>
+                <p className="text-[13px] font-semibold text-neutral-900 dark:text-surface-50 truncate">{user?.full_name}</p>
                 <p className="text-[10px] font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wide truncate">{user?.email}</p>
               </div>
               <ChevronsUpDown className="h-3.5 w-3.5 text-neutral-400 group-hover:text-neutral-600" />

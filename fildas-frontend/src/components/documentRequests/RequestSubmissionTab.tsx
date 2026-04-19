@@ -135,7 +135,7 @@ export default function RequestSubmissionTab({
                   <StatusBadge status={selectedSubmission.status} />
                 )}
                 {hasLocalFile && (
-                  <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:bg-sky-950/30 dark:text-sky-400">
+                  <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-600 dark:bg-sky-950/30 dark:text-sky-400">
                     Ready to submit
                   </span>
                 )}
@@ -165,7 +165,7 @@ export default function RequestSubmissionTab({
           {isSubmitter && hasExample && !hasLocalFile && (
             <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-slate-100 dark:border-surface-400 bg-slate-50/30 dark:bg-surface-600/20">
               <div className="min-w-0">
-                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
                   Reference
                 </p>
                 <p className="text-xs text-slate-600 dark:text-slate-400">
@@ -246,7 +246,7 @@ export default function RequestSubmissionTab({
               </div>
 
               <div>
-                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
                   Submission Note
                 </p>
                 <textarea
@@ -289,7 +289,7 @@ export default function RequestSubmissionTab({
           {/* Reviewer: Decision Box */}
           {isReviewer && canReview && !hasLocalFile && (
             <div className="px-5 py-4 border-t border-slate-100 dark:border-surface-400 bg-slate-50/30 dark:bg-surface-600/20">
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
+              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
                 Review Decision
               </p>
               <div className="flex items-start gap-3">

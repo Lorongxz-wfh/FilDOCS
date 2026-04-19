@@ -102,7 +102,7 @@ export default function RequestCommentsPanel({
         <button
           type="button"
           onClick={handleScrollToNew}
-          className="shrink-0 w-full flex items-center justify-center gap-1.5 rounded-md bg-sky-500 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-sky-600 transition animate-pulse"
+          className="shrink-0 w-full flex items-center justify-center gap-1.5 rounded-md bg-sky-500 py-1.5 text-xs font-semibold text-white  hover:bg-sky-600 transition animate-pulse"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-white" />
           {newMessageCount} new message{newMessageCount > 1 ? "s" : ""} · Click
@@ -166,14 +166,14 @@ export default function RequestCommentsPanel({
 
       {readOnly ? (
         <div className="shrink-0 border border-slate-200 bg-slate-50 rounded-xl px-4 py-3 dark:border-surface-400 dark:bg-surface-600/50">
-          <p className="text-center text-[11px] text-slate-400 dark:text-slate-500 font-display font-bold uppercase tracking-widest leading-none">
+          <p className="text-center text-[11px] text-slate-400 dark:text-slate-500 font-display font-semibold uppercase tracking-widest leading-none">
             {readOnlyLabel}
           </p>
         </div>
       ) : (
         <div className="shrink-0 space-y-2">
           {postErr && (
-            <p className="px-2 text-xs font-bold text-rose-600 dark:text-rose-400">
+            <p className="px-2 text-xs font-semibold text-rose-600 dark:text-rose-400">
               {postErr}
             </p>
           )}

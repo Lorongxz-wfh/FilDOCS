@@ -72,7 +72,7 @@ export default function MaintenancePage() {
 
           {timeLeft && (
             <div className="mb-8 p-6 rounded-xl bg-slate-50 dark:bg-surface-600 border border-slate-100 dark:border-surface-400 flex flex-col items-center">
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Estimated Back Online in</span>
+              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Estimated Back Online in</span>
               <span className="text-4xl font-mono font-black text-brand-500 dark:text-brand-400 tracking-tighter">
                 {timeLeft}
               </span>
@@ -82,14 +82,14 @@ export default function MaintenancePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
              <a 
                href="mailto:support@fildocs.fcu.edu.ph"
-               className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-slate-200 dark:border-surface-400 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition text-[13px] font-bold"
+               className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-slate-200 dark:border-surface-400 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition text-[13px] font-semibold"
              >
                 <Mail size={16} />
                 Contact Support
              </a>
              <button 
                onClick={() => window.location.reload()}
-               className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-brand-500 text-white hover:bg-brand-600 shadow-lg shadow-brand-500/20 transition text-[13px] font-bold"
+               className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-brand-500 text-white hover:bg-brand-600 shadow-lg shadow-brand-500/20 transition text-[13px] font-semibold"
              >
                 <RefreshCw size={16} />
                 Check Status
@@ -106,7 +106,7 @@ export default function MaintenancePage() {
                 window.location.href = "/login";
               }
             }}
-            className="text-[10px] font-bold text-slate-400 hover:text-rose-500 uppercase tracking-widest transition-colors"
+            className="text-[10px] font-semibold text-slate-400 hover:text-rose-500 uppercase tracking-widest transition-colors"
           >
             Sign Out Permanently
           </button>

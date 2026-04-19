@@ -104,7 +104,7 @@ const ForcePasswordChangePage: React.FC = () => {
           </div>
 
           <div className="text-center mb-8">
-            <h2 className="text-[1.6rem] font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            <h2 className="text-[1.6rem] font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               Set New Password
             </h2>
             <p className="mt-1 text-sm text-slate-400 dark:text-slate-400">

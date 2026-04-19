@@ -18,7 +18,7 @@ export const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
   const photoUrl = user?.profile_photo_url;
 
   return (
-    <div className="h-full rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-sm overflow-hidden flex flex-col">
+    <div className="h-full rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500  overflow-hidden flex flex-col">
       <div className="flex flex-col gap-6 p-6">
         {/* Photo Section */}
         <div className="flex flex-col items-center gap-4">
@@ -41,10 +41,10 @@ export const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
           </div>
           
           <div className="text-center">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 leading-tight">
               {user?.full_name}
             </h2>
-            <span className="inline-flex items-center gap-1.5 mt-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-surface-400 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+            <span className="inline-flex items-center gap-1.5 mt-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-surface-400 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
               <ShieldCheck className="h-3 w-3" />
               {(user as any)?.role?.name || (user as any)?.role || "User"}
             </span>
@@ -75,7 +75,7 @@ export const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-surface-400">
            <Button 
             variant="secondary" 
-            className="w-full font-bold h-10 shadow-sm"
+            className="w-full font-semibold h-10 "
             onClick={onEdit}
           >
             Edit Personal Info
@@ -94,7 +94,7 @@ interface DetailItemProps {
 
 const DetailItem: React.FC<DetailItemProps> = ({ icon, label, value }) => (
   <div className="flex flex-col gap-1">
-    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+    <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
       {icon}
       {label}
     </div>

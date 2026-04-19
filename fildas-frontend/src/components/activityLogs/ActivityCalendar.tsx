@@ -87,7 +87,7 @@ const DayPanel: React.FC<{
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span
-                        className={`text-xs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full ${colors.bg} ${colors.text}`}
+                        className={`text-xs font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full ${colors.bg} ${colors.text}`}
                       >
                         {log.event.replace(".", " ")}
                       </span>

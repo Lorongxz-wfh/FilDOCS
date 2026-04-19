@@ -74,7 +74,7 @@ const OfficeCreationChart: React.FC<{
               </div>
 
               {/* Count */}
-              <span className="w-8 shrink-0 text-right text-xs font-bold tabular-nums text-slate-800 dark:text-slate-100">
+              <span className="w-8 shrink-0 text-right text-xs font-semibold tabular-nums text-slate-800 dark:text-slate-100">
                 {d.total}
               </span>
             </div>

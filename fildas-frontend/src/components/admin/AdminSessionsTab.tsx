@@ -121,13 +121,13 @@ const AdminSessionsTab: React.FC = () => {
     {
       key: "user",
       header: "User",
-      render: (s) => <span className="font-bold text-slate-900 dark:text-slate-100">{s.user.full_name}</span>
+      render: (s) => <span className="font-semibold text-slate-900 dark:text-slate-100">{s.user.full_name}</span>
     },
     {
       key: "office",
       header: "Office",
       render: (s) => (
-        <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">
+        <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
           {s.user.office?.code || "—"}
         </span>
       )
@@ -248,8 +248,8 @@ const AdminSessionsTab: React.FC = () => {
                     <History size={18} />
                   </div>
                   <div className="min-w-0">
-                     <h3 className="text-sm font-bold truncate">Session Tracking</h3>
-                     <p className="text-[10px] text-slate-400 truncate uppercase tracking-widest font-bold">{selectedSession.user.full_name}</p>
+                     <h3 className="text-sm font-semibold truncate">Session Tracking</h3>
+                     <p className="text-[10px] text-slate-400 truncate uppercase tracking-widest font-semibold">{selectedSession.user.full_name}</p>
                   </div>
                </div>
                <div className="flex items-center gap-1">
@@ -300,7 +300,7 @@ const AdminSessionsTab: React.FC = () => {
                    {sessionLogs.length === 0 && (
                      <div className="flex flex-col items-center justify-center py-20 text-center px-10">
                         <Activity className="h-10 w-10 text-slate-200 dark:text-surface-300 mb-4 opacity-50" />
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-tight">No Session Activity</p>
+                        <p className="text-sm font-semibold text-slate-400 uppercase tracking-tight">No Session Activity</p>
                         <p className="text-xs text-slate-400 mt-1">This user has not performed any loggable actions during this session yet.</p>
                      </div>
                    )}
@@ -314,7 +314,7 @@ const AdminSessionsTab: React.FC = () => {
                   size="sm" 
                   loading={revokingId === selectedSession.id}
                   onClick={() => handleRevoke(selectedSession.id)}
-                  className="w-full font-bold uppercase tracking-wider text-[11px]"
+                  className="w-full font-semibold uppercase tracking-wider text-[11px]"
                >
                   <div className="flex items-center gap-2">
                     <Trash2 size={14} />

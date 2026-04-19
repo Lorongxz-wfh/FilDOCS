@@ -21,7 +21,7 @@ function SidebarItem({ to, icon: Icon, label }: SidebarItemProps) {
       className={({ isActive }) => `
         flex items-center gap-3 px-4 py-2 text-[13px] font-medium rounded-lg transition-all
         ${isActive 
-          ? "bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 border border-brand-100 dark:border-brand-500/20 shadow-sm" 
+          ? "bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 border border-brand-100 dark:border-brand-500/20 " 
           : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-surface-400"
         }
       `}
@@ -71,7 +71,7 @@ export default function KnowledgeBaseSidebar() {
 
         {/* Pro Tip */}
         <div className="mt-auto p-4 rounded-xl bg-slate-900 dark:bg-brand-600 shadow-xl border border-white/10">
-          <p className="text-[11px] font-bold text-white mb-1">Knowledge is Power</p>
+          <p className="text-[11px] font-semibold text-white mb-1">Knowledge is Power</p>
           <p className="text-[10px] text-white/70 leading-relaxed">
             Use the search bar on any chapter page to find specific technical procedures.
           </p>

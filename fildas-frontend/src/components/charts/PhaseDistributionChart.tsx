@@ -162,10 +162,10 @@ const DonutChart: React.FC<{
         className="pointer-events-none absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center leading-none"
         style={{ top: "40%" }}
       >
-        <span className="text-[22px] font-bold font-display tabular-nums text-slate-900 dark:text-slate-100 leading-none">
+        <span className="text-[22px] font-semibold font-display tabular-nums text-slate-900 dark:text-slate-100 leading-none">
           {total}
         </span>
-        <span className="mt-1 text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none">
+        <span className="mt-1 text-[11px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none">
           total
         </span>
       </div>
@@ -190,10 +190,10 @@ const StatCards: React.FC<{
             key={d.phase}
             className="rounded-lg border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-4 py-3"
           >
-            <div className="text-2xl font-bold font-display tabular-nums text-slate-900 dark:text-slate-100">
+            <div className="text-2xl font-semibold font-display tabular-nums text-slate-900 dark:text-slate-100">
               {d.count}
             </div>
-            <div className="mt-0.5 text-xs font-bold uppercase tracking-tight text-slate-500 dark:text-slate-400">
+            <div className="mt-0.5 text-xs font-semibold uppercase tracking-tight text-slate-500 dark:text-slate-400">
               {d.phase}
             </div>
             <div className="mt-2.5 h-1 w-full rounded-full bg-slate-200 dark:bg-surface-400 overflow-hidden">

@@ -11,18 +11,18 @@ import MiddleTruncate from "../../components/ui/MiddleTruncate";
 import { formatDate } from "../../utils/formatters";
 import { StatusBadge } from "../../components/ui/Badge";
 import { PageActions, CreateAction } from "../../components/ui/PageActions";
-import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import { useSmartRefresh } from "../../hooks/useSmartRefresh";
 import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
 import { getUserRole } from "../../lib/roleFilters";
 import { TabBar } from "../../components/documentRequests/shared";
 import DeletedItemsView from "../../components/admin/DeletedItemsView";
-import { Building2, Trash2, CheckSquare } from "lucide-react";
+import Button from "../../components/ui/Button";
+import { motion, AnimatePresence } from "framer-motion";
 import { useBulkActions } from "../../hooks/useBulkActions";
 import BulkActionBar from "../../components/ui/BulkActionBar";
 import axios from "../../services/api";
-import Button from "../../components/ui/Button";
 import { useToast } from "../../components/ui/toast/ToastContext";
+import { Building2, Trash2, CheckSquare, SlidersHorizontal, Search, X } from "lucide-react";
 
 const OFFICE_TYPES = ["office", "vp", "president", "committee", "unit"];
 
@@ -43,11 +43,13 @@ export function OfficeManagerPage() {
   const _oc = pageCache.get<AdminOffice>("offices", '{"q":"","status":"active","type":""}', 10 * 60_000);
   const [items, setItems] = useState<AdminOffice[]>(_oc?.rows ?? []);
   const [trashRefreshTrigger, setTrashRefreshTrigger] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(_oc?.hasMore ?? true);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(!_oc);
   const [error, setError] = useState<string | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
 
   const location = useLocation();
   const [modalOpen, setModalOpen] = useState(() => (location.state as any)?.openModal === true);
@@ -71,8 +73,12 @@ export function OfficeManagerPage() {
     async (pageNum: number, silent = false) => {
       const filterKey = JSON.stringify({ q: qDebounced.trim(), status: statusFilter, type: typeFilter });
       try {
-        if (!silent) setInitialLoading(true);
-        setLoading(true);
+      if (pageNum === 1 && !silent) {
+        setInitialLoading(true);
+        setItems([]);
+        setTotal(null);
+      }
+      setLoading(true);
         setError(null);
         const res = await getAdminOffices({
           q: qDebounced.trim() || undefined,
@@ -86,6 +92,7 @@ export function OfficeManagerPage() {
         const more = res.meta.current_page < res.meta.last_page;
         setItems((prev) => (pageNum === 1 ? res.data : [...prev, ...res.data]));
         setHasMore(more);
+        if (res.meta?.total !== undefined) setTotal(res.meta.total);
         if (pageNum === 1) pageCache.set("offices", filterKey, res.data, more);
         return res.data;
       } catch (e: any) {
@@ -242,7 +249,7 @@ export function OfficeManagerPage() {
         </PageActions>
       }
     >
-      <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px pr-4">
+      <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-transparent px-1 mb-2 pr-4 gap-4">
         <div className="flex items-center">
           {isAdmin && adminDebugMode && (
             <TabBar
@@ -251,25 +258,114 @@ export function OfficeManagerPage() {
                 { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
               ]}
               active={activeTab}
-              onChange={(val: any) => setActiveTab(val)}
+              onChange={(val: any) => {
+                setActiveTab(val);
+                setShowFilters(false);
+              }}
             />
           )}
         </div>
-        {activeTab === "active" && (
-          <Button
-            variant={isSelectMode ? "primary" : "ghost"}
-            size="sm"
-            onClick={() => {
-              setIsSelectMode(!isSelectMode);
-              if (isSelectMode) clearSelection();
-            }}
-            className="flex items-center gap-2 h-8"
-          >
-            <CheckSquare size={14} />
-            <span>{isSelectMode ? "Cancel" : "Select"}</span>
-          </Button>
-        )}
+
+        <div className="flex items-center gap-2 shrink-0">
+          {activeTab === "active" && (
+            <>
+              <div className="hidden lg:flex items-center relative w-72 h-8 ml-4">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  value={q}
+                  onChange={(e) => { setQ(e.target.value); setPage(1); }}
+                  placeholder="Search offices..."
+                  className="w-full pl-9 pr-8 h-8 text-[13px] bg-slate-50/50 border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-500 dark:bg-surface-500/50 dark:border-surface-400/50 dark:text-slate-200"
+                />
+                {q && (
+                  <button
+                    type="button"
+                    onClick={() => { setQ(""); setPage(1); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              <Button
+                variant={showFilters || activeFiltersCount > 0 ? "primary" : "outline"}
+                size="sm"
+                reveal
+                onClick={() => setShowFilters(!showFilters)}
+                className="h-8"
+              >
+                <SlidersHorizontal size={14} />
+                <span>Filters</span>
+                {activeFiltersCount > 0 && !showFilters && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-semibold text-white  ring-2 ring-white dark:ring-surface-600">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
+
+              <Button
+                variant={isSelectMode ? "primary" : "outline"}
+                size="sm"
+                reveal
+                onClick={() => {
+                  setIsSelectMode(!isSelectMode);
+                  if (isSelectMode) clearSelection();
+                }}
+                className="h-8"
+              >
+                <CheckSquare size={14} />
+                <span>{isSelectMode ? "Cancel" : "Select"}</span>
+              </Button>
+            </>
+          )}
+        </div>
       </div>
+
+      <AnimatePresence>
+        {activeTab === "active" && showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden bg-slate-50/50 dark:bg-surface-600/50 border-b border-slate-200 dark:border-surface-400"
+          >
+            <div className="px-4 py-2.5 flex flex-wrap items-center gap-2">
+              <SelectDropdown
+                value={statusFilter}
+                onChange={(val) => { setStatusFilter((val as any) || "active"); setPage(1); }}
+                className="w-40"
+                options={[
+                  { value: "active", label: "Active" },
+                  { value: "disabled", label: "Disabled" },
+                  { value: "all", label: "All Statuses" }
+                ]}
+              />
+              <SelectDropdown
+                value={typeFilter}
+                onChange={(val) => { setTypeFilter((val as string) || ""); setPage(1); }}
+                className="w-48"
+                options={[
+                  { value: "", label: "All Types" },
+                  ...OFFICE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))
+                ]}
+              />
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                reveal
+                onClick={clearFilters}
+                className="text-[11px] h-8"
+              >
+                <Trash2 size={14} />
+                <span>Clear all</span>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {activeTab === "deleted" ? (
         <div className="flex-1 min-h-0">
@@ -281,49 +377,6 @@ export function OfficeManagerPage() {
         </div>
       ) : (
         <>
-          <SearchFilterBar
-            search={q}
-            setSearch={(val) => { setQ(val); setPage(1); }}
-            placeholder="Search name or code…"
-            activeFiltersCount={activeFiltersCount}
-            onClear={clearFilters}
-            mobileFilters={
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Status</label>
-                  <SelectDropdown
-                    value={statusFilter}
-                    onChange={(val) => setStatusFilter((val as any) || "active")}
-                    className="w-full"
-                    options={[{ value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }, { value: "all", label: "All" }]}
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
-                  <SelectDropdown
-                    value={typeFilter}
-                    onChange={(val) => setTypeFilter((val as string) || "")}
-                    className="w-full"
-                    options={[{ value: "", label: "All types" }, ...OFFICE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))]}
-                  />
-                </div>
-              </div>
-            }
-          >
-            <SelectDropdown
-              value={statusFilter}
-              onChange={(val) => setStatusFilter((val as any) || "active")}
-              className="w-28"
-              options={[{ value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }, { value: "all", label: "All" }]}
-            />
-            <SelectDropdown
-              value={typeFilter}
-              onChange={(val) => setTypeFilter((val as string) || "")}
-              className="w-32"
-              options={[{ value: "", label: "All types" }, ...OFFICE_TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))]}
-            />
-          </SearchFilterBar>
-
           {error && <Alert variant="danger">{error}</Alert>}
 
           <div className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
@@ -332,13 +385,18 @@ export function OfficeManagerPage() {
               className="h-full"
               columns={columns}
               rows={items}
+              total={total ?? undefined}
               rowKey={(o) => o.id}
               onRowClick={openEdit}
               loading={loading}
               initialLoading={initialLoading}
               emptyMessage={q || statusFilter !== "active" || typeFilter ? "No offices match your filters." : "No offices found."}
               hasMore={hasMore}
-              onLoadMore={() => setPage((p) => p + 1)}
+              onLoadMore={() => {
+                const next = page + 1;
+                setPage(next);
+                load(next, true);
+              }}
               gridTemplateColumns="minmax(80px, 6rem) minmax(140px, 1.2fr) minmax(140px, 1.2fr) 8rem 7rem 8rem"
               sortBy={sortBy}
               sortDir={sortDir}

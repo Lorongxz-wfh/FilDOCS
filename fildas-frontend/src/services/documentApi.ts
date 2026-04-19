@@ -50,6 +50,10 @@ export async function createDocumentWithProgress(
     formData.append("effective_date", payload.effective_date);
   }
 
+  if (payload.retention_date) {
+    formData.append("retention_date", payload.retention_date);
+  }
+
   if (payload.acting_as_office_id)
     formData.append("acting_as_office_id", String(payload.acting_as_office_id));
 
@@ -706,6 +710,24 @@ export async function deleteDocument(documentId: number): Promise<void> {
     const status = e?.response?.status;
     const msg =
       e?.response?.data?.message || (status ? `Delete failed (${status})` : "Delete failed");
+    throw new Error(msg);
+  }
+}
+
+export async function updateDocumentVersionRetentionDate(
+  versionId: number,
+  retention_date: string | null,
+): Promise<{ message: string; retention_date: string | null }> {
+  try {
+    const api = await getApi();
+    const res = await api.patch(`/document-versions/${versionId}/retention`, {
+      retention_date,
+    });
+    return res.data;
+  } catch (e: any) {
+    const status = e?.response?.status;
+    const msg =
+      e?.response?.data?.message || (status ? `Failed (${status})` : "Failed");
     throw new Error(msg);
   }
 }

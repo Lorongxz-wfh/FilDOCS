@@ -40,7 +40,7 @@ export function buildCreatedColumns(onDelete?: (id: number) => void): TableColum
       header: "ID",
       skeletonShape: "narrow",
       render: (doc) => (
-        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+        <span className="text-[10px] font-semibold font-mono text-slate-400 dark:text-slate-500">
           #{doc.id}
         </span>
       ),
@@ -96,7 +96,7 @@ export function buildCreatedColumns(onDelete?: (id: number) => void): TableColum
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
-      render: (doc) => <span className="text-[11px] font-mono font-bold text-slate-400 bg-slate-50 dark:bg-surface-400/30 px-1.5 py-0.5 rounded-sm border border-slate-100 dark:border-surface-400/50 whitespace-nowrap">{doc.code || "—"}</span>,
+      render: (doc) => <span className="text-[11px] font-mono font-semibold text-slate-400 bg-slate-50 dark:bg-surface-400/30 px-1.5 py-0.5 rounded-sm border border-slate-100 dark:border-surface-400/50 whitespace-nowrap">{doc.code || "—"}</span>,
     },
     {
       key: "type",
@@ -167,7 +167,7 @@ export function buildSharedColumns(onDelete?: (id: number) => void): TableColumn
       header: "ID",
       skeletonShape: "narrow",
       render: (doc) => (
-        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+        <span className="text-[10px] font-semibold font-mono text-slate-400 dark:text-slate-500">
           #{doc.id}
         </span>
       ),
@@ -223,7 +223,7 @@ export function buildSharedColumns(onDelete?: (id: number) => void): TableColumn
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
-      render: (doc) => <span className="text-[11px] font-mono font-bold text-slate-400 bg-slate-50 dark:bg-surface-400/30 px-1.5 py-0.5 rounded-sm border border-slate-100 dark:border-surface-400/50 whitespace-nowrap">{doc.code || "—"}</span>,
+      render: (doc) => <span className="text-[11px] font-mono font-semibold text-slate-400 bg-slate-50 dark:bg-surface-400/30 px-1.5 py-0.5 rounded-sm border border-slate-100 dark:border-surface-400/50 whitespace-nowrap">{doc.code || "—"}</span>,
     },
     {
       key: "type",
@@ -297,7 +297,7 @@ export function buildRequestedColumns(isQaAdmin: boolean, onDelete?: (id: number
       header: "ID",
       skeletonShape: "narrow",
       render: (r) => (
-        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+        <span className="text-[10px] font-semibold font-mono text-slate-400 dark:text-slate-500">
           #{r.id || r.recipient_id || "?"}
         </span>
       ),
@@ -383,7 +383,7 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
       skeletonShape: "narrow",
       sortKey: "id",
       render: (item) => (
-        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+        <span className="text-[10px] font-semibold font-mono text-slate-400 dark:text-slate-500">
           #{item.docId || item.id || "?"}
         </span>
       ),
@@ -421,7 +421,7 @@ export function buildAllColumns(onDelete?: (id: number) => void): TableColumn<Li
       header: "Code",
       sortKey: "code",
       skeletonShape: "narrow",
-      render: (item: any) => <span className="text-[11px] font-mono font-bold text-slate-400 bg-slate-50 dark:bg-surface-400/30 px-1.5 py-0.5 rounded-sm border border-slate-100 dark:border-surface-400/50 whitespace-nowrap">{item.code || "—"}</span>,
+      render: (item: any) => <span className="text-[11px] font-mono font-semibold text-slate-400 bg-slate-50 dark:bg-surface-400/30 px-1.5 py-0.5 rounded-sm border border-slate-100 dark:border-surface-400/50 whitespace-nowrap">{item.code || "—"}</span>,
     },
     {
       key: "office",
@@ -490,7 +490,7 @@ export function buildArchiveColumns(onDelete?: (id: number) => void): TableColum
       header: "ID",
       skeletonShape: "narrow",
       render: (doc) => (
-        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+        <span className="text-[10px] font-semibold font-mono text-slate-400 dark:text-slate-500">
           #{doc.id}
         </span>
       ),

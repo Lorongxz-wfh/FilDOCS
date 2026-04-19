@@ -30,12 +30,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
   ongoingCount,
   activityReport,
 }) => {
-  const {
-    kpis,
-    volumeSeries,
-    phaseDist,
-    stageDelaysByPhase,
-  } = stats;
+  const { kpis, volumeSeries, phaseDist, stageDelaysByPhase } = stats;
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,7 +40,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           loading={loading}
           label="All documents"
           value={kpis.total_created}
-          sub="Total unique documents initiated"
           icon={<FileText size={16} className="text-sky-600 dark:text-sky-400" />}
           iconBg="bg-sky-50 dark:bg-sky-900/30"
         />
@@ -53,7 +47,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           loading={loading}
           label="Distributed"
           value={kpis.total_approved_final}
-          sub="Latest versions fully distributed"
           icon={<CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />}
           iconBg="bg-emerald-50 dark:bg-emerald-900/30"
         />
@@ -61,7 +54,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           loading={loading}
           label="Ongoing"
           value={ongoingCount}
-          sub="Documents currently in progress"
           icon={<Activity size={16} className="text-amber-600 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/30"
         />
@@ -102,7 +94,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           loading={loading}
           label="First pass yield"
           value={`${kpis.first_pass_yield_pct}%`}
-          sub="Docs distributed with NO returns"
           icon={<Percent size={16} className="text-emerald-600 dark:text-emerald-400" />}
           iconBg="bg-emerald-50 dark:bg-emerald-900/30"
         />
@@ -110,7 +101,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           loading={loading}
           label="Avg cycle time"
           value={`${kpis.cycle_time_avg_days}d`}
-          sub="Draft to distributed, total days"
           icon={<Clock size={16} className="text-sky-600 dark:text-sky-400" />}
           iconBg="bg-sky-50 dark:bg-sky-900/30"
         />
@@ -118,7 +108,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           loading={loading}
           label="Ping-pong ratio"
           value={kpis.pingpong_ratio}
-          sub="Avg return events per document"
           icon={<RotateCcw size={16} className="text-rose-500 dark:text-rose-400" />}
           iconBg="bg-rose-50 dark:bg-rose-900/30"
         />
@@ -134,7 +123,11 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       </ReportChartCard>
 
       {/* Activity Summary */}
-      {(qaMode || role === "ADMIN" || role === "SYSADMIN" || role === "OFFICE_HEAD" || role === "OFFICE_STAFF") && (
+      {(qaMode ||
+        role === "ADMIN" ||
+        role === "SYSADMIN" ||
+        role === "OFFICE_HEAD" ||
+        role === "OFFICE_STAFF") && (
         <div className="relative group/snap">
           <div className="sm:hidden absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none animate-pulse-slow">
             <div className="bg-white/80 dark:bg-surface-600/80 backdrop-blur-sm p-1.5 rounded-full shadow-md border border-slate-200 dark:border-surface-400">

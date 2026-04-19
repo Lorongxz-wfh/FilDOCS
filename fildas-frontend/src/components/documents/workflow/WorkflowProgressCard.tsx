@@ -89,7 +89,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
 
     return (
       <div className="space-y-1.5 min-w-[140px]">
-        <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
+        <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
           <CheckCircle2 className="h-3 w-3" />
           <span>Completed</span>
         </div>
@@ -135,7 +135,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
                   <Tooltip content={completionInfo}>
                     <motion.div
                       whileHover={{ scale: 1.1 }}
-                      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold shadow-sm transition-all duration-300 ${stepIsCurrent
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold  transition-all duration-300 ${stepIsCurrent
                           ? "bg-sky-600 text-white ring-2 ring-sky-100 dark:ring-sky-900/30"
                           : completionInfo || stepIsCompleted
                             ? "bg-emerald-500 text-white cursor-help"
@@ -147,7 +147,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
                   </Tooltip>
                   <span
                     className={`mt-1.5 text-center text-[10px] font-medium leading-tight line-clamp-2 transition-colors duration-300 ${stepIsCurrent
-                        ? "text-slate-900 dark:text-slate-100 font-bold"
+                        ? "text-slate-900 dark:text-slate-100 font-semibold"
                         : stepIsCompleted
                           ? "text-slate-700 dark:text-slate-300"
                           : "text-slate-400 dark:text-slate-500"
@@ -190,7 +190,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden shadow-sm shadow-slate-200/50 dark:shadow-none">
+    <div className="mx-auto w-full max-w-5xl rounded-xl border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 overflow-hidden  shadow-slate-200/50 dark:shadow-none">
       {/* ── Header bar — always visible, click to toggle ── */}
       <button
         type="button"
@@ -201,7 +201,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-200">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">
                   Workflow progress
                 </p>
                 <span
@@ -236,7 +236,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
                 <div className="h-3 w-16 rounded-full bg-slate-300 dark:bg-surface-300 animate-pulse shrink-0" />
               ) : (
                 <div className="shrink-0 flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-100">
                     {currentPhase.label}
                   </span>
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -447,7 +447,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
                         type="button"
                         onClick={() => setSelectedPhaseId(phase.id)}
                         className={`flex-1 min-w-0 rounded-md border px-3 py-2 text-left transition-all duration-300 cursor-pointer ${isCurrent
-                            ? "border-sky-600/50 bg-sky-50 dark:border-sky-600/40 dark:bg-sky-500/10 shadow-sm shadow-sky-600/10"
+                            ? "border-sky-600/50 bg-sky-50 dark:border-sky-600/40 dark:bg-sky-500/10  shadow-sky-600/10"
                             : isSelected
                               ? "border-slate-400 bg-slate-100 dark:border-slate-400 dark:bg-surface-400/60"
                               : isCompleted
@@ -466,7 +466,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
                                 }`}
                             />
                             <span
-                              className={`text-xs font-bold truncate transition-colors duration-500 ${isCurrent
+                              className={`text-xs font-semibold truncate transition-colors duration-500 ${isCurrent
                                   ? "text-slate-900 dark:text-slate-100"
                                   : isCompleted
                                     ? "text-slate-600 dark:text-slate-200"
@@ -535,7 +535,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
               </div>
             ) : (
               <div className="mt-3 rounded-md border border-slate-200 bg-slate-50/40 p-3 dark:border-surface-400 dark:bg-surface-600/40">
-                <p className="text-center text-[10px] font-bold mb-2 uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                <p className="text-center text-[10px] font-semibold mb-2 uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   {selectedPhaseId === currentPhaseId
                     ? "Current Steps"
                     : `${phases.find((p) => p.id === selectedPhaseId)?.label} steps`}

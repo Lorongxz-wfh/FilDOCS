@@ -154,17 +154,17 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
                     className={`flex items-start gap-3 group/item ${isRecentlyAdded(log.id) ? "animate-live-entry" : ""} ${isClickable ? "cursor-pointer" : ""}`}
                     style={{ animationDelay: `${idx * 50}ms` }}
                   >
-                    <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border border-slate-100 dark:border-surface-400/30 bg-white dark:bg-surface-500 ${meta.text} shadow-xs transition-transform group-hover/item:scale-110`}>
+                    <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border border-slate-100 dark:border-surface-400/30 bg-white dark:bg-surface-500 ${meta.text}  transition-transform group-hover/item:scale-110`}>
                       {meta.icon}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className={`text-[12px] sm:text-[13px] font-bold uppercase tracking-tight leading-tight transition-colors ${isClickable ? "text-slate-800 dark:text-slate-100 group-hover/item:text-sky-600 dark:group-hover/item:text-sky-400" : "text-slate-600 dark:text-slate-300"}`}>
+                      <p className={`text-[12px] sm:text-[13px] font-semibold uppercase tracking-tight leading-tight transition-colors ${isClickable ? "text-slate-800 dark:text-slate-100 group-hover/item:text-sky-600 dark:group-hover/item:text-sky-400" : "text-slate-600 dark:text-slate-300"}`}>
                         {friendlyEvent(log.event)}
                       </p>
 
                       <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium overflow-hidden">
-                        <span className="shrink-0 font-bold text-slate-600 dark:text-slate-300">
+                        <span className="shrink-0 font-semibold text-slate-600 dark:text-slate-300">
                           {actorName}
                         </span>
                         <span className="shrink-0 opacity-40">|</span>
@@ -191,7 +191,7 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
               <button
                 type="button"
                 onClick={() => navigate("/activity-logs")}
-                className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 rounded text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider shadow-sm hover:bg-slate-50 dark:hover:bg-surface-400 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 rounded text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider  hover:bg-slate-50 dark:hover:bg-surface-400 transition-all active:scale-95"
               >
                 View full activity
               </button>

@@ -41,7 +41,6 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
           loading={loading}
           label="Documents created"
           value={kpis.total_created}
-          sub="Total unique documents initiated"
           icon={<FileText size={16} className="text-sky-600 dark:text-sky-400" />}
           iconBg="bg-sky-50 dark:bg-sky-900/30"
         />
@@ -49,7 +48,6 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
           loading={loading}
           label="Distributed"
           value={kpis.total_approved_final}
-          sub="Fully completed and distributed"
           icon={<CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />}
           iconBg="bg-emerald-50 dark:bg-emerald-900/30"
         />
@@ -57,7 +55,6 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
           loading={loading}
           label="Active"
           value={ongoingCount}
-          sub="Documents currently in progress"
           icon={<Activity size={16} className="text-amber-600 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/30"
         />
@@ -65,7 +62,6 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
           loading={loading}
           label="Avg cycle time"
           value={`${kpis.cycle_time_avg_days}d`}
-          sub="Draft to distributed, total duration"
           icon={<Clock size={16} className="text-slate-500 dark:text-slate-400" />}
           iconBg="bg-slate-100 dark:bg-surface-400"
         />
@@ -123,7 +119,12 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
               subtitle="Where documents get sent back most"
               loading={loading}
             >
-              <ReturnByStageChart data={revisionStats.by_stage ?? []} variant="horizontal" height={220} loading={loading} />
+              <ReturnByStageChart
+                data={revisionStats.by_stage ?? []}
+                variant="horizontal"
+                height={220}
+                loading={loading}
+              />
             </ReportChartCard>
           </div>
         </div>
@@ -179,28 +180,24 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
               {loading ? (
                 <Skeleton className="h-7 w-12 mb-1" />
               ) : (
-                <p className="text-2xl font-bold tabular-nums text-amber-500 dark:text-amber-400 leading-none">
+                <p className="text-2xl font-semibold tabular-nums text-amber-500 dark:text-amber-400 leading-none">
                   {revisionStats.docs_on_v2_plus}
                 </p>
               )}
               <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-                docs revised
-                <br />
-                (v2 or later)
+                docs revised <br /> (v2 or later)
               </p>
             </div>
             <div className="flex flex-col items-center justify-center rounded-md bg-slate-50 dark:bg-surface-600 border border-slate-100 dark:border-surface-400 py-4 px-3 text-center">
               {loading ? (
                 <Skeleton className="h-7 w-12 mb-1" />
               ) : (
-                <p className="text-2xl font-bold tabular-nums text-violet-500 dark:text-violet-400 leading-none">
+                <p className="text-2xl font-semibold tabular-nums text-violet-500 dark:text-violet-400 leading-none">
                   {revisionStats.avg_versions}
                 </p>
               )}
               <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-                avg versions
-                <br />
-                per document
+                avg versions <br /> per document
               </p>
             </div>
           </div>

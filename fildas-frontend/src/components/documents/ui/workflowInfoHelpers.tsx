@@ -21,7 +21,7 @@ export const InfoRow: React.FC<{
   >
     <div className="flex items-center gap-2 shrink-0">
       {icon && <span className="text-slate-400 dark:text-slate-500">{icon}</span>}
-      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
         {label}
       </span>
     </div>

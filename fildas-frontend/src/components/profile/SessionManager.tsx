@@ -111,7 +111,7 @@ export const SessionManager: React.FC<{ refreshTrigger?: number }> = ({ refreshT
     <div className="space-y-6">
       <div className="flex items-center justify-between">
          <div>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Login Sessions</h3>
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Login Sessions</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">Manage all devices where you are currently signed in.</p>
          </div>
           {sessions.length > 1 && (
@@ -135,7 +135,7 @@ export const SessionManager: React.FC<{ refreshTrigger?: number }> = ({ refreshT
               key={session.id} 
               className={`group relative flex items-center justify-between p-4 rounded-lg border transition-all ${
                 session.is_current 
-                  ? "border-brand-200 bg-brand-50/30 dark:border-brand-500/20 dark:bg-brand-500/5 shadow-sm" 
+                  ? "border-brand-200 bg-brand-50/30 dark:border-brand-500/20 dark:bg-brand-500/5 " 
                   : "border-slate-100 dark:border-surface-400 bg-white dark:bg-surface-500 hover:border-slate-200 dark:hover:border-surface-300"
               }`}
             >
@@ -148,9 +148,9 @@ export const SessionManager: React.FC<{ refreshTrigger?: number }> = ({ refreshT
 
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-bold text-slate-800 dark:text-slate-100">{device}</span>
+                    <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">{device}</span>
                     {session.is_current && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400 border border-brand-200 dark:border-brand-500/20 shadow-sm">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400 border border-brand-200 dark:border-brand-500/20 ">
                         <ShieldCheck className="h-2.5 w-2.5" />
                         Current Session
                       </span>
@@ -192,10 +192,10 @@ export const SessionManager: React.FC<{ refreshTrigger?: number }> = ({ refreshT
         })}
       </div>
 
-      <div className="p-4 rounded-lg bg-slate-50 dark:bg-surface-400/20 border border-slate-100 dark:border-surface-400 flex gap-3 shadow-sm">
+      <div className="p-4 rounded-lg bg-slate-50 dark:bg-surface-400/20 border border-slate-100 dark:border-surface-400 flex gap-3 ">
          <AlertCircle className="h-5 w-5 text-slate-400 dark:text-slate-500 shrink-0" />
          <div className="space-y-1">
-            <h4 className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest">Account Security Tip</h4>
+            <h4 className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-widest">Account Security Tip</h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400/90 leading-normal">
                 If you see a device you don't recognize, revoke it immediately and change your account password. 
                 We recommend enabling Two-Factor Authentication for maximum account integrity.

@@ -18,6 +18,7 @@ export interface CreateDocumentPayload {
   doctype: "internal" | "external" | "forms";
   description?: string;
   effective_date?: string | null; // YYYY-MM-DD, QA-only on create
+  retention_date?: string | null; // YYYY-MM-DD, Optional
   visibility_scope?: "office" | "global";
   school_year?: string;
   semester?: string;
@@ -59,6 +60,7 @@ export interface Document {
 
   tags?: string[];
   effective_date?: string | null;
+  retention_date?: string | null;
   distributed_at?: string | null;
   archived_at?: string | null;
   archive_reason?: string | null;
@@ -133,6 +135,7 @@ export interface DocumentVersion {
   routing_mode?: string | null;
 
   effective_date?: string | null; // YYYY-MM-DD
+  retention_date?: string | null; // YYYY-MM-DD
 
   distributed_at: string | null;
   superseded_at: string | null;

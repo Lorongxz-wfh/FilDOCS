@@ -48,7 +48,7 @@ const CommentComposer: React.FC<CommentComposerProps> = ({
     <div className={`flex flex-col gap-1.5 shrink-0 ${className}`}>
       <div className="flex items-stretch gap-2 h-[44px]">
         {/* ── Textarea Input ── */}
-        <div className="flex-1 bg-slate-50 dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-md transition-all focus-within:border-brand-600 dark:focus-within:border-brand-500 focus-within:bg-white dark:focus-within:bg-surface-500 focus-within:ring-1 focus-within:ring-brand-500/20 overflow-hidden shadow-sm">
+        <div className="flex-1 bg-slate-50 dark:bg-surface-600 border border-slate-200 dark:border-surface-400 rounded-md transition-all focus-within:border-brand-600 dark:focus-within:border-brand-500 focus-within:bg-white dark:focus-within:bg-surface-500 focus-within:ring-1 focus-within:ring-brand-500/20 overflow-hidden ">
           <textarea
             ref={textareaRef}
             rows={1}
@@ -67,7 +67,7 @@ const CommentComposer: React.FC<CommentComposerProps> = ({
           type="button"
           disabled={isDisabled || !value.trim()}
           onClick={onSend}
-          className="group h-full px-4 flex flex-col items-center justify-center rounded-lg bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm shadow-sky-600/20 active:scale-95 shrink-0 border border-sky-600/50"
+          className="group h-full px-4 flex flex-col items-center justify-center rounded-lg bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all  shadow-sky-600/20 active:scale-95 shrink-0 border border-sky-600/50"
           title="Send (Ctrl+Enter)"
         >
           {isSending ? (
@@ -75,7 +75,7 @@ const CommentComposer: React.FC<CommentComposerProps> = ({
           ) : (
             <Send className="h-4 w-4" />
           )}
-          <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5 leading-none">{isSending ? "..." : "Send"}</span>
+          <span className="text-[9px] font-semibold uppercase tracking-wider mt-0.5 leading-none">{isSending ? "..." : "Send"}</span>
         </button>
       </div>
     </div>

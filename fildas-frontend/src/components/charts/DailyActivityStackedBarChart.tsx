@@ -44,12 +44,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.fill }} />
                 <span className="text-slate-600 dark:text-slate-400 font-medium">{entry.name}</span>
               </div>
-              <span className="tabular-nums font-bold text-slate-900 dark:text-slate-100">{entry.value}</span>
+              <span className="tabular-nums font-semibold text-slate-900 dark:text-slate-100">{entry.value}</span>
             </div>
           ))}
           <div className="mt-1 border-t border-slate-100 dark:border-surface-400 pt-1 flex items-center justify-between gap-4">
             <span className="text-slate-500 font-medium">Total</span>
-            <span className="tabular-nums font-bold text-slate-900 dark:text-slate-100">
+            <span className="tabular-nums font-semibold text-slate-900 dark:text-slate-100">
               {payload.reduce((sum: number, entry: any) => sum + entry.value, 0)}
             </span>
           </div>

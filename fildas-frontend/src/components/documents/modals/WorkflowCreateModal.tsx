@@ -210,7 +210,7 @@ export default function FlowSelectModal({
               ].join(" ")}
             >
               <p
-                className={`text-xs font-bold uppercase tracking-wide ${routingMode === mode ? "text-neutral-900 dark:text-surface-50" : "text-neutral-600 dark:text-neutral-400"}`}
+                className={`text-xs font-semibold uppercase tracking-wide ${routingMode === mode ? "text-neutral-900 dark:text-surface-50" : "text-neutral-600 dark:text-neutral-400"}`}
               >
                 {mode === "default"
                   ? isQA
@@ -258,7 +258,7 @@ export default function FlowSelectModal({
             <div className="flex flex-col gap-2">
               {customOfficeIds.map((val, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <span className="w-5 shrink-0 text-center text-xs font-bold text-neutral-400">
+                  <span className="w-5 shrink-0 text-center text-xs font-semibold text-neutral-400">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -319,7 +319,7 @@ export default function FlowSelectModal({
           <div className="rounded-md border border-slate-200 dark:border-surface-400 bg-slate-50/20 dark:bg-surface-600/10 px-3.5 py-3.5 space-y-2.5">
             <div className="flex items-center gap-2 mb-1">
               <span className="h-px flex-1 bg-neutral-100 dark:bg-surface-400/50"></span>
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">
                 Flow Preview
               </p>
               <span className="h-px flex-1 bg-neutral-100 dark:bg-surface-400/50"></span>
@@ -339,7 +339,7 @@ export default function FlowSelectModal({
               },
             ].map((phase) => (
               <div key={phase.label} className="flex items-start gap-4">
-                <span className="w-16 shrink-0 text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider pt-1">
+                <span className="w-16 shrink-0 text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider pt-1">
                   {phase.label}
                 </span>
                 <div className="flex flex-wrap items-center gap-1.5">

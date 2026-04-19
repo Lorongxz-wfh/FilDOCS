@@ -38,7 +38,7 @@ export const WorkflowRegisterModal: React.FC<WorkflowRegisterModalProps> = ({
       <div className="flex flex-col gap-6">
         {/* Document Primary Detail */}
         <div className="flex flex-col gap-1 px-1">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
             Document Title
           </span>
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-snug">
@@ -49,17 +49,17 @@ export const WorkflowRegisterModal: React.FC<WorkflowRegisterModalProps> = ({
         {/* Metadata Grid */}
         <div className="grid grid-cols-2 gap-x-8 gap-y-6 px-1">
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
               <Hash className="h-3 w-3" />
               System Code
             </div>
-            <p className="text-sm font-mono font-bold text-sky-600 dark:text-sky-400">
+            <p className="text-sm font-mono font-semibold text-sky-600 dark:text-sky-400">
               {documentCode || "Pending"}
             </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-emerald-500 dark:text-emerald-400">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-emerald-500 dark:text-emerald-400">
               <Calendar className="h-3 w-3" />
               Effective Date
             </div>
@@ -67,12 +67,12 @@ export const WorkflowRegisterModal: React.FC<WorkflowRegisterModalProps> = ({
               type="date"
               value={effectiveDate}
               onChange={(e) => onEffectiveDateChange(e.target.value)}
-              className="w-full bg-transparent border-b border-emerald-100 dark:border-emerald-900/30 pb-0.5 text-sm font-bold text-slate-800 dark:text-slate-100 outline-none focus:border-emerald-400 transition cursor-pointer"
+              className="w-full bg-transparent border-b border-emerald-100 dark:border-emerald-900/30 pb-0.5 text-sm font-semibold text-slate-800 dark:text-slate-100 outline-none focus:border-emerald-400 transition cursor-pointer"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
               <Building2 className="h-3 w-3" />
               Originating Office
             </div>
@@ -82,7 +82,7 @@ export const WorkflowRegisterModal: React.FC<WorkflowRegisterModalProps> = ({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
               <ShieldCheck className="h-3 w-3" />
               Process
             </div>

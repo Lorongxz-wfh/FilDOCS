@@ -72,7 +72,7 @@ const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
         {label && (
           <label
             htmlFor={id}
-            className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5"
+            className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5"
           >
             {label}
             {isRequired && <span className="ml-0.5 text-rose-500">*</span>}

@@ -19,7 +19,7 @@ export default function ProtectedLayout() {
   React.useEffect(() => {
     // Force hide any lingering splash screen from the login transition
     window.dispatchEvent(new Event("hide_splash"));
-    
+
     let alive = true;
 
     (async () => {

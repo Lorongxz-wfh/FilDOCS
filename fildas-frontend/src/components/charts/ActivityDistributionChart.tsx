@@ -99,7 +99,7 @@ const ActivityDistributionChart: React.FC<Props> = ({ data, height = 220, loadin
         className="pointer-events-none absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center leading-none"
         style={{ top: "40%" }}
       >
-        <span className="text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100 leading-none">
+        <span className="text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100 leading-none">
           {total}
         </span>
         <span className="mt-1 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 leading-none">

@@ -48,7 +48,7 @@ const WorkflowCommentBubble: React.FC<Props> = ({
       {/* Avatar */}
       <div className="shrink-0 mt-0.5">
         <div
-          className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold ring-1 ring-slate-200 dark:ring-surface-400/50 overflow-hidden ${
+          className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-semibold ring-1 ring-slate-200 dark:ring-surface-400/50 overflow-hidden ${
             Number(isMine)
               ? "bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900"
               : "bg-slate-100 dark:bg-surface-400 text-slate-500 dark:text-slate-400"
@@ -75,16 +75,16 @@ const WorkflowCommentBubble: React.FC<Props> = ({
         <div
           className={`flex items-center gap-2 flex-wrap font-display ${isMine ? "flex-row-reverse" : "flex-row"}`}
         >
-          <span className="text-[12px] font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+          <span className="text-[12px] font-semibold text-slate-900 dark:text-slate-100 tracking-tight">
             {senderName}
           </span>
           {formattedRole && (
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
               {formattedRole}
             </span>
           )}
           {type && type !== "comment" && (
-            <span className="rounded-sm bg-slate-100 dark:bg-surface-300 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 dark:text-slate-600 uppercase tracking-widest">
+            <span className="rounded-sm bg-slate-100 dark:bg-surface-300 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500 dark:text-slate-600 uppercase tracking-widest">
               {type}
             </span>
           )}
@@ -104,7 +104,7 @@ const WorkflowCommentBubble: React.FC<Props> = ({
           {message}
         </div>
 
-        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-0.5 font-display">
+        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-0.5 font-display">
           {when}
         </span>
       </div>

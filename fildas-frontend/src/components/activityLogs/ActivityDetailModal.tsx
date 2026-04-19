@@ -86,7 +86,7 @@ const ActivityDetailModal: React.FC<ActivityDetailModalProps> = ({ row, onClose,
           <Field label="Transition">
             <div className="flex items-center gap-2 flex-wrap mt-0.5">
               <StatusBadge status={fromStatus} className="opacity-70" />
-              <span className="text-slate-400 text-xs text-center font-bold">→</span>
+              <span className="text-slate-400 text-xs text-center font-semibold">→</span>
               <StatusBadge status={toStatus} />
             </div>
           </Field>

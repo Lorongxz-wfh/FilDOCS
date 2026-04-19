@@ -48,7 +48,7 @@ export default function Modal({
         >
           {/* Header */}
           <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-surface-400">
-            <h2 className="truncate text-sm font-display font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="truncate text-sm font-display font-semibold text-slate-900 dark:text-slate-100">
               {title}
             </h2>
             {headerActions ? (

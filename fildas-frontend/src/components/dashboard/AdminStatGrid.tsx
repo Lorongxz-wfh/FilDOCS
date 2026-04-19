@@ -67,7 +67,7 @@ const AdminStatGrid: React.FC<Props> = ({ data, loading }) => {
             className={`rounded-md border border-slate-200 bg-white p-2.5 sm:px-4 sm:py-3.5 dark:border-surface-400 dark:bg-surface-500 flex flex-col justify-between transition-all ${isPulsing ? "animate-pulse-highlight ring-1 ring-emerald-500/10" : ""}`}
           >
             <div className="flex items-center justify-between gap-1">
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider leading-tight truncate">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold uppercase tracking-wider leading-tight truncate">
                 {item.label}
               </p>
               <span className="text-slate-500 dark:text-slate-500 sm:scale-100 scale-75 shrink-0">
@@ -79,7 +79,7 @@ const AdminStatGrid: React.FC<Props> = ({ data, loading }) => {
               {loading && !data ? (
                 <Skeleton className="h-5 sm:h-7 w-12 sm:w-14" />
               ) : (
-                <p className={`text-lg sm:text-2xl font-display font-bold leading-none text-slate-900 dark:text-slate-100 tabular-nums transition-all ${isPulsing ? "scale-110 text-emerald-600 dark:text-emerald-400" : "scale-100"}`}>
+                <p className={`text-lg sm:text-2xl font-display font-semibold leading-none text-slate-900 dark:text-slate-100 tabular-nums transition-all ${isPulsing ? "scale-110 text-emerald-600 dark:text-emerald-400" : "scale-100"}`}>
                   {item.value}
                 </p>
               )}
@@ -90,13 +90,13 @@ const AdminStatGrid: React.FC<Props> = ({ data, loading }) => {
                 if (item.label === "Total users" && data?.users.online && data.users.online > 0) {
                   return (
                     <span>
-                      {data.users.active} active · <span className="text-emerald-500 font-bold">{data.users.online} online now</span>
+                      {data.users.active} active · <span className="text-emerald-500 font-semibold">{data.users.online} online now</span>
                     </span>
                   );
                 }
                 if (item.label === "Total documents" && data?.documents.distributed && data.documents.distributed > 0) {
                   return (
-                    <span className="text-emerald-500 font-bold">
+                    <span className="text-emerald-500 font-semibold">
                       {data.documents.distributed} distributed
                     </span>
                   );

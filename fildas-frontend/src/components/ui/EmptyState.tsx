@@ -49,7 +49,7 @@ export default function EmptyState({
     <div
       className={`flex flex-col items-center justify-center py-16 px-6 text-center animate-in fade-in duration-500 ${className}`}
     >
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 dark:bg-surface-600 mb-4 border border-slate-100 dark:border-surface-400 shadow-sm">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 dark:bg-surface-600 mb-4 border border-slate-100 dark:border-surface-400 ">
         <div className="text-slate-400 dark:text-slate-500">
           {renderIcon()}
         </div>

@@ -99,7 +99,7 @@ const SubmissionAttemptsChart: React.FC<{
         <LabelList
           dataKey="count"
           position="top"
-          style={{ fontSize: 12, fontWeight: 700, fill: "currentColor" }}
+          style={{ fontSize: 12, fontWeight: 600, fill: "currentColor" }}
         />
         {data.map((d) => (
           <Cell key={d.attempt} fill={ATTEMPT_COLORS[d.attempt] ?? "#94a3b8"} />

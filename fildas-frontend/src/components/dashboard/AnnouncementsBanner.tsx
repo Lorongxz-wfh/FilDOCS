@@ -114,7 +114,7 @@ const AnnouncementsBanner: React.FC<Props> = ({ announcements, loading }) => {
         <button
           type="button"
           onClick={() => navigate("/announcements")}
-          className="shrink-0 text-xs font-bold text-brand-500 hover:text-brand-400 dark:text-brand-400"
+          className="shrink-0 text-xs font-semibold text-brand-500 hover:text-brand-400 dark:text-brand-400"
         >
           Post →
         </button>
@@ -133,7 +133,7 @@ const AnnouncementsBanner: React.FC<Props> = ({ announcements, loading }) => {
       <div className="flex items-center justify-between gap-4 border-b border-slate-100 dark:border-surface-400 px-4 py-2 sm:py-2.5">
         <div className="flex items-center gap-2">
           <Megaphone className="h-4 w-4 text-brand-500 dark:text-brand-400 fill-brand-500/10" />
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
             Announcements
           </h2>
         </div>
@@ -142,7 +142,7 @@ const AnnouncementsBanner: React.FC<Props> = ({ announcements, loading }) => {
             <button
               type="button"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 uppercase tracking-tight transition-colors"
+              className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 uppercase tracking-tight transition-colors"
             >
               <span className="hidden sm:inline">{isCollapsed ? "Expand" : "Collapse"}</span>
               {isCollapsed ? <ChevronDown size={11} /> : <ChevronUp size={11} />}
@@ -151,7 +151,7 @@ const AnnouncementsBanner: React.FC<Props> = ({ announcements, loading }) => {
           <button
             type="button"
             onClick={() => navigate("/announcements")}
-            className="shrink-0 text-[10px] sm:text-[11px] font-bold text-brand-500 hover:text-brand-400 dark:text-brand-400 transition-colors uppercase tracking-tight flex items-center gap-1"
+            className="shrink-0 text-[10px] sm:text-[11px] font-semibold text-brand-500 hover:text-brand-400 dark:text-brand-400 transition-colors uppercase tracking-tight flex items-center gap-1"
           >
             <span className="hidden sm:inline">Manage</span>
             <span className="text-[13px] sm:text-[11px]">→</span>
@@ -205,7 +205,7 @@ const AnnouncementsBanner: React.FC<Props> = ({ announcements, loading }) => {
                       {a.title}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0 text-[10px] font-bold text-slate-400 dark:text-slate-500 tabular-nums uppercase whitespace-nowrap">
+                  <div className="flex items-center gap-2 shrink-0 text-[10px] font-semibold text-slate-400 dark:text-slate-500 tabular-nums uppercase whitespace-nowrap">
                     <span className="hidden sm:inline text-slate-500 dark:text-slate-400">{a.created_by}</span>
                     <span className="hidden sm:inline opacity-50">·</span>
                     <span>{timeAgo(a.created_at)}</span>

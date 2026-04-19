@@ -103,7 +103,7 @@ const DocumentTypeChart: React.FC<{
           </ResponsiveContainer>
           {/* Center label */}
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center leading-none">
-            <span className="text-[20px] font-bold tabular-nums text-slate-900 dark:text-slate-100 leading-none">
+            <span className="text-[20px] font-semibold tabular-nums text-slate-900 dark:text-slate-100 leading-none">
               {total}
             </span>
             <span className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 leading-none">total</span>
@@ -139,7 +139,7 @@ const DocumentTypeChart: React.FC<{
             key={d.doctype}
             className="rounded-md bg-slate-50 dark:bg-surface-600 border border-slate-100 dark:border-surface-400 px-2 py-1.5 text-center"
           >
-            <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100 leading-none">
+            <p className="text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100 leading-none">
               {d.count}
             </p>
             <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{label(d.doctype)}</p>

@@ -221,10 +221,10 @@ const LoginPage: React.FC = () => {
 
               {/* Brand Section */}
               <div className="mb-6">
-                <h1 className="text-[4.5rem] font-display font-bold tracking-tighter text-white leading-none">
+                <h1 className="text-[4.5rem] font-display font-semibold tracking-tighter text-white leading-none">
                   FilDOCS
                 </h1>
-                <p className="text-xl font-display font-bold text-blue-200 mt-2">
+                <p className="text-xl font-display font-semibold text-blue-200 mt-2">
                   Filamer Document Operations and Control System
                 </p>
               </div>
@@ -242,7 +242,7 @@ const LoginPage: React.FC = () => {
                       <div className="shrink-0 h-6 w-6 rounded-md bg-white/15 backdrop-blur-sm flex items-center justify-center">
                         <CheckCircle2 size={13} className="text-blue-200" />
                       </div>
-                      <span className="text-[13px] font-bold tracking-tight text-white/95">
+                      <span className="text-[13px] font-semibold tracking-tight text-white/95">
                         {f}
                       </span>
                     </li>
@@ -252,7 +252,7 @@ const LoginPage: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <p className="text-[9px] mt-4 font-bold text-blue-300/60 uppercase tracking-widest">
+            <p className="text-[9px] mt-4 font-semibold text-blue-300/60 uppercase tracking-widest">
               Filamer Christian University • Quality Assurance Office
             </p>
           </div>
@@ -270,7 +270,7 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            <h2 className="text-[1.6rem] font-display font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            <h2 className="text-[1.6rem] font-display font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               {showChallenge ? "Two-Factor Verification" : "Sign In"}
             </h2>
             <p className="mt-1 text-sm text-slate-400 dark:text-slate-400">
@@ -283,7 +283,7 @@ const LoginPage: React.FC = () => {
               <div className="mt-6 flex items-start gap-3 rounded-lg border border-brand-100 bg-brand-50/50 p-3.5 dark:border-brand-900/30 dark:bg-brand-950/20 animate-in fade-in slide-in-from-top-2 duration-300">
                 <AlertCircle className="mt-0.5 h-4 w-4 text-brand-600 dark:text-brand-400 shrink-0" />
                 <div className="flex-1">
-                  <p className="text-[11px] font-bold text-brand-900 dark:text-brand-100 uppercase tracking-tight">
+                  <p className="text-[11px] font-semibold text-brand-900 dark:text-brand-100 uppercase tracking-tight">
                     Session Timed Out
                   </p>
                   <p className="mt-0.5 text-[10px] leading-relaxed text-brand-700/80 dark:text-brand-300/80 font-medium">
@@ -359,7 +359,7 @@ const LoginPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 rounded-md bg-brand-500 hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700 text-sm font-semibold text-white shadow-sm shadow-brand-500/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                  className="w-full py-2.5 rounded-md bg-brand-500 hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700 text-sm font-semibold text-white  shadow-brand-500/20 active:scale-[0.98] transition-all disabled:opacity-50"
                 >
                   {loading ? "Signing in..." : "Sign In"}
                 </button>
@@ -382,7 +382,7 @@ const LoginPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-2.5 rounded-md bg-brand-500 hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700 text-sm font-semibold text-white shadow-sm shadow-brand-500/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                      className="w-full py-2.5 rounded-md bg-brand-500 hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700 text-sm font-semibold text-white  shadow-brand-500/20 active:scale-[0.98] transition-all disabled:opacity-50"
                     >
                       {loading ? "Verifying..." : "Verify Code"}
                     </button>
@@ -410,7 +410,7 @@ const LoginPage: React.FC = () => {
                                 setIsResendingEmail(false);
                               }
                             }}
-                            className="text-xs font-bold text-slate-500 hover:text-brand-500 dark:text-slate-400 dark:hover:text-brand-300 transition text-center py-1 disabled:opacity-50 disabled:cursor-not-allowed group"
+                            className="text-xs font-semibold text-slate-500 hover:text-brand-500 dark:text-slate-400 dark:hover:text-brand-300 transition text-center py-1 disabled:opacity-50 disabled:cursor-not-allowed group"
                           >
                             <div className="flex items-center gap-2">
                               {isResendingEmail && <div className="h-3 w-3 rounded-full border border-slate-300 border-t-brand-500 animate-spin" />}

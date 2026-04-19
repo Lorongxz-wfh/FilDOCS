@@ -23,7 +23,7 @@ export const CardHeader: React.FC<{
     <div className="min-w-0">
       <div className="flex items-center gap-2">
         {icon && <span className="text-slate-400 dark:text-slate-500">{icon}</span>}
-        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
           {title}
         </p>
       </div>
@@ -66,7 +66,7 @@ export const CardFooter: React.FC<{
 
 /**
  * Standardized Card Container
- * Enforces the system's 1px border, shadow-sm, and rounded-md geometry.
+ * Enforces the system's 1px border, , and rounded-md geometry.
  */
 export const Card: React.FC<CardProps> = ({ 
   children, 
@@ -81,8 +81,8 @@ export const Card: React.FC<CardProps> = ({
       onClick={onClick}
       className={`
         flex flex-col rounded-md bg-white dark:bg-surface-500 overflow-hidden transition-all duration-150
-        ${noBorder ? "" : "border border-slate-200 dark:border-surface-400 shadow-sm"}
-        ${isClickable ? "cursor-pointer hover:border-brand-300 hover:shadow-md dark:hover:border-surface-300" : ""}
+        ${noBorder ? "" : "border border-slate-200 dark:border-surface-400"}
+        ${isClickable ? "cursor-pointer hover:border-brand-300 dark:hover:border-surface-300" : ""}
         ${className}
       `}
     >

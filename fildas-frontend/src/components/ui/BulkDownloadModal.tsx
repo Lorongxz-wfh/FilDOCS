@@ -40,18 +40,18 @@ export default function BulkDownloadModal({
             <FileArchive size={24} />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               Generating ZIP Archive
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              You have selected <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCount} items</span>. 
+              You have selected <span className="font-semibold text-slate-900 dark:text-slate-100">{selectedCount} items</span>. 
               We will package these into a single compressed file for download.
             </p>
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">
             ZIP Filename
           </label>
           <div className="relative">
@@ -63,7 +63,7 @@ export default function BulkDownloadModal({
               placeholder="Enter filename..."
               className="w-full h-11 pl-4 pr-12 rounded-lg border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-600 text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none"
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400 uppercase">
               .zip
             </div>
           </div>

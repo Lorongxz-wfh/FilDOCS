@@ -3,10 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import PageFrame from "../../components/layout/PageFrame";
 import Modal from "../../components/ui/Modal";
 import Alert from "../../components/ui/Alert";
-import EmptyState from "../../components/ui/EmptyState";
 import { useToast } from "../../components/ui/toast/ToastContext";
-import { Tag, LayoutGrid, List, ChevronDown } from "lucide-react";
-import { Tabs } from "../../components/ui/Tabs";
+import { Tag, ChevronDown } from "lucide-react";
 import { getAuthUser } from "../../lib/auth";
 import { isAdmin } from "../../lib/roleFilters";
 import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
@@ -32,18 +30,13 @@ import {
 } from "../../services/templates";
 
 import TemplateList from "../../components/templates/TemplateList";
-import TemplateGridCard from "../../components/templates/TemplateGridCard";
 import TemplateUploadForm from "../../components/templates/TemplateUploadForm";
 import TemplateDetailPanel from "../../components/templates/TemplateDetailPanel";
 import Button from "../../components/ui/Button";
 
-type ViewMode = "grid" | "list";
 type ScopeFilter = "all" | "global" | "mine";
 
-const VIEW_TABS = [
-  { key: "grid", label: "Grid", icon: <LayoutGrid className="h-3.5 w-3.5" /> },
-  { key: "list", label: "List", icon: <List className="h-3.5 w-3.5" /> },
-];
+
 
 const TemplatesPage: React.FC = () => {
   const { push } = useToast();
@@ -70,9 +63,7 @@ const TemplatesPage: React.FC = () => {
   );
   const [selectedTemplate, setSelectedTemplate] =
     useState<DocumentTemplate | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    return (localStorage.getItem("templates_view") as ViewMode) ?? "grid";
-  });
+
 
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
@@ -155,10 +146,7 @@ const TemplatesPage: React.FC = () => {
   const [bulkDownloadOpen, setBulkDownloadOpen] = useState(false);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
-  const setView = (mode: ViewMode) => {
-    setViewMode(mode);
-    localStorage.setItem("templates_view", mode);
-  };
+
 
   const templateIdsRef = React.useRef<string>("");
 
@@ -312,7 +300,7 @@ const TemplatesPage: React.FC = () => {
         }
       >
         {isSysAdmin && adminDebugMode && (
-          <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px">
+          <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-1 mb-px">
             <TabBar
               tabs={[
                 { value: "active", label: "Active Templates", icon: <Layers size={12} /> },
@@ -330,18 +318,16 @@ const TemplatesPage: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 pr-4">
-              <Tabs 
-                tabs={VIEW_TABS} 
-                activeTab={viewMode} 
-                onChange={(key) => setView(key as ViewMode)} 
-                id="template-views" 
-                className="border-none"
-              />
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 shrink-0 pr-4">
+              <div className="flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 italic opacity-70">
+                <Layers className="h-3.5 w-3.5" />
+                <span>All Templates</span>
+              </div>
               {activeTab === "active" && (
                 <Button
                   variant={isSelectMode ? "primary" : "ghost"}
                   size="sm"
+                  reveal
                   onClick={() => {
                     setIsSelectMode(!isSelectMode);
                     if (isSelectMode) clearSelection();
@@ -368,7 +354,7 @@ const TemplatesPage: React.FC = () => {
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Scope</label>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Scope</label>
                   <SelectDropdown
                     value={scope}
                     onChange={(val) => setScope((val as typeof scope) || "all")}
@@ -381,7 +367,7 @@ const TemplatesPage: React.FC = () => {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Tag</label>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Tag</label>
                   <SelectDropdown
                     value={activeTag || ""}
                     onChange={(val) => setActiveTag((val as string) || null)}
@@ -420,7 +406,7 @@ const TemplatesPage: React.FC = () => {
                 "flex items-center gap-1.5 rounded-md border px-2.5 h-8 text-[11px] font-medium transition",
                 activeTag
                   ? "border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-500/10 dark:text-brand-400"
-                  : "border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 shadow-xs",
+                  : "border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 ",
               ].join(" ")}
             >
               <Tag className="h-3 w-3" />
@@ -430,7 +416,7 @@ const TemplatesPage: React.FC = () => {
             {tagDropdownOpen && (
               <div className="absolute left-0 top-full mt-1.5 z-20 w-52 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="px-3 py-2 border-b border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-700/50">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                     Filter by tag
                   </p>
                 </div>
@@ -506,7 +492,7 @@ const TemplatesPage: React.FC = () => {
             {error}{" "}
             <button
               type="button"
-              className="underline font-bold"
+              className="underline font-semibold"
               onClick={() => loadTemplates()}
             >
               Retry
@@ -517,70 +503,28 @@ const TemplatesPage: React.FC = () => {
         <div className="flex-1 min-h-0 min-w-0 flex flex-col">
           <AnimatePresence mode="wait">
             <motion.div
-              key={viewMode + debouncedQ + scope + activeTag}
+              key={debouncedQ + scope + activeTag}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
               className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden"
             >
-              {viewMode === "grid" ? (
-                <div className="h-full overflow-y-auto p-4 sm:p-6">
-                  {initialLoading ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                      {Array.from({ length: 10 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="rounded-xl border border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600/30 animate-pulse aspect-3/4 flex flex-col"
-                        >
-                          <div className="flex-1 bg-slate-100/50 dark:bg-surface-600/50" />
-                          <div className="p-2.5 space-y-1.5">
-                            <div className="h-2.5 rounded bg-slate-100/50 dark:bg-surface-600/50 w-3/4" />
-                            <div className="h-2 rounded bg-slate-100/50 dark:bg-surface-600/50 w-1/2" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : filtered.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center py-20">
-                      <EmptyState
-                        label={templates.length === 0 ? "No templates yet." : "No matching templates."}
-                        description="Try adjusting your search or filters."
-                        isSearch={templates.length > 0}
-                      />
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-                      {filtered.map((t) => (
-                        <TemplateGridCard
-                          key={t.id}
-                          template={t}
-                          onSelect={setSelectedTemplate}
-                          onDeleteClick={handleDeleteClick}
-                          isDeleting={deletingId === t.id}
-                          adminDebugMode={adminDebugMode}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <TemplateList
-                  templates={filtered}
-                  loading={initialLoading}
-                  deletingId={deletingId}
-                  onDeleteClick={handleDeleteClick}
-                  onSelect={setSelectedTemplate}
-                  sortBy={sortBy}
-                  sortDir={sortDir}
-                  onSortChange={handleSortChange}
-                  adminDebugMode={adminDebugMode}
-                  selectable={isSelectMode}
-                  selectedIds={selectedIds}
-                  onToggleRow={toggleRow}
-                  onToggleAll={toggleAll}
-                />
-              )}
+              <TemplateList
+                templates={filtered}
+                loading={initialLoading}
+                deletingId={deletingId}
+                onDeleteClick={handleDeleteClick}
+                onSelect={setSelectedTemplate}
+                sortBy={sortBy}
+                sortDir={sortDir}
+                onSortChange={handleSortChange}
+                adminDebugMode={adminDebugMode}
+                selectable={isSelectMode}
+                selectedIds={selectedIds}
+                onToggleRow={toggleRow}
+                onToggleAll={toggleAll}
+              />
             </motion.div>
           </AnimatePresence>
         </div>

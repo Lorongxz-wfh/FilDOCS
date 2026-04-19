@@ -80,7 +80,7 @@ const RequestFunnelChart: React.FC<{ data: FunnelStep[]; loading?: boolean }> = 
               </div>
 
               {/* Count */}
-              <span className="w-10 shrink-0 text-right text-sm font-bold tabular-nums text-slate-800 dark:text-slate-100">
+              <span className="w-10 shrink-0 text-right text-sm font-semibold tabular-nums text-slate-800 dark:text-slate-100">
                 {step.count}
               </span>
             </div>

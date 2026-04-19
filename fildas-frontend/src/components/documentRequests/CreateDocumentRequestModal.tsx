@@ -174,7 +174,7 @@ export default function CreateDocumentRequestModal({ open, onClose }: Props) {
               >
                 <div className="flex items-center gap-2 mb-1 pt-0.5">
                   <p
-                    className={`text-xs font-bold uppercase tracking-wide ${active ? "text-neutral-900 dark:text-neutral-50" : "text-neutral-600 dark:text-neutral-400"}`}
+                    className={`text-xs font-semibold uppercase tracking-wide ${active ? "text-neutral-900 dark:text-neutral-50" : "text-neutral-600 dark:text-neutral-400"}`}
                   >
                     {opt.label}
                   </p>

@@ -103,7 +103,7 @@ export default function SelectDropdown({
       ? "border-rose-300 dark:border-rose-800 bg-rose-50/30 dark:bg-rose-950/20"
       : "border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600",
     open
-      ? "ring-2 ring-brand-500 border-brand-500 dark:border-brand-400 shadow-sm"
+      ? "ring-2 ring-brand-500 border-brand-500 dark:border-brand-400 "
       : "hover:border-slate-300 dark:hover:border-surface-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:focus:border-brand-400",
     disabled
       ? "opacity-50 cursor-not-allowed text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-surface-700"
@@ -204,7 +204,7 @@ export default function SelectDropdown({
                   </div>
                   <div className="shrink-0 flex items-center gap-2">
                     {o.disabled && !isSelected && o.disabledHint && (
-                      <span className="text-[10px] bg-slate-100 dark:bg-surface-600 px-1.5 py-0.5 rounded text-slate-500 uppercase tracking-wider font-bold">
+                      <span className="text-[10px] bg-slate-100 dark:bg-surface-600 px-1.5 py-0.5 rounded text-slate-500 uppercase tracking-wider font-semibold">
                         {o.disabledHint}
                       </span>
                     )}

@@ -95,11 +95,11 @@ const StatusDonutChart: React.FC<FullProps> = ({
 
         {centerValue !== undefined && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-2xl font-bold font-display leading-none text-slate-900 dark:text-slate-100">
+            <span className="text-2xl font-semibold font-display leading-none text-slate-900 dark:text-slate-100">
               {centerValue}
             </span>
             {centerLabel && (
-              <span className="mt-1 text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+              <span className="mt-1 text-[11px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 {centerLabel}
               </span>
             )}

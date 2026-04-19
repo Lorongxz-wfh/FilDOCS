@@ -41,11 +41,11 @@ const QueueCard: React.FC<QueueCardProps> = ({ item, onClick }) => {
 
       <div className="shrink-0 text-right">
         {item.can_act ? (
-          <span className="text-[10px] sm:text-[11px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider block">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-rose-500 dark:text-rose-400 uppercase tracking-wider block">
             Action needed
           </span>
         ) : (
-          <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
             Monitoring
           </span>
         )}

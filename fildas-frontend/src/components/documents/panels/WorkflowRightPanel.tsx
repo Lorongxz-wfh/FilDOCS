@@ -65,7 +65,7 @@ const WorkflowRightPanel: React.FC<Props> = (props) => {
       label: "Comments", 
       icon: <MessageSquare className="h-3 w-3 shrink-0 opacity-70" />, 
       badge: newMessageCount > 0 ? (
-        <span className="ml-0.5 inline-flex items-center justify-center rounded bg-sky-100 dark:bg-sky-950/40 px-1 py-0.5 text-[8px] font-bold text-sky-700 dark:text-sky-400">
+        <span className="ml-0.5 inline-flex items-center justify-center rounded bg-sky-100 dark:bg-sky-950/40 px-1 py-0.5 text-[8px] font-semibold text-sky-700 dark:text-sky-400">
           {newMessageCount}
         </span>
       ) : null 

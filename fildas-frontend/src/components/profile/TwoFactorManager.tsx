@@ -137,7 +137,7 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
             {isEnabled ? "Two-Factor Authentication is active" : "Secure your account with 2FA"}
           </h4>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-lg leading-relaxed">
@@ -168,7 +168,7 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
                    setIsRecoveryModalOpen(true);
                    setRecoveryCodes([]); // Reset to force re-auth in UX
                }}
-               className="text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-brand-500 flex items-center gap-1.5 transition-colors"
+               className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 hover:text-brand-500 flex items-center gap-1.5 transition-colors"
              >
                 <Key className="h-3 w-3" />
                 View Recovery Codes
@@ -190,7 +190,7 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
                   <Smartphone className="h-5 w-5 text-brand-600 dark:text-brand-400" />
                </div>
                <div className="space-y-1">
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">1. Scan the QR Code</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">1. Scan the QR Code</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">Scan this image with your authenticator app (e.g., Google Authenticator, Authy).</p>
                </div>
             </div>
@@ -208,9 +208,9 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
             </div>
 
             <div className="bg-slate-50 dark:bg-surface-400/20 p-3 rounded-md border border-slate-100 dark:border-surface-400 space-y-2">
-                <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider text-center">Or enter manually</p>
+                <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 tracking-wider text-center">Or enter manually</p>
                 <div className="flex items-center justify-center gap-2">
-                   <code className="text-xs sm:text-sm font-mono font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-surface-500 px-2.5 py-1 rounded shadow-sm break-all text-center border border-slate-100 dark:border-surface-400">
+                   <code className="text-xs sm:text-sm font-mono font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-surface-500 px-2.5 py-1 rounded  break-all text-center border border-slate-100 dark:border-surface-400">
                       {setupData?.secret.match(/.{1,4}/g)?.join(' ') || "..."}
                    </code>
                    <button 
@@ -227,7 +227,7 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
 
             <div className="space-y-3 pt-2">
                <div className="space-y-1">
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">2. Verification Code</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">2. Verification Code</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">Enter the 6-digit code shown in your app to confirm.</p>
                </div>
                <input 
@@ -251,7 +251,7 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 p-3 rounded-md border border-emerald-100 dark:border-emerald-500/20">
                  <CheckCircle2 className="h-5 w-5" />
-                 <p className="text-xs font-bold uppercase tracking-wider">Setup Complete</p>
+                 <p className="text-xs font-semibold uppercase tracking-wider">Setup Complete</p>
               </div>
 
               <div className="space-y-3">
@@ -259,9 +259,9 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
                     Store these recovery codes in a secure place. If you lose access to your authenticator app, these are the **only way** to regain access to your account.
                  </p>
 
-                 <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-surface-400/20 p-4 rounded-md border border-slate-100 dark:border-surface-400 font-mono text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                 <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-surface-400/20 p-4 rounded-md border border-slate-100 dark:border-surface-400 font-mono text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                     {recoveryCodes.map(c => (
-                      <div key={c} className="bg-white dark:bg-surface-500 p-1.5 px-2 rounded shadow-sm border border-slate-100 dark:border-surface-400">
+                      <div key={c} className="bg-white dark:bg-surface-500 p-1.5 px-2 rounded  border border-slate-100 dark:border-surface-400">
                         {c}
                       </div>
                     ))}
@@ -306,7 +306,7 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
              <div className="p-3 bg-amber-50 border border-amber-100 rounded text-amber-700 space-y-1">
                 <div className="flex items-center gap-2">
                    <AlertCircle className="h-4 w-4" />
-                   <p className="text-xs font-bold uppercase tracking-wider">Security Check</p>
+                   <p className="text-xs font-semibold uppercase tracking-wider">Security Check</p>
                 </div>
                 <p className="text-[11px]">Please enter your password to view your recovery codes.</p>
              </div>
@@ -327,9 +327,9 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
           </div>
         ) : (
           <div className="space-y-5">
-             <div className="grid grid-cols-2 gap-2 bg-slate-50 p-4 rounded-md border border-slate-100 font-mono text-[11px] font-bold text-slate-600">
+             <div className="grid grid-cols-2 gap-2 bg-slate-50 p-4 rounded-md border border-slate-100 font-mono text-[11px] font-semibold text-slate-600">
                 {recoveryCodes.map(c => (
-                  <div key={c} className="bg-white p-1.5 px-2 rounded shadow-sm border border-slate-100">
+                  <div key={c} className="bg-white p-1.5 px-2 rounded  border border-slate-100">
                     {c}
                   </div>
                 ))}
@@ -373,7 +373,7 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
            <div className="p-3 bg-rose-50 border border-rose-100 rounded text-rose-700 flex gap-3">
               <Trash2 className="h-4 w-4 shrink-0 mt-0.5" />
               <div className="space-y-1">
-                 <p className="text-xs font-bold uppercase tracking-wider">Warning</p>
+                 <p className="text-xs font-semibold uppercase tracking-wider">Warning</p>
                  <p className="text-[11px] leading-relaxed">Disabling two-factor authentication makes your account less secure. You will only need your password to log in.</p>
               </div>
            </div>

@@ -19,11 +19,11 @@ import { formatDate } from "../../utils/formatters";
 import { StatusBadge } from "../../components/ui/Badge";
 import RoleBadge from "../../components/ui/RoleBadge";
 import { PageActions, CreateAction } from "../../components/ui/PageActions";
-import SearchFilterBar from "../../components/ui/SearchFilterBar";
+import { motion, AnimatePresence } from "framer-motion";
 import DeletedItemsView from "../../components/admin/DeletedItemsView";
 import AdminSessionsTab from "../../components/admin/AdminSessionsTab";
 import { TabBar } from "../../components/documentRequests/shared";
-import { Users, Trash2, CheckSquare, ShieldCheck, ShieldAlert, Activity } from "lucide-react";
+import { Users, Trash2, CheckSquare, ShieldCheck, ShieldAlert, Activity, SlidersHorizontal, Search, X } from "lucide-react";
 import { useBulkActions } from "../../hooks/useBulkActions";
 import BulkActionBar from "../../components/ui/BulkActionBar";
 import axios from "../../services/api";
@@ -49,6 +49,7 @@ const UserManagerPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(!_uc);
   const [error, setError] = useState<string | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
 
   const [search, setSearch] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
@@ -56,6 +57,7 @@ const UserManagerPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<number | "">("");
   const [roles, setRoles] = useState<AdminRole[]>([]);
   const [trashRefreshTrigger, setTrashRefreshTrigger] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
 
   const [sortBy, setSortBy] = useState<"first_name" | "last_name" | "email" | "created_at">("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -84,15 +86,19 @@ const UserManagerPage: React.FC = () => {
   }, [search]);
 
   // Data fetching logic
-  const loadRef = useCallback(
-    async (silent = false) => {
-      if (page > 1 && !hasMore) return;
-      if (!silent) setInitialLoading(true);
+  const load = useCallback(
+    async (pageNum: number, silent = false) => {
+      if (pageNum > 1 && !hasMore) return;
+      if (pageNum === 1 && !silent) {
+        setInitialLoading(true);
+        setRows([]);
+        setTotal(null);
+      }
       setLoading(true);
       setError(null);
       try {
         const res = await getAdminUsers({
-          page,
+          page: pageNum,
           per_page: 10,
           q: searchDebounced || undefined,
           status: statusFilter || undefined,
@@ -101,12 +107,12 @@ const UserManagerPage: React.FC = () => {
           sort_dir: sortDir,
         });
         const incoming = res.data ?? [];
-        setRows((prev) => (page === 1 ? incoming : [...prev, ...incoming]));
+        setRows((prev) => (pageNum === 1 ? incoming : [...prev, ...incoming]));
         const meta = res.meta ?? (res as any);
         const more = meta?.current_page != null && meta?.last_page != null && meta.current_page < meta.last_page;
         setHasMore(more);
-
-        if (page === 1) {
+        if (meta?.total !== undefined) setTotal(meta.total);
+        if (pageNum === 1) {
           const filterKey = JSON.stringify({ q: searchDebounced, status: statusFilter, role: String(roleFilter) });
           pageCache.set("users", filterKey, incoming, more);
         }
@@ -117,7 +123,7 @@ const UserManagerPage: React.FC = () => {
         setInitialLoading(false);
       }
     },
-    [page, searchDebounced, statusFilter, roleFilter, sortBy, sortDir, hasMore]
+    [searchDebounced, statusFilter, roleFilter, sortBy, sortDir, hasMore]
   );
 
   // Background refresh logic
@@ -167,11 +173,9 @@ const UserManagerPage: React.FC = () => {
 
   // Trigger load on change
   useEffect(() => {
-    let alive = true;
-    if (alive) loadRef(rows.length > 0);
-    return () => { alive = false; };
+    load(1, rows.length > 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, searchDebounced, statusFilter, roleFilter, sortBy, sortDir]);
+  }, [searchDebounced, statusFilter, roleFilter, sortBy, sortDir]);
 
   const openEdit = (u: AdminUser) => {
     setEditMode("edit");
@@ -186,7 +190,7 @@ const UserManagerPage: React.FC = () => {
   };
 
   const handleSaved = () => {
-    loadRef(true);
+    load(1, true);
   };
 
   const {
@@ -265,7 +269,7 @@ const UserManagerPage: React.FC = () => {
           return (
             <div className="flex justify-center">
               <div
-                className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-slate-300 dark:bg-surface-400'}`}
+                className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500  shadow-emerald-500/50' : 'bg-slate-300 dark:bg-surface-400'}`}
                 title={isOnline ? 'Online' : u.disabled_at ? 'Disabled' : 'Offline'}
               />
             </div>
@@ -334,7 +338,7 @@ const UserManagerPage: React.FC = () => {
         </PageActions>
       }
     >
-      <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px pr-4">
+      <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-transparent px-1 mb-2 pr-4 gap-4">
         <div className="flex items-center">
             <TabBar
               tabs={[
@@ -343,24 +347,113 @@ const UserManagerPage: React.FC = () => {
                 { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
               ]}
               active={activeTab}
-              onChange={(val: any) => setActiveTab(val)}
+              onChange={(val: any) => {
+                setActiveTab(val);
+                setShowFilters(false);
+              }}
             />
         </div>
-        {activeTab === "active" && (
-          <Button
-            variant={isSelectMode ? "primary" : "ghost"}
-            size="sm"
-            onClick={() => {
-              setIsSelectMode(!isSelectMode);
-              if (isSelectMode) clearSelection();
-            }}
-            className="flex items-center gap-2 h-8"
-          >
-            <CheckSquare size={14} />
-            <span>{isSelectMode ? "Cancel" : "Select"}</span>
-          </Button>
-        )}
+
+        <div className="flex items-center gap-2 shrink-0">
+          {activeTab === "active" && (
+            <>
+              <div className="hidden lg:flex items-center relative w-72 h-8 ml-4">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  placeholder="Search users..."
+                  className="w-full pl-9 pr-8 h-8 text-[13px] bg-slate-50/50 border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-500 dark:bg-surface-500/50 dark:border-surface-400/50 dark:text-slate-200"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => { setSearch(""); setPage(1); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              <Button
+                variant={showFilters || activeFiltersCount > 0 ? "primary" : "outline"}
+                size="sm"
+                reveal
+                onClick={() => setShowFilters(!showFilters)}
+                className="h-8"
+              >
+                <SlidersHorizontal size={14} />
+                <span>Filters</span>
+                {activeFiltersCount > 0 && !showFilters && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-semibold text-white  ring-2 ring-white dark:ring-surface-600">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
+
+              <Button
+                variant={isSelectMode ? "primary" : "outline"}
+                size="sm"
+                reveal
+                onClick={() => {
+                  setIsSelectMode(!isSelectMode);
+                  if (isSelectMode) clearSelection();
+                }}
+                className="h-8"
+              >
+                <CheckSquare size={14} />
+                <span>{isSelectMode ? "Cancel" : "Select"}</span>
+              </Button>
+            </>
+          )}
+        </div>
       </div>
+
+      <AnimatePresence>
+        {activeTab === "active" && showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden bg-slate-50/50 dark:bg-surface-600/50 border-b border-slate-200 dark:border-surface-400"
+          >
+            <div className="px-4 py-2.5 flex flex-wrap items-center gap-2">
+              <SelectDropdown
+                value={statusFilter}
+                onChange={(val) => { setStatusFilter((val as any) || ""); setPage(1); }}
+                className="w-40"
+                options={[
+                  { value: "", label: "All Statuses" },
+                  { value: "active", label: "Active" },
+                  { value: "disabled", label: "Disabled" }
+                ]}
+              />
+              <SelectDropdown
+                value={roleFilter}
+                onChange={(val) => { setRoleFilter(val === null || val === "" ? "" : Number(val)); setPage(1); }}
+                className="w-48"
+                options={[
+                  { value: "", label: "All Roles" },
+                  ...roles.map((r) => ({ value: r.id, label: r.label || r.name }))
+                ]}
+              />
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                reveal
+                onClick={clearFilters}
+                className="text-[11px] h-8"
+              >
+                <Trash2 size={14} />
+                <span>Clear all</span>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {activeTab === "deleted" ? (
         <div className="flex-1 min-h-0">
@@ -376,49 +469,6 @@ const UserManagerPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <SearchFilterBar
-            search={search}
-            setSearch={(val) => { setSearch(val); setPage(1); }}
-            placeholder="Search name / email…"
-            activeFiltersCount={activeFiltersCount}
-            onClear={clearFilters}
-            mobileFilters={
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Status</label>
-                  <SelectDropdown
-                    value={statusFilter}
-                    onChange={(val) => setStatusFilter((val as any) || "")}
-                    className="w-full"
-                    options={[{ value: "", label: "All statuses" }, { value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }]}
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Role</label>
-                  <SelectDropdown
-                    value={roleFilter}
-                    onChange={(val) => setRoleFilter(val === null || val === "" ? "" : Number(val))}
-                    className="w-full"
-                    options={[{ value: "", label: "All roles" }, ...roles.map((r) => ({ value: r.id, label: r.label || r.name }))]}
-                  />
-                </div>
-              </div>
-            }
-          >
-            <SelectDropdown
-              value={statusFilter}
-              onChange={(val) => setStatusFilter((val as any) || "")}
-              className="w-32"
-              options={[{ value: "", label: "All statuses" }, { value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }]}
-            />
-            <SelectDropdown
-              value={roleFilter}
-              onChange={(val) => setRoleFilter(val === null || val === "" ? "" : Number(val))}
-              className="w-40"
-              options={[{ value: "", label: "All roles" }, ...roles.map((r) => ({ value: r.id, label: r.label || r.name }))]}
-            />
-          </SearchFilterBar>
-
           {error && <Alert variant="danger">{error}</Alert>}
 
           <div className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
@@ -427,13 +477,18 @@ const UserManagerPage: React.FC = () => {
               className="h-full"
               columns={columns}
               rows={rows}
+              total={total ?? undefined}
               rowKey={(u) => u.id}
               onRowClick={openEdit}
               loading={loading}
               initialLoading={initialLoading}
               emptyMessage={search || statusFilter || roleFilter ? "No users match your filters." : "No users found."}
               hasMore={hasMore}
-              onLoadMore={() => setPage((p) => p + 1)}
+              onLoadMore={() => {
+                const next = page + 1;
+                setPage(next);
+                load(next, true);
+              }}
               gridTemplateColumns="40px 1.6fr 1.3fr 1.8fr 7.5rem 4.5rem 4rem"
               sortBy={sortBy}
               sortDir={sortDir}

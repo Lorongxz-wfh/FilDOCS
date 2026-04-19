@@ -59,6 +59,8 @@ export type TableProps<T> = {
 
   // Row expansion
   renderRowDetails?: (row: T) => React.ReactNode;
+  /** Total items in the backend (for "Showing X of Y") */
+  total?: number;
 };
 
 const alignClass = (align: Align | undefined) => {
@@ -160,6 +162,7 @@ export default function Table<T>({
   onToggleRow,
   onToggleAll,
   renderRowDetails,
+  total,
 }: TableProps<T>) {
   const [expandedIds, setExpandedIds] = React.useState<Set<string | number>>(new Set());
 
@@ -212,7 +215,7 @@ export default function Table<T>({
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         {/* Sticky header — hidden if mobileRender is active on small screen */}
         <div
-          className={`sticky top-0 z-20 shrink-0 grid gap-3 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-300 border-b border-neutral-300/60 dark:border-surface-300/50 bg-neutral-50 dark:bg-surface-600 ${mobileRender ? "hidden sm:grid" : "grid"}`}
+          className={`sticky top-0 z-20 shrink-0 grid gap-3 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-300 border-b border-neutral-300/60 dark:border-surface-300/50 bg-neutral-50 dark:bg-surface-600 ${mobileRender ? "hidden sm:grid" : "grid"}`}
           style={{ gridTemplateColumns: finalTemplate }}
         >
           {selectable && (
@@ -231,7 +234,7 @@ export default function Table<T>({
               isActive && sortDir === "desc" ? "asc" : "desc";
 
             const headerBaseClass = [
-              "flex items-center min-w-0 font-bold uppercase tracking-wider text-[11px]",
+              "flex items-center min-w-0 font-semibold uppercase tracking-wider text-[11px]",
               alignHeaderClass(c.align),
               c.headerClassName ?? "",
             ].join(" ");
@@ -499,7 +502,7 @@ export default function Table<T>({
             {onLoadMore && (
               <div ref={sentinelRef} className="py-3 flex justify-center">
                 {loading && !initialLoading && (
-                  <div className="h-5 w-5 rounded-full border-2 border-neutral-200 dark:border-surface-400 border-t-brand-600 animate-spin" />
+                  <div className="h-5 w-5 rounded-full border-2 border-slate-200/50 dark:border-surface-400/50 border-t-brand-500 dark:border-t-brand-400 animate-spin" />
                 )}
                 {!loading && !hasMore && rows.length > 0 && (
                   <span className="text-xs text-neutral-400 dark:text-neutral-400/60 font-medium">
@@ -511,6 +514,14 @@ export default function Table<T>({
           </div>
         )}
       </div>
+
+      {total != null && rows.length > 0 && (
+        <div className="shrink-0 px-4 py-2 border-t border-neutral-100 dark:border-surface-400/50 bg-neutral-50/30 dark:bg-surface-600/10 flex justify-end">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+            Showing {rows.length} of {total} items
+          </span>
+        </div>
+      )}
     </>
   );
 

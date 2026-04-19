@@ -56,10 +56,10 @@ const AdminUsersByRoleChart: React.FC<Props> = ({ active, inactive, loading = fa
         
         {/* Center label with focus animation */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center animate-in fade-in zoom-in-75 duration-500">
-          <span className="text-2xl font-bold font-display leading-none text-slate-900 dark:text-slate-100">
+          <span className="text-2xl font-semibold font-display leading-none text-slate-900 dark:text-slate-100">
             {total}
           </span>
-          <span className="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <span className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             TOTAL
           </span>
         </div>
@@ -70,10 +70,10 @@ const AdminUsersByRoleChart: React.FC<Props> = ({ active, inactive, loading = fa
         <div className="flex items-center gap-3 group">
           <div className="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500 group-hover:scale-125 transition-transform" />
           <div className="min-w-0">
-            <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100 truncate">
+            <p className="text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100 truncate">
               {active}
             </p>
-            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
               Enabled · {pct}%
             </p>
           </div>
@@ -81,10 +81,10 @@ const AdminUsersByRoleChart: React.FC<Props> = ({ active, inactive, loading = fa
         <div className="flex items-center gap-3 group">
           <div className="h-2.5 w-2.5 shrink-0 rounded-full bg-slate-400 dark:bg-slate-500 group-hover:scale-125 transition-transform" />
           <div className="min-w-0">
-            <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100 truncate">
+            <p className="text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100 truncate">
               {inactive}
             </p>
-            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
               Disabled
             </p>
           </div>

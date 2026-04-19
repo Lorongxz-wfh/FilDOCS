@@ -64,7 +64,7 @@ const TemplateGridCard: React.FC<Props> = ({
         ) : (
           /* Fallback — clean document placeholder */
           <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-4">
-            <div className="flex flex-col items-center justify-center w-14 h-16 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-400 shadow-sm relative">
+            <div className="flex flex-col items-center justify-center w-14 h-16 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-400  relative">
               {/* Folded corner */}
               <div className="absolute top-0 right-0 w-3 h-3 border-l border-b border-slate-200 dark:border-surface-300 bg-slate-50 dark:bg-surface-500 rounded-bl-sm" />
               <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-1">

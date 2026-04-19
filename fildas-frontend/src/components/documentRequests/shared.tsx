@@ -25,7 +25,7 @@ export function RoleBadge({ role }: { role?: string | null }) {
   };
   return (
     <span
-      className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${map[r] ?? "bg-slate-100 text-slate-600"}`}
+      className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${map[r] ?? "bg-slate-100 text-slate-600"}`}
     >
       {r}
     </span>
@@ -58,7 +58,7 @@ export function TabBar<T extends string>({
           {t.icon}
           {t.label}
           {badge?.[t.value] ? (
-            <span className="rounded-full bg-sky-100 px-1.5 text-[10px] font-bold text-sky-600 dark:bg-sky-950/40 dark:text-sky-400">
+            <span className="rounded-full bg-sky-100 px-1.5 text-[10px] font-semibold text-sky-600 dark:bg-sky-950/40 dark:text-sky-400">
               {badge[t.value]}
             </span>
           ) : null}

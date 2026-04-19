@@ -64,11 +64,11 @@ export default function OnboardingChecklist() {
   const progress = Math.round((completed.length / DEFAULT_ITEMS.length) * 100);
 
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shadow-sm">
+    <div className="rounded-2xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden ">
       <div className="px-6 py-5 border-b border-slate-100 dark:border-surface-400 flex items-center justify-between bg-slate-50/50 dark:bg-surface-600/50">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Quick Start Checklist</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Quick Start Checklist</h3>
             {syncing && <RefreshCw className="h-3 w-3 text-slate-400 animate-spin" />}
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Essential steps for every new user</p>
@@ -120,7 +120,7 @@ export default function OnboardingChecklist() {
           <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-400/20 flex items-center justify-center">
             <PartyPopper className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+          <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
             Certified! You're ready to master the FilDOCS workflows.
           </p>
         </div>

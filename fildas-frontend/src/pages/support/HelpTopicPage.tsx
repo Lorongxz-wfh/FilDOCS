@@ -45,11 +45,11 @@ const TOPICS: Record<string, TopicData> = {
           <div className="space-y-4">
             <p>FilDOCS is a centralized document workflow and management system designed for institutional compliance and ISO-standard document control. It replaces manual paper trails with a rigorous, electronic serial lifecycle.</p>
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-surface-400 border border-slate-100 dark:border-surface-300">
-               <p className="text-xs font-bold uppercase text-brand-600 mb-2">Key Value Pillars</p>
+               <p className="text-xs font-semibold uppercase text-brand-600 mb-2">Key Value Pillars</p>
             <ul className="list-disc list-inside space-y-2 text-[13px]">
-                 <li><span className="font-bold">Accountability:</span> Every action is logged with a timestamp and IP address.</li>
-                 <li><span className="font-bold">Standardization:</span> All documents follow the same 5 phases without exception.</li>
-                 <li><span className="font-bold">Security:</span> Mandatory 2FA for all administrative and workflow actions.</li>
+                 <li><span className="font-semibold">Accountability:</span> Every action is logged with a timestamp and IP address.</li>
+                 <li><span className="font-semibold">Standardization:</span> All documents follow the same 5 phases without exception.</li>
+                 <li><span className="font-semibold">Security:</span> Mandatory 2FA for all administrative and workflow actions.</li>
                </ul>
             </div>
           </div>
@@ -62,11 +62,11 @@ const TOPICS: Record<string, TopicData> = {
             <p>Accessing your workspace requires valid institutional credentials. Your account is usually created by a System Administrator.</p>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded bg-brand-500 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">1</div>
-                <p className="text-xs leading-relaxed">Enter your registered email and password at the <Link to="/login" className="text-brand-500 font-bold hover:underline inline-flex items-center gap-1">Login Page <ExternalLink className="h-3 w-3" /></Link>.</p>
+                <div className="h-5 w-5 rounded bg-brand-500 text-white flex items-center justify-center text-[10px] font-semibold shrink-0 mt-0.5">1</div>
+                <p className="text-xs leading-relaxed">Enter your registered email and password at the <Link to="/login" className="text-brand-500 font-semibold hover:underline inline-flex items-center gap-1">Login Page <ExternalLink className="h-3 w-3" /></Link>.</p>
               </div>
               <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded bg-brand-500 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">2</div>
+                <div className="h-5 w-5 rounded bg-brand-500 text-white flex items-center justify-center text-[10px] font-semibold shrink-0 mt-0.5">2</div>
                 <p className="text-xs leading-relaxed">If you forget your password, use the 'Forgot Password' link to receive a reset code via email.</p>
               </div>
             </div>
@@ -80,12 +80,12 @@ const TOPICS: Record<string, TopicData> = {
             <p>Security is paramount. 2FA is mandatory for all users participating in workflows.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 rounded-xl border border-brand-100 bg-brand-50/20 dark:bg-brand-500/5">
-                <p className="text-xs font-bold text-brand-600 mb-2 uppercase">Initial Setup</p>
-                <p className="text-xs leading-relaxed mb-4">Navigate to your <Link to="/profile" className="text-brand-500 font-bold hover:underline">Profile Settings</Link> and click 'Enable 2FA'. You will need a TOTP app like Google Authenticator.</p>
-                    <Link to="/profile" className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 dark:bg-brand-500 text-white text-[10px] font-bold rounded-lg hover:bg-slate-800 transition-colors">Go to Settings</Link>
+                <p className="text-xs font-semibold text-brand-600 mb-2 uppercase">Initial Setup</p>
+                <p className="text-xs leading-relaxed mb-4">Navigate to your <Link to="/profile" className="text-brand-500 font-semibold hover:underline">Profile Settings</Link> and click 'Enable 2FA'. You will need a TOTP app like Google Authenticator.</p>
+                    <Link to="/profile" className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 dark:bg-brand-500 text-white text-[10px] font-semibold rounded-lg hover:bg-slate-800 transition-colors">Go to Settings</Link>
               </div>
               <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 dark:bg-surface-400">
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-100 mb-2 uppercase">Recovery Codes</p>
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-100 mb-2 uppercase">Recovery Codes</p>
                 <p className="text-xs leading-relaxed">Always save your recovery codes during setup. These are the only way to access your account if you lose your phone.</p>
               </div>
             </div>
@@ -100,15 +100,15 @@ const TOPICS: Record<string, TopicData> = {
             <ul className="space-y-3 text-[13px]">
               <li className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors">
                  <div className="h-2 w-2 rounded-full bg-brand-500" />
-                 <p><span className="font-bold">E-Signature:</span> Mandatory for Approvers. Upload a clean PNG at <Link to="/profile" className="text-brand-500 underline">Settings</Link>.</p>
+                 <p><span className="font-semibold">E-Signature:</span> Mandatory for Approvers. Upload a clean PNG at <Link to="/profile" className="text-brand-500 underline">Settings</Link>.</p>
               </li>
               <li className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors">
                  <div className="h-2 w-2 rounded-full bg-brand-500" />
-                 <p><span className="font-bold">Notification Prefs:</span> Toggle Email vs In-App alerts for document updates.</p>
+                 <p><span className="font-semibold">Notification Prefs:</span> Toggle Email vs In-App alerts for document updates.</p>
               </li>
               <li className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors">
                  <div className="h-2 w-2 rounded-full bg-brand-500" />
-                 <p><span className="font-bold">Theme:</span> Switch between Light, Dark, or System mode.</p>
+                 <p><span className="font-semibold">Theme:</span> Switch between Light, Dark, or System mode.</p>
               </li>
             </ul>
           </div>
@@ -118,7 +118,7 @@ const TOPICS: Record<string, TopicData> = {
         title: "Chapter 1.5 — Navigation and Dashboard",
         content: (
           <div className="space-y-4">
-            <p>The <Link to="/dashboard" className="text-brand-500 font-bold hover:underline">Dashboard</Link> is your command center.</p>
+            <p>The <Link to="/dashboard" className="text-brand-500 font-semibold hover:underline">Dashboard</Link> is your command center.</p>
             <div className="grid grid-cols-2 gap-3">
                {[
                  { t: "Pending Tasks", v: "Actions currently waiting for your office." },
@@ -159,11 +159,11 @@ const TOPICS: Record<string, TopicData> = {
                ].map((s, i) => (
                  <div key={i} className="flex items-center gap-4 group">
                     <div className="relative flex flex-col items-center">
-                       <div className="h-8 w-8 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold text-xs z-10">{i+1}</div>
+                       <div className="h-8 w-8 rounded-full bg-brand-500 text-white flex items-center justify-center font-semibold text-xs z-10">{i+1}</div>
                        {i < 4 && <div className="h-10 w-0.5 bg-slate-200 dark:bg-surface-300 -mb-2" />}
                     </div>
                     <div className="flex-1 p-3 rounded-xl border border-slate-100 dark:border-surface-400 bg-slate-50/50">
-                       <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.n}</p>
+                       <p className="text-xs font-semibold text-slate-800 dark:text-slate-100">{s.n}</p>
                        <p className="text-[10px] text-slate-500">Actor: {s.c}</p>
                     </div>
                  </div>
@@ -176,13 +176,13 @@ const TOPICS: Record<string, TopicData> = {
         title: "Chapter 2.2 — Draft Phase",
         content: (
           <div className="space-y-4">
-            <p>Every document starts at <Link to="/documents/create" className="text-brand-500 font-bold underline">Create Document</Link>.</p>
+            <p>Every document starts at <Link to="/documents/create" className="text-brand-500 font-semibold underline">Create Document</Link>.</p>
             <ul className="space-y-2 text-[13px]">
-               <li><span className="font-bold">v0 Versioning:</span> All new drafts are named v0. They remain private until forwarded.</li>
-               <li><span className="font-bold">Metadata:</span> You must provide a Title, Description, and Category.</li>
-               <li><span className="font-bold">Routing:</span> Choose Default (System) or Custom (Select specific offices).</li>
+               <li><span className="font-semibold">v0 Versioning:</span> All new drafts are named v0. They remain private until forwarded.</li>
+               <li><span className="font-semibold">Metadata:</span> You must provide a Title, Description, and Category.</li>
+               <li><span className="font-semibold">Routing:</span> Choose Default (System) or Custom (Select specific offices).</li>
             </ul>
-            <Link to="/documents/create" className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-all">Start a Draft</Link>
+            <Link to="/documents/create" className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-xl hover:bg-slate-800 transition-all">Start a Draft</Link>
           </div>
         )
       },
@@ -192,10 +192,10 @@ const TOPICS: Record<string, TopicData> = {
           <div className="space-y-3">
              <p>The Review phase is for technical validation. The reviewer ensures the content is accurate and formatted correctly.</p>
              <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-950/30">
-                <p className="text-xs font-bold text-amber-800 dark:text-amber-400 mb-2 uppercase">Reviewer Actions</p>
+                <p className="text-xs font-semibold text-amber-800 dark:text-amber-400 mb-2 uppercase">Reviewer Actions</p>
                 <div className="grid grid-cols-2 gap-4 text-[11px]">
-                   <p><span className="font-bold">Forward:</span> Moves it to Approval.</p>
-                   <p><span className="font-bold">Return:</span> Sends back to Creator for fixes.</p>
+                   <p><span className="font-semibold">Forward:</span> Moves it to Approval.</p>
+                   <p><span className="font-semibold">Return:</span> Sends back to Creator for fixes.</p>
                 </div>
              </div>
           </div>
@@ -219,8 +219,8 @@ const TOPICS: Record<string, TopicData> = {
           <div className="space-y-3 text-[13px]">
              <p>Once approved globally, the document returns to the Creator (or QA) for finalization:</p>
              <ol className="list-decimal list-inside space-y-2">
-                <li><span className="font-bold uppercase tracking-wider text-brand-600">Register:</span> Assign a unique Document ID based on your office code.</li>
-                <li><span className="font-bold uppercase tracking-wider text-brand-600">Distribute:</span> Share the document with the Library. Only after this step is it visible to others.</li>
+                <li><span className="font-semibold uppercase tracking-wider text-brand-600">Register:</span> Assign a unique Document ID based on your office code.</li>
+                <li><span className="font-semibold uppercase tracking-wider text-brand-600">Distribute:</span> Share the document with the Library. Only after this step is it visible to others.</li>
              </ol>
           </div>
         )
@@ -231,7 +231,7 @@ const TOPICS: Record<string, TopicData> = {
           <div className="space-y-4 text-[13px]">
              <p>A 'Completed' document cannot be edited. To update it, you must initiate a **Revision Cycle**.</p>
              <div className="bg-slate-900 rounded-xl p-4 text-white">
-                <p className="text-brand-400 font-bold uppercase mb-2">Revision Process</p>
+                <p className="text-brand-400 font-semibold uppercase mb-2">Revision Process</p>
                 <ol className="list-decimal list-inside space-y-1.5 leading-relaxed opacity-90">
                    <li>Locate the document in the <Link to="/documents" className="text-brand-300 underline">Library</Link>.</li>
                    <li>Click the 'Revise' button.</li>
@@ -255,7 +255,7 @@ const TOPICS: Record<string, TopicData> = {
         title: "Chapter 3.1 — Document Library",
         content: (
           <div className="space-y-4">
-            <p>The <Link to="/documents" className="text-brand-500 font-bold underline">Document Library</Link> contains all distributed and active records.</p>
+            <p>The <Link to="/documents" className="text-brand-500 font-semibold underline">Document Library</Link> contains all distributed and active records.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
                {[
                  { t: "Created", d: "Docs started by your office." },
@@ -276,7 +276,7 @@ const TOPICS: Record<string, TopicData> = {
         title: "Chapter 3.2 — Archive",
         content: (
           <div className="space-y-3">
-             <p>The <Link to="/archive" className="text-brand-500 font-bold underline">Archive</Link> stores soft-deleted documents and outdated versions. These remain searchable and can be restored by Sysadmins if necessary.</p>
+             <p>The <Link to="/archive" className="text-brand-500 font-semibold underline">Archive</Link> stores soft-deleted documents and outdated versions. These remain searchable and can be restored by Sysadmins if necessary.</p>
              <p className="text-xs bg-red-50 dark:bg-red-950/20 p-2 border border-red-100 text-red-700 dark:text-red-400 font-medium">Items in the Archive are read-only and cannot be modified until restored to the Library.</p>
           </div>
         )
@@ -285,10 +285,10 @@ const TOPICS: Record<string, TopicData> = {
         title: "Chapter 3.3 — Templates",
         content: (
           <div className="space-y-3 text-[13px]">
-             <p>Standardized forms are available in the <Link to="/templates" className="text-brand-500 font-bold underline">Templates Hub</Link>.</p>
+             <p>Standardized forms are available in the <Link to="/templates" className="text-brand-500 font-semibold underline">Templates Hub</Link>.</p>
              <ul className="list-disc list-inside space-y-2">
-                <li><span className="font-bold">QA Provided:</span> All official templates are uploaded by Document Controllers.</li>
-                <li><span className="font-bold">Auto-Fill:</span> Some templates will automatically pull your office data when used to create a draft.</li>
+                <li><span className="font-semibold">QA Provided:</span> All official templates are uploaded by Document Controllers.</li>
+                <li><span className="font-semibold">Auto-Fill:</span> Some templates will automatically pull your office data when used to create a draft.</li>
              </ul>
           </div>
         )
@@ -297,7 +297,7 @@ const TOPICS: Record<string, TopicData> = {
         title: "Chapter 3.4 — Document Requests",
         content: (
           <div className="space-y-3 text-[13px]">
-             <p>If you need a physical copy or access to a restricted document, use <Link to="/document-requests" className="text-brand-500 font-bold underline">Document Requests</Link>.</p>
+             <p>If you need a physical copy or access to a restricted document, use <Link to="/document-requests" className="text-brand-500 font-semibold underline">Document Requests</Link>.</p>
              <ol className="list-decimal list-inside space-y-1">
                 <li>Create a Request specifying the document and reason.</li>
                 <li>Owner office reviews the request.</li>
@@ -319,11 +319,11 @@ const TOPICS: Record<string, TopicData> = {
         title: "Chapter 4.1 — Reports and Analytics",
         content: (
           <div className="space-y-3 text-[13px]">
-             <p>Visit the <Link to="/reports" className="text-brand-500 font-bold underline">Reports</Link> page to view department-level audits:</p>
+             <p>Visit the <Link to="/reports" className="text-brand-500 font-semibold underline">Reports</Link> page to view department-level audits:</p>
              <ul className="list-disc list-inside space-y-2">
-                <li><span className="font-bold">Approval Audit:</span> Lists signatures with timestamps and IP addresses of approvers.</li>
-                <li><span className="font-bold">Compliance Rate:</span> Percent of docs that completed within target timeframes.</li>
-                <li><span className="font-bold">Export:</span> All reports can be downloaded as CSV for external meetings.</li>
+                <li><span className="font-semibold">Approval Audit:</span> Lists signatures with timestamps and IP addresses of approvers.</li>
+                <li><span className="font-semibold">Compliance Rate:</span> Percent of docs that completed within target timeframes.</li>
+                <li><span className="font-semibold">Export:</span> All reports can be downloaded as CSV for external meetings.</li>
              </ul>
           </div>
         )
@@ -332,9 +332,9 @@ const TOPICS: Record<string, TopicData> = {
         title: "Chapter 4.2 — Activity Logs",
         content: (
           <div className="space-y-3 text-[13px]">
-             <p>Every major change is tracked in <Link to="/activity-logs" className="text-brand-500 font-bold underline">Activity Logs</Link>.</p>
+             <p>Every major change is tracked in <Link to="/activity-logs" className="text-brand-500 font-semibold underline">Activity Logs</Link>.</p>
              <div className="p-3 bg-brand-50 dark:bg-brand-500/5 rounded-xl border border-brand-100">
-                <p className="font-bold text-brand-600 mb-1">What is logged?</p>
+                <p className="font-semibold text-brand-600 mb-1">What is logged?</p>
                 <p className="leading-relaxed opacity-80">Document creation, Phase changes, File replacements, Signature applications, and Permission changes.</p>
              </div>
           </div>
@@ -355,7 +355,7 @@ const TOPICS: Record<string, TopicData> = {
       {
         title: "Chapter 4.4 — Announcements",
         content: (
-          <p className="text-xs">System-wide notices (Maintenance windows, Policy updates) are posted in <Link to="/announcements" className="text-brand-500 font-bold underline">Announcements</Link>. These are shared with all users and usually pinned to the top of the dashboard feed.</p>
+          <p className="text-xs">System-wide notices (Maintenance windows, Policy updates) are posted in <Link to="/announcements" className="text-brand-500 font-semibold underline">Announcements</Link>. These are shared with all users and usually pinned to the top of the dashboard feed.</p>
         )
       },
       {
@@ -363,7 +363,7 @@ const TOPICS: Record<string, TopicData> = {
         content: (
           <div className="space-y-4">
              <p className="text-xs">This manual is the primary resource for technical training. If you identify a bug or need access assistance, use the support button below:</p>
-             <Link to="/report-issue" className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-white text-[11px] font-bold rounded-lg hover:shadow-lg transition-all">Open Support Ticket</Link>
+             <Link to="/report-issue" className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-white text-[11px] font-semibold rounded-lg hover:shadow-lg transition-all">Open Support Ticket</Link>
           </div>
         )
       }
@@ -392,7 +392,7 @@ function AccordionItem({
         onClick={() => setOpen((prev) => !prev)}
         className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left transition hover:bg-slate-50 dark:hover:bg-surface-400"
       >
-        <span className={`text-sm font-bold transition-colors ${open ? "text-brand-600 dark:text-brand-400" : "text-slate-800 dark:text-slate-100"}`}>
+        <span className={`text-sm font-semibold transition-colors ${open ? "text-brand-600 dark:text-brand-400" : "text-slate-800 dark:text-slate-100"}`}>
           {title}
         </span>
         <ChevronDown
@@ -502,7 +502,7 @@ export default function HelpTopicPage() {
           </div>
 
           {/* Articles */}
-          <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-sm">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 ">
             {filteredArticles.length > 0 ? (
               filteredArticles.map((article, i) => (
                 <AccordionItem
@@ -518,7 +518,7 @@ export default function HelpTopicPage() {
                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 dark:bg-surface-400 mb-4">
                       <Search className="h-6 w-6 text-slate-300" />
                    </div>
-                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100">No matching articles</p>
+                   <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">No matching articles</p>
                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Try adjusting your search query.</p>
                 </div>
             )}
@@ -527,14 +527,14 @@ export default function HelpTopicPage() {
           {/* Nav Footer */}
           <div className="mt-12 p-8 rounded-2xl border border-dashed border-slate-200 dark:border-surface-400 flex flex-col items-center text-center">
              <MessageSquare className="h-8 w-8 text-slate-300 mb-4" />
-             <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Still Stuck?</p>
+             <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Still Stuck?</p>
              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs leading-relaxed">
                 If the manual doesn't have the answer, our technical support team is available for direct assistance.
              </p>
              <button
                type="button"
                onClick={() => navigate("/report-issue")}
-               className="mt-6 px-6 py-2.5 bg-slate-900 dark:bg-brand-500 text-white text-[11px] font-bold rounded-lg hover:shadow-lg transition-all"
+               className="mt-6 px-6 py-2.5 bg-slate-900 dark:bg-brand-500 text-white text-[11px] font-semibold rounded-lg hover:shadow-lg transition-all"
              >
                Contact Support
              </button>

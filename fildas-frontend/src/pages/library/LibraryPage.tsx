@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../../components/layout/PageFrame";
 import {
@@ -13,9 +13,9 @@ import SelectDropdown from "../../components/ui/SelectDropdown";
 import Alert from "../../components/ui/Alert";
 import { DateRangePicker } from "../../components/ui/DateRangePicker";
 import { PageActions, CreateAction } from "../../components/ui/PageActions";
-import SearchFilterBar from "../../components/ui/SearchFilterBar";
+import { Archive, Library, Trash2, CheckSquare, Download, Search, X, SlidersHorizontal } from "lucide-react";
 import { markWorkQueueSession } from "../../lib/guards/RequireFromWorkQueue";
-import { Archive, Library, Trash2, CheckSquare, Download } from "lucide-react";
+import { inputCls } from "../../utils/formStyles";
 import { Tabs } from "../../components/ui/Tabs";
 import { TabBar as SubTabBar } from "../../components/documentRequests/shared";
 import DeletedItemsView from "../../components/admin/DeletedItemsView";
@@ -79,7 +79,19 @@ export default function LibraryPage() {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [total, setTotal] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination & Concurrency control
+  const isFetchingRef = useRef(false);
+  const pageRef = useRef(1); // For individual tabs (Created/Shared/Requested)
+  const allDocPageRef = useRef(1); // For All tab (Docs part)
+  const allReqPageRef = useRef(1); // For All tab (Requests part)
+  
+  const docTotalRef = useRef(0);
+  const reqTotalRef = useRef(0);
+  const allDocHasMoreRef = useRef(true);
+  const allReqHasMoreRef = useRef(true);
 
   const { push } = useToast();
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -115,6 +127,8 @@ export default function LibraryPage() {
     actionableIds: (string | number)[];
     skippedCount: number;
   } | null>(null);
+
+  const [showFilters, setShowFilters] = useState(false);
 
   const handleDelete = async () => {
     if (!deletingId || !deletingType) return;
@@ -224,10 +238,6 @@ export default function LibraryPage() {
     }
   };
 
-  const [allDocPage, setAllDocPage] = useState(1);
-  const [allReqPage, setAllReqPage] = useState(1);
-  const [allDocHasMore, setAllDocHasMore] = useState(true);
-  const [allReqHasMore, setAllReqHasMore] = useState(true);
 
   useEffect(() => {
     const t = window.setTimeout(() => setQDebounced(q), 300);
@@ -244,15 +254,33 @@ export default function LibraryPage() {
   }, []);
 
   const loadData = useCallback(async (isNextPage = false, silent = false) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     let targetPage = 1;
-    setPage(prev => {
-      targetPage = isNextPage ? prev + 1 : 1;
-      return targetPage;
-    });
-    if (!isNextPage && !silent) {
-      setInitialLoading(true);
-      setRows([]);
+    if (!isNextPage) {
+      targetPage = 1;
+      pageRef.current = 1;
+      if (!silent) {
+        setInitialLoading(true);
+        setRows([]);
+        setTotal(null);
+        docTotalRef.current = 0;
+        reqTotalRef.current = 0;
+        allDocPageRef.current = 1;
+        allReqPageRef.current = 1;
+        allDocHasMoreRef.current = true;
+        allReqHasMoreRef.current = true;
+      }
+    } else {
+      // Logic for next page: different based on tab
+      if (tab === "all") {
+        // Handled specifically inside the "all" block using refs directly
+      } else {
+        targetPage = pageRef.current + 1;
+      }
     }
+
     if (!silent) setLoading(true);
     setError(null);
 
@@ -279,9 +307,19 @@ export default function LibraryPage() {
 
         const res = await listDocumentsPage(params);
         const incoming = res.data ?? [];
-        setRows(prev => targetPage === 1 ? incoming : [...prev, ...incoming]);
+        
+        setRows(prev => isNextPage ? [...prev, ...incoming] : incoming);
         setHasMore(!!res.meta && res.meta.current_page < res.meta.last_page);
-        setPage(targetPage);
+        
+        if (res.meta?.total !== undefined) {
+          setTotal(res.meta.total);
+          docTotalRef.current = res.meta.total;
+        }
+        
+        if (isNextPage && incoming.length > 0) {
+          pageRef.current += 1;
+        }
+        setPage(pageRef.current);
         return incoming;
       } else if (tab === "requested") {
         const res = await listDocumentRequestIndividual({
@@ -295,14 +333,24 @@ export default function LibraryPage() {
           batch_type: (batchFilter === "multi_office" || batchFilter === "multi_doc") ? batchFilter : undefined,
         });
         const incoming = Array.isArray(res.data) ? res.data : [];
-        setRows(prev => targetPage === 1 ? incoming : [...prev, ...incoming]);
+        setRows(prev => isNextPage ? [...prev, ...incoming] : incoming);
         setHasMore((res.current_page ?? 0) < (res.last_page ?? 0));
-        setPage(targetPage);
+        if (res.total !== undefined) {
+          setTotal(res.total);
+          reqTotalRef.current = res.total;
+        }
+        if (isNextPage && incoming.length > 0) {
+          pageRef.current += 1;
+        }
+        setPage(pageRef.current);
         return incoming;
       } else if (tab === "all") {
+        const nextDocPage = isNextPage ? allDocPageRef.current + 1 : 1;
+        const nextReqPage = isNextPage ? allReqPageRef.current + 1 : 1;
+
         const [docRes, reqRes] = await Promise.all([
-          (!isNextPage || allDocHasMore) ? listDocumentsPage({
-            page: isNextPage ? allDocPage + 1 : 1,
+          (!isNextPage || allDocHasMoreRef.current) ? listDocumentsPage({
+            page: nextDocPage,
             perPage: 8,
             q: qDebounced.trim() || undefined,
             space: "library",
@@ -315,11 +363,11 @@ export default function LibraryPage() {
             sort_dir: sortDir,
             owner_office_id: officeFilter ? Number(officeFilter) : undefined,
           }) : Promise.resolve(null),
-          (!isNextPage || allReqHasMore) && !isAuditor(role) ? listDocumentRequestIndividual({
+          (!isNextPage || allReqHasMoreRef.current) && !isAuditor(role) ? listDocumentRequestIndividual({
             status: "accepted",
             q: qDebounced.trim() || undefined,
             per_page: 8,
-            page: isNextPage ? allReqPage + 1 : 1,
+            page: nextReqPage,
             sort_by: sortBy,
             sort_dir: sortDir,
             office_id: officeFilter ? Number(officeFilter) : undefined,
@@ -329,11 +377,11 @@ export default function LibraryPage() {
 
         const docIn = docRes?.data ?? [];
         const reqIn = Array.isArray(reqRes?.data) ? reqRes.data : [];
-        const docMore = docRes && docRes.meta ? (docRes.meta.current_page < docRes.meta.last_page) : allDocHasMore;
-        const reqMore = reqRes ? ((reqRes.current_page ?? 0) < (reqRes.last_page ?? 0)) : allReqHasMore;
+        const docMore = docRes && docRes.meta ? (docRes.meta.current_page < docRes.meta.last_page) : allDocHasMoreRef.current;
+        const reqMore = reqRes ? ((reqRes.current_page ?? 0) < (reqRes.last_page ?? 0)) : allReqHasMoreRef.current;
 
-        setAllDocHasMore(docMore);
-        setAllReqHasMore(reqMore);
+        allDocHasMoreRef.current = docMore;
+        allReqHasMoreRef.current = reqMore;
         setHasMore(!!(docMore || reqMore));
 
         const items = [
@@ -341,14 +389,22 @@ export default function LibraryPage() {
           ...reqIn.map((r: any) => reqToLibraryItem(r))
         ];
 
+        const dTotalVal = docRes?.meta?.total ?? docTotalRef.current;
+        const rTotalVal = reqRes?.total ?? reqTotalRef.current;
+        
+        if (docRes?.meta?.total !== undefined) docTotalRef.current = docRes.meta.total;
+        if (reqRes?.total !== undefined) reqTotalRef.current = reqRes.total;
+
         if (!isNextPage) {
           setRows(items);
-          setAllDocPage(1);
-          setAllReqPage(1);
+          allDocPageRef.current = 1;
+          allReqPageRef.current = 1;
+          setTotal((docRes?.meta?.total ?? 0) + (reqRes?.total ?? 0));
         } else {
           setRows(prev => [...prev, ...items]);
-          if (docRes) setAllDocPage(p => p + 1);
-          if (reqRes) setAllReqPage(p => p + 1);
+          if (docRes && docIn.length > 0) allDocPageRef.current += 1;
+          if (reqRes && reqIn.length > 0) allReqPageRef.current += 1;
+          setTotal(dTotalVal + rTotalVal);
         }
         return items;
       }
@@ -357,8 +413,11 @@ export default function LibraryPage() {
     } finally {
       setLoading(false);
       setInitialLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [tab, qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, isAdmin, myOfficeId, role]);
+  }, [
+    tab, qDebounced, typeFilter, dateFrom, dateTo, sortBy, sortDir, isAdmin, myOfficeId, role
+  ]);
 
   useSmartRefresh(async () => {
     await loadData(false, true);
@@ -443,14 +502,16 @@ export default function LibraryPage() {
       title="Document Library"
       right={
         <PageActions>
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
+            reveal
             onClick={() => navigate("/archive")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-400 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-300 transition-colors cursor-pointer"
+            tooltip="View archived documents"
           >
             <Archive className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Archive library</span>
-          </button>
+            <span>Archive</span>
+          </Button>
           {canCreate && (
             <CreateAction
               label="Create document"
@@ -465,7 +526,7 @@ export default function LibraryPage() {
       contentClassName="flex flex-col min-h-0 gap-0 h-full overflow-hidden"
     >
       {isAdmin && adminDebugMode && (
-        <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 px-1 mb-px">
+        <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-1 mb-px">
           <SubTabBar
             tabs={[
               { value: "active", label: "Active Library", icon: <Library size={12} /> },
@@ -487,91 +548,147 @@ export default function LibraryPage() {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 pr-4">
-            <Tabs
-              tabs={TABS}
-              activeTab={tab}
-              onChange={(key) => setTab(key as LibTab)}
-              id="library"
-              className="border-none"
-            />
-            {activeTab === "active" && (
-              <Button
-                variant={isSelectMode ? "primary" : "ghost"}
-                size="sm"
-                onClick={() => {
-                  setIsSelectMode(!isSelectMode);
-                  if (isSelectMode) clearSelection();
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 shrink-0 pr-4 gap-4 mb-4">
+            <div className="flex-1 flex items-center min-w-0">
+              <Tabs
+                tabs={TABS}
+                activeTab={tab}
+                onChange={(key) => {
+                  setTab(key as LibTab);
+                  setShowFilters(false);
                 }}
-                className="flex items-center gap-2 h-8"
+                id="library"
+                className="border-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Search moved to Right Side Utility Group */}
+              <div className="hidden lg:flex items-center relative w-72 h-8 ml-4">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  value={q}
+                  onChange={(e) => { setQ(e.target.value); setPage(1); }}
+                  placeholder="Search library..."
+                  className={`${inputCls} pl-9 pr-8 h-8 text-[11px] bg-slate-50/50 border-slate-200/60 dark:bg-surface-500/50 dark:border-surface-400/50`}
+                />
+                {q && (
+                  <button
+                    type="button"
+                    onClick={() => { setQ(""); setPage(1); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              <Button
+                variant={showFilters || activeFiltersCount > 0 ? "primary" : "outline"}
+                size="sm"
+                reveal
+                onClick={() => setShowFilters(!showFilters)}
+                className="h-8"
               >
-                <CheckSquare size={14} />
-                <span>{isSelectMode ? "Cancel" : "Select"}</span>
+                <SlidersHorizontal size={14} />
+                <span>Filters</span>
+                {activeFiltersCount > 0 && !showFilters && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-semibold text-white  ring-2 ring-white dark:ring-surface-600">
+                    {activeFiltersCount}
+                  </span>
+                )}
               </Button>
-            )}
+
+              {activeTab === "active" && (
+                <Button
+                  variant={isSelectMode ? "primary" : "outline"}
+                  size="sm"
+                  reveal
+                  onClick={() => {
+                    setIsSelectMode(!isSelectMode);
+                    if (isSelectMode) clearSelection();
+                  }}
+                  className="h-8"
+                >
+                  <CheckSquare size={14} />
+                  <span>{isSelectMode ? "Cancel" : "Select"}</span>
+                </Button>
+              )}
+            </div>
           </div>
 
-          <SearchFilterBar
-            search={q}
-            setSearch={(val) => { setQ(val); setPage(1); }}
-            placeholder="Search library..."
-            activeFiltersCount={activeFiltersCount}
-            onClear={() => { 
-              setQ(""); 
-              setTypeFilter("all"); 
-              setDateFrom(""); 
-              setDateTo(""); 
-              setOfficeFilter("");
-              setBatchFilter("");
-              setPage(1); 
-            }}
-            mobileFilters={
-              <div className="flex flex-col gap-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
-                    <SelectDropdown
-                      value={typeFilter}
-                      onChange={(val) => setTypeFilter((val as string) || "all")}
-                      className="w-full"
-                      options={[{ value: "all", label: "All Types" }, { value: "internal", label: "Internal" }, { value: "external", label: "External" }, { value: "forms", label: "Forms" }]}
-                    />
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="overflow-hidden border-b border-slate-200 dark:border-surface-400 bg-transparent"
+              >
+                <div className="p-4 flex flex-wrap items-center gap-4">
+                  {tab !== "requested" && (
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Type</label>
+                      <SelectDropdown
+                        value={typeFilter}
+                        onChange={(val) => setTypeFilter((val as string) || "all")}
+                        className="w-32"
+                        options={[{ value: "all", label: "All Types" }, { value: "internal", label: "Internal" }, { value: "external", label: "External" }, { value: "forms", label: "Forms" }]}
+                      />
+                    </div>
+                  )}
+                  {(tab === "all" || tab === "created" || tab === "shared" || (tab === "requested" && (isAdmin || isQA(role)))) && (
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Office</label>
+                      <SelectDropdown
+                        searchable
+                        value={officeFilter}
+                        onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
+                        className="w-48"
+                        placeholder="All Offices"
+                        options={[{ value: "", label: "All Offices" }, ...offices]}
+                      />
+                    </div>
+                  )}
+                  {tab === "requested" && (
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Batch</label>
+                      <SelectDropdown
+                        searchable
+                        value={batchFilter}
+                        onChange={(val) => { setBatchFilter(val as string); setPage(1); }}
+                        className="w-40"
+                        placeholder="All Batches"
+                        options={[{ value: "multi_office", label: "Multi-Office" }, { value: "multi_doc", label: "Multi-Doc" }]}
+                      />
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Date Range</label>
+                    <DateRangePicker from={dateFrom} to={dateTo} onSelect={(r: any) => { setDateFrom(r.from); setDateTo(r.to); }} />
                   </div>
+
+                  {activeFiltersCount > 0 && (
+                    <button
+                      onClick={() => {
+                        setTypeFilter("all");
+                        setDateFrom("");
+                        setDateTo("");
+                        setOfficeFilter("");
+                        setBatchFilter("");
+                        setPage(1);
+                      }}
+                      className="mt-auto mb-1 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 transition-colors"
+                    >
+                      Reset Filters
+                    </button>
+                  )}
                 </div>
-                <DateRangePicker from={dateFrom} to={dateTo} onSelect={(r: any) => { setDateFrom(r.from); setDateTo(r.to); }} />
-              </div>
-            }
-          >
-            {tab !== "requested" && (
-              <SelectDropdown
-                value={typeFilter}
-                onChange={(val) => setTypeFilter((val as string) || "all")}
-                className="w-32"
-                options={[{ value: "all", label: "All Types" }, { value: "internal", label: "Internal" }, { value: "external", label: "External" }, { value: "forms", label: "Forms" }]}
-              />
+              </motion.div>
             )}
-            {(tab === "all" || tab === "created" || tab === "shared" || (tab === "requested" && (isAdmin || isQA(role)))) && (
-              <SelectDropdown
-                searchable
-                value={officeFilter}
-                onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
-                className="w-40"
-                placeholder="Office"
-                options={[{ value: "", label: "All Offices" }, ...offices]}
-              />
-            )}
-            {tab === "requested" && (
-              <SelectDropdown
-                searchable
-                value={batchFilter}
-                onChange={(val) => { setBatchFilter(val as string); setPage(1); }}
-                className="w-40"
-                placeholder="Batch"
-                options={[{ value: "multi_office", label: "Multi-Office" }, { value: "multi_doc", label: "Multi-Doc" }]}
-              />
-            )}
-            <DateRangePicker from={dateFrom} to={dateTo} onSelect={(r: any) => { setDateFrom(r.from); setDateTo(r.to); }} />
-          </SearchFilterBar>
+          </AnimatePresence>
+
 
           {error && <Alert variant="danger" className="mb-4 mx-4">{error}</Alert>}
 
@@ -590,6 +707,7 @@ export default function LibraryPage() {
                   className="h-full"
                   columns={columns}
                   rows={rows}
+                  total={total ?? undefined}
                   rowKey={(r: any, idx) => {
                     if (tab === "all") return r._key || `item-${idx}-${r.id || r.docId || r.reqId}`;
                     if (tab === "requested") return `req-${r.request_id || r.batch_id || "raw"}-${r.id || r.recipient_id || r.row_id || idx}`;
@@ -599,7 +717,7 @@ export default function LibraryPage() {
                   initialLoading={initialLoading}
                   onRowClick={handleRowClick}
                   hasMore={hasMore}
-                  onLoadMore={() => setPage(p => p + 1)}
+                  onLoadMore={() => loadData(true)}
                   renderRowDetails={undefined}
                   gridTemplateColumns={
                     tab === "created"

@@ -82,7 +82,7 @@ const WorkflowActionConfirmModal: React.FC<WorkflowActionConfirmModalProps> = ({
           <div className="mb-6 p-3 rounded-lg border border-brand-200 bg-brand-50/30 dark:border-brand-900/40 dark:bg-brand-900/10">
             <div className="flex items-center gap-2 mb-2.5">
               <User className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">
                 Dev Mode: Act as participant
               </span>
             </div>

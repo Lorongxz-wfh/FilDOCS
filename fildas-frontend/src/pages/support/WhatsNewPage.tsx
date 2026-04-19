@@ -150,7 +150,7 @@ const TAG_STYLES: Record<Tag, string> = {
 
 function TagPill({ tag }: { tag: Tag }) {
   return (
-    <span className={`inline-block shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${TAG_STYLES[tag]}`}>
+    <span className={`inline-block shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${TAG_STYLES[tag]}`}>
       {tag}
     </span>
   );
@@ -404,11 +404,11 @@ function ReleaseCard({
         onClick={() => setOpen((v) => !v)}
         className="group mb-2 flex w-full flex-wrap items-center gap-2 text-left"
       >
-        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
+        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           {release.version}
         </span>
         {release.label && (
-          <span className="rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+          <span className="rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
             {release.label}
           </span>
         )}

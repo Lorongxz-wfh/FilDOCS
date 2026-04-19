@@ -38,7 +38,7 @@ const ActivityLogsTable: React.FC<Props> = ({
       header: "ID",
       skeletonShape: "narrow",
       render: (r) => (
-        <span className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-500">
+        <span className="text-[10px] font-semibold font-mono text-slate-400 dark:text-slate-500">
           #{r.id}
         </span>
       ),
@@ -128,7 +128,7 @@ const ActivityLogsTable: React.FC<Props> = ({
         mobileRender={(r) => (
           <div className="px-4 py-3">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wide">
+              <span className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wide">
                 {friendlyEvent(r.event)}
               </span>
               <span className="text-[10px] text-slate-400 tabular-nums">

@@ -103,7 +103,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
               <button
                 type="button"
                 onClick={() => navigate("/work-queue")}
-                className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 rounded text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider shadow-sm hover:bg-slate-50 dark:hover:bg-surface-400 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 rounded text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider  hover:bg-slate-50 dark:hover:bg-surface-400 transition-all active:scale-95"
               >
                 View all pending
               </button>

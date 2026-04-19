@@ -120,7 +120,7 @@ const QADashboard: React.FC<
                     variant="ghost"
                     size="xs"
                     onClick={() => navigate("/reports")}
-                    className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+                    className="font-semibold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
                   >
                     View reports →
                   </Button>
@@ -145,7 +145,7 @@ const QADashboard: React.FC<
                     variant="ghost"
                     size="xs"
                     onClick={() => navigate("/documents")}
-                    className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+                    className="font-semibold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
                   >
                     View library →
                   </Button>
@@ -171,7 +171,7 @@ const QADashboard: React.FC<
                     variant="ghost"
                     size="xs"
                     onClick={() => navigate("/reports")}
-                    className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+                    className="font-semibold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
                   >
                     View reports →
                   </Button>
@@ -212,7 +212,7 @@ const QADashboard: React.FC<
                   variant="ghost"
                   size="xs"
                   onClick={() => navigate("/reports")}
-                  className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+                  className="font-semibold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
                 >
                   View reports →
                 </Button>
@@ -314,7 +314,7 @@ const OfficeDashboard: React.FC<
                       variant="ghost"
                       size="xs"
                       onClick={() => navigate("/documents")}
-                      className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+                      className="font-semibold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
                     >
                       Open library →
                     </Button>
@@ -390,7 +390,7 @@ const AdminDashboard: React.FC<
               variant="ghost"
               size="xs"
               onClick={() => navigate("/documents")}
-              className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+              className="font-semibold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
             >
               Open library →
             </Button>
@@ -415,7 +415,7 @@ const AdminDashboard: React.FC<
               variant="ghost"
               size="xs"
               onClick={() => navigate("/reports")}
-              className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+              className="font-semibold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
             >
               View reports →
             </Button>
@@ -441,7 +441,7 @@ const AdminDashboard: React.FC<
             variant="ghost"
             size="xs"
             onClick={() => navigate("/reports")}
-            className="font-bold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+            className="font-semibold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
           >
             View full report →
           </Button>
@@ -484,7 +484,7 @@ const AuditorDashboard: React.FC<
           <CardBody>
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Distributed Documents
                 </p>
                 {loading && stats && (
@@ -496,7 +496,7 @@ const AuditorDashboard: React.FC<
             {loading && !stats ? (
               <div className="h-8 w-16 bg-slate-100 dark:bg-surface-400 animate-pulse mt-2 rounded" />
             ) : (
-              <p className="mt-2 text-2xl font-display font-bold text-slate-900 dark:text-slate-100">
+              <p className="mt-2 text-2xl font-display font-semibold text-slate-900 dark:text-slate-100">
                 {stats?.distributed ?? 0}
               </p>
             )}
@@ -599,10 +599,10 @@ const DashboardPage: React.FC = () => {
       <div className="shrink-0 border-b border-slate-200 bg-slate-50 dark:border-surface-400 dark:bg-surface-600 px-4 sm:px-5 py-3 sm:py-3.5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 leading-none">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 leading-none">
               {today}
             </p>
-            <h1 className="mt-1 text-sm sm:text-base font-display font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
+            <h1 className="mt-1 text-sm sm:text-base font-display font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate">
               {greeting}<span className="hidden sm:inline">, {firstName}</span>
             </h1>
           </div>

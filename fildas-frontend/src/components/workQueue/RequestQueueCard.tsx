@@ -32,7 +32,7 @@ const RequestQueueCard: React.FC<RequestQueueCardProps> = ({ item, onClick }) =>
           {title}
         </p>
         <div className="flex items-center gap-2 mt-1.5">
-          <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500">
+          <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500">
              {isMultiDoc ? <FileStack className="h-3 w-3" /> : <Users className="h-3 w-3" />}
              <span>{isMultiDoc ? "Multi-doc" : "Multi-office"}</span>
           </div>
@@ -43,19 +43,19 @@ const RequestQueueCard: React.FC<RequestQueueCardProps> = ({ item, onClick }) =>
 
       <div className="shrink-0 text-right">
         {isActionNeeded ? (
-          <span className="text-[10px] sm:text-[11px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider block">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-rose-500 dark:text-rose-400 uppercase tracking-wider block">
             Action needed
           </span>
         ) : (item.status?.toLowerCase() === "closed") ? (
-          <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
             Closed
           </span>
         ) : (item.status?.toLowerCase() === "cancelled") ? (
-          <span className="text-[10px] sm:text-[11px] font-bold text-rose-500/50 dark:text-rose-400/50 uppercase tracking-wider block">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-rose-500/50 dark:text-rose-400/50 uppercase tracking-wider block">
             Cancelled
           </span>
         ) : (
-          <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
             Ongoing
           </span>
         )}

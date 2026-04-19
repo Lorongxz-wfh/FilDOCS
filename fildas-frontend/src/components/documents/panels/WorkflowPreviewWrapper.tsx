@@ -65,10 +65,10 @@ const WorkflowPreviewWrapper: React.FC<Props> = ({
       {/* Info Strip */}
       <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 dark:bg-surface-600 border-b border-slate-200 dark:border-surface-400">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center px-1.5 py-0.5 rounded-sm bg-slate-600 dark:bg-slate-400 text-[10px] font-bold text-white dark:text-slate-900 uppercase">
+          <div className="flex items-center justify-center px-1.5 py-0.5 rounded-sm bg-slate-600 dark:bg-slate-400 text-[10px] font-semibold text-white dark:text-slate-900 uppercase">
             V{localVersion.version_number}
           </div>
-          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
             {localVersion.status}
           </span>
         </div>

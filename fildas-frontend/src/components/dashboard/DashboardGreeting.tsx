@@ -34,7 +34,7 @@ const DashboardGreeting: React.FC<Props> = ({ pendingCount, loading }) => {
           <p className="text-xs text-slate-400 dark:text-slate-500">
             {today}
           </p>
-          <h1 className="mt-0.5 flex items-center gap-1.5 text-lg font-bold text-slate-900 dark:text-slate-100">
+          <h1 className="mt-0.5 flex items-center gap-1.5 text-lg font-semibold text-slate-900 dark:text-slate-100">
             {greeting}, {firstName}
             <Hand className="h-4 w-4 text-amber-400" />
           </h1>

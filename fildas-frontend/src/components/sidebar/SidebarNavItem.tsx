@@ -106,7 +106,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
         ? "text-slate-900 dark:text-surface-50"
         : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-surface-50",
     ].join(" ") : [
-      "rounded-xl text-[13px] font-bold duration-150 active:scale-[0.98] h-11 gap-3 px-3",
+      "rounded-xl text-[13px] font-semibold duration-150 active:scale-[0.98] h-11 gap-3 px-3",
       isActuallyActive
         ? "text-brand-600 dark:text-brand-400"
         : "text-slate-500 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-surface-50 shadow-none",
@@ -138,7 +138,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
           <>
             <motion.div
               layoutId="active-bg"
-              className="absolute inset-0 bg-neutral-100/80 dark:bg-surface-400/80 rounded-lg border border-neutral-200/50 dark:border-surface-300/30 shadow-xs"
+              className="absolute inset-0 bg-neutral-100/80 dark:bg-surface-400/80 rounded-lg border border-neutral-200/50 dark:border-surface-300/30 "
               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
             />
             {collapsed && (
@@ -194,10 +194,10 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
         {badgeCount !== undefined && badgeCount > 0 && (
           <span 
             className={[
-              "absolute z-[100] flex items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white ring-2 ring-white dark:ring-surface-500",
+              "absolute z-[100] flex items-center justify-center rounded-full bg-rose-600 text-[10px] font-semibold text-white ring-2 ring-white dark:ring-surface-500",
               collapsed && !mobileOpen
                 ? "right-1.5 top-1.5 h-4 w-4" // Collapsed dot/small badge
-                : "right-7 top-1/2 -translate-y-1/2 px-1 min-w-[20px] h-5 shadow-sm" // Expanded label badge
+                : "right-7 top-1/2 -translate-y-1/2 px-1 min-w-[20px] h-5 " // Expanded label badge
             ].join(" ")}
           >
             {collapsed && !mobileOpen ? (badgeCount > 9 ? "!" : badgeCount) : (badgeCount > 99 ? "99+" : badgeCount)}
@@ -281,7 +281,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
 
                         {/* Child Badge */}
                         {(child as any).badgeCount > 0 && (
-                          <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-surface-400">
+                          <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-semibold text-white  ring-1 ring-white dark:ring-surface-400">
                             {(child as any).badgeCount > 99 ? "99+" : (child as any).badgeCount}
                           </span>
                         )}

@@ -57,7 +57,7 @@ export default function SplashScreen() {
 
       <div className="flex flex-col items-center gap-5">
         {/* Logo */}
-        <div className="h-18 w-18 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 shadow-sm">
+        <div className="h-18 w-18 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 ">
           <img
             src={logoUrl}
             alt="FilDOCS logo"

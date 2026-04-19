@@ -70,7 +70,7 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
           }
         }}
         disabled={saving}
-        className="flex-1 rounded-md border border-sky-400 bg-white dark:bg-surface-600 px-2 py-1 text-sm font-bold text-slate-900 dark:text-slate-100 outline-none transition disabled:opacity-50"
+        className="flex-1 rounded-md border border-sky-400 bg-white dark:bg-surface-600 px-2 py-1 text-sm font-semibold text-slate-900 dark:text-slate-100 outline-none transition disabled:opacity-50"
       />
       <button
         type="button"

@@ -1,4 +1,5 @@
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Tooltip from "./Tooltip";
 import { Loader2 } from "lucide-react";
 
@@ -14,24 +15,26 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   tooltipSide?: Side;
   /** If true, and the button has multiple words or is specifically marked, it hides the text on mobile */
   responsive?: boolean;
+  /** If true, the button shows only the icon initially and expands to show text on hover */
+  reveal?: boolean;
 };
 
 const base =
-  "cursor-pointer inline-flex items-center justify-center font-semibold rounded-md transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-brand-500/50";
+  "cursor-pointer inline-flex items-center justify-center font-semibold rounded-md transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-brand-600 text-white hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-400 border border-brand-700/20 dark:border-white/10 shadow-lg shadow-brand-600/10",
+    "bg-brand-500 text-white hover:bg-brand-600 border border-brand-700 dark:bg-brand-600 dark:hover:bg-brand-500",
   secondary:
-    "bg-neutral-800 text-white hover:bg-neutral-900 dark:bg-surface-400 dark:hover:bg-surface-300 shadow-sm",
+    "bg-slate-800 text-white hover:bg-slate-900 dark:bg-surface-400 dark:hover:bg-surface-300",
   outline:
-    "border-2 border-brand-600 bg-transparent text-brand-700 hover:bg-brand-50 hover:border-brand-700 dark:border-brand-400 dark:text-brand-300 dark:hover:bg-brand-900/20 shadow-sm",
+    "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 dark:bg-surface-500 dark:border-surface-400 dark:text-slate-300 dark:hover:bg-surface-400",
   ghost:
-    "text-neutral-600 hover:bg-neutral-100/80 dark:text-neutral-400 dark:hover:bg-surface-400/50",
+    "text-slate-600 hover:bg-slate-100/80 dark:text-slate-400 dark:hover:bg-surface-400/50",
   danger:
-    "bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500 shadow-lg shadow-red-600/10 border border-red-700/20 dark:border-white/10",
+    "bg-rose-600 text-white hover:bg-rose-700 border border-rose-700 dark:bg-rose-600 dark:hover:bg-rose-500",
   success:
-    "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 shadow-lg shadow-emerald-600/10 border border-emerald-700/20 dark:border-white/10",
+    "bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500",
 };
 
 const sizes: Record<Size, string> = {
@@ -48,35 +51,69 @@ export default function Button({
   tooltip,
   tooltipSide = "top",
   responsive = false,
+  reveal = false,
   disabled,
   className = "",
   children,
   ...props
 }: ButtonProps) {
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  // If reveal is true, we need to carefully separate the icon from the text
+  const content = React.useMemo(() => {
+    if (!reveal) return children;
+
+    const childrenArray = React.Children.toArray(children);
+    const icon = childrenArray.find((child) => React.isValidElement(child) && child.type !== "span");
+    const textNode = childrenArray.find((child) => typeof child === "string" || (React.isValidElement(child) && child.type === "span"));
+
+    return (
+      <div className="flex items-center gap-2 overflow-hidden">
+        {icon || childrenArray[0]}
+        <AnimatePresence initial={false}>
+          {isHovered && (
+            <motion.span
+              initial={{ width: 0, opacity: 0, marginLeft: 0 }}
+              animate={{ width: "auto", opacity: 1, marginLeft: 8 }}
+              exit={{ width: 0, opacity: 0, marginLeft: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="overflow-hidden whitespace-nowrap font-semibold"
+            >
+              {textNode}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }, [children, reveal, isHovered]);
+
   const btn = (
     <button
       {...props}
       disabled={disabled || loading}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={[
         base,
         variants[variant],
         sizes[size],
-        responsive ? "[&>span]:hidden [&>span]:sm:inline" : "",
+        responsive && !reveal ? "[&>span]:hidden [&>span]:sm:inline" : "",
+        reveal ? (isHovered ? "px-5" : "px-2.5") : "", 
         className,
       ].join(" ")}
     >
       {loading ? (
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
-          {size !== "xs" && <span>Processing…</span>}
+          {!reveal && size !== "xs" && <span>Processing…</span>}
         </div>
       ) : (
-        children
+        content
       )}
     </button>
   );
 
-  if (tooltip) {
+  if (tooltip && !reveal) {
     return <Tooltip content={tooltip} side={tooltipSide}>{btn}</Tooltip>;
   }
   return btn;

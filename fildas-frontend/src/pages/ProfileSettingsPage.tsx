@@ -256,7 +256,7 @@ const ProfileSettingsPage: React.FC = () => {
         {/* Right Side: Shared Content Area */}
         <main className="md:col-span-8 lg:col-span-9 flex flex-col min-w-0 h-full min-h-0">
           {/* Content Card with Integrated Header */}
-          <div className="flex-1 flex flex-col min-h-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-sm overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500  overflow-hidden">
 
             {/* Card Header (Integrated Tabs + Filters) */}
             <div className="px-6 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-surface-400">
@@ -329,26 +329,26 @@ const ProfileSettingsPage: React.FC = () => {
         <form onSubmit={handleProfileSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">First Name</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">First Name</label>
               <input className={inputCls} value={profileForm.first_name} onChange={e => setProfileForm(p => ({ ...p, first_name: e.target.value }))} required />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Last Name</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Last Name</label>
               <input className={inputCls} value={profileForm.last_name} onChange={e => setProfileForm(p => ({ ...p, last_name: e.target.value }))} required />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Middle Name</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Middle Name</label>
               <input className={inputCls} value={profileForm.middle_name || ""} onChange={e => setProfileForm(p => ({ ...p, middle_name: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Suffix</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Suffix</label>
               <input className={inputCls} placeholder="Jr., III, etc." value={profileForm.suffix || ""} onChange={e => setProfileForm(p => ({ ...p, suffix: e.target.value }))} />
             </div>
           </div>
           <div className="space-y-1.5 pt-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Email Address</label>
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Email Address</label>
             <input type="email" className={inputCls} value={profileForm.email} onChange={e => setProfileForm(p => ({ ...p, email: e.target.value }))} required />
           </div>
 
@@ -356,7 +356,7 @@ const ProfileSettingsPage: React.FC = () => {
             <div className="p-4 rounded-md border border-rose-100 bg-rose-50/50 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center gap-2 text-rose-600">
                 <KeyRound className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">Security Verification</span>
+                <span className="text-xs font-semibold uppercase tracking-wider">Security Verification</span>
               </div>
               <p className="text-[11px] text-rose-500 leading-tight">
                 You are changing your primary email address. To authorize this sensitive action, please enter your current password.
@@ -510,14 +510,14 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
   return (
     <div className="space-y-12 pb-10">
       {isAdmin && (
-        <div className="space-y-8 p-6 rounded-xl border border-brand-100 dark:border-brand-900/40 bg-brand-50/20 dark:bg-brand-500/5 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+        <div className="space-y-8 p-6 rounded-xl border border-brand-100 dark:border-brand-900/40 bg-brand-50/20 dark:bg-brand-500/5  animate-in fade-in slide-in-from-top-4 duration-500">
           <PillarHeader title="Developer & Administrative Tools" />
           <Section
             title="Developer Debug Mode"
             icon={<Wrench className="h-4 w-4" />}
             description="Toggle advanced permissions and testing tools. When enabled, you can act on behalf of any office to test workflow logic."
           >
-            <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-brand-200/50 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 overflow-hidden shadow-sm">
+            <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-brand-200/50 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 overflow-hidden ">
               <ToggleRow
                 label="Enable Debug Mode"
                 desc="Bypass role/office restrictions for testing purposes."
@@ -552,8 +552,8 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
               <button
                 key={opt.id}
                 onClick={() => handleThemeChange(opt.id as any)}
-                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-bold transition-all ${currentTheme === opt.id
-                    ? "bg-white dark:bg-surface-600 text-brand-500 shadow-sm"
+                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-semibold transition-all ${currentTheme === opt.id
+                    ? "bg-white dark:bg-surface-600 text-brand-500 "
                     : "text-slate-500 hover:text-slate-700 dark:text-slate-100"
                   }`}
               >
@@ -579,8 +579,8 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
               <button
                 key={opt.id}
                 onClick={() => handleFontSizeChange(opt.id as any)}
-                className={`flex-1 flex flex-col items-center justify-center py-1.5 rounded-md text-xs font-bold transition-all ${currentFontSize === opt.id
-                    ? "bg-white dark:bg-surface-600 text-brand-500 shadow-sm"
+                className={`flex-1 flex flex-col items-center justify-center py-1.5 rounded-md text-xs font-semibold transition-all ${currentFontSize === opt.id
+                    ? "bg-white dark:bg-surface-600 text-brand-500 "
                     : "text-slate-500 hover:text-slate-700 dark:text-slate-100"
                   }`}
               >
@@ -597,7 +597,7 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
           icon={<Volume2 className="h-4 w-4" />}
           description="Manage audio feedback for system alerts and incoming messages."
         >
-          <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-slate-100 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 overflow-hidden shadow-sm">
+          <div className="divide-y divide-slate-100 dark:divide-surface-400 border border-slate-100 dark:border-surface-400 rounded-md bg-white dark:bg-surface-500 overflow-hidden ">
             <ToggleRow 
               label="Incoming Message Chime" 
               desc="Play a subtle sound when a new message arrives in the work queue." 
@@ -621,19 +621,19 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
             <TwoFactorManager user={user} />
 
             <div className="pt-4 border-t border-slate-100 dark:border-surface-400">
-              <h5 className="text-[12px] font-bold uppercase tracking-wider text-slate-400 mb-4">Change Password</h5>
+              <h5 className="text-[12px] font-semibold uppercase tracking-wider text-slate-400 mb-4">Change Password</h5>
               <form onSubmit={handlePasswordSubmit} className="space-y-5">
                 <div className="space-y-1.5 max-w-sm">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Current Password</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Current Password</label>
                   <input type="password" className={inputCls} value={pw.current_password} onChange={e => setPw(p => ({ ...p, current_password: e.target.value }))} required />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">New Password</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">New Password</label>
                     <input type="password" className={inputCls} value={pw.password} onChange={e => setPw(p => ({ ...p, password: e.target.value }))} required />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Confirm New Password</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Confirm New Password</label>
                     <input type="password" className={inputCls} value={pw.password_confirmation} onChange={e => setPw(p => ({ ...p, password_confirmation: e.target.value }))} required />
                   </div>
                 </div>
@@ -645,7 +645,7 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
                 )}
 
                 <div className="flex justify-start">
-                  <Button loading={pwLoading} size="sm" className="font-bold">Update Password</Button>
+                  <Button loading={pwLoading} size="sm" className="font-semibold">Update Password</Button>
                 </div>
               </form>
             </div>
@@ -678,13 +678,13 @@ const SettingsLayout: React.FC<{ user: any; push: any }> = ({ user, push }) => {
               <div className="flex flex-col gap-3">
                 <p className="text-[11px] text-slate-500 leading-relaxed max-w-xs">Supported formats: PNG, JPG (transparent recommended). Max size 1MB.</p>
                 <div className="flex items-center gap-3">
-                  <Button variant="outline" size="sm" onClick={() => sigInputRef.current?.click()} className="font-bold text-[11px]">Upload New Signature</Button>
+                  <Button variant="outline" size="sm" onClick={() => sigInputRef.current?.click()} className="font-semibold text-[11px]">Upload New Signature</Button>
                   <input ref={sigInputRef} type="file" className="hidden" accept="image/*" onChange={handleSigUpload} />
                   {sigUrl && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-bold text-[11px]"
+                      className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-semibold text-[11px]"
                       onClick={handleSigRemove}
                     >
                       Remove Signature
@@ -716,7 +716,7 @@ const Section: React.FC<{ icon: any; title: string; description: string; childre
         {icon}
       </div>
       <div>
-        <h4 className="text-[14.5px] font-bold text-slate-800 dark:text-slate-100">{title}</h4>
+        <h4 className="text-[14.5px] font-semibold text-slate-800 dark:text-slate-100">{title}</h4>
         <p className="text-[12px] text-slate-500 dark:text-slate-400">{description}</p>
       </div>
     </div>

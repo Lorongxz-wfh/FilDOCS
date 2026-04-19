@@ -13,8 +13,9 @@ import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
 import { useToast } from "../../components/ui/toast/ToastContext";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePageBurstRefresh } from "../../hooks/usePageBurstRefresh";
-import SearchFilterBar from "../../components/ui/SearchFilterBar";
+import { SlidersHorizontal, Search, X, Archive } from "lucide-react";
 import SelectDropdown from "../../components/ui/SelectDropdown";
 import { DateRangePicker } from "../../components/ui/DateRangePicker";
 import { useBulkActions } from "../../hooks/useBulkActions";
@@ -63,8 +64,10 @@ export default function ArchivePage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [officeFilter, setOfficeFilter] = useState("");
   const [reasonFilter, setReasonFilter] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   const [rows, setRows] = useState<any[]>([]);
+  const [total, setTotal] = useState<number | null>(null);
 
   const {
     selectedIds,
@@ -188,6 +191,7 @@ export default function ArchivePage() {
     if (!isNextPage) {
       setInitialLoading(true);
       setRows([]);
+      setTotal(null);
     }
 
     setLoading(true);
@@ -212,6 +216,7 @@ export default function ArchivePage() {
       setRows(prev => targetPage === 1 ? incoming : [...prev, ...incoming]);
       setHasMore((res.meta?.current_page ?? 0) < (res.meta?.last_page ?? 0));
       setPage(targetPage);
+      if (res.meta?.total !== undefined) setTotal(res.meta.total);
     } catch (e: any) {
       setError(e?.message ?? "Failed to load archive.");
     } finally {
@@ -247,77 +252,107 @@ export default function ArchivePage() {
       onBack={() => navigate("/documents")}
       contentClassName="flex flex-col min-h-0 h-full"
     >
-      <div className="flex items-center justify-end border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shrink-0 px-4 h-12">
-        <Button
-          variant={isSelectMode ? "primary" : "ghost"}
-          size="sm"
-          onClick={() => {
-            setIsSelectMode(!isSelectMode);
-            if (isSelectMode) clearSelection();
-          }}
-          className="flex items-center gap-2"
-        >
-          <CheckSquare size={14} />
-          <span>{isSelectMode ? "Cancel" : "Select"}</span>
-        </Button>
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-transparent shrink-0 pr-4 gap-4 mb-2">
+        <div className="flex items-center h-10 px-4">
+          <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
+            <Archive size={16} className="text-slate-400" />
+            <span className="text-sm font-semibold">Document Archive</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 h-10">
+          <div className="hidden lg:flex items-center relative w-72 h-8 ml-4">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <input
+              value={q}
+              onChange={(e) => { setQ(e.target.value); setPage(1); }}
+              placeholder="Search archive..."
+              className="w-full pl-9 pr-8 h-8 text-[13px] bg-slate-50/50 border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-500 dark:bg-surface-500/50 dark:border-surface-400/50 dark:text-slate-200"
+            />
+            {q && (
+              <button
+                type="button"
+                onClick={() => { setQ(""); setPage(1); }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <Button
+            variant={showFilters || activeFiltersCount > 0 ? "primary" : "outline"}
+            size="sm"
+            reveal
+            onClick={() => setShowFilters(!showFilters)}
+            className="h-8"
+          >
+            <SlidersHorizontal size={14} />
+            <span>Filters</span>
+            {activeFiltersCount > 0 && !showFilters && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-semibold text-white  ring-2 ring-white dark:ring-surface-600">
+                {activeFiltersCount}
+              </span>
+            )}
+          </Button>
+
+          <Button
+            variant={isSelectMode ? "primary" : "outline"}
+            size="sm"
+            reveal
+            onClick={() => {
+              setIsSelectMode(!isSelectMode);
+              if (isSelectMode) clearSelection();
+            }}
+            className="h-8"
+          >
+            <CheckSquare size={14} />
+            <span>{isSelectMode ? "Cancel" : "Select"}</span>
+          </Button>
+        </div>
       </div>
 
-      <SearchFilterBar
-        search={q}
-        setSearch={(val) => {
-          setQ(val);
-          setPage(1);
-        }}
-        placeholder="Search archive..."
-        activeFiltersCount={activeFiltersCount}
-        onClear={() => {
-          setQ("");
-          setTypeFilter("ALL");
-          setDateFrom("");
-          setDateTo("");
-          setOfficeFilter("");
-          setReasonFilter("");
-          setPage(1);
-        }}
-        mobileFilters={
-          <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-2 gap-2">
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden bg-slate-50/50 dark:bg-surface-600/50 border-b border-slate-200 dark:border-surface-400"
+          >
+            <div className="px-4 py-2.5 flex flex-wrap items-center gap-2">
               <SelectDropdown
                 value={officeFilter}
                 onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
-                placeholder="Office"
+                placeholder="All Offices"
+                className="w-40"
                 options={[{ value: "", label: "All Offices" }, ...availableOffices]}
               />
               <SelectDropdown
                 value={reasonFilter}
                 onChange={(val) => { setReasonFilter(val as string); setPage(1); }}
-                placeholder="Reason"
+                placeholder="All Reasons"
+                className="w-40"
                 options={[
                   { value: "", label: "All Reasons" },
                   { value: "Archived", label: "Archived" },
                   { value: "Superseded", label: "Superseded" },
-                  { value: "Cancelled", label: "Cancelled" },
+                  { value: "Cancelled", label: "Cancelled" }
                 ]}
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Type</label>
               <SelectDropdown
                 value={typeFilter}
-                onChange={(val) => setTypeFilter((val as string) || "ALL")}
+                onChange={(val) => { setTypeFilter((val as string) || "ALL"); setPage(1); }}
                 placeholder="All Types"
-                className="w-full"
+                className="w-32"
                 options={[
                   { value: "ALL", label: "All Types" },
                   { value: "INTERNAL", label: "Internal" },
                   { value: "EXTERNAL", label: "External" },
-                  { value: "FORMS", label: "Forms" },
+                  { value: "FORMS", label: "Forms" }
                 ]}
               />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Date Range</label>
               <DateRangePicker
                 from={dateFrom}
                 to={dateTo}
@@ -327,52 +362,29 @@ export default function ArchivePage() {
                   setPage(1);
                 }}
               />
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                reveal
+                onClick={() => {
+                  setQ("");
+                  setTypeFilter("ALL");
+                  setDateFrom("");
+                  setDateTo("");
+                  setOfficeFilter("");
+                  setReasonFilter("");
+                  setPage(1);
+                }}
+                className="text-[11px] h-8"
+              >
+                <Trash2 size={14} />
+                <span>Clear all</span>
+              </Button>
             </div>
-          </div>
-        }
-      >
-        <SelectDropdown
-          value={officeFilter}
-          onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
-          placeholder="Office"
-          className="w-40"
-          options={[{ value: "", label: "All Offices" }, ...availableOffices]}
-        />
-        <SelectDropdown
-          value={reasonFilter}
-          onChange={(val) => { setReasonFilter(val as string); setPage(1); }}
-          placeholder="Reason"
-          className="w-40"
-          options={[
-            { value: "", label: "All Reasons" },
-            { value: "Archived", label: "Archived" },
-            { value: "Superseded", label: "Superseded" },
-            { value: "Cancelled", label: "Cancelled" },
-          ]}
-        />
-        <SelectDropdown
-          value={typeFilter}
-          onChange={(val) => setTypeFilter((val as string) || "ALL")}
-          placeholder="All Types"
-          className="w-32"
-          options={[
-            { value: "ALL", label: "All Types" },
-            { value: "INTERNAL", label: "Internal" },
-            { value: "EXTERNAL", label: "External" },
-            { value: "FORMS", label: "Forms" },
-          ]}
-        />
-
-        <DateRangePicker
-          from={dateFrom}
-          to={dateTo}
-          onSelect={(r: any) => {
-            setDateFrom(r.from);
-            setDateTo(r.to);
-            setPage(1);
-          }}
-        />
-      </SearchFilterBar>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
 
@@ -382,6 +394,7 @@ export default function ArchivePage() {
           className="h-full"
           columns={columns}
           rows={rows}
+          total={total ?? undefined}
           rowKey={(r, idx) => `archived-${r.id}-${r.target_version_id || idx}`}
           loading={loading}
           initialLoading={initialLoading}
@@ -403,7 +416,7 @@ export default function ArchivePage() {
           mobileRender={(r) => (
             <div className="px-4 py-3">
               <div className="flex items-center justify-between mb-1">
-                <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300">
+                <span className="rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-300">
                   {r.doctype}
                 </span>
                 <span className="text-[10px] text-slate-400 tabular-nums">

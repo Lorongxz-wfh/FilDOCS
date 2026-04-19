@@ -50,7 +50,7 @@ const MobileActionFab: React.FC = () => {
             
             <div className="absolute bottom-full right-0 mb-4 z-50 w-52 overflow-hidden rounded-xl border border-slate-200 dark:border-surface-300 bg-white/95 dark:bg-surface-500/95 backdrop-blur-md shadow-2xl animate-in slide-in-from-bottom-4 duration-200">
                 <div className="px-4 py-3 border-b border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-black/5">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                         Create New
                     </p>
                 </div>
@@ -71,7 +71,7 @@ const MobileActionFab: React.FC = () => {
                                 }}
                                 className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors"
                             >
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100/50 dark:bg-surface-400/50 text-slate-500 dark:text-slate-400 shadow-sm border border-white/20 dark:border-white/5">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100/50 dark:bg-surface-400/50 text-slate-500 dark:text-slate-400  border border-white/20 dark:border-white/5">
                                     <Icon className="h-4 w-4" />
                                 </div>
                                 <span className="font-semibold">{action.label}</span>

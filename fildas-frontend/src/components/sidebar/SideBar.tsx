@@ -79,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           type="button"
           onClick={toggle}
           title="Expand sidebar"
-          className="hidden md:flex fixed top-7 -translate-y-1/2 z-[110] left-[calc(3.5rem-12px)] cursor-pointer items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-500 text-slate-400 hover:bg-slate-100 dark:hover:bg-surface-400 hover:text-slate-700 dark:hover:text-slate-200 shadow-sm transition-all duration-200"
+          className="hidden md:flex fixed top-7 -translate-y-1/2 z-[110] left-[calc(3.5rem-12px)] cursor-pointer items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-500 text-slate-400 hover:bg-slate-100 dark:hover:bg-surface-400 hover:text-slate-700 dark:hover:text-slate-200  transition-all duration-200"
         >
           {/* Using a simple div instead of re-importing PanelLeftOpen to keep imports clean if needed, 
               but let's just use the previous logic or import Lucide if strictly necessary */}
@@ -128,7 +128,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             return (
               <div key={group.label}>
                 {(!collapsed && !mobileOpen) ? (
-                  <p className="mb-1 px-2 text-[10px] font-bold uppercase tracking-widest text-slate-400/80 dark:text-slate-500/80">{group.label}</p>
+                  <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80 dark:text-slate-500/80">{group.label}</p>
                 ) : mobileOpen ? null : (
                   <div className="mb-1.5 mx-2 border-t border-slate-200 dark:border-surface-400" />
                 )}

@@ -40,7 +40,7 @@ const ActivityLogsFilters: React.FC<Props> = ({
         <div className="flex flex-col gap-3">
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Scope</label>
+              <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Scope</label>
               {isOfficeHead ? (
                 <div className="px-3 h-9 rounded-md border border-slate-200 dark:border-surface-400 bg-slate-100 dark:bg-surface-500 opacity-60 flex items-center justify-center text-[11px] font-medium text-slate-500 dark:text-slate-400">
                   Office scoped
@@ -59,7 +59,7 @@ const ActivityLogsFilters: React.FC<Props> = ({
               )}
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Category</label>
+              <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Category</label>
               <SelectDropdown
                 value={params.category}
                 onChange={(val) => updateParams({ category: val as Category })}
@@ -78,7 +78,7 @@ const ActivityLogsFilters: React.FC<Props> = ({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Date Range</label>
+            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Date Range</label>
             <DateRangePicker
               from={params.dateFrom}
               to={params.dateTo}

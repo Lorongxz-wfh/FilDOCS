@@ -129,7 +129,7 @@ const WorkflowCommentsPanel: React.FC<Props> = ({
         <button
           type="button"
           onClick={() => { scrollToBottom(); clearNewMessageCount?.(); }}
-          className="shrink-0 w-full flex items-center justify-center gap-1.5 rounded-md bg-sky-500 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-sky-600 transition animate-pulse"
+          className="shrink-0 w-full flex items-center justify-center gap-1.5 rounded-md bg-sky-500 py-1.5 text-xs font-semibold text-white  hover:bg-sky-600 transition animate-pulse"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-white" />
           {newMessageCount} new message{newMessageCount > 1 ? "s" : ""} · Click to scroll

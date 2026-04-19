@@ -16,11 +16,11 @@ const OfficeComplianceTable: React.FC<Props> = ({ data, loading = false }) => {
     <div className="flex flex-col min-h-0 w-full overflow-hidden">
       {/* Table Header */}
       <div className="flex items-center gap-4 px-4 py-2 bg-slate-50 dark:bg-surface-600/50 border-b border-slate-200 dark:border-surface-400">
-        <span className="w-16 shrink-0 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Office</span>
-        <span className="flex-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">In Review</span>
-        <span className="flex-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Approved</span>
-        <span className="flex-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Approval %</span>
-        <span className="w-16 shrink-0 text-right text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Returned</span>
+        <span className="w-16 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Office</span>
+        <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">In Review</span>
+        <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Approved</span>
+        <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Approval %</span>
+        <span className="w-16 shrink-0 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Returned</span>
       </div>
 
       {/* Table Body - Scrollable */}
@@ -37,7 +37,7 @@ const OfficeComplianceTable: React.FC<Props> = ({ data, loading = false }) => {
             return (
               <div key={d.office_id} className="flex items-center gap-4 px-4 py-2.5 hover:bg-slate-50/50 dark:hover:bg-surface-400/20 transition-colors group">
                 {/* Office Code */}
-                <span className="w-16 shrink-0 text-xs font-bold text-slate-700 dark:text-slate-100">
+                <span className="w-16 shrink-0 text-xs font-semibold text-slate-700 dark:text-slate-100">
                   {d.office_code}
                 </span>
 
@@ -47,7 +47,7 @@ const OfficeComplianceTable: React.FC<Props> = ({ data, loading = false }) => {
                 </span>
 
                 {/* Approved */}
-                <span className="flex-1 text-xs font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                <span className="flex-1 text-xs font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
                   {d.approved}
                 </span>
 
@@ -59,13 +59,13 @@ const OfficeComplianceTable: React.FC<Props> = ({ data, loading = false }) => {
                       style={{ width: `${approvalPct}%` }}
                     />
                   </div>
-                  <span className="w-8 shrink-0 text-[10px] tabular-nums font-bold text-slate-400 dark:text-slate-500 text-right">
+                  <span className="w-8 shrink-0 text-[10px] tabular-nums font-semibold text-slate-400 dark:text-slate-500 text-right">
                     {approvalPct}%
                   </span>
                 </div>
 
                 {/* Returned */}
-                <span className="w-16 shrink-0 text-right text-xs font-bold tabular-nums text-rose-500 dark:text-rose-400">
+                <span className="w-16 shrink-0 text-right text-xs font-semibold tabular-nums text-rose-500 dark:text-rose-400">
                   {d.returned}
                 </span>
               </div>

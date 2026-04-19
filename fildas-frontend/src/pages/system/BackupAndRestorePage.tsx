@@ -100,11 +100,11 @@ function ExportCard({
         
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between mb-0.5">
-             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">
+             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-tight">
                {title}
              </h3>
              {loading ? <Skeleton className="h-4 w-12" /> : (
-               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-black/20 px-1.5 py-0.5 rounded border border-slate-100 dark:border-white/5">
+               <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-black/20 px-1.5 py-0.5 rounded border border-slate-100 dark:border-white/5">
                  {countLabel}
                </div>
              )}
@@ -114,7 +114,7 @@ function ExportCard({
             {loading ? (
               <Skeleton className="h-7 w-16" />
             ) : (
-              <p className="text-2xl font-bold tabular-nums text-slate-800 dark:text-white leading-none">
+              <p className="text-2xl font-semibold tabular-nums text-slate-800 dark:text-white leading-none">
                 {count?.toLocaleString() ?? 0}
               </p>
             )}
@@ -132,7 +132,7 @@ function ExportCard({
             type="button"
             disabled={loading || saveLoading || (count ?? 0) === 0}
             onClick={onSaveToSystem}
-            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:bg-white hover:text-brand-500 hover:shadow-sm transition-all disabled:opacity-30 dark:text-slate-400 dark:hover:bg-surface-400"
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 hover:bg-white hover:text-brand-500 hover: transition-all disabled:opacity-30 dark:text-slate-400 dark:hover:bg-surface-400"
           >
             {saveLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <HardDrive className="h-3 w-3" />}
             {saveLoading ? "Saving..." : "Save to History"}
@@ -143,7 +143,7 @@ function ExportCard({
           type="button"
           disabled={downloading || loading || (count ?? 0) === 0}
           onClick={onDownload}
-          className="flex items-center gap-1.5 rounded-md bg-brand-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-brand-600 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-brand-600 dark:hover:bg-brand-500"
+          className="flex items-center gap-1.5 rounded-md bg-brand-500 px-3.5 py-1.5 text-xs font-semibold text-white  transition-all hover:bg-brand-600 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-brand-600 dark:hover:bg-brand-500"
         >
           {downloading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -426,7 +426,7 @@ export default function BackupAndRestorePage() {
             />
             <button
               type="button"
-              className="h-8 px-3 flex items-center gap-1.5 rounded-md bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition-all dark:bg-surface-500 dark:border-surface-400 dark:text-slate-300"
+              className="h-8 px-3 flex items-center gap-1.5 rounded-md bg-white border border-slate-200 text-[10px] font-semibold uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition-all dark:bg-surface-500 dark:border-surface-400 dark:text-slate-300"
               onClick={() => document.getElementById('snapshot-upload')?.click()}
               disabled={uploading}
             >
@@ -439,7 +439,7 @@ export default function BackupAndRestorePage() {
                 type="button"
                 onClick={() => setIsBackupMenuOpen(!isBackupMenuOpen)}
                 disabled={creating}
-                className="h-8 pl-3 pr-2 flex items-center gap-1.5 rounded-md bg-brand-500 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm hover:bg-brand-600 active:scale-95 transition-all"
+                className="h-8 pl-3 pr-2 flex items-center gap-1.5 rounded-md bg-brand-500 text-[10px] font-semibold uppercase tracking-wider text-white  hover:bg-brand-600 active:scale-95 transition-all"
               >
                 {creating ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
                 Generate Snapshot
@@ -469,7 +469,7 @@ export default function BackupAndRestorePage() {
                             {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
                           </div>
                           <div>
-                            <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Database Snapshot</p>
+                            <p className="text-[11px] font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Database Snapshot</p>
                             <p className="text-[10px] text-slate-500 leading-tight mt-0.5">Primary system data and document metadata.</p>
                           </div>
                         </button>
@@ -483,7 +483,7 @@ export default function BackupAndRestorePage() {
                             {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderArchive className="h-4 w-4" />}
                           </div>
                           <div>
-                            <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Documents Archive</p>
+                            <p className="text-[11px] font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Documents Archive</p>
                             <p className="text-[10px] text-slate-500 leading-tight mt-0.5">All physical files, templates, and user signatures.</p>
                           </div>
                         </button>
@@ -495,11 +495,11 @@ export default function BackupAndRestorePage() {
                           onClick={() => handleCreateSnapshot("full")}
                           className="w-full flex items-start gap-3 p-2.5 rounded-md hover:bg-brand-500 group transition-colors text-left disabled:opacity-50"
                         >
-                          <div className="mt-0.5 p-1.5 bg-brand-500 text-white rounded-md group-hover:bg-white group-hover:text-brand-600 transition-colors shadow-sm">
+                          <div className="mt-0.5 p-1.5 bg-brand-500 text-white rounded-md group-hover:bg-white group-hover:text-brand-600 transition-colors ">
                             {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
                           </div>
                           <div>
-                            <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 group-hover:text-white uppercase tracking-tight">Complete System Backup</p>
+                            <p className="text-[11px] font-semibold text-slate-900 dark:text-slate-100 group-hover:text-white uppercase tracking-tight">Complete System Backup</p>
                             <p className="text-[10px] text-slate-500 group-hover:text-white/80 leading-tight mt-0.5">Everything: Database and all physical files.</p>
                           </div>
                         </button>
@@ -538,7 +538,7 @@ export default function BackupAndRestorePage() {
         {/* ── Resource Collections ── */}
         <div className="mb-10 text-slate-900 dark:text-slate-100">
           <div className="flex items-center justify-between mb-4 border-l-2 border-brand-500 pl-3">
-             <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Resource Collections</h2>
+             <h2 className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Resource Collections</h2>
              
              <div className="flex items-center gap-4">
                 <DatePresetSwitcher
@@ -628,23 +628,23 @@ export default function BackupAndRestorePage() {
         <div className="mb-8 flex flex-col">
           <div className="flex items-center justify-between mb-4 border-l-2 border-brand-500 pl-3 shrink-0">
              <div className="flex items-center gap-4">
-                <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">System Snapshots</h2>
+                <h2 className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">System Snapshots</h2>
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 dark:bg-surface-400 rounded-full border border-slate-200 dark:border-surface-300">
                    <HardDrive className="h-3 w-3 text-brand-500" />
-                   <span className="text-[10px] font-bold text-slate-600 dark:text-slate-200 tabular-nums uppercase">{formatSize(totalSize)} USED</span>
+                   <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-200 tabular-nums uppercase">{formatSize(totalSize)} USED</span>
                 </div>
              </div>
-             <div className="text-[10px] text-slate-400 font-bold tracking-tighter cursor-default flex items-center gap-1.5">
+             <div className="text-[10px] text-slate-400 font-semibold tracking-tighter cursor-default flex items-center gap-1.5">
                <ShieldCheck className="h-3 w-3" />
                ENCRYPTED PERSISTENT ARCHIVE
              </div>
           </div>
 
-          <div className="max-h-[500px] flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 shadow-sm">
+          <div className="max-h-[500px] flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white dark:border-surface-400 dark:bg-surface-500 ">
             <div className="overflow-y-auto flex-1 custom-scrollbar">
               <table className="w-full text-left text-xs border-collapse">
                 <thead className="sticky top-0 z-20">
-                  <tr className="border-b border-slate-100 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:border-surface-400 dark:bg-surface-600">
+                  <tr className="border-b border-slate-100 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:border-surface-400 dark:bg-surface-600">
                     <th className="px-5 py-3 text-slate-900 dark:text-slate-100">Snapshot Name</th>
                     <th className="px-5 py-3 text-slate-900 dark:text-slate-100">Capacity</th>
                     <th className="px-5 py-3 text-slate-900 dark:text-slate-100">State</th>
@@ -683,13 +683,13 @@ export default function BackupAndRestorePage() {
                               <div className="font-extrabold text-slate-800 dark:text-slate-200 leading-tight truncate">
                                 {b.filename.replace(/\.[^/.]+$/, "")}
                               </div>
-                              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">
+                              <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-tighter mt-0.5">
                                 {b.type === 'full' ? 'Complete System' : isDoc ? 'Documents Archive' : 'Database Snapshot'}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-5 py-3.5 font-bold tabular-nums text-slate-600 dark:text-slate-400">
+                        <td className="px-5 py-3.5 font-semibold tabular-nums text-slate-600 dark:text-slate-400">
                           {formatSize(b.size)}
                         </td>
                         <td className="px-5 py-3.5">
@@ -698,7 +698,7 @@ export default function BackupAndRestorePage() {
                             VALIDATED
                           </span>
                         </td>
-                        <td className="px-5 py-3.5 font-bold tabular-nums text-slate-500 dark:text-slate-400">
+                        <td className="px-5 py-3.5 font-semibold tabular-nums text-slate-500 dark:text-slate-400">
                            {new Date(b.created_at).toLocaleString('en-US', { 
                             month: 'short', day: 'numeric', year: 'numeric' 
                           })}
@@ -707,7 +707,7 @@ export default function BackupAndRestorePage() {
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-1 group-hover:translate-x-0">
                             <button
                               onClick={() => downloadSystemSnapshot(b.filename)}
-                              className="p-1.5 text-slate-400 hover:bg-white hover:text-brand-500 hover:shadow-sm rounded-md transition-all dark:hover:bg-surface-400"
+                              className="p-1.5 text-slate-400 hover:bg-white hover:text-brand-500 hover: rounded-md transition-all dark:hover:bg-surface-400"
                               title="Download"
                             >
                               <Download className="h-4 w-4" />
@@ -715,7 +715,7 @@ export default function BackupAndRestorePage() {
                             {canRestore && (
                               <button
                                 onClick={() => setConfirmingRestore(b.filename)}
-                                className="p-1.5 text-slate-400 hover:bg-white hover:text-amber-500 hover:shadow-sm rounded-md transition-all dark:hover:bg-surface-400"
+                                className="p-1.5 text-slate-400 hover:bg-white hover:text-amber-500 hover: rounded-md transition-all dark:hover:bg-surface-400"
                                 title="Restore"
                               >
                                 <RotateCcw className="h-4 w-4" />
@@ -724,7 +724,7 @@ export default function BackupAndRestorePage() {
                             {canRestore && (
                               <button
                                 onClick={() => handleDeleteBackup(b.filename)}
-                                className="p-1.5 text-slate-400 hover:bg-white hover:text-rose-500 hover:shadow-sm rounded-md transition-all dark:hover:bg-surface-400"
+                                className="p-1.5 text-slate-400 hover:bg-white hover:text-rose-500 hover: rounded-md transition-all dark:hover:bg-surface-400"
                                 title="Delete"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -742,14 +742,14 @@ export default function BackupAndRestorePage() {
           </div>
         </div>
 
-        <div className="rounded-md border border-slate-200 bg-white p-4 dark:border-surface-400 dark:bg-surface-500 shadow-sm">
+        <div className="rounded-md border border-slate-200 bg-white p-4 dark:border-surface-400 dark:bg-surface-500 ">
           <div className="flex items-start gap-3">
             <ShieldCheck className="h-5 w-5 text-brand-500 shrink-0 mt-0.5" />
             <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed uppercase tracking-tight">
                <span className="font-extrabold text-slate-900 dark:text-white mr-1">Institutional Data Policy:</span>
                All snapshots are hosted on high-availability persistent storage. For disaster recovery, ensure both 
-               <span className="mx-1 text-brand-600 font-bold dark:text-brand-400 italic">Database Image</span> and 
-               <span className="mx-1 text-sky-600 font-bold dark:text-sky-400 italic">Object Volume</span> are restored in sequence. 
+               <span className="mx-1 text-brand-600 font-semibold dark:text-brand-400 italic">Database Image</span> and 
+               <span className="mx-1 text-sky-600 font-semibold dark:text-sky-400 italic">Object Volume</span> are restored in sequence. 
                CSV exports omit sensitive checksums and binary blobs.
             </div>
           </div>
@@ -774,8 +774,8 @@ export default function BackupAndRestorePage() {
                       <AlertTriangle className="h-8 w-8" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{isDoc ? 'Volume Restoration' : 'Kernel Level Reset'}</h3>
-                      <p className="text-xs opacity-75 font-bold uppercase tracking-widest">{isDoc ? 'Safe Operation' : 'Critical Failure Risk'}</p>
+                      <h3 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{isDoc ? 'Volume Restoration' : 'Kernel Level Reset'}</h3>
+                      <p className="text-xs opacity-75 font-semibold uppercase tracking-widest">{isDoc ? 'Safe Operation' : 'Critical Failure Risk'}</p>
                     </div>
                   </div>
 
@@ -787,7 +787,7 @@ export default function BackupAndRestorePage() {
                         <>You are reverting the entire system database to state: <span className="font-mono font-black text-slate-900 dark:text-white underline decoration-rose-500/30">{confirmingRestore}</span>.</>
                       )}
                     </p>
-                    <div className="p-3 bg-slate-50 dark:bg-black/20 rounded border border-slate-100 dark:border-white/5 text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-2">
+                    <div className="p-3 bg-slate-50 dark:bg-black/20 rounded border border-slate-100 dark:border-white/5 text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex items-center gap-2">
                        <Clock className="h-3 w-3" />
                        Action will synchronize across all offices
                     </div>
@@ -797,14 +797,14 @@ export default function BackupAndRestorePage() {
                     <button
                       type="button"
                       onClick={() => setConfirmingRestore(null)}
-                      className="flex-1 rounded-md border border-slate-200 py-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50 dark:border-surface-400 dark:text-slate-300 dark:hover:bg-white/5"
+                      className="flex-1 rounded-md border border-slate-200 py-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-surface-400 dark:text-slate-300 dark:hover:bg-white/5"
                     >
                       ABORT
                     </button>
                     <button
                       type="button"
                       onClick={() => handleRestoreSnapshot(backup!)}
-                      className={`flex-1 rounded-md ${isDoc ? 'bg-sky-600 hover:bg-sky-700' : 'bg-rose-600 hover:bg-rose-700'} py-3 text-xs font-bold text-white transition shadow-lg shadow-current/10`}
+                      className={`flex-1 rounded-md ${isDoc ? 'bg-sky-600 hover:bg-sky-700' : 'bg-rose-600 hover:bg-rose-700'} py-3 text-xs font-semibold text-white transition shadow-lg shadow-current/10`}
                     >
                       {isDoc ? 'RESTORE VOLUME' : 'INITIATE RESET'}
                     </button>
@@ -838,7 +838,7 @@ export default function BackupAndRestorePage() {
                <div className="space-y-4">
                   {restoreStatus.status !== 'failed' && (
                     <>
-                      <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-slate-400">
+                      <div className="flex items-center justify-between text-[10px] uppercase font-semibold tracking-widest text-slate-400">
                          <span>{restoreStatus.message}</span>
                          <span className="tabular-nums text-brand-500">
                            {restoreStatus.progress}%
@@ -872,7 +872,7 @@ export default function BackupAndRestorePage() {
                             setRestoring(null);
                             setRestoreStatus(null);
                           }}
-                          className="w-full py-4 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[11px] font-bold uppercase tracking-[0.3em] rounded transition-all border border-white/5 hover:border-white/20"
+                          className="w-full py-4 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[11px] font-semibold uppercase tracking-[0.3em] rounded transition-all border border-white/5 hover:border-white/20"
                         >
                           DISMISS AND DIAGNOSE
                         </button>
@@ -883,7 +883,7 @@ export default function BackupAndRestorePage() {
              
              <div className="mt-8 flex items-center justify-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10 w-fit mx-auto">
                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest tabular-nums truncate max-w-[200px]">Node: {restoring}</span>
+               <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest tabular-nums truncate max-w-[200px]">Node: {restoring}</span>
              </div>
            </div>
         </div>
@@ -900,8 +900,8 @@ export default function BackupAndRestorePage() {
                 <CheckCircle2 className="h-10 w-10" />
               </div>
               
-              <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">Restoration Success</h3>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 mb-6">Database Synchronized</p>
+              <h3 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white mb-2">Restoration Success</h3>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 mb-6">Database Synchronized</p>
               
               <div className="mb-8 p-4 bg-slate-50 dark:bg-black/20 rounded-md border border-slate-100 dark:border-white/5">
                 <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
@@ -912,7 +912,7 @@ export default function BackupAndRestorePage() {
               <button
                 type="button"
                 onClick={() => window.location.reload()}
-                className="w-full rounded-md bg-brand-500 py-4 text-xs font-bold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-600 transition-all active:scale-[0.98] uppercase tracking-widest"
+                className="w-full rounded-md bg-brand-500 py-4 text-xs font-semibold text-white shadow-lg shadow-brand-500/20 hover:bg-brand-600 transition-all active:scale-[0.98] uppercase tracking-widest"
               >
                 Reload Application
               </button>

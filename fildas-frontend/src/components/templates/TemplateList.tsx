@@ -67,7 +67,7 @@ const TemplateActions: React.FC<{
         disabled={downloading}
         onClick={handleDownload}
         title="Download"
-        className="cursor-pointer inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 p-1.5 text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-surface-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-50"
+        className="cursor-pointer inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-surface-400 bg-transparent p-1.5 text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-surface-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-50"
       >
         {downloading ? (
           <span className="h-3.5 w-3.5 inline-block animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
@@ -84,7 +84,7 @@ const TemplateActions: React.FC<{
             onDeleteClick(template.id);
           }}
           title="Delete"
-          className="cursor-pointer inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 p-1.5 text-rose-500 dark:text-rose-400 transition hover:border-rose-300 hover:bg-rose-50 dark:hover:border-rose-800 dark:hover:bg-rose-950/30 disabled:opacity-50"
+          className="cursor-pointer inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-surface-400 bg-transparent p-1.5 text-rose-500 dark:text-rose-400 transition hover:border-rose-300 hover:bg-rose-50 dark:hover:border-rose-800 dark:hover:bg-rose-950/30 disabled:opacity-50"
         >
           {isDeleting ? (
             <span className="h-3.5 w-3.5 inline-block animate-spin rounded-full border-2 border-rose-300 border-t-rose-600" />
@@ -242,9 +242,9 @@ const TemplateList: React.FC<Props> = ({
       onRowClick={onSelect}
       emptyMessage="No templates match your filters."
       mobileRender={(t) => (
-        <div className="px-4 py-3 bg-white dark:bg-surface-500 border-b border-slate-100 dark:border-surface-400">
+        <div className="px-4 py-3 bg-transparent border-b border-slate-100 dark:border-surface-400">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="rounded bg-slate-100 dark:bg-surface-400 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+            <span className="rounded bg-slate-100 dark:bg-surface-400 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">
               {templateFileTypeLabel(t.mime_type)}
             </span>
             <span className="text-[10px] text-slate-400">
