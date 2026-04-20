@@ -142,6 +142,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
         ->middleware('can:preview,version');
     Route::get('/document-versions/{version}/download',     [DocumentController::class, 'downloadVersion'])
         ->middleware('can:download,version');
+    Route::patch('/document-versions/{version}/retention', [DocumentController::class, 'updateRetentionDate']);
 
     // ── Messages ───────────────────────────────────────────────────────────
     Route::get('/document-versions/{version}/messages',  [DocumentMessageController::class, 'index']);

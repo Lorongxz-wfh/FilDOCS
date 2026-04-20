@@ -26,6 +26,7 @@ class DocumentVersion extends Model
         'distributed_at',
         'superseded_at',
         'cancelled_at',
+        'retention_date',
     ];
 
     /**
@@ -45,6 +46,7 @@ class DocumentVersion extends Model
         'distributed_at' => 'datetime',
         'superseded_at'  => 'datetime',
         'cancelled_at'   => 'datetime',
+        'retention_date' => 'date',
     ];
 
     public function document()

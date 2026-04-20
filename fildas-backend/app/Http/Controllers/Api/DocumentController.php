@@ -580,6 +580,7 @@ class DocumentController extends Controller
             'routing_mode'   => $routingMode,
             'description'    => $data['description'] ?? null,
             'effective_date' => $data['effective_date'] ?? null,
+            'retention_date' => $data['retention_date'] ?? null,
         ]);
 
         $customOfficeIds = [];
@@ -1646,6 +1647,43 @@ class DocumentController extends Controller
         } catch (\Throwable) {}
 
         return response()->json(['message' => 'Document record deleted.']);
+    }
+
+    public function updateRetentionDate(Request $request, DocumentVersion $version)
+    {
+        $user = $request->user();
+        $roleName = $this->roleNameOf($user);
+        $userOfficeId = (int) ($user?->office_id ?? 0);
+        $ownerOfficeId = (int) ($version->document->owner_office_id ?? 0);
+
+        // Security: Only Owner or QA/Admin can update retention
+        $canManage = ($userOfficeId === $ownerOfficeId) || in_array($roleName, ['admin', 'sysadmin', 'qa'], true);
+
+        if (!$canManage) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $data = $request->validate([
+            'retention_date' => 'nullable|date|after_or_equal:today',
+        ]);
+
+        $oldDate = $version->retention_date ? $version->retention_date->toDateString() : null;
+        $newDate = $data['retention_date'] ?? null;
+
+        $version->retention_date = $newDate;
+        $version->save();
+
+        if ($oldDate !== $newDate) {
+            $this->logActivity('version.retention_updated', 'Updated document retention date', $user->id, $user->office_id, [
+                'old_date' => $oldDate,
+                'new_date' => $newDate,
+            ], $version->document_id, $version->id);
+        }
+
+        return response()->json([
+            'message' => 'Retention date updated.',
+            'retention_date' => $newDate,
+        ]);
     }
 }
 

@@ -288,7 +288,11 @@ class WorkflowTransitionService
             DocumentVersion::where('document_id', $version->document_id)
                 ->where('id', '!=', $version->id)
                 ->where('status', 'Distributed')
-                ->update(['status' => 'Superseded', 'superseded_at' => now()]);
+                ->update([
+                    'status' => 'Superseded', 
+                    'superseded_at' => now(),
+                    'retention_date' => null
+                ]);
         }
 
         $version->save();

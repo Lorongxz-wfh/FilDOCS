@@ -45,6 +45,7 @@ class DocumentStoreRequest extends FormRequest
             'semester' => 'nullable|string|max:20',
             'description' => 'nullable|string',
             'effective_date' => 'nullable|date',
+            'retention_date' => 'nullable|date|after_or_equal:today',
             'file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
         ];
     }
