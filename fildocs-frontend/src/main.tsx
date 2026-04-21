@@ -3,8 +3,8 @@ import { BrowserRouter } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import "./index.css";
 import App from "./App.tsx";
-import { ThemeProvider } from "./lib/ThemeContext";
-import SplashScreen from "./components/SplashScreen";
+import { ThemeProvider } from "./lib/ThemeContext.tsx";
+import SplashScreen from "./components/SplashScreen.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>

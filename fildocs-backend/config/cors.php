@@ -25,13 +25,10 @@ return [
         'http://localhost:3000',
         'https://fildocs-v2.vercel.app',
         'https://fildocs-v2.vercel.app/',
-        'https://fildas-v2.vercel.app',
-        'https://fildas-v2.vercel.app/',
     ],
 
     'allowed_origins_patterns' => [
         '#^https://fildocs-v2-.*\.vercel\.app$#',
-        '#^https://fildas-v2-.*\.vercel\.app$#',
     ],
 
 

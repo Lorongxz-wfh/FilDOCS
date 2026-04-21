@@ -28,7 +28,7 @@ const apiMsg = (e: any, fallback: string) =>
 import { getAuthUser, AUTH_USER_KEY } from "../../lib/auth";
 import { User as UserIcon, ShieldOff, AlertCircle, KeyRound } from "lucide-react";
 import { useAdminDebugMode } from "../../hooks/useAdminDebugMode";
-import { PasswordRequirements, validatePassword } from "../../components/auth/PasswordRequirements";
+import { PasswordRequirements, validatePassword } from "../auth/PasswordRequirements";
 
 type Props = {
   open: boolean;
@@ -612,12 +612,12 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
               A temporary password will be emailed, but you can also set an initial one manually below.
             </p>
           </div>
-          
+
           <div className="space-y-1.5">
             <label className={labelCls}>Manual Initial Password (Optional)</label>
-            <input 
-              type="password" 
-              className={inputCls} 
+            <input
+              type="password"
+              className={inputCls}
               placeholder="Leave blank for auto-generated"
               value={manualPassword}
               onChange={e => setManualPassword(e.target.value)}
@@ -626,7 +626,7 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
 
           {manualPassword && (
             <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-               <PasswordRequirements password={manualPassword} />
+              <PasswordRequirements password={manualPassword} />
             </div>
           )}
         </div>
@@ -639,14 +639,14 @@ const UserEditModal: React.FC<Props> = ({ open, mode, user, onClose, onSaved }) 
             <KeyRound className="h-4 w-4 text-slate-400" />
             <h5 className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Manual Password Reset</h5>
           </div>
-          
+
           <div className="grid grid-cols-1 gap-3">
             <div className="space-y-1.5">
               <label className={labelCls}>New Password</label>
-              <input 
-                type="password" 
-                className={inputCls} 
-                placeholder="Enter to force a reset" 
+              <input
+                type="password"
+                className={inputCls}
+                placeholder="Enter to force a reset"
                 value={manualPassword}
                 onChange={e => setManualPassword(e.target.value)}
               />
