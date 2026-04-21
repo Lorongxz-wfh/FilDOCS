@@ -177,7 +177,7 @@ class UserController extends Controller
                 recipientName: trim($user->first_name . ' ' . $user->last_name) ?: $user->email,
                 tempPassword:  $tempPassword,
                 appUrl:        rtrim(env('FRONTEND_URL', config('app.url')), '/'),
-                appName:       config('app.name', 'FilDAS'),
+                appName:       config('app.name', 'FilDOCS'),
             ));
         } catch (\Throwable) {}
 
@@ -391,7 +391,7 @@ class UserController extends Controller
         if ($user->email) {
             try {
                 $appUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
-                $appName = config('app.name', 'FilDAS');
+                $appName = config('app.name', 'FilDOCS');
                 Mail::to($user->email)->queue(new WorkflowNotificationMail(
                     recipientName: $user->full_name,
                     notifTitle: '2FA Reset by Administrator',

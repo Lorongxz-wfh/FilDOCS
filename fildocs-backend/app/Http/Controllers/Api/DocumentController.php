@@ -1094,7 +1094,7 @@ class DocumentController extends Controller
             return $filePath;
         }
 
-        $tmpDir  = sys_get_temp_dir() . '/fildas/' . $version->id;
+        $tmpDir  = sys_get_temp_dir() . '/fildocs/' . $version->id;
         $tmpFile = $tmpDir . '/original.' . $ext;
 
         if (!is_dir($tmpDir)) {

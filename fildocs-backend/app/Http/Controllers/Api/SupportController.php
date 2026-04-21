@@ -80,13 +80,13 @@ class SupportController extends Controller
         // 4. Send the Real Email
         try {
             Mail::to($allReceivers)->send(new SupportIssueMail(
-                senderName: $user?->full_name ?? 'FilDAS User',
+                senderName: $user?->full_name ?? 'FilDOCS User',
                 senderEmail: $data['sender_email'],
                 notifTitle: $data['subject'],
                 notifMessage: $data['message'],
                 attachmentPaths: $absolutePaths,
                 appUrl: config('app.url'),
-                appName: config('app.name', 'FilDAS'),
+                appName: config('app.name', 'FilDOCS'),
             ));
         } catch (\Exception $e) {
             // Log issue but don't stop the flow (activity is already logged)

@@ -24,7 +24,7 @@ class PreviewController extends Controller
         $ext = strtolower($file->getClientOriginalExtension());
         $r2Folder = 'previews/' . $year . '/' . $previewId;
 
-        $tmpDir = sys_get_temp_dir() . '/fildas/previews/' . $previewId;
+        $tmpDir = sys_get_temp_dir() . '/fildocs/previews/' . $previewId;
         if (!is_dir($tmpDir)) {
             mkdir($tmpDir, 0775, true);
         }

@@ -103,7 +103,7 @@ class TwoFactorController extends Controller
         if ($user->email) {
             try {
                 $appUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
-                $appName = config('app.name', 'FilDAS');
+                $appName = config('app.name', 'FilDOCS');
                 Mail::to($user->email)->queue(new WorkflowNotificationMail(
                     recipientName: $user->full_name,
                     notifTitle: '2FA Enabled',
@@ -191,7 +191,7 @@ class TwoFactorController extends Controller
         if ($user->email) {
             try {
                 $appUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
-                $appName = config('app.name', 'FilDAS');
+                $appName = config('app.name', 'FilDOCS');
                 Mail::to($user->email)->queue(new WorkflowNotificationMail(
                     recipientName: $user->full_name,
                     notifTitle: '2FA Disabled (Warning)',

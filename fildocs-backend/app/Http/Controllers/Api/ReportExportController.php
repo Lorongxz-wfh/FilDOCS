@@ -66,7 +66,7 @@ class ReportExportController extends Controller
 
             $zip->close();
 
-            $filename = 'FilDAS_Master_Reports_' . now()->format('Y-m-d_His') . '.zip';
+            $filename = 'FilDOCS_Master_Reports_' . now()->format('Y-m-d_His') . '.zip';
             return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
 
         } catch (\Exception $e) {

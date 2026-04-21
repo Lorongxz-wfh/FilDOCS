@@ -647,7 +647,7 @@ class SystemBackupController extends Controller
                     actorName: $actor->full_name,
                     documentId: null,
                     appUrl: rtrim(env('FRONTEND_URL', config('app.url')), '/'),
-                    appName: config('app.name', 'FilDAS'),
+                    appName: config('app.name', 'FilDOCS'),
                     cardLabel: 'Critical'
                 ));
             } catch (\Throwable $e) {}

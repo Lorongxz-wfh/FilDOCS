@@ -28,7 +28,7 @@ return [
     ],
 
     'allowed_origins_patterns' => [
-        '#^https://fildocs-v2-.*\.vercel\.app$#',
+        '#^https://fildocs-.*\.vercel\.app$#',
     ],
 
 

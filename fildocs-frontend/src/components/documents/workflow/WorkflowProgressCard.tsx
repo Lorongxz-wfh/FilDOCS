@@ -66,7 +66,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
     if (!tasks || tasks.length === 0) return null;
 
     // Map flowConfig step ID to backend task step name if needed
-    // In FilDAS, they should match for custom routing or the standard ones
+    // In FilDOCS, they should match for custom routing or the standard ones
     // We'll look for a completed task that matches this step
     const task = tasks.find(t => {
       if (t.status !== 'completed') return false;

@@ -74,7 +74,7 @@ export const SessionManager: React.FC<{ refreshTrigger?: number }> = ({ refreshT
   const parseUA = (ua: string) => {
     if (!ua) return { device: "Unknown Device", browser: "Unknown Browser" };
     
-    // Simple parsing for FilDAS high-density UI
+    // Simple parsing for FilDOCS high-density UI
     const isMobile = /mobile|android|iphone|ipad|phone/i.test(ua);
     const deviceType = isMobile ? "Mobile Device" : "Desktop Device";
     
