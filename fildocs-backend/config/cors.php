@@ -24,11 +24,11 @@ return [
         'http://localhost:3001',
         'http://localhost:3000',
         'https://fildocs-v2.vercel.app',
-        'https://fildocs-v2.vercel.app/',
+        'https://fildocs.vercel.app',
     ],
 
     'allowed_origins_patterns' => [
-        '#^https://fildocs-.*\.vercel\.app$#',
+        '#^https://fildocs(-.*)?\.vercel\.app$#',
     ],
 
 
