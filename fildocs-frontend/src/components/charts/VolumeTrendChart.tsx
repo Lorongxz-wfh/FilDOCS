@@ -54,7 +54,7 @@ const VolumeTrendChart: React.FC<{ data: VolumeSeries[]; height?: number; loadin
     setMounted(true);
   }, []);
 
-  if (loading) return <ChartSkeleton height={height} />;
+  if (loading) return <ChartSkeleton height={height} type="bar" />;
   if (!data?.length) return <EmptyChart height={height} />;
   if (!mounted) return <div style={{ height }} className="w-full" />;
   return (

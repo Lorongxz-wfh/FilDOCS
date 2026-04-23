@@ -268,7 +268,7 @@ const PhaseDistributionChart: React.FC<{
   colorMap?: Record<string, string>;
   loading?: boolean;
 }> = ({ data, variant, height = 220, colorMap, loading = false }) => {
-  if (loading) return <ChartSkeleton height={height} />;
+  if (loading) return <ChartSkeleton height={height} type={variant === "donut" ? "donut" : "bar"} />;
   if (!data?.length) return <EmptyChart height={height} />;
   if (variant === "stacked-bar")
     return <StackedBar data={data} colorMap={colorMap} />;
