@@ -12,12 +12,8 @@ interface ChartSkeletonProps {
   height?: string | number;
   /** Custom wrapper classes */
   className?: string;
-}
+};
 
-/**
- * Standardized Chart Skeleton for FilDOCS.
- * Use this as the loading state for all charts to ensure consistent, premium UI transition.
- */
 const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
   type = "bar",
   showLegend = false,
@@ -31,87 +27,87 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
       style={{ height: typeof height === "number" ? `${height}px` : height }}
     >
       {showTitle && (
-        <div className="flex items-center justify-between mb-4">
-          <Skeleton className="h-3 w-32" />
-          <Skeleton className="h-3 w-12" />
+        <div className="flex items-center justify-between mb-4 px-1">
+          <Skeleton className="h-4 w-32 rounded-full" />
+          <Skeleton className="h-4 w-8 rounded-full opacity-40" />
         </div>
       )}
       
-      <div className="flex-1 relative overflow-hidden flex flex-col justify-end bg-slate-50 dark:bg-surface-600 rounded-md border border-slate-200 dark:border-surface-400 p-6">
+      <div className="flex-1 relative overflow-hidden flex flex-col justify-end bg-slate-50/20 dark:bg-surface-600/10 rounded-md border border-slate-100/50 dark:border-surface-400/20 p-4">
         {/* Shimmer Area */}
-        <div className="w-full flex items-end gap-3 sm:gap-5 justify-around px-2 z-10">
+        <div className="w-full flex items-end gap-2 sm:gap-4 justify-around px-2 z-10">
           {type === "bar" && (
             <>
-              <Skeleton className="w-[10%] h-[45%] rounded-t-sm" />
-              <Skeleton className="w-[10%] h-[75%] rounded-t-sm" />
-              <Skeleton className="w-[10%] h-[55%] rounded-t-sm opacity-50" />
-              <Skeleton className="w-[10%] h-[90%] rounded-t-sm" />
-              <Skeleton className="w-[10%] h-[65%] rounded-t-sm" />
-              <Skeleton className="w-[10%] h-[50%] rounded-t-sm opacity-50" />
-              <Skeleton className="w-[10%] h-[70%] rounded-t-sm" />
-              <Skeleton className="w-[10%] h-[40%] rounded-t-sm opacity-30" />
+              <Skeleton className="w-[8%] h-[35%] rounded-t-sm" />
+              <Skeleton className="w-[8%] h-[65%] rounded-t-sm" />
+              <Skeleton className="w-[8%] h-[45%] rounded-t-sm opacity-60" />
+              <Skeleton className="w-[8%] h-[80%] rounded-t-sm" />
+              <Skeleton className="w-[8%] h-[55%] rounded-t-sm" />
+              <Skeleton className="w-[8%] h-[40%] rounded-t-sm opacity-60" />
+              <Skeleton className="w-[8%] h-[60%] rounded-t-sm" />
+              <Skeleton className="w-[8%] h-[30%] rounded-t-sm opacity-40" />
             </>
           )}
+
           {type === "line" && (
-            <div className="absolute inset-0 flex flex-col justify-end pb-10">
-               <div className="relative h-[70%] w-full overflow-hidden">
-                 <svg className="absolute inset-0 h-full w-full opacity-20" viewBox="0 0 100 100" preserveAspectRatio="none">
-                   <path d="M0,80 L20,50 L40,65 L60,25 L80,45 L100,15" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-300 dark:text-surface-300" />
-                 </svg>
+            <div className="absolute inset-0 flex flex-col justify-end pb-8">
+               <div className="relative h-[60%] w-full overflow-hidden">
                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Skeleton className="h-0.5 w-[92%] opacity-40" />
+                    <div className="h-px w-[90%] bg-slate-200 dark:bg-surface-300 opacity-30" />
+                 </div>
+                 <div className="absolute inset-0 flex items-center justify-around px-8">
+                    <Skeleton className="h-3 w-3 rounded-full" />
+                    <Skeleton className="h-3 w-3 rounded-full opacity-60 translate-y-4" />
+                    <Skeleton className="h-3 w-3 rounded-full opacity-40 -translate-y-4" />
+                    <Skeleton className="h-3 w-3 rounded-full opacity-60" />
                  </div>
                </div>
-               <div className="flex justify-around px-6">
-                 <Skeleton className="h-2 w-10 rounded-full" />
-                 <Skeleton className="h-2 w-10 rounded-full" />
-                 <Skeleton className="h-2 w-10 rounded-full" />
-                 <Skeleton className="h-2 w-10 rounded-full" />
+               <div className="flex justify-around px-4">
+                 <Skeleton className="h-1.5 w-8 rounded-full opacity-40" />
+                 <Skeleton className="h-1.5 w-8 rounded-full opacity-40" />
+                 <Skeleton className="h-1.5 w-8 rounded-full opacity-40" />
+                 <Skeleton className="h-1.5 w-8 rounded-full opacity-40" />
                </div>
             </div>
           )}
+
           {(type === "pie" || type === "donut") && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className={`relative rounded-full border-[18px] border-slate-100 dark:border-surface-400 h-40 w-40 flex items-center justify-center ${type === "donut" ? "" : "bg-slate-50 dark:bg-surface-500"}`}>
-                <div className="absolute inset-0 rounded-full border-[18px] border-t-slate-200 dark:border-t-surface-200 border-r-transparent border-b-transparent border-l-transparent animate-pulse" />
-                {type === "donut" && (
-                  <div className="flex flex-col items-center justify-center leading-none">
-                    <Skeleton className="h-4 w-12 mb-1.5" />
-                    <Skeleton className="h-2 w-8 opacity-40" />
-                  </div>
-                )}
+              <div className={`relative rounded-full border-[14px] border-slate-200/20 dark:border-surface-300/10 h-32 w-32 flex items-center justify-center ${type === "donut" ? "" : "bg-slate-200/10 dark:bg-surface-300/5"}`}>
+                <div className="absolute inset-0 rounded-full border-[14px] border-t-slate-300 dark:border-t-surface-200 border-r-transparent border-b-transparent border-l-transparent animate-pulse" />
+                {type === "donut" && <div className="h-16 w-16 rounded-full bg-slate-50/5 dark:bg-surface-600/5 shadow-inner" />}
               </div>
             </div>
           )}
+
           {type === "funnel" && (
-            <div className="flex flex-col items-center gap-3 w-full max-w-md mx-auto mb-4">
-              <Skeleton className="w-full h-10 rounded-sm" />
-              <Skeleton className="w-[85%] h-10 rounded-sm opacity-80" />
-              <Skeleton className="w-[70%] h-10 rounded-sm opacity-60" />
-              <Skeleton className="w-[55%] h-10 rounded-sm opacity-40" />
-              <Skeleton className="w-[40%] h-10 rounded-sm opacity-20" />
+            <div className="flex flex-col items-center gap-2 w-full max-w-sm mx-auto">
+              <Skeleton className="w-full h-8 rounded-sm opacity-80" />
+              <Skeleton className="w-[80%] h-8 rounded-sm opacity-60" />
+              <Skeleton className="w-[60%] h-8 rounded-sm opacity-40" />
+              <Skeleton className="w-[40%] h-8 rounded-sm opacity-20" />
             </div>
           )}
         </div>
         
         {/* Grid lines mockup */}
-        <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none flex flex-col justify-between py-10 opacity-10 px-4">
-          <div className="border-t border-slate-300 dark:border-surface-300 w-full" />
-          <div className="border-t border-slate-300 dark:border-surface-300 w-full" />
-          <div className="border-t border-slate-300 dark:border-surface-300 w-full" />
-          <div className="border-t border-slate-300 dark:border-surface-300 w-full" />
+        <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none flex flex-col justify-between py-6 opacity-[0.03] dark:opacity-[0.05]">
+          <div className="border-t border-current w-full" />
+          <div className="border-t border-current w-full" />
+          <div className="border-t border-current w-full" />
+          <div className="border-t border-current w-full" />
         </div>
       </div>
 
       {showLegend && (
-        <div className="flex items-center justify-center gap-6 mt-8">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-2 w-2 rounded-full" />
-            <Skeleton className="h-2 w-16 rounded-full" />
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="h-1.5 w-1.5 rounded-full" />
+            <Skeleton className="h-1.5 w-10 rounded-full opacity-50" />
           </div>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-2 w-2 rounded-full" />
-            <Skeleton className="h-2 w-16 rounded-full" />
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="h-1.5 w-1.5 rounded-full" />
+            <Skeleton className="h-1.5 w-10 rounded-full opacity-50" />
           </div>
         </div>
       )}
