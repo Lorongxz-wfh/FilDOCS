@@ -1,7 +1,7 @@
 import React from "react";
 import Skeleton from "./Skeleton";
 
-export type ChartSkeletonProps = {
+export interface ChartSkeletonProps {
   /** The type of chart shimmer to show */
   type?: "bar" | "line" | "pie" | "funnel" | "donut";
   /** If true, shows a legend placeholder area */
