@@ -1,7 +1,7 @@
 import React from "react";
 import Skeleton from "./Skeleton";
 
-interface ChartSkeletonProps {
+export type ChartSkeletonProps = {
   /** The type of chart shimmer to show */
   type?: "bar" | "line" | "pie" | "funnel" | "donut";
   /** If true, shows a legend placeholder area */
@@ -14,7 +14,7 @@ interface ChartSkeletonProps {
   className?: string;
 };
 
-const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
+export const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
   type = "bar",
   showLegend = false,
   showTitle = false,
@@ -115,4 +115,4 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
   );
 };
 
-export default ChartSkeleton;
+

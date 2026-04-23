@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Download } from "lucide-react";
-import ChartSkeleton, { ChartSkeletonProps } from "../ui/loader/ChartSkeleton";
+import { ChartSkeleton, ChartSkeletonProps } from "../ui/loader/ChartSkeleton";
 
 type Props = {
   title: string;
