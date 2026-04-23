@@ -10,7 +10,7 @@ const Skeleton: React.FC<Props> = ({ className = "", style }) => {
     <div
       style={style}
       className={[
-        "relative overflow-hidden rounded-md bg-slate-200/80 dark:bg-surface-300 shimmer-active",
+        "relative overflow-hidden rounded-md bg-slate-200/80 dark:bg-surface-200 shimmer-active",
         className,
       ].join(" ")}
     />
