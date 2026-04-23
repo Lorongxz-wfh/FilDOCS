@@ -37,9 +37,9 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
         </div>
       )}
       
-      <div className="flex-1 relative overflow-hidden flex flex-col justify-end">
+      <div className="flex-1 relative overflow-hidden flex flex-col justify-end bg-slate-50/20 dark:bg-surface-600/10 rounded-md border border-slate-100/50 dark:border-surface-400/20 p-4">
         {/* Shimmer Area */}
-        <div className="w-full flex items-end gap-2 sm:gap-4 justify-around px-2">
+        <div className="w-full flex items-end gap-2 sm:gap-4 justify-around px-2 z-10">
           {type === "bar" && (
             <>
               <Skeleton className="w-[8%] h-[35%] rounded-t-sm" />
@@ -72,7 +72,7 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
           )}
           {(type === "pie" || type === "donut") && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className={`relative rounded-full border-[12px] border-slate-100/30 dark:border-surface-400/30 h-32 w-32 flex items-center justify-center ${type === "donut" ? "" : "bg-slate-100/20 dark:bg-surface-400/20"}`}>
+              <div className={`relative rounded-full border-[12px] border-slate-200/20 dark:border-surface-400/20 h-32 w-32 flex items-center justify-center ${type === "donut" ? "" : "bg-slate-200/10 dark:bg-surface-400/10"}`}>
                 <div className="absolute inset-0 rounded-full border-[12px] border-t-brand-400/20 border-r-transparent border-b-transparent border-l-transparent animate-pulse" />
                 {type === "donut" && <div className="h-16 w-16 rounded-full bg-slate-50/5 dark:bg-surface-600/5 shadow-inner" />}
               </div>
@@ -89,7 +89,7 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
         </div>
         
         {/* Grid lines mockup */}
-        <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none flex flex-col justify-between py-2 opacity-5">
+        <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none flex flex-col justify-between py-6 opacity-[0.03]">
           <div className="border-t border-current w-full" />
           <div className="border-t border-current w-full" />
           <div className="border-t border-current w-full" />
