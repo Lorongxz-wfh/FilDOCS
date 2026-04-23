@@ -50,11 +50,15 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onChange, className
             {t.badge}
             
             {isActive && (
-              <motion.div
-                layoutId={`tab-indicator-${id}`}
-                className="absolute bottom-0 left-1 right-1 h-0.5 bg-brand-500 z-10 rounded-sm"
-                transition={{ type: "spring", bounce: 0, duration: 0.25 }}
-              />
+              motion ? (
+                <motion.div
+                  layoutId={`tab-indicator-${id}`}
+                  className="absolute bottom-0 left-1 right-1 h-0.5 bg-brand-500 z-10 rounded-sm"
+                  transition={{ type: "spring", bounce: 0, duration: 0.25 }}
+                />
+              ) : (
+                <div className="absolute bottom-0 left-1 right-1 h-0.5 bg-brand-500 z-10 rounded-sm" />
+              )
             )}
             
             {/* Hover Indicator (Subtle) */}
@@ -73,10 +77,17 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onChange, className
  * Fades and slightly slides content when switching.
  */
 export const TabContent: React.FC<{ activeKey: string; currentKey: string; children: React.ReactNode; className?: string }> = ({ activeKey, currentKey, children, className = "" }) => {
+  const SafeAnimatePresence = AnimatePresence as any;
+  const SafeMotion = motion as any;
+
+  if (!SafeAnimatePresence || !SafeMotion) {
+    return activeKey === currentKey ? <div className={className}>{children}</div> : null;
+  }
+
   return (
-    <AnimatePresence mode="wait">
+    <SafeAnimatePresence mode="wait">
       {activeKey === currentKey && (
-        <motion.div
+        <SafeMotion.div
           key={currentKey}
           initial={{ opacity: 0, x: 4 }}
           animate={{ opacity: 1, x: 0 }}
@@ -85,8 +96,8 @@ export const TabContent: React.FC<{ activeKey: string; currentKey: string; child
           className={className || "w-full"}
         >
           {children}
-        </motion.div>
+        </SafeMotion.div>
       )}
-    </AnimatePresence>
+    </SafeAnimatePresence>
   );
 };

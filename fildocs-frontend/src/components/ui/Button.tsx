@@ -64,15 +64,27 @@ export default function Button({
     if (!reveal) return children;
 
     const childrenArray = React.Children.toArray(children);
-    const icon = childrenArray.find((child) => React.isValidElement(child) && child.type !== "span");
-    const textNode = childrenArray.find((child) => typeof child === "string" || (React.isValidElement(child) && child.type === "span"));
+    const icon = childrenArray.find((child) => React.isValidElement(child) && (child.type as any) !== "span");
+    const textNode = childrenArray.find((child) => typeof child === "string" || (React.isValidElement(child) && (child.type as any) === "span"));
+
+    const SafeAnimatePresence = AnimatePresence as any;
+    const SafeMotion = motion as any;
+
+    if (!SafeAnimatePresence || !SafeMotion) {
+      return (
+        <div className="flex items-center gap-2 overflow-hidden">
+          {icon || childrenArray[0]}
+          {isHovered && <span className="ml-2 font-semibold whitespace-nowrap">{textNode}</span>}
+        </div>
+      );
+    }
 
     return (
       <div className="flex items-center gap-2 overflow-hidden">
         {icon || childrenArray[0]}
-        <AnimatePresence initial={false}>
+        <SafeAnimatePresence initial={false}>
           {isHovered && (
-            <motion.span
+            <SafeMotion.span
               initial={{ width: 0, opacity: 0, marginLeft: 0 }}
               animate={{ width: "auto", opacity: 1, marginLeft: 8 }}
               exit={{ width: 0, opacity: 0, marginLeft: 0 }}
@@ -80,9 +92,9 @@ export default function Button({
               className="overflow-hidden whitespace-nowrap font-semibold"
             >
               {textNode}
-            </motion.span>
+            </SafeMotion.span>
           )}
-        </AnimatePresence>
+        </SafeAnimatePresence>
       </div>
     );
   }, [children, reveal, isHovered]);
