@@ -173,7 +173,7 @@ export function ActionButton({
     >
       {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
       <span>{label}</span>
-    </Button>
+    </SafeButton>
   );
 }
 
