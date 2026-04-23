@@ -1,6 +1,6 @@
 import React from "react";
 import { Building2 } from "lucide-react";
-import ChartSkeleton from "../ui/loader/ChartSkeleton";
+import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 export type OfficeCreationDatum = {
   office_code: string;

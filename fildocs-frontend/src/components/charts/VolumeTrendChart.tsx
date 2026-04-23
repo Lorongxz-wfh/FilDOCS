@@ -1,6 +1,6 @@
 import React from "react";
 import { BarChart2 } from "lucide-react";
-import ChartSkeleton from "../ui/loader/ChartSkeleton";
+import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 const EmptyChart = ({ height = 200 }: { height?: number }) => (
   <div

@@ -33,7 +33,7 @@ const phaseColor = (stage: string) => PHASE_COLORS[stage] ?? FALLBACK_COLOR;
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
-import ChartSkeleton from "../ui/loader/ChartSkeleton";
+import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 // ── Empty ─────────────────────────────────────────────────────────────────────
 

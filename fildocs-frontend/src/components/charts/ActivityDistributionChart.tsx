@@ -2,7 +2,7 @@ import React from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import type { ActivityDistributionDatum } from "../../services/types";
 import { BarChart2 } from "lucide-react";
-import ChartSkeleton from "../ui/loader/ChartSkeleton";
+import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 const CATEGORY_COLORS: Record<string, string> = {
   Workflows: "#6366f1", // indigo-500

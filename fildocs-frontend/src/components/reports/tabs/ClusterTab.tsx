@@ -32,7 +32,7 @@ const ClusterTab: React.FC<ClusterTabProps> = ({ loading, stats, parent }) => {
           title="Office document breakdown"
           subtitle="Documents in review, approved, and returned per office."
           loading={loading}
-          skeletonType="bar"
+          skeletonType="table"
           skeletonHeight={350}
         >
           <OfficeComplianceTable data={offices} loading={loading} />

@@ -1,12 +1,13 @@
 import axios from "axios";
 import { clearAuthAndRedirect } from "../lib/auth";
 
-// Automatically uses local URL in development, production URL when deployed
-const BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string) ||
-  (import.meta.env.PROD
-    ? `${window.location.origin}/api`
-    : "http://127.0.0.1:8001/api");
+// Smart Environment Detection: 
+// Automatically uses localhost:8001 when running locally, 
+// and the production Render URL when deployed.
+const BASE_URL = 
+  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:8001/api"
+    : "https://fildocs.onrender.com/api";
 
 const api = axios.create({
   baseURL: BASE_URL,

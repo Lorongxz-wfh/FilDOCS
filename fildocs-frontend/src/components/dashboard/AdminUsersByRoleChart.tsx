@@ -1,13 +1,13 @@
 import React from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import ChartSkeleton from "../ui/loader/ChartSkeleton";
+import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 type Props = { active: number; inactive: number; loading?: boolean; height?: number };
 
 const COLORS = ["#10b981", "#94a3b8"];
 
 const AdminUsersByRoleChart: React.FC<Props> = ({ active, inactive, loading = false, height = 220 }) => {
-  if (loading) return <ChartSkeleton height={height} />;
+  if (loading) return <ChartSkeleton type="donut" height={height} />;
 
   const total = active + inactive;
 

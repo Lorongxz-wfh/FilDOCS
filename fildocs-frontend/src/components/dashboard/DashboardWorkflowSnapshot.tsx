@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardBody, CardHeader } from "../ui/Card";
 import ComplianceClusterBarChart from "../charts/ComplianceClusterBarChart";
-import Skeleton from "../ui/loader/Skeleton";
+import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 import type { ComplianceReportResponse } from "../../services/documents";
 
 type Props = {
@@ -30,7 +30,7 @@ const DashboardWorkflowSnapshot: React.FC<Props> = ({ report, loading }) => {
       />
       <CardBody>
         {loading ? (
-          <Skeleton className="h-56 w-full rounded-xl" />
+          <ChartSkeleton type="bar" height={220} className="w-full" />
         ) : (
           <ComplianceClusterBarChart
             height={220}

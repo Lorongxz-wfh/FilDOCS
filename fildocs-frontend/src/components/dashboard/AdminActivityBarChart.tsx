@@ -10,18 +10,12 @@ import {
   Cell,
 } from "recharts";
 
+import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
+
 type Props = { data: { label: string; count: number }[]; height?: number; loading?: boolean };
 
-const ChartSkeleton = ({ height = 180 }: { height?: number }) => (
-  <div style={{ height }} className="flex items-end gap-2 px-2 pb-5 pt-2">
-    {[40, 65, 50, 80, 55, 70, 45, 90].map((h, i) => (
-      <div key={i} className="flex-1 animate-pulse rounded-t-sm bg-slate-100 dark:bg-surface-400" style={{ height: `${h}%` }} />
-    ))}
-  </div>
-);
-
 const AdminActivityBarChart: React.FC<Props> = ({ data, height = 180, loading = false }) => {
-  if (loading) return <ChartSkeleton height={height} />;
+  if (loading) return <ChartSkeleton type="bar" height={height} />;
   return (
     <div style={{ height, minWidth: 0 }} className="w-full">
       <ResponsiveContainer width="100%" height="100%" debounce={1}>

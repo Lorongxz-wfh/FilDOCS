@@ -1,6 +1,6 @@
 import React from "react";
 import { type ComplianceOfficeDatum } from "../../services/types";
-import ChartSkeleton from "../ui/loader/ChartSkeleton";
+import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 interface Props {
   data: ComplianceOfficeDatum[];
@@ -8,7 +8,7 @@ interface Props {
 }
 
 const OfficeComplianceTable: React.FC<Props> = ({ data, loading = false }) => {
-  if (loading) return <ChartSkeleton type="bar" height={300} />;
+  if (loading) return <ChartSkeleton type="table" height={300} />;
 
   const sorted = [...data].sort((a, b) => b.in_review + b.approved - (a.in_review + a.approved));
 

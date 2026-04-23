@@ -16,18 +16,7 @@ type Props = {
   loading?: boolean;
 };
 
-import Skeleton from "../ui/loader/Skeleton";
-
-const ChartSkeleton = ({ height = 180 }: { height?: number }) => (
-  <div style={{ height }} className="flex flex-col justify-center gap-4 px-4 py-3">
-    {[80, 55, 65, 40, 70].map((w, i) => (
-      <div key={i} className="flex items-center gap-3">
-        <Skeleton className="w-20 h-2.5 shrink-0 opacity-40" />
-        <Skeleton className="rounded-r-sm h-4 flex-1" style={{ maxWidth: `${w}%` }} />
-      </div>
-    ))}
-  </div>
-);
+import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 const PHASES = [
   { key: "draft", label: "Draft", color: "#94a3b8" },
@@ -43,7 +32,7 @@ const AdminDocumentPhaseChart: React.FC<Props> = ({ byPhase, height = 180, loadi
     setMounted(true);
   }, []);
 
-  if (loading) return <ChartSkeleton height={height} />;
+  if (loading) return <ChartSkeleton type="bar" height={height} />;
   if (!mounted) return <div style={{ height }} className="w-full" />;
 
   const data = PHASES.map((p) => ({

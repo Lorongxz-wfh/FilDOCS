@@ -10,7 +10,7 @@ import {
   Legend,
 } from "recharts";
 import type { ActivityTrendDatum } from "../../services/types";
-import ChartSkeleton from "../ui/loader/ChartSkeleton";
+import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 const formatDate = (dateStr: string, options: Intl.DateTimeFormatOptions) => {
   try {

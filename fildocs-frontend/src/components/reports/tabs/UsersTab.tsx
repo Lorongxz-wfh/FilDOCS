@@ -48,7 +48,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ adminUserLoading, adminUserStats })
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
-          <ReportChartCard title="Account Status" subtitle="Enabled vs. disabled users" loading={adminUserLoading}>
+          <ReportChartCard title="Account Status" subtitle="Enabled vs. disabled users" loading={adminUserLoading} skeletonType="donut">
             <AdminUsersByRoleChart
               active={adminUserStats?.active ?? 0}
               inactive={adminUserStats?.inactive ?? 0}
