@@ -726,7 +726,7 @@ const WorkflowPage: React.FC = () => {
                       {isThisActionBusy ? (
                         <Loader2 className="animate-spin h-3.5 w-3.5" />
                       ) : (
-                        <Icon className="h-3.5 w-3.5" />
+                        Icon ? <Icon className="h-3.5 w-3.5" /> : null
                       )}
                       <span>{a.label.split(" ")[0]}</span>
                     </Button>
