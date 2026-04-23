@@ -40,36 +40,36 @@ export const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
             <>
               <Skeleton className="w-[8%] h-[35%] rounded-t-sm" />
               <Skeleton className="w-[8%] h-[65%] rounded-t-sm" />
-              <Skeleton className="w-[8%] h-[45%] rounded-t-sm opacity-60" />
+              <Skeleton className="w-[8%] h-[45%] rounded-t-sm opacity-80" />
               <Skeleton className="w-[8%] h-[80%] rounded-t-sm" />
               <Skeleton className="w-[8%] h-[55%] rounded-t-sm" />
-              <Skeleton className="w-[8%] h-[40%] rounded-t-sm opacity-60" />
+              <Skeleton className="w-[8%] h-[40%] rounded-t-sm opacity-80" />
               <Skeleton className="w-[8%] h-[60%] rounded-t-sm" />
-              <Skeleton className="w-[8%] h-[30%] rounded-t-sm opacity-40" />
+              <Skeleton className="w-[8%] h-[30%] rounded-t-sm opacity-70" />
             </>
           )}
           {type === "line" && (
             <div className="absolute inset-0 flex flex-col justify-end pb-8">
                <div className="relative h-[60%] w-full overflow-hidden">
-                 <svg className="absolute inset-0 h-full w-full opacity-10" viewBox="0 0 100 100" preserveAspectRatio="none">
-                   <path d="M0,80 L20,60 L40,70 L60,30 L80,50 L100,20" fill="none" stroke="currentColor" strokeWidth="2" />
+                 <svg className="absolute inset-0 h-full w-full opacity-20" viewBox="0 0 100 100" preserveAspectRatio="none">
+                   <path d="M0,80 L20,60 L40,70 L60,30 L80,50 L100,20" fill="none" stroke="currentColor" strokeWidth="3" />
                  </svg>
                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Skeleton className="h-0.5 w-[90%] opacity-20" />
+                    <Skeleton className="h-1 w-[90%] opacity-40" />
                  </div>
                </div>
                <div className="flex justify-around px-4">
-                 <Skeleton className="h-1.5 w-8 rounded-full opacity-30" />
-                 <Skeleton className="h-1.5 w-8 rounded-full opacity-30" />
-                 <Skeleton className="h-1.5 w-8 rounded-full opacity-30" />
-                 <Skeleton className="h-1.5 w-8 rounded-full opacity-30" />
+                 <Skeleton className="h-2 w-10 rounded-full opacity-60" />
+                 <Skeleton className="h-2 w-10 rounded-full opacity-60" />
+                 <Skeleton className="h-2 w-10 rounded-full opacity-60" />
+                 <Skeleton className="h-2 w-10 rounded-full opacity-60" />
                </div>
             </div>
           )}
           {(type === "pie" || type === "donut") && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className={`relative rounded-full border-[12px] border-slate-100/30 dark:border-surface-300/40 h-32 w-32 flex items-center justify-center ${type === "donut" ? "" : "bg-slate-100/20 dark:bg-surface-300/20"}`}>
-                <div className="absolute inset-0 rounded-full border-[12px] border-t-brand-400/20 border-r-transparent border-b-transparent border-l-transparent animate-pulse" />
+              <div className={`relative rounded-full border-[14px] border-slate-200/20 dark:border-slate-600/40 h-32 w-32 flex items-center justify-center ${type === "donut" ? "" : "bg-slate-200/10 dark:bg-slate-700/20"}`}>
+                <div className="absolute inset-0 rounded-full border-[14px] border-t-sky-500/30 dark:border-t-sky-400/40 border-r-transparent border-b-transparent border-l-transparent animate-pulse" />
                 {type === "donut" && <div className="h-16 w-16 rounded-full bg-slate-50/5 dark:bg-surface-600/5 shadow-inner" />}
               </div>
             </div>
