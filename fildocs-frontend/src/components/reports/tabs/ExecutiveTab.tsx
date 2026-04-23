@@ -78,6 +78,8 @@ const ExecutiveTab: React.FC<ExecutiveTabProps> = ({ loading, stats }) => {
             title="Institutional Document Flux"
             subtitle="System-wide document lifecycle trends"
             loading={loading}
+            skeletonType="bar"
+            skeletonHeight={300}
           >
             <VolumeTrendChart data={volumeSeries} height={300} loading={loading} />
           </ReportChartCard>
@@ -87,6 +89,8 @@ const ExecutiveTab: React.FC<ExecutiveTabProps> = ({ loading, stats }) => {
             title="University Pulse"
             subtitle="Where are we moving right now?"
             loading={loading}
+            skeletonType="donut"
+            skeletonHeight={300}
           >
             <PhaseDistributionChart data={phaseDist} variant="donut" height={300} loading={loading} />
           </ReportChartCard>

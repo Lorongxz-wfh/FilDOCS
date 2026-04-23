@@ -32,6 +32,8 @@ const ClusterTab: React.FC<ClusterTabProps> = ({ loading, stats, parent }) => {
           title="Office document breakdown"
           subtitle="Documents in review, approved, and returned per office."
           loading={loading}
+          skeletonType="bar"
+          skeletonHeight={350}
         >
           <OfficeComplianceTable data={offices} loading={loading} />
         </ReportChartCard>
@@ -39,6 +41,8 @@ const ClusterTab: React.FC<ClusterTabProps> = ({ loading, stats, parent }) => {
           title="Compliance Benchmarks"
           subtitle="Institutional requirement adherence per office"
           loading={loading}
+          skeletonType="bar"
+          skeletonHeight={350}
         >
           <ComplianceClusterBarChart data={clusters} loading={loading} height={350} />
         </ReportChartCard>

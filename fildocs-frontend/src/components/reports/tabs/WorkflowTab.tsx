@@ -80,6 +80,8 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
               title={`Document volume · ${bucket}`}
               subtitle="Documents created vs distributed per period"
               loading={loading}
+              skeletonType="bar"
+              skeletonHeight={220}
             >
               <VolumeTrendChart data={volumeSeries} height={220} loading={loading} />
             </ReportChartCard>
@@ -89,6 +91,8 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
               title="By document type"
               subtitle="Internal · External · Forms split"
               loading={loading}
+              skeletonType="donut"
+              skeletonHeight={160}
             >
               <DocumentTypeChart data={doctypeDist} height={160} loading={loading} />
             </ReportChartCard>
@@ -109,6 +113,8 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
               title="Documents by office"
               subtitle="Ranked by creation volume"
               loading={loading}
+              skeletonType="bar"
+              skeletonHeight={220}
             >
               <OfficeCreationChart data={creationByOffice} height={220} loading={loading} />
             </ReportChartCard>
@@ -118,6 +124,8 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
               title="Return rate by stage"
               subtitle="Where documents get sent back most"
               loading={loading}
+              skeletonType="bar"
+              skeletonHeight={220}
             >
               <ReturnByStageChart
                 data={revisionStats.by_stage ?? []}
@@ -135,6 +143,8 @@ const WorkflowTab: React.FC<WorkflowTabProps> = ({
         title="Document lifecycle funnel"
         subtitle="How many documents pass each stage — creation date range applied"
         loading={loading}
+        skeletonType="funnel"
+        skeletonHeight={220}
       >
         <WorkflowFunnelChart data={lifecycleFunnel} loading={loading} />
       </ReportChartCard>

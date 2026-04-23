@@ -27,6 +27,7 @@ const ActivityTab: React.FC<ActivityTabProps> = ({
               title="System Activity Breakdown"
               subtitle="Distribution by category in selected period"
               loading={activityLoading}
+              skeletonType="donut"
             >
               <ActivityDistributionChart
                 data={activityReport?.distribution ?? []}
@@ -40,6 +41,7 @@ const ActivityTab: React.FC<ActivityTabProps> = ({
               title="Activity Trend"
               subtitle="Daily volume across categories"
               loading={activityLoading}
+              skeletonType="bar"
             >
               <DailyActivityStackedBarChart
                 data={activityReport?.daily_trend ?? []}

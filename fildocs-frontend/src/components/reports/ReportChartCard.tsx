@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
-// import html2canvas from "html2canvas";
 import { Download } from "lucide-react";
+import ChartSkeleton, { ChartSkeletonProps } from "../ui/loader/ChartSkeleton";
 
 type Props = {
   title: string;
@@ -10,6 +10,7 @@ type Props = {
   className?: string;
   loading?: boolean;
   skeletonHeight?: number;
+  skeletonType?: ChartSkeletonProps["type"];
   onExportCsv?: () => void;
   onExportPdf?: (element: HTMLElement) => Promise<void>;
 };
@@ -22,6 +23,7 @@ const ReportChartCard: React.FC<Props> = ({
   className = "",
   loading = false,
   skeletonHeight = 220,
+  skeletonType = "bar",
   onExportCsv,
   onExportPdf,
 }) => {
@@ -112,10 +114,7 @@ const ReportChartCard: React.FC<Props> = ({
       </div>
       <div className="p-4 sm:p-6">
         {loading ? (
-          <div
-            className="animate-pulse rounded-lg bg-slate-100 dark:bg-surface-400"
-            style={{ height: skeletonHeight }}
-          />
+          <ChartSkeleton height={skeletonHeight} type={skeletonType} />
         ) : (
           children
         )}

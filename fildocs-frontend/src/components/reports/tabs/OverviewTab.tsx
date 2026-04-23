@@ -72,6 +72,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               title={`Document volume · ${bucket}`}
               subtitle="Created vs distributed per period"
               loading={loading}
+              skeletonType="bar"
             >
               <VolumeTrendChart data={volumeSeries} height={220} loading={loading} />
             </ReportChartCard>
@@ -81,6 +82,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               title="Documents by phase"
               subtitle="Current status of documents in selected period"
               loading={loading}
+              skeletonType="donut"
             >
               <PhaseDistributionChart data={phaseDist} variant="donut" height={220} />
             </ReportChartCard>
@@ -118,6 +120,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         title="Stage delay by phase"
         subtitle="Median task hold time per workflow phase"
         loading={loading}
+        skeletonType="bar"
+        skeletonHeight={160}
       >
         <StageDelayChart data={stageDelaysByPhase} height={160} loading={loading} />
       </ReportChartCard>
@@ -140,6 +144,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                 title="System Activity Breakdown"
                 subtitle="Distribution by category in selected period"
                 loading={activityLoading}
+                skeletonType="donut"
+                skeletonHeight={180}
               >
                 <ActivityDistributionChart
                   data={activityReport?.distribution ?? []}
@@ -153,6 +159,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                 title="Activity Trend"
                 subtitle="Daily volume across categories"
                 loading={activityLoading}
+                skeletonType="bar"
+                skeletonHeight={180}
               >
                 <DailyActivityStackedBarChart
                   data={activityReport?.daily_trend ?? []}
