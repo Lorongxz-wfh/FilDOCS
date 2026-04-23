@@ -12,7 +12,17 @@ class ChunkErrorBoundary extends React.Component<
 
   static getDerivedStateFromError() { return { error: true }; }
 
-  componentDidCatch(error: Error) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("[App Error]", error, errorInfo);
+    
+    // Specifically handle React Error #130
+    if (error.message?.includes("Minified React error #130")) {
+      console.error("React Error #130 detected. This means a component is returning undefined during render.");
+      if (errorInfo.componentStack) {
+        console.error("Component Stack:", errorInfo.componentStack);
+      }
+    }
+
     const isChunkError =
       error.message?.includes("Failed to fetch dynamically imported module") ||
       error.message?.includes("dynamically imported module") ||
