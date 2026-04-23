@@ -143,6 +143,28 @@ export default function CreateWorkflowPage() {
     string,
     string[]
   > | null>(null);
+  useEffect(() => {
+    console.log("[CreateWorkflowPage] Diagnostic Check:", {
+      React: !!React,
+      useEffect: !!useEffect,
+      useMemo: !!useMemo,
+      useState: !!useState,
+      useNavigate: !!useNavigate,
+      useLocation: !!useLocation,
+      useToast: !!useToast,
+      allOffices: !!allOffices,
+      me: !!me,
+      isQA: !!isQA,
+      inputCls: !!inputCls,
+      Button: !!Button,
+      TemplatesBrowserPanel: !!TemplatesBrowserPanel,
+      FlowSelectModal: !!FlowSelectModal,
+      SelectDropdown: !!SelectDropdown,
+      PageFrame: !!PageFrame,
+      Pencil: !!Pencil,
+    });
+  }, []);
+
   const previewSeqRef = React.useRef(0);
 
   // ── Admin: office picker ───────────────────────────────────────────────────

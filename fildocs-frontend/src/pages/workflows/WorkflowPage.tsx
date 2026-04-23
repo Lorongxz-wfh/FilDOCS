@@ -102,6 +102,37 @@ const WorkflowPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
 
+  useEffect(() => {
+    console.log("[WorkflowPage] Diagnostic Check:", {
+      React: !!React,
+      Workflow: !!Workflow,
+      WorkflowActionConfirmModal: !!WorkflowActionConfirmModal,
+      WorkflowRevisionModal: !!WorkflowRevisionModal,
+      Alert: !!Alert,
+      Button: !!Button,
+      PageActions: !!PageActions,
+      DocFrame: !!DocFrame,
+      WorkflowRightPanel: !!WorkflowRightPanel,
+      WorkflowVersionsDropdown: !!WorkflowVersionsDropdown,
+      BackButton: !!BackButton,
+      Skeleton: !!Skeleton,
+      FileX: !!FileX,
+      Share2: !!Share2,
+      Library: !!Library,
+      Loader2: !!Loader2,
+      XCircle: !!XCircle,
+      Trash2: !!Trash2,
+      ArrowRightToLine: !!ArrowRightToLine,
+      ArrowLeftCircle: !!ArrowLeftCircle,
+      CheckCircle2: !!CheckCircle2,
+      Hash: !!Hash,
+      Play: !!Play,
+      Layers: !!Layers,
+      RefreshCcw: !!RefreshCcw,
+      GitCompare: !!GitCompare,
+    });
+  }, []);
+
   const role = getUserRole();
   const isAdmin = role === "ADMIN" || role === "SYSADMIN";
   const currentUserId = getAuthUser()?.id;
