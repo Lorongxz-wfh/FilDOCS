@@ -1,7 +1,14 @@
 import React from "react";
 import Skeleton from "./Skeleton";
 import TableSkeleton from "./TableSkeleton";
-import type { ChartSkeletonProps } from "./loaderTypes";
+
+export interface ChartSkeletonProps {
+  type?: "bar" | "line" | "pie" | "donut" | "funnel" | "table";
+  showLegend?: boolean;
+  showTitle?: boolean;
+  height?: string | number;
+  className?: string;
+}
 
 /**
  * Standardized Chart Skeleton for FilDOCS.
