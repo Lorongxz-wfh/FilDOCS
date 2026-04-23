@@ -173,7 +173,7 @@ const LoginPage: React.FC = () => {
   ];
 
   return (
-    <main className="relative min-h-screen flex flex-col overflow-hidden">
+    <main className="relative min-h-screen flex flex-col overflow-y-auto lg:overflow-hidden">
       <MaintenanceBanner />
       
       <div className="flex-1 relative flex items-center justify-center">
@@ -194,12 +194,12 @@ const LoginPage: React.FC = () => {
         </button>
 
         {/* Card container */}
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-10 flex items-stretch justify-center">
+        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-6 lg:py-10 flex items-stretch justify-center">
           {/* ── Left panel ───────────────────────────────────────────────────── */}
           <div className="hidden lg:flex flex-col justify-between w-[430px] rounded-3xl rounded-r-none bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 text-white p-9 shadow-2xl">
             <div>
               {/* Institutional Header (Horizontal) */}
-              <div className="flex items-start gap-4 mb-14">
+              <div className="flex items-start gap-4 mb-8 lg:mb-12">
                 <div className="h-16 w-16 overflow-hidden rounded-2xl border border-white/25 bg-white/20 backdrop-blur-md shadow-lg shadow-blue-900/10 shrink-0">
                   <img
                     src={logoUrl}
@@ -258,7 +258,7 @@ const LoginPage: React.FC = () => {
           </div>
 
           {/* ── Right panel ──────────────────────────────────────────────────── */}
-          <div className="w-full max-w-sm lg:max-w-none lg:w-[390px] rounded-3xl lg:rounded-l-none bg-white dark:bg-surface-500 shadow-2xl px-10 py-12 flex flex-col justify-center">
+          <div className="w-full max-w-sm lg:max-w-none lg:w-[390px] rounded-3xl lg:rounded-l-none bg-white dark:bg-surface-500 shadow-2xl px-10 py-8 lg:py-10 flex flex-col justify-center">
             {/* Mobile logo */}
             <div className="flex lg:hidden items-center justify-center mb-8">
               <div className="h-14 w-14 overflow-hidden rounded-md border border-slate-200 bg-white">
