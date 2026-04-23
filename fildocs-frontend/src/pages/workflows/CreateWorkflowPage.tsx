@@ -15,6 +15,7 @@ import {
 import PageFrame from "../../components/layout/PageFrame";
 import Button from "../../components/ui/Button";
 import TemplatesBrowserPanel from "../../components/templates/TemplatesBrowserPanel";
+import { useToast } from "../../components/ui/toast/ToastContext";
 import FlowSelectModal, {
   type FlowSelection,
 } from "../../components/documents/modals/WorkflowCreateModal";
