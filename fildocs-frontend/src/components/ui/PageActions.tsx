@@ -159,8 +159,11 @@ export function ActionButton({
   loading?: boolean;
   variant?: "primary" | "secondary" | "outline" | "danger" | "ghost";
 }) {
+  const SafeButton = Button as any;
+  if (!SafeButton) return null;
+
   return (
-    <Button
+    <SafeButton
       variant={variant}
       size="sm"
       reveal

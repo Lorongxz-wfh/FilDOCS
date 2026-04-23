@@ -43,7 +43,7 @@ export default function Tooltip({
           "pointer-events-none absolute z-[9999] whitespace-nowrap rounded",
           "bg-slate-800 dark:bg-slate-900 px-2.5 py-1.5 text-[11px] leading-relaxed text-white shadow-xl border border-white/10",
           "opacity-0 group-hover/tt:opacity-100 transition-opacity duration-150",
-          SIDE_CLS[side],
+          SIDE_CLS[side] || SIDE_CLS.top,
         ].join(" ")}
       >
         {content}

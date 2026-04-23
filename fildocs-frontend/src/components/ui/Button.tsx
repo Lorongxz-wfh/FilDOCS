@@ -104,7 +104,7 @@ export default function Button({
     >
       {loading ? (
         <div className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
+          {Loader2 ? <Loader2 className="h-4 w-4 animate-spin" /> : <div className="h-4 w-4 rounded-full border-2 border-slate-200 border-t-transparent animate-spin" />}
           {!reveal && size !== "xs" && <span>Processing…</span>}
         </div>
       ) : (
@@ -113,8 +113,9 @@ export default function Button({
     </button>
   );
 
-  if (tooltip && !reveal) {
-    return <Tooltip content={tooltip} side={tooltipSide}>{btn}</Tooltip>;
+  const SafeTooltip = Tooltip as any;
+  if (tooltip && !reveal && SafeTooltip) {
+    return <SafeTooltip content={tooltip} side={tooltipSide}>{btn}</SafeTooltip>;
   }
   return btn;
 }
