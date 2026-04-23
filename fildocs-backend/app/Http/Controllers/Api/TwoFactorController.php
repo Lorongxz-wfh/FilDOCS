@@ -13,16 +13,19 @@ use Illuminate\Support\Facades\Mail;
 use PragmaRX\Google2FALaravel\Support\Authenticator;
 use PragmaRX\Google2FA\Google2FA;
 use Illuminate\Support\Str;
+use App\Actions\TwoFactorRecoveryAction;
 
 class TwoFactorController extends Controller
 {
     use LogsActivityTrait;
 
     protected $google2fa;
+    protected $recovery;
 
-    public function __construct()
+    public function __construct(TwoFactorRecoveryAction $recovery)
     {
         $this->google2fa = new Google2FA();
+        $this->recovery = $recovery;
     }
 
     /**
@@ -80,14 +83,10 @@ class TwoFactorController extends Controller
         // Save secret and generate recovery codes
         $user->two_factor_secret = $request->secret;
         $user->two_factor_confirmed_at = now();
-        
-        // Generate 8 recovery codes
-        $recovery = [];
-        for ($i = 0; $i < 8; $i++) {
-            $recovery[] = Str::random(10) . '-' . Str::random(10);
-        }
-        $user->two_factor_recovery_codes = encrypt(json_encode($recovery));
         $user->save();
+
+        $this->recovery->generate($user);
+        $cleanCodes = $this->recovery->view($user);
 
         $this->logActivity('auth.2fa_enabled', 'Enabled Two-Factor Authentication', $user->id, $user->office_id);
 
@@ -122,7 +121,7 @@ class TwoFactorController extends Controller
 
         return response()->json([
             'message' => 'Two-factor authentication enabled successfully.',
-            'recovery_codes' => $recovery
+            'recovery_codes' => $cleanCodes
         ]);
     }
 
@@ -150,11 +149,11 @@ class TwoFactorController extends Controller
             
             if ($request->recovery_code) {
                 // Check recovery codes
-                $codes = json_decode(decrypt($user->two_factor_recovery_codes), true);
+                $codes = $this->recovery->view($user);
                 foreach ($codes as $index => $code) {
                     if ($code === $request->recovery_code) {
-                        unset($codes[$index]);
-                        $user->two_factor_recovery_codes = encrypt(json_encode(array_values($codes)));
+                        $remaining = collect($codes)->except($index)->map(fn($c) => encrypt($c))->all();
+                        $user->two_factor_recovery_codes = $remaining;
                         // We don't save yet, we'll save at the end when resetting everything
                         $valid = true;
                         break;
@@ -228,10 +227,38 @@ class TwoFactorController extends Controller
              return response()->json(['message' => 'Incorrect password.'], 422);
          }
 
-         $codes = json_decode(decrypt($user->two_factor_recovery_codes), true);
+         $codes = $this->recovery->view($user);
 
          $this->logActivity('auth.recovery_viewed', 'Viewed 2FA recovery codes', $user->id, $user->office_id);
 
          return response()->json(['recovery_codes' => $codes]);
+    }
+
+    /**
+     * Regenerate recovery codes.
+     */
+    public function regenerateRecoveryCodes(Request $request)
+    {
+         /** @var User $user */
+         $user = $request->user();
+
+         if (!$user->two_factor_confirmed_at) {
+             return response()->json(['message' => '2FA not enabled.'], 400);
+         }
+
+         $request->validate(['password' => 'required|string']);
+         if (!Hash::check($request->password, $user->password)) {
+             return response()->json(['message' => 'Incorrect password.'], 422);
+         }
+
+         $this->recovery->generate($user);
+         $codes = $this->recovery->view($user);
+
+         $this->logActivity('auth.recovery_regenerated', 'Regenerated 2FA recovery codes', $user->id, $user->office_id);
+
+         return response()->json([
+             'message' => 'New recovery codes generated.',
+             'recovery_codes' => $codes
+         ]);
     }
 }

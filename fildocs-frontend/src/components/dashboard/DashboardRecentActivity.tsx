@@ -112,7 +112,7 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
       />
 
       <CardBody noPadding className="relative min-h-[300px]">
-        <div className={`p-4 space-y-4 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"}`}>
+        <div className={`p-4 space-y-2.5 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"}`}>
           {loading && !hasData ? (
             <SkeletonList variant="activity" rows={4} className="divide-y divide-slate-100 dark:divide-surface-400" />
           ) : logs.length === 0 ? (
@@ -122,7 +122,7 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
               className="py-10"
             />
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2.5">
               {logs.slice(0, 10).map((log, idx) => {
                 const meta = getEventMeta(log.event);
 
@@ -154,12 +154,14 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
                     className={`flex items-start gap-3 group/item ${isRecentlyAdded(log.id) ? "animate-live-entry" : ""} ${isClickable ? "cursor-pointer" : ""}`}
                     style={{ animationDelay: `${idx * 50}ms` }}
                   >
-                    <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border border-slate-100 dark:border-surface-400/30 bg-white dark:bg-surface-500 ${meta.text}  transition-transform group-hover/item:scale-110`}>
-                      {meta.icon}
+                    <div className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-slate-100 dark:border-surface-400/30 bg-white dark:bg-surface-500 ${meta.text}  transition-transform group-hover/item:scale-110`}>
+                      <div className="scale-75">
+                         {meta.icon}
+                      </div>
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className={`text-[12px] sm:text-[13px] font-semibold uppercase tracking-tight leading-tight transition-colors ${isClickable ? "text-slate-800 dark:text-slate-100 group-hover/item:text-sky-600 dark:group-hover/item:text-sky-400" : "text-slate-600 dark:text-slate-300"}`}>
+                      <p className={`text-[12px] font-bold uppercase tracking-tight leading-tight transition-colors ${isClickable ? "text-slate-800 dark:text-slate-100 group-hover/item:text-sky-600 dark:group-hover/item:text-sky-400" : "text-slate-600 dark:text-slate-300"}`}>
                         {friendlyEvent(log.event)}
                       </p>
 

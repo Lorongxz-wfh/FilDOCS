@@ -126,7 +126,7 @@ const QADashboard: React.FC<
                   </Button>
                 }
               />
-              <CardBody>
+              <CardBody className="h-[150px] sm:h-[200px] flex items-center justify-center">
                 <VolumeTrendChart
                   data={report.volume_series}
                   height={window.innerWidth < 640 ? 150 : 200}
@@ -151,7 +151,7 @@ const QADashboard: React.FC<
                   </Button>
                 }
               />
-              <CardBody>
+              <CardBody className="h-[150px] sm:h-[200px] flex items-center justify-center">
                 <PhaseDistributionChart
                   data={report.phase_distribution ?? []}
                   variant="donut"
@@ -177,7 +177,7 @@ const QADashboard: React.FC<
                   </Button>
                 }
               />
-              <CardBody>
+              <CardBody className="h-[150px] flex items-center justify-center">
                 <StageDelayChart
                   data={report.stage_delays_by_phase ?? []}
                   height={150}
@@ -218,7 +218,7 @@ const QADashboard: React.FC<
                 </Button>
               }
             />
-            <CardBody>
+            <CardBody className="h-[200px] flex items-center justify-center">
               <StageDelayChart
                 data={report.stage_delays_by_phase ?? []}
                 height={200}

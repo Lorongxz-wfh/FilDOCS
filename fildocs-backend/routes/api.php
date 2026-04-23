@@ -215,6 +215,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastActive::class]
     Route::post('/profile/two-factor/confirm',            [\App\Http\Controllers\Api\TwoFactorController::class, 'confirm']);
     Route::post('/profile/two-factor/disable',            [\App\Http\Controllers\Api\TwoFactorController::class, 'disable']);
     Route::post('/profile/two-factor/recovery-codes',     [\App\Http\Controllers\Api\TwoFactorController::class, 'getRecoveryCodes']);
+    Route::post('/profile/two-factor/recovery-codes/regenerate', [\App\Http\Controllers\Api\TwoFactorController::class, 'regenerateRecoveryCodes']);
     Route::get('/profile/sessions',                       [SessionController::class, 'index']);
     Route::delete('/profile/sessions/{id}',               [SessionController::class, 'destroy']);
     Route::post('/profile/sessions/revoke-others',        [SessionController::class, 'revokeOthers']);

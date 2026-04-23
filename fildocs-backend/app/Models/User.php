@@ -41,6 +41,7 @@ class User extends Authenticatable
         'theme_preference',
         'must_change_password',
         'onboarding_progress',
+        'two_factor_recovery_codes',
     ];
 
     /**

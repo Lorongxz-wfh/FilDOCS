@@ -71,14 +71,14 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
                   type="button"
                   onClick={handleClick}
                   style={{ animationDelay: `${i * 40}ms` }}
-                  className="flex w-full items-center gap-2.5 sm:gap-3 p-3.5 sm:px-4 sm:py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-surface-400 min-w-0 animate-live-entry fill-mode-backwards"
+                  className="flex w-full items-center gap-2.5 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 t-left transition-colors hover:bg-slate-50 dark:hover:bg-surface-400 min-w-0 animate-live-entry fill-mode-backwards"
                 >
-                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded border border-slate-100 dark:border-surface-400 ${isRequest ? 'bg-amber-50 dark:bg-amber-950/30' : 'bg-slate-100/50 dark:bg-surface-400'}`}>
-                    <Icon className={`h-3.5 w-3.5 ${isRequest ? 'text-amber-500' : 'text-slate-500 dark:text-slate-400'}`} />
+                  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border border-slate-100 dark:border-surface-400 ${isRequest ? 'bg-amber-50 dark:bg-amber-950/30' : 'bg-slate-100/50 dark:bg-surface-400'}`}>
+                    <Icon className={`h-3 w-3 ${isRequest ? 'text-amber-500' : 'text-slate-500 dark:text-slate-400'}`} />
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100 leading-tight">
+                    <p className="truncate text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-tight">
                       {x.title}
                     </p>
                     <p className="mt-0.5 truncate text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-mono">

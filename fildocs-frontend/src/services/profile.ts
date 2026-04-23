@@ -101,3 +101,8 @@ export async function getRecoveryCodes(password: string) {
   const { data } = await api.post("/profile/two-factor/recovery-codes", { password });
   return data.recovery_codes as string[];
 }
+
+export async function regenerateRecoveryCodes(password: string) {
+  const { data } = await api.post("/profile/two-factor/recovery-codes/regenerate", { password });
+  return data as { message: string; recovery_codes: string[] };
+}

@@ -18,7 +18,8 @@ import {
   setupTwoFactor, 
   confirmTwoFactor, 
   disableTwoFactor,
-  getRecoveryCodes 
+  getRecoveryCodes,
+  regenerateRecoveryCodes
 } from "../../services/profile";
 import { normalizeError } from "../../lib/normalizeError";
 
@@ -117,6 +118,21 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
       setIsRecoveryModalOpen(true);
     } catch (err) {
       push({ type: "error", title: "Verification Failed", message: normalizeError(err) });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegenerateRecovery = async () => {
+    if (!window.confirm("Are you sure? This will invalidate all current recovery codes. You should download or copy the new ones immediately.")) return;
+    
+    setLoading(true);
+    try {
+      const res = await regenerateRecoveryCodes(password);
+      setRecoveryCodes(res.recovery_codes);
+      push({ type: "success", title: "Regenerated", message: "New recovery codes have been generated." });
+    } catch (err) {
+      push({ type: "error", title: "Regeneration Failed", message: normalizeError(err) });
     } finally {
       setLoading(false);
     }
@@ -334,18 +350,34 @@ export const TwoFactorManager: React.FC<TwoFactorManagerProps> = ({ user }) => {
                   </div>
                 ))}
              </div>
-             <Button 
-               variant="outline" 
-               className="w-full"
-               onClick={() => {
-                 const text = recoveryCodes.join("\n");
-                 navigator.clipboard.writeText(text);
-                 push({ type: "success", message: "Codes copied to clipboard." });
-               }}
-             >
-                Copy to Clipboard
-             </Button>
-          </div>
+              <div className="flex flex-col gap-2">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    const text = recoveryCodes.join("\n");
+                    navigator.clipboard.writeText(text);
+                    push({ type: "success", message: "Codes copied to clipboard." });
+                  }}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy to Clipboard
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[10px] font-bold uppercase tracking-widest"
+                  loading={loading}
+                  onClick={() => {
+                    if (confirm("Are you sure you want to regenerate your recovery codes? Old codes will stop working.")) {
+                      handleRegenerateRecovery();
+                    }
+                  }}
+                >
+                  <RefreshCw className={`h-3 w-3 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  Regenerate Codes
+                </Button>
+              </div>
+            </div>
         )}
       </Modal>
 

@@ -22,5 +22,11 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') === 'production') {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
+
+        // Register email audit logging
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Mail\Events\MessageSent::class,
+            [\App\Listeners\LogNotificationAttempt::class, 'handle']
+        );
     }
 }
