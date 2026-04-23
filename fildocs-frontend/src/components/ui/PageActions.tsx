@@ -168,7 +168,7 @@ export function ActionButton({
       disabled={disabled}
       loading={loading}
     >
-      <Icon className="h-3.5 w-3.5" />
+      {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
       <span>{label}</span>
     </Button>
   );

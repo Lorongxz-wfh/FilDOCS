@@ -32,6 +32,19 @@ import type {
   WorkflowTask,
 } from "../services/documents";
 import type { HeaderActionButton } from "../components/documents/workflow/config/types";
+import {
+  XCircle,
+  Trash2,
+  ArrowRightToLine,
+  ArrowLeftCircle,
+  CheckCircle2,
+  Hash,
+  Share2,
+  Play,
+  Layers,
+  RotateCcw
+} from "lucide-react";
+
 
 interface Options {
   document: Document | null;
@@ -581,6 +594,18 @@ export function useWorkflowUI({
             push({ type: "error", title: "Action failed", message: e?.message ?? "Action failed." });
           }
         },
+        icon:
+          code === "REJECT" ? XCircle :
+          code.includes("CANCEL") || code.includes("DELETE") ? Trash2 :
+          code.includes("SEND") || code.includes("FORWARD") ? ArrowRightToLine :
+          code.includes("BACK") || code.includes("RETURN") ? ArrowLeftCircle :
+          code.includes("APPROVAL") || code === "QA_PRESIDENT_APPROVE" || code === "OFFICE_PRESIDENT_APPROVE" ? CheckCircle2 :
+          code.includes("REGISTER") ? Hash :
+          code.includes("DISTRIBUTE") ? Share2 :
+          code.includes("FINALIZATION") ? Play :
+          code.includes("APPROVAL") ? Layers :
+          code === "REPLACE_FILE" ? RotateCcw :
+          undefined
       };
     };
 
