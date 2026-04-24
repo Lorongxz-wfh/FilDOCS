@@ -204,4 +204,13 @@
   .animate-pulse-highlight {
     animation: var(--animate-pulse-highlight);
   }
-}@layer utilities { .font-body { font-family: 'Inter', sans-serif !important; } }
+
+  .font-display {
+    font-family: "Inter", system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities { 
+  .font-body { font-family: 'Inter', sans-serif !important; } 
+}

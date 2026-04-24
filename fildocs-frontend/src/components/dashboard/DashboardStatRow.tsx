@@ -125,7 +125,7 @@ const DashboardStatRow: React.FC<Props> = ({
             onClick={item.onClick}
             className={`
               transition-all duration-200 min-h-0 ${mobileColSpan} sm:col-span-1
-              ${isActionNeeded && item.value > 0 ? "ring-1 ring-rose-500/20 bg-rose-50/15 dark:ring-rose-500/40 dark:bg-rose-500/5 border-rose-200 dark:border-rose-900/50" : ""}
+              ${isActionNeeded && item.value > 0 ? "ring-1 ring-rose-500/20 bg-rose-50/15 dark:ring-rose-500/40 dark:bg-rose-500/5 border-rose-200 dark:border-rose-900/50" : "border-neutral-200/60 dark:border-surface-400"}
               ${isPulsing ? "animate-pulse-highlight ring-emerald-500/30" : ""}
             `}
           >
@@ -133,7 +133,7 @@ const DashboardStatRow: React.FC<Props> = ({
               <div className="flex flex-col gap-1.5 sm:gap-2">
                 <div className="flex items-center gap-2">
                   <span className={`shrink-0 ${item.iconColor} sm:scale-110`}>{item.icon}</span>
-                  <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+                  <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 truncate">
                     {item.label}
                   </p>
                 </div>
@@ -142,7 +142,7 @@ const DashboardStatRow: React.FC<Props> = ({
                   {loading ? (
                     <Skeleton className="h-6 w-10 sm:h-8 sm:w-16" />
                   ) : (
-                    <p className={`text-xl sm:text-3xl font-semibold tabular-nums leading-none transition-transform duration-300 ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
+                    <p className={`text-xl sm:text-3xl font-display font-semibold tabular-nums leading-none transition-transform duration-300 ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
                       {item.value}
                     </p>
                   )}

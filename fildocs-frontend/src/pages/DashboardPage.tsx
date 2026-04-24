@@ -596,13 +596,13 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="min-h-0 flex flex-1 flex-col overflow-hidden">
       {/* ── Page header ── */}
-      <div className="shrink-0 border-b border-slate-200 bg-slate-50 dark:border-surface-400 dark:bg-surface-600 px-4 sm:px-5 py-3 sm:py-3.5">
+      <div className="shrink-0 border-b border-neutral-200/60 bg-neutral-50 dark:border-surface-400 dark:bg-surface-600 px-4 sm:px-5 py-3 sm:py-3.5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 leading-none">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-neutral-400 dark:text-neutral-500 leading-none">
               {today}
             </p>
-            <h1 className="mt-1 text-sm sm:text-base font-display font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate">
+            <h1 className="mt-1.5 text-sm sm:text-base font-display font-semibold text-neutral-900 dark:text-neutral-50 leading-tight truncate">
               {greeting}<span className="hidden sm:inline">, {firstName}</span>
             </h1>
           </div>
@@ -620,7 +620,7 @@ const DashboardPage: React.FC = () => {
       </div>
 
       {/* ── Scrollable body ── */}
-      <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-surface-600/50">
+      <div className="flex-1 overflow-y-auto bg-neutral-50/50 dark:bg-surface-600/50">
         <div className="px-3.5 sm:px-5 py-4 space-y-3.5 sm:space-y-4">
           {isAdmin ? (
             <AdminDashboard {...dashData} navigate={navigate} announcements={announcements} />

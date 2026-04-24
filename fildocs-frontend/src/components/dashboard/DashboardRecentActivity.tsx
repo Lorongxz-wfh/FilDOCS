@@ -33,44 +33,44 @@ const getEventMeta = (event: string): EventMeta => {
   const e = event.toLowerCase();
   if (e.includes("approved") || e.includes("approval"))
     return {
-      icon: <CheckCircle2 className="h-3.5 w-3.5" />,
+      icon: <CheckCircle2 className="h-3 w-3" />,
       bg: "bg-emerald-50 dark:bg-emerald-950/40",
       text: "text-emerald-600 dark:text-emerald-400",
     };
   if (e.includes("rejected") || e.includes("reject"))
     return {
-      icon: <XCircle className="h-3.5 w-3.5" />,
+      icon: <XCircle className="h-3 w-3" />,
       bg: "bg-rose-50 dark:bg-rose-950/40",
       text: "text-rose-600 dark:text-rose-400",
     };
   if (e.includes("returned") || e.includes("return"))
     return {
-      icon: <CornerUpLeft className="h-3.5 w-3.5" />,
+      icon: <CornerUpLeft className="h-3 w-3" />,
       bg: "bg-amber-50 dark:bg-amber-950/40",
       text: "text-amber-600 dark:text-amber-400",
     };
   if (e.includes("distributed") || e.includes("distribute"))
     return {
-      icon: <Share2 className="h-3.5 w-3.5" />,
+      icon: <Share2 className="h-3 w-3" />,
       bg: "bg-sky-50 dark:bg-sky-950/40",
       text: "text-sky-600 dark:text-sky-400",
     };
   if (e.includes("registered") || e.includes("register"))
     return {
-      icon: <BookMarked className="h-3.5 w-3.5" />,
+      icon: <BookMarked className="h-3 w-3" />,
       bg: "bg-violet-50 dark:bg-violet-950/40",
       text: "text-violet-600 dark:text-violet-400",
     };
   if (e.includes("submitted") || e.includes("submit"))
     return {
-      icon: <Send className="h-3.5 w-3.5" />,
+      icon: <Send className="h-3 w-3" />,
       bg: "bg-brand-50 dark:bg-brand-950/30",
       text: "text-brand-600 dark:text-brand-400",
     };
   return {
-    icon: <Activity className="h-3.5 w-3.5" />,
-    bg: "bg-slate-100 dark:bg-surface-400",
-    text: "text-slate-500 dark:text-slate-400",
+    icon: <Activity className="h-3 w-3" />,
+    bg: "bg-neutral-100 dark:bg-surface-400",
+    text: "text-neutral-500 dark:text-neutral-400",
   };
 };
 
@@ -112,9 +112,9 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
       />
 
       <CardBody noPadding className="relative min-h-[300px]">
-        <div className={`p-4 space-y-2.5 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"}`}>
+        <div className={`p-4 space-y-3 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"}`}>
           {loading && !hasData ? (
-            <SkeletonList variant="activity" rows={4} className="divide-y divide-slate-100 dark:divide-surface-400" />
+            <SkeletonList variant="activity" rows={4} className="divide-y divide-neutral-100 dark:divide-surface-400" />
           ) : logs.length === 0 ? (
             <EmptyState
               label="No recent activity"
@@ -122,7 +122,7 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
               className="py-10"
             />
           ) : (
-            <div className="space-y-2.5">
+            <div className="space-y-3.5">
               {logs.slice(0, 10).map((log, idx) => {
                 const meta = getEventMeta(log.event);
 
@@ -151,30 +151,28 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
                   <div
                     key={log.id}
                     onClick={isClickable ? handleLogClick : undefined}
-                    className={`flex items-start gap-3 group/item ${isRecentlyAdded(log.id) ? "animate-live-entry" : ""} ${isClickable ? "cursor-pointer" : ""}`}
+                    className={`flex items-start gap-3.5 group/item ${isRecentlyAdded(log.id) ? "animate-live-entry" : ""} ${isClickable ? "cursor-pointer" : ""}`}
                     style={{ animationDelay: `${idx * 50}ms` }}
                   >
-                    <div className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-slate-100 dark:border-surface-400/30 bg-white dark:bg-surface-500 ${meta.text}  transition-transform group-hover/item:scale-110`}>
-                      <div className="scale-75">
-                         {meta.icon}
-                      </div>
+                    <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded border border-neutral-200/60 dark:border-surface-400/30 bg-white dark:bg-surface-500 ${meta.text} transition-all group-hover/item:border-brand-300 dark:group-hover/item:border-brand-500 shadow-sm`}>
+                       {meta.icon}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className={`text-[12px] font-bold uppercase tracking-tight leading-tight transition-colors ${isClickable ? "text-slate-800 dark:text-slate-100 group-hover/item:text-sky-600 dark:group-hover/item:text-sky-400" : "text-slate-600 dark:text-slate-300"}`}>
+                      <p className={`text-[11px] font-bold uppercase tracking-widest leading-none transition-colors ${isClickable ? "text-neutral-900 dark:text-neutral-50 group-hover/item:text-brand-500" : "text-neutral-600 dark:text-neutral-300"}`}>
                         {friendlyEvent(log.event)}
                       </p>
 
-                      <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium overflow-hidden">
-                        <span className="shrink-0 font-semibold text-slate-600 dark:text-slate-300">
+                      <div className="flex items-center gap-1.5 mt-1.5 text-[10px] sm:text-[11px] text-neutral-500 dark:text-neutral-400 font-medium overflow-hidden">
+                        <span className="shrink-0 font-semibold text-neutral-700 dark:text-neutral-300">
                           {actorName}
                         </span>
-                        <span className="shrink-0 opacity-40">|</span>
+                        <span className="shrink-0 opacity-40">/</span>
                         <span className="truncate max-w-[50%]">
                           {targetName}
                         </span>
-                        <span className="shrink-0 opacity-40">|</span>
-                        <span className="tabular-nums whitespace-nowrap opacity-80">
+                        <span className="shrink-0 opacity-40">/</span>
+                        <span className="tabular-nums whitespace-nowrap opacity-80 font-mono">
                           {formatRelative(log.created_at)}
                         </span>
                       </div>
@@ -193,7 +191,7 @@ const DashboardRecentActivity: React.FC<Props> = ({ logs, loading, hasData }) =>
               <button
                 type="button"
                 onClick={() => navigate("/activity-logs")}
-                className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 rounded text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider  hover:bg-slate-50 dark:hover:bg-surface-400 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200/80 dark:border-surface-400 bg-white dark:bg-surface-500 rounded text-[10px] font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider hover:bg-neutral-50 dark:hover:bg-surface-400 transition-all active:scale-95 shadow-sm"
               >
                 View full activity
               </button>

@@ -32,7 +32,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
       <CardBody noPadding className="relative min-h-[240px]">
         <div
           key={items.length} 
-          className={`divide-y divide-slate-100 dark:divide-surface-400 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"}`}
+          className={`divide-y divide-neutral-200/60 dark:divide-surface-400 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"}`}
         >
           {loading && !hasData ? (
             <div className="flex flex-col h-full bg-white dark:bg-surface-500">
@@ -42,14 +42,14 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
             </div>
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-4 animate-in fade-in duration-500">
-              <div className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/40">
-                <CheckCircle className="h-4.5 w-4.5 text-emerald-500" />
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50">
+                <CheckCircle className="h-5 w-5 text-emerald-500" />
               </div>
-              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-50">
                 All caught up
               </p>
-              <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500 italic">
-                No pending actions right now.
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500 italic">
+                No pending actions requiring attention.
               </p>
             </div>
           ) : (
@@ -71,17 +71,17 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
                   type="button"
                   onClick={handleClick}
                   style={{ animationDelay: `${i * 40}ms` }}
-                  className="flex w-full items-center gap-2.5 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 t-left transition-colors hover:bg-slate-50 dark:hover:bg-surface-400 min-w-0 animate-live-entry fill-mode-backwards"
+                  className="flex w-full items-center gap-2.5 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 t-left transition-colors hover:bg-neutral-50 dark:hover:bg-surface-400 min-w-0 animate-live-entry fill-mode-backwards"
                 >
-                  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border border-slate-100 dark:border-surface-400 ${isRequest ? 'bg-amber-50 dark:bg-amber-950/30' : 'bg-slate-100/50 dark:bg-surface-400'}`}>
-                    <Icon className={`h-3 w-3 ${isRequest ? 'text-amber-500' : 'text-slate-500 dark:text-slate-400'}`} />
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded border border-neutral-200/60 dark:border-surface-300 ${isRequest ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-500' : 'bg-neutral-50 dark:bg-surface-400 text-neutral-500 dark:text-neutral-400'}`}>
+                    <Icon className="h-3.5 w-3.5" />
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-tight">
+                    <p className="truncate text-[13px] font-semibold text-neutral-900 dark:text-neutral-50 leading-tight">
                       {x.title}
                     </p>
-                    <p className="mt-0.5 truncate text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-mono">
+                    <p className="mt-0.5 truncate text-[10px] sm:text-[11px] text-neutral-400 dark:text-neutral-500 font-mono">
                       {x.type === "document" ? (x.code || (x.item as any)?.document?.reserved_code || "—") : (x.code || "—")}
                       {x.type === "document" && x.item?.version?.version_number !== undefined && (
                         <> · v{x.item.version.version_number}</>
@@ -103,7 +103,7 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
               <button
                 type="button"
                 onClick={() => navigate("/work-queue")}
-                className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 rounded text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider  hover:bg-slate-50 dark:hover:bg-surface-400 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200/80 dark:border-surface-400 bg-white dark:bg-surface-500 rounded text-[10px] font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider hover:bg-neutral-50 dark:hover:bg-surface-400 transition-all active:scale-95 shadow-sm"
               >
                 View all pending
               </button>
