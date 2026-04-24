@@ -4,17 +4,9 @@ import { clearAuthAndRedirect } from "../lib/auth";
 // Smart Environment Detection: 
 // Automatically uses localhost:8001 when running locally, 
 // and the production Render URL when deployed.
-const getBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_BASE_URL;
-  if (envUrl) {
-    return envUrl.endsWith("/api") ? envUrl : `${envUrl}/api`;
-  }
-  
-  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  return isLocal ? "http://localhost:8001/api" : "https://fildas-v2.onrender.com/api";
-};
+import { API_BASE } from "./config";
 
-const BASE_URL = getBaseUrl();
+const BASE_URL = API_BASE;
 
 const api = axios.create({
   baseURL: BASE_URL,

@@ -15,8 +15,8 @@ export async function getApi(): Promise<ApiClient> {
   return mod.default;
 }
 
-export const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string) || "http://127.0.0.1:8001/api";
+import { API_BASE } from "./config";
+export { API_BASE };
 
 export function normalizePaginated<T>(payload: any): Paginated<T> {
   const emptyMeta = { current_page: 1, last_page: 1, per_page: 25, total: 0 };
