@@ -667,15 +667,12 @@ const WorkflowPage: React.FC = () => {
                             a.variant === "outline" ? "outline" : "primary"
                       }
                       disabled={isBusy || a.disabled}
+                      loading={isThis}
                       onClick={() => handleHeaderActionClick(a)}
                       tooltip={a.label}
                     >
-                      {isThis ? (
-                        <Loader2 className="animate-spin h-3.5 w-3.5" />
-                      ) : (
-                        Icon ? <Icon className="h-3.5 w-3.5" /> : null
-                      )}
-                      <span>{a.label.split(" ")[0]}</span>
+                      {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+                      <span>{a.label}</span>
                     </Button>
                   );
                 })}
@@ -707,6 +704,8 @@ const WorkflowPage: React.FC = () => {
                             ? "danger"
                             : "outline"
                       }
+                      reveal
+                      loading={isThisActionBusy}
                       onClick={async () => {
                         setProcessingVersionAction(a.key);
                         try {
@@ -723,12 +722,8 @@ const WorkflowPage: React.FC = () => {
                       }
                       tooltip={a.label}
                     >
-                      {isThisActionBusy ? (
-                        <Loader2 className="animate-spin h-3.5 w-3.5" />
-                      ) : (
-                        Icon ? <Icon className="h-3.5 w-3.5" /> : null
-                      )}
-                      <span>{a.label.split(" ")[0]}</span>
+                      {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+                      <span>{a.label}</span>
                     </Button>
                   );
                 })}

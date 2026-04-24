@@ -42,7 +42,8 @@ import {
   Share2,
   Play,
   Layers,
-  RotateCcw
+  RotateCcw,
+  FileDown
 } from "lucide-react";
 
 
@@ -721,6 +722,7 @@ export function useWorkflowUI({
         key: "download",
         label: "Download",
         variant: "outline",
+        icon: FileDown,
         disabled: workflow.isChangingStatus || signingInBackground || removingSignature || fileUpload.isUploading,
         onClick: async () => {
           try {
@@ -737,6 +739,7 @@ export function useWorkflowUI({
         key: "delete_draft",
         label: "Delete draft",
         variant: "danger",
+        icon: Trash2,
         disabled: workflow.isChangingStatus || signingInBackground || removingSignature || fileUpload.isUploading,
         onClick: async () => setPendingDelete("draft"),
       });

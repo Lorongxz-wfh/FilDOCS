@@ -194,12 +194,12 @@ const LoginPage: React.FC = () => {
         </button>
 
         {/* Card container */}
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-6 lg:py-10 flex items-stretch justify-center">
+        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-4 lg:py-8 flex items-stretch justify-center">
           {/* ── Left panel ───────────────────────────────────────────────────── */}
           <div className="hidden lg:flex flex-col justify-between w-[430px] rounded-3xl rounded-r-none bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 text-white p-9 shadow-2xl">
             <div>
               {/* Institutional Header (Horizontal) */}
-              <div className="flex items-start gap-4 mb-8 lg:mb-12">
+              <div className="flex items-start gap-4 mb-6 lg:mb-8">
                 <div className="h-16 w-16 overflow-hidden rounded-2xl border border-white/25 bg-white/20 backdrop-blur-md shadow-lg shadow-blue-900/10 shrink-0">
                   <img
                     src={logoUrl}
@@ -220,23 +220,23 @@ const LoginPage: React.FC = () => {
               </div>
 
               {/* Brand Section */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <h1 className="text-[4.5rem] font-display font-semibold tracking-tighter text-white leading-none">
                   FilDOCS
                 </h1>
-                <p className="text-xl font-display font-semibold text-blue-200 mt-2">
+                <p className="text-lg font-display font-semibold text-blue-200 mt-1">
                   Filamer Document Operations and Control System
                 </p>
               </div>
 
               {/* Hero & Features */}
               <div>
-                <p className="text-sm text-blue-100/90 leading-relaxed max-w-[320px] mb-8 font-medium">
+                <p className="text-sm text-blue-100/90 leading-relaxed max-w-[320px] mb-6 font-medium">
                   A centralized workflow system built for seamless review,
                   tracking, and institutional accountability.
                 </p>
 
-                <ul className="space-y-4">
+                <ul className="space-y-3">
                   {features.map((f) => (
                     <li key={f} className="flex items-center gap-3.5">
                       <div className="shrink-0 h-6 w-6 rounded-md bg-white/15 backdrop-blur-sm flex items-center justify-center">
@@ -258,7 +258,7 @@ const LoginPage: React.FC = () => {
           </div>
 
           {/* ── Right panel ──────────────────────────────────────────────────── */}
-          <div className="w-full max-w-sm lg:max-w-none lg:w-[390px] rounded-3xl lg:rounded-l-none bg-white dark:bg-surface-500 shadow-2xl px-10 py-8 lg:py-10 flex flex-col justify-center">
+          <div className="w-full max-w-sm lg:max-w-none lg:w-[390px] rounded-3xl lg:rounded-l-none bg-white dark:bg-surface-500 shadow-2xl px-10 py-6 lg:py-8 flex flex-col justify-center">
             {/* Mobile logo */}
             <div className="flex lg:hidden items-center justify-center mb-8">
               <div className="h-14 w-14 overflow-hidden rounded-md border border-slate-200 bg-white">
@@ -273,7 +273,7 @@ const LoginPage: React.FC = () => {
             <h2 className="text-[1.6rem] font-display font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               {showChallenge ? "Two-Factor Verification" : "Sign In"}
             </h2>
-            <p className="mt-1 text-sm text-slate-400 dark:text-slate-400">
+            <p className="mt-0.5 text-sm text-slate-400 dark:text-slate-400">
               {showChallenge 
                 ? (isRecovery ? "Enter a backup recovery code to access your account." : "Enter the 6-digit code from your authenticator app.") 
                 : "Enter your credentials to access your portal."}
@@ -305,7 +305,7 @@ const LoginPage: React.FC = () => {
             )}
 
             {!showChallenge ? (
-              <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 {/* Email */}
                 <FormField
                   label="Institutional Email"
@@ -461,7 +461,7 @@ const LoginPage: React.FC = () => {
               </form>
             )}
 
-            <p className="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
+            <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
               New to FilDOCS?{" "}
               <span className="font-semibold text-slate-600 dark:text-slate-300">
                 Contact System Administrator
