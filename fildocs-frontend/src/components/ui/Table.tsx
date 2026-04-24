@@ -247,7 +247,7 @@ export default function Table<T>({
                   onClick={() => onSortChange!(c.sortKey!, nextDir)}
                   className={[
                     headerBaseClass,
-                    "w-full gap-1 transition-colors select-none",
+                    "w-full gap-1 transition-colors select-none py-1.5", // Added vertical padding
                     isActive
                       ? "text-neutral-900 dark:text-surface-50"
                       : "hover:text-neutral-900 dark:hover:text-surface-50",
@@ -476,7 +476,7 @@ export default function Table<T>({
                         {c.key === 'expand' ? (
                            <button 
                              onClick={(e) => { e.stopPropagation(); toggleExpand(key); }}
-                             className="p-1 rounded hover:bg-slate-100 dark:hover:bg-surface-400 transition-colors"
+                             className="p-2 rounded hover:bg-slate-100 dark:hover:bg-surface-400 transition-colors" // Increased from p-1
                            >
                              <svg 
                                className={`h-4 w-4 transition-transform ${expandedIds.has(key) ? "rotate-180" : ""}`} 

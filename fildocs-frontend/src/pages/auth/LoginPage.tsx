@@ -182,13 +182,14 @@ const LoginPage: React.FC = () => {
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url(/login_bg.png)" }}
         />
-        <div className="absolute inset-0 bg-slate-900/45 backdrop-blur-[2px]" />
+        {/* Background Overlay - Institutional Tint */}
+        <div className="absolute inset-0 bg-neutral-900/45 backdrop-blur-[1px]" />
 
         {/* Dark mode toggle */}
         <button
           type="button"
           onClick={toggleDark}
-          className="absolute top-4 right-4 z-20 flex items-center justify-center h-8 w-8 rounded-md bg-white/10 hover:bg-white/20 border border-white/20 text-white backdrop-blur-sm transition"
+          className="absolute top-4 right-4 z-20 flex items-center justify-center h-8 w-8 rounded-md bg-brand-500/10 hover:bg-brand-500/20 border border-brand-400/20 text-white backdrop-blur-sm transition"
         >
           {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
         </button>
@@ -196,11 +197,11 @@ const LoginPage: React.FC = () => {
         {/* Card container */}
         <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-4 lg:py-8 flex items-stretch justify-center">
           {/* ── Left panel ───────────────────────────────────────────────────── */}
-          <div className="hidden lg:flex flex-col justify-between w-[430px] rounded-3xl rounded-r-none bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 text-white p-9 shadow-2xl">
+          <div className="hidden lg:flex flex-col justify-between w-[430px] rounded-l-lg bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white p-9 border border-brand-600/50 border-r-0 shadow-xl shadow-brand-900/10">
             <div>
               {/* Institutional Header (Horizontal) */}
               <div className="flex items-start gap-4 mb-6 lg:mb-8">
-                <div className="h-16 w-16 overflow-hidden rounded-2xl border border-white/25 bg-white/20 backdrop-blur-md shadow-lg shadow-blue-900/10 shrink-0">
+                <div className="h-16 w-16 overflow-hidden rounded-lg border border-white/20 bg-white/10 backdrop-blur-md shrink-0">
                   <img
                     src={logoUrl}
                     alt="FCU Logo"
@@ -211,7 +212,7 @@ const LoginPage: React.FC = () => {
                   <h3 className="text-[15.6px] font-display font-black uppercase tracking-tight leading-none text-white">
                     Filamer Christian University, Inc.
                   </h3>
-                  <p className="text-[11px] text-blue-100/80 leading-tight mt-2 font-medium">
+                  <p className="text-[11px] text-brand-100/80 leading-tight mt-2 font-medium">
                     Roxas Avenue, Roxas City, Capiz, Philippines
                     <br />
                     Quality Assurance Office
@@ -224,14 +225,14 @@ const LoginPage: React.FC = () => {
                 <h1 className="text-[4.5rem] font-display font-semibold tracking-tighter text-white leading-none">
                   FilDOCS
                 </h1>
-                <p className="text-lg font-display font-semibold text-blue-200 mt-1">
+                <p className="text-lg font-display font-semibold text-brand-200 mt-1">
                   Filamer Document Operations and Control System
                 </p>
               </div>
 
               {/* Hero & Features */}
               <div>
-                <p className="text-sm text-blue-100/90 leading-relaxed max-w-[320px] mb-6 font-medium">
+                <p className="text-sm text-brand-100/90 leading-relaxed max-w-[320px] mb-6 font-medium">
                   A centralized workflow system built for seamless review,
                   tracking, and institutional accountability.
                 </p>
@@ -240,7 +241,7 @@ const LoginPage: React.FC = () => {
                   {features.map((f) => (
                     <li key={f} className="flex items-center gap-3.5">
                       <div className="shrink-0 h-6 w-6 rounded-md bg-white/15 backdrop-blur-sm flex items-center justify-center">
-                        <CheckCircle2 size={13} className="text-blue-200" />
+                        <CheckCircle2 size={13} className="text-brand-200" />
                       </div>
                       <span className="text-[13px] font-semibold tracking-tight text-white/95">
                         {f}
@@ -252,16 +253,16 @@ const LoginPage: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <p className="text-[9px] mt-4 font-semibold text-blue-300/60 uppercase tracking-widest">
+            <p className="text-[9px] mt-4 font-semibold text-brand-300/60 uppercase tracking-widest">
               Filamer Christian University • Quality Assurance Office
             </p>
           </div>
 
           {/* ── Right panel ──────────────────────────────────────────────────── */}
-          <div className="w-full max-w-sm lg:max-w-none lg:w-[390px] rounded-3xl lg:rounded-l-none bg-white dark:bg-surface-500 shadow-2xl px-10 py-6 lg:py-8 flex flex-col justify-center">
+          <div className="w-full max-w-sm lg:max-w-none lg:w-[390px] rounded-lg lg:rounded-l-none bg-white dark:bg-surface-500 border border-neutral-200 dark:border-surface-400 shadow-xl shadow-neutral-900/5 px-6 lg:px-10 py-6 lg:py-8 flex flex-col justify-center">
             {/* Mobile logo */}
             <div className="flex lg:hidden items-center justify-center mb-8">
-              <div className="h-14 w-14 overflow-hidden rounded-md border border-slate-200 bg-white">
+              <div className="h-14 w-14 overflow-hidden rounded-md border border-neutral-200 bg-white">
                 <img
                   src={logoUrl}
                   alt="FCU Logo"
@@ -270,10 +271,10 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            <h2 className="text-[1.6rem] font-display font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <h2 className="text-[1.6rem] font-display font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
               {showChallenge ? "Two-Factor Verification" : "Sign In"}
             </h2>
-            <p className="mt-0.5 text-sm text-slate-400 dark:text-slate-400">
+            <p className="mt-0.5 text-sm text-neutral-400 dark:text-neutral-400">
               {showChallenge 
                 ? (isRecovery ? "Enter a backup recovery code to access your account." : "Enter the 6-digit code from your authenticator app.") 
                 : "Enter your credentials to access your portal."}

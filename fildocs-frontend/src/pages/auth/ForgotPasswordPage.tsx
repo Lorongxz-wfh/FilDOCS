@@ -61,10 +61,10 @@ const ForgotPasswordPage: React.FC = () => {
       {/* Card container */}
       <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-10 flex items-stretch justify-center">
         {/* ── Left panel ───────────────────────────────────────────────────── */}
-        <div className="hidden lg:flex flex-col justify-between w-[430px] rounded-3xl rounded-r-none bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 text-white p-9 shadow-2xl">
+        <div className="hidden lg:flex flex-col justify-between w-[430px] rounded-l-lg bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 text-white p-9 border border-blue-600/50 border-r-0 shadow-xl shadow-blue-900/10">
           <div>
             <div className="flex items-center gap-3 mb-10">
-              <div className="h-11 w-11 overflow-hidden rounded-md border border-white/25 bg-white/15 backdrop-blur-sm shrink-0">
+              <div className="h-11 w-11 overflow-hidden rounded-md border border-white/20 bg-white/10 backdrop-blur-sm shrink-0">
                 <img
                   src={logoUrl}
                   alt="FCU Logo"
@@ -72,7 +72,7 @@ const ForgotPasswordPage: React.FC = () => {
                 />
               </div>
               <div className="leading-tight">
-                <div className="text-base font-semibold tracking-tight text-brand-600 dark:text-brand-400">FilDOCS</div>
+                <div className="text-base font-semibold tracking-tight text-white">FilDOCS</div>
                 <div className="text-[11px] uppercase tracking-wide text-blue-200 font-medium">
                   Quality Assurance
                 </div>
@@ -111,7 +111,7 @@ const ForgotPasswordPage: React.FC = () => {
         </div>
 
         {/* ── Right panel ──────────────────────────────────────────────────── */}
-        <div className="w-full max-w-sm lg:max-w-none lg:w-[390px] rounded-3xl lg:rounded-l-none bg-white dark:bg-surface-500 shadow-2xl px-10 py-12 flex flex-col justify-center">
+        <div className="w-full max-w-sm lg:max-w-none lg:w-[390px] rounded-lg lg:rounded-l-none bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 shadow-xl shadow-slate-900/5 px-10 py-12 flex flex-col justify-center">
           {/* Mobile logo */}
           <div className="flex lg:hidden items-center justify-center mb-8">
             <div className="h-14 w-14 overflow-hidden rounded-md border border-slate-200 bg-white">

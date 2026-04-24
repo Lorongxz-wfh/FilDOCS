@@ -52,7 +52,7 @@ export default function MaintenancePage() {
         <div className="flex justify-center mb-8">
            <div className="relative">
               <div className="absolute inset-0 scale-150 bg-brand-500/10 blur-xl rounded-full animate-pulse" />
-              <div className="relative h-20 w-20 rounded-3xl bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 shadow-2xl flex items-center justify-center text-brand-500">
+              <div className="relative h-20 w-20 rounded-lg bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 shadow-xl shadow-slate-900/5 flex items-center justify-center text-brand-500">
                 <ShieldAlert size={40} strokeWidth={1.5} />
               </div>
            </div>
@@ -65,7 +65,7 @@ export default function MaintenancePage() {
         
         <div className="mx-auto w-20 h-1 bg-brand-500 rounded-full mb-8" />
 
-        <div className="bg-white dark:bg-surface-500 rounded-2xl border border-slate-200 dark:border-surface-400 p-8 shadow-2xl shadow-slate-200/50 dark:shadow-none">
+        <div className="bg-white dark:bg-surface-500 rounded-lg border border-slate-200 dark:border-surface-400 p-8 shadow-xl shadow-slate-200/50 dark:shadow-none">
           <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium mb-8">
             {reason}
           </p>

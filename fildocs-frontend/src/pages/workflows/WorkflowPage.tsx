@@ -59,7 +59,7 @@ const WorkflowSkeleton: React.FC<{ onBack: () => void }> = ({ onBack }) => (
     rightHeader={<Skeleton className="h-8 w-32 rounded-md" />}
     left={
       <div className="space-y-6">
-        <div className="flex items-center gap-4 border-b border-slate-100 dark:border-surface-400 pb-4">
+        <div className="flex items-center gap-4 border-b border-neutral-200/60 dark:border-surface-400 pb-4">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-4 w-24" />
@@ -88,7 +88,7 @@ const WorkflowSkeleton: React.FC<{ onBack: () => void }> = ({ onBack }) => (
             ))}
           </div>
         </div>
-        <div className="flex-1 min-h-0 border-t border-slate-100 dark:border-surface-400 pt-6">
+        <div className="flex-1 min-h-0 border-t border-neutral-200/60 dark:border-surface-400 pt-6">
           <Skeleton className="h-40 w-full" />
         </div>
       </div>
@@ -529,14 +529,14 @@ const WorkflowPage: React.FC = () => {
       (error ?? "").toLowerCase().includes("could not be found");
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/30 text-rose-400 dark:text-rose-500">
+        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-rose-50 dark:bg-rose-950/30 text-rose-400 dark:text-rose-500">
           <FileX className="h-8 w-8" />
         </div>
         <div className="space-y-1">
-          <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">
+          <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-50">
             {isNotFound ? "Document not found" : "Failed to load document"}
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">
             {error ??
               "This document doesn't exist or you may not have access to it."}
           </p>
@@ -568,7 +568,7 @@ const WorkflowPage: React.FC = () => {
                 <Skeleton className="h-4 w-48 mt-0.5" />
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="min-w-0 whitespace-normal wrap-break-word font-semibold text-slate-800 dark:text-white leading-snug">
+                  <span className="min-w-0 whitespace-normal wrap-break-word font-semibold text-neutral-900 dark:text-white leading-snug">
                     {headerState?.title ?? document?.title}
                   </span>
                 </div>
@@ -735,7 +735,7 @@ const WorkflowPage: React.FC = () => {
         left={
           <div className="relative">
             {pendingUploadPct !== null && (
-              <div className="mb-3 w-full rounded-md border-l-4 border-brand-400 dark:border-brand-300 bg-slate-50 dark:bg-surface-400 px-4 py-2.5 flex items-center gap-4">
+              <div className="mb-3 w-full rounded-md border-l-4 border-brand-400 dark:border-brand-300 bg-neutral-50 dark:bg-surface-400 px-4 py-2.5 flex items-center gap-4">
                 <div className="flex items-center gap-2 shrink-0">
                   <Loader2 className="animate-spin h-3.5 w-3.5 text-brand-400 dark:text-brand-300" />
                   <span className="text-xs font-medium text-brand-600 dark:text-brand-300">

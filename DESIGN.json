@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-04-24T17:01:40Z",
+  "title": "Design System: FilDOCS",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "FCU Sky Blue",
+        "canonical": "#0ea5e9",
+        "tonalRamp": ["#082f49", "#0c4a6e", "#075985", "#0369a1", "#0284c7", "#0ea5e9", "#38bdf8", "#7dd3fc", "#bae6fd", "#e0f2fe", "#f0f9ff"]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Night Slate",
+        "canonical": "#0d1117",
+        "tonalRamp": ["#010409", "#0d1117", "#161b22", "#21262d", "#30363d", "#8b949e", "#c9d1d9", "#f0f6fc"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display Header", "purpose": "Main page titles and branding." },
+      "body": { "displayName": "Body Text", "purpose": "General interface text and document content." }
+    },
+    "shadows": [
+      { "name": "elevated", "value": "0 4px 12px rgba(0,0,0,0.1)", "purpose": "Used for floating overlays like dropdowns and modals." }
+    ],
+    "motion": [
+      { "name": "standard-ease", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "General transitions." },
+      { "name": "sharp-pop", "value": "cubic-bezier(0, 0, 0.2, 1)", "purpose": "Quick entry animations." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The main action button used throughout the system.",
+      "html": "<button class=\"ds-btn-primary\">CONTINUE</button>",
+      "css": ".ds-btn-primary { background: #0ea5e9; color: #ffffff; padding: 10px 32px; border: 1px solid #0284c7; border-radius: 6px; font-weight: 600; font-family: 'Inter', sans-serif; font-size: 14px; cursor: pointer; transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: #0284c7; transform: translateY(-1px); } .ds-btn-primary:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Low-emphasis action used for secondary tasks.",
+      "html": "<button class=\"ds-btn-ghost\">CANCEL</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #64748b; padding: 10px 32px; border: none; border-radius: 6px; font-weight: 600; font-family: 'Inter', sans-serif; font-size: 14px; cursor: pointer; transition: all 150ms; } .ds-btn-ghost:hover { background: rgba(0,0,0,0.05); color: #0f172a; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Institutional Ledger",
+    "overview": "FilDOCS is designed as a high-integrity, modern productivity tool. Every element must feel grounded, precise, and reliable.",
+    "keyCharacteristics": [
+      "Border-First Hierarchy",
+      "High Information Density",
+      "Surgical Typography",
+      "FCU Identity"
+    ],
+    "rules": [
+      { "name": "The 10% Accent Rule", "body": "Primary accent color is used on ≤10% of any screen.", "section": "colors" },
+      { "name": "The Border-over-Shadow Rule", "body": "Use 1px borders for structure; shadows only for floating overlays.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use tabular-nums for all dates and quantities.",
+      "Do use stroke-width: 2.25px for all icons.",
+      "Do prioritize a dense, functional layout."
+    ],
+    "donts": [
+      "Don't use rounded-3xl or oversized radii.",
+      "Don't use purple or pink accents.",
+      "Don't use vibe-coded soft shadows for separation."
+    ]
+  }
+}

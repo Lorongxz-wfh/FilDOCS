@@ -95,7 +95,7 @@ const ForcePasswordChangePage: React.FC = () => {
       </button>
 
       <div className="relative z-10 w-full max-w-md mx-auto px-4 py-10">
-        <div className="rounded-3xl bg-white dark:bg-surface-500 shadow-2xl px-10 py-12 flex flex-col">
+        <div className="rounded-lg bg-white dark:bg-surface-500 border border-slate-200 dark:border-surface-400 shadow-xl shadow-slate-900/5 px-10 py-12 flex flex-col">
           {/* Logo */}
           <div className="flex items-center justify-center mb-8">
             <div className="h-14 w-14 overflow-hidden rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600">
