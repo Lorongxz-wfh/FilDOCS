@@ -3,7 +3,7 @@ import Skeleton from "./Skeleton";
 import TableSkeleton from "./TableSkeleton";
 
 export interface ChartSkeletonProps {
-  type?: "bar" | "line" | "pie" | "donut" | "funnel" | "table";
+  type?: "bar" | "bar-horizontal" | "line" | "pie" | "donut" | "funnel" | "table";
   showLegend?: boolean;
   showTitle?: boolean;
   height?: string | number;
@@ -30,7 +30,7 @@ export const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
         </div>
       )}
 
-      <div className="flex-1 relative overflow-hidden rounded-md border border-slate-100 dark:border-surface-400 bg-slate-50/30 dark:bg-surface-600/20 p-4">
+      <div className="flex-1 relative overflow-hidden rounded-lg border border-neutral-200/60 dark:border-surface-400 bg-neutral-50/30 dark:bg-surface-600/20 p-4">
         {/* Shimmer Area */}
         <div className="h-full w-full flex items-end gap-3 justify-around pt-4">
           {type === "bar" && (
@@ -42,6 +42,15 @@ export const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
               <Skeleton className="w-[12%] h-[60%]" />
               <Skeleton className="w-[12%] h-[45%]" />
             </>
+          )}
+          {type === "bar-horizontal" && (
+            <div className="w-full flex flex-col gap-3 justify-center">
+              <Skeleton className="h-4 w-[40%]" />
+              <Skeleton className="h-4 w-[70%]" />
+              <Skeleton className="h-4 w-[50%]" />
+              <Skeleton className="h-4 w-[85%]" />
+              <Skeleton className="h-4 w-[60%]" />
+            </div>
           )}
           {type === "line" && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -56,8 +65,8 @@ export const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
           )}
           {(type === "pie" || type === "donut") && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className={`rounded-full border-[15px] border-slate-200/50 dark:border-surface-400/50 h-32 w-32 flex items-center justify-center ${type === "donut" ? "" : "bg-slate-200/50 dark:bg-surface-400/50"}`}>
-                <Skeleton className="h-4 w-10 opacity-30" />
+              <div className={`rounded-full border-[12px] border-neutral-200/50 dark:border-surface-400/50 h-24 w-24 flex items-center justify-center ${type === "donut" ? "" : "bg-neutral-200/40 dark:bg-surface-400/40"}`}>
+                <Skeleton className="h-3 w-8 opacity-20" />
               </div>
             </div>
           )}

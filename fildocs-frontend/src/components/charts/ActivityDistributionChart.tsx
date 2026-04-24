@@ -5,21 +5,21 @@ import { BarChart2 } from "lucide-react";
 import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Workflows: "#6366f1", // indigo-500
-  Access: "#f59e0b",    // amber-500
-  System: "#10b981",    // emerald-500
-  Others: "#94a3b8",    // slate-400
+  Workflows: "var(--color-brand-500)",
+  Access: "var(--color-neutral-400)",
+  System: "var(--color-neutral-600)",
+  Others: "var(--color-neutral-200)",
 };
 
-const fallbackColor = "#cbd5e1";
+const fallbackColor = "var(--color-neutral-200)";
 
 const EmptyChart = ({ height = 220 }: { height?: number }) => (
   <div
-    className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-200 dark:border-surface-300 bg-slate-50/50 dark:bg-surface-600/30 text-slate-400 dark:text-slate-500"
+    className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-200 dark:border-surface-400 bg-neutral-50/50 dark:bg-surface-600/30 text-neutral-400 dark:text-neutral-500"
     style={{ height }}
   >
     <BarChart2 className="h-5 w-5 opacity-40" />
-    <span className="text-xs font-medium">No activity data</span>
+    <span className="text-xs font-medium uppercase tracking-wider">No activity data</span>
   </div>
 );
 
@@ -29,12 +29,12 @@ const CustomTooltip = ({ active, payload, total }: any) => {
   const percentage = total ? Math.round((value / total) * 100) : 0;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white dark:border-surface-300 dark:bg-surface-500 px-3 py-2 shadow-md text-xs">
-      <p className="font-semibold text-slate-700 dark:text-slate-200 mb-0.5">
+    <div className="rounded-lg border border-neutral-200 bg-white dark:border-surface-400 dark:bg-surface-500 px-3 py-2 shadow-xl shadow-neutral-900/5 text-xs">
+      <p className="font-bold text-neutral-900 dark:text-neutral-50 mb-0.5 uppercase tracking-tight">
         {name}
       </p>
-      <p className="text-slate-500 dark:text-slate-400">
-        {value} actions &middot; {percentage}%
+      <p className="text-neutral-500 dark:text-neutral-400 font-medium">
+        <span className="font-bold text-neutral-900 dark:text-neutral-50 tabular-nums">{value}</span> actions &middot; <span className="font-mono">{percentage}%</span>
       </p>
     </div>
   );
@@ -52,7 +52,7 @@ const ActivityDistributionChart: React.FC<Props> = ({ data, height = 220, loadin
     setMounted(true);
   }, []);
 
-  if (loading) return <ChartSkeleton height={height} />;
+  if (loading) return <ChartSkeleton type="donut" height={height} />;
   if (!mounted) return <div style={{ height }} className="w-full h-full" />;
 
   if (!data || data.length === 0 || data.every(d => d.count === 0)) {
@@ -88,8 +88,8 @@ const ActivityDistributionChart: React.FC<Props> = ({ data, height = 220, loadin
             verticalAlign="bottom" 
             align="center"
             iconType="circle"
-            iconSize={8}
-            wrapperStyle={{ fontSize: 11, paddingTop: 10 }}
+            iconSize={6}
+            wrapperStyle={{ fontSize: 10, paddingTop: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}
           />
         </PieChart>
       </ResponsiveContainer>
@@ -99,10 +99,10 @@ const ActivityDistributionChart: React.FC<Props> = ({ data, height = 220, loadin
         className="pointer-events-none absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center leading-none"
         style={{ top: "40%" }}
       >
-        <span className="text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100 leading-none">
+        <span className="text-2xl font-bold font-display tabular-nums text-neutral-900 dark:text-neutral-50 leading-none tracking-tight">
           {total}
         </span>
-        <span className="mt-1 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 leading-none">
+        <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.15em] text-neutral-400 dark:text-neutral-500 leading-none">
           Total
         </span>
       </div>

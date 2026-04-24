@@ -4,13 +4,14 @@ import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 const EmptyChart = ({ height = 200 }: { height?: number }) => (
   <div
-    className="flex flex-col items-center justify-center gap-2 w-full rounded-md border border-dashed border-slate-200/60 dark:border-surface-400/30 bg-slate-50/20 dark:bg-surface-600/10 text-slate-400 dark:text-slate-500"
+    className="flex flex-col items-center justify-center gap-2 w-full rounded-lg border border-dashed border-neutral-200 dark:border-surface-400 bg-neutral-50/20 dark:bg-surface-600/10 text-neutral-400 dark:text-neutral-500"
     style={{ height }}
   >
     <BarChart2 className="h-5 w-5 opacity-40" />
-    <span className="text-[11px] font-semibold uppercase tracking-wider opacity-60">No data available</span>
+    <span className="text-xs font-semibold uppercase tracking-widest opacity-60">No data available</span>
   </div>
 );
+
 import {
   ResponsiveContainer,
   BarChart,
@@ -31,13 +32,13 @@ export type VolumeSeries = {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white dark:border-surface-300 dark:bg-surface-500 px-3 py-2 shadow-md text-xs">
-      <p className="font-semibold text-slate-700 dark:text-slate-200 mb-1.5">{label}</p>
+    <div className="rounded-lg border border-neutral-200 bg-white dark:border-surface-400 dark:bg-surface-500 px-3 py-2 shadow-xl shadow-neutral-900/5 text-xs">
+      <p className="font-bold text-neutral-900 dark:text-neutral-50 mb-1.5 uppercase tracking-tight">{label}</p>
       {payload.map((p: any) => (
-        <div key={p.dataKey} className="flex items-center gap-2">
+        <div key={p.dataKey} className="flex items-center gap-2 mt-0.5">
           <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-          <span className="text-slate-500 dark:text-slate-400">{p.name}</span>
-          <span className="ml-auto font-semibold text-slate-800 dark:text-slate-100 pl-3">{p.value}</span>
+          <span className="text-neutral-500 dark:text-neutral-400 font-medium">{p.name}</span>
+          <span className="ml-auto font-bold text-neutral-900 dark:text-neutral-50 pl-3 tabular-nums">{p.value}</span>
         </div>
       ))}
     </div>
@@ -66,20 +67,20 @@ const VolumeTrendChart: React.FC<{ data: VolumeSeries[]; height?: number; loadin
           barCategoryGap="40%"
           barGap={3}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.15} vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-neutral-400)" strokeOpacity={0.1} vertical={false} />
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 11, fontWeight: 500, fill: "#94a3b8" }}
+            tick={{ fontSize: 10, fontWeight: 600, fill: "var(--color-neutral-400)" }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             allowDecimals={false}
-            tick={{ fontSize: 11, fontWeight: 500, fill: "#94a3b8" }}
+            tick={{ fontSize: 10, fontWeight: 600, fill: "var(--color-neutral-400)" }}
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.07)" }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(var(--color-neutral-900), 0.04)" }} />
           <Legend 
             verticalAlign="bottom" 
             align="center"
@@ -91,11 +92,11 @@ const VolumeTrendChart: React.FC<{ data: VolumeSeries[]; height?: number; loadin
               paddingTop: 16,
               textTransform: 'uppercase', 
               letterSpacing: '0.05em',
-              color: '#94a3b8' 
+              color: 'var(--color-neutral-400)' 
             }}
           />
-          <Bar dataKey="created" name="Created" fill="#38bdf8" radius={[4, 4, 0, 0]} maxBarSize={32} />
-          <Bar dataKey="approved_final" name="Approved" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={32} />
+          <Bar dataKey="created" name="Created" fill="var(--color-brand-400)" radius={[2, 2, 0, 0]} maxBarSize={28} />
+          <Bar dataKey="approved_final" name="Approved" fill="var(--color-brand-600)" radius={[2, 2, 0, 0]} maxBarSize={28} />
         </BarChart>
       </ResponsiveContainer>
     </div>

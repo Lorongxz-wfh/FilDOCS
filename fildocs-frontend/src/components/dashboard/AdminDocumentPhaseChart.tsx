@@ -19,11 +19,11 @@ type Props = {
 import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 const PHASES = [
-  { key: "draft", label: "Draft", color: "#94a3b8" },
-  { key: "review", label: "Review", color: "#f59e0b" },
-  { key: "approval", label: "Approval", color: "#6366f1" },
-  { key: "finalization", label: "Finalization", color: "#8b5cf6" },
-  { key: "distributed", label: "Distributed", color: "#10b981" },
+  { key: "draft", label: "Draft", color: "var(--color-neutral-400)" },
+  { key: "review", label: "Review", color: "var(--color-brand-400)" },
+  { key: "approval", label: "Approval", color: "var(--color-brand-600)" },
+  { key: "finalization", label: "Finalization", color: "var(--color-neutral-600)" },
+  { key: "distributed", label: "Distributed", color: "var(--color-brand-500)" },
 ];
 
 const AdminDocumentPhaseChart: React.FC<Props> = ({ byPhase, height = 180, loading = false }) => {
@@ -32,7 +32,7 @@ const AdminDocumentPhaseChart: React.FC<Props> = ({ byPhase, height = 180, loadi
     setMounted(true);
   }, []);
 
-  if (loading) return <ChartSkeleton type="bar" height={height} />;
+  if (loading) return <ChartSkeleton type="bar-horizontal" height={height} />;
   if (!mounted) return <div style={{ height }} className="w-full" />;
 
   const data = PHASES.map((p) => ({
@@ -45,9 +45,9 @@ const AdminDocumentPhaseChart: React.FC<Props> = ({ byPhase, height = 180, loadi
 
   if (allZero) {
     return (
-      <p className="py-8 text-center text-xs text-slate-400 dark:text-slate-500">
-        No documents yet
-      </p>
+      <div style={{ height }} className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-200 dark:border-surface-400 bg-neutral-50/50 dark:bg-surface-600/30 text-neutral-400 dark:text-neutral-500">
+        <span className="text-xs font-medium uppercase tracking-wider">No documents yet</span>
+      </div>
     );
   }
 
@@ -59,11 +59,11 @@ const AdminDocumentPhaseChart: React.FC<Props> = ({ byPhase, height = 180, loadi
           data={data}
           margin={{ top: 0, right: 32, left: 0, bottom: 0 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.1} horizontal={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-neutral-400)" strokeOpacity={0.1} horizontal={false} />
           <XAxis
             type="number"
             allowDecimals={false}
-            tick={{ fontSize: 11, fill: "#94a3b8" }}
+            tick={{ fontSize: 10, fill: "var(--color-neutral-400)", fontWeight: 600 }}
             axisLine={false}
             tickLine={false}
           />
@@ -71,25 +71,25 @@ const AdminDocumentPhaseChart: React.FC<Props> = ({ byPhase, height = 180, loadi
             type="category"
             dataKey="label"
             width={82}
-            tick={{ fontSize: 11, fill: "#94a3b8" }}
+            tick={{ fontSize: 10, fill: "var(--color-neutral-500)", fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}
             axisLine={false}
             tickLine={false}
           />
           <Tooltip
-            cursor={{ fill: "rgba(148,163,184,0.08)" }}
+            cursor={{ fill: "rgba(var(--color-neutral-900), 0.04)" }}
             content={({ active, payload, label }: any) => {
               if (!active || !payload?.length) return null;
               return (
-                <div className="rounded-lg border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-500 px-3 py-2 shadow-md text-xs">
-                  <p className="font-semibold text-slate-700 dark:text-slate-200 mb-0.5">{label}</p>
-                  <p className="text-slate-500 dark:text-slate-400">
-                    <span className="font-semibold text-slate-800 dark:text-slate-100">{payload[0].value}</span> documents
+                <div className="rounded-lg border border-neutral-200 bg-white dark:border-surface-400 dark:bg-surface-500 px-3 py-2 shadow-xl shadow-neutral-900/5 text-xs">
+                  <p className="font-bold text-neutral-900 dark:text-neutral-50 mb-0.5 uppercase tracking-tight">{label}</p>
+                  <p className="text-neutral-500 dark:text-neutral-400 font-medium">
+                    <span className="font-bold text-neutral-900 dark:text-neutral-50 tabular-nums">{payload[0].value}</span> documents
                   </p>
                 </div>
               );
             }}
           />
-          <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={20}>
+          <Bar dataKey="count" radius={[0, 2, 2, 0]} maxBarSize={16}>
             {data.map((entry, i) => (
               <Cell key={i} fill={entry.color} />
             ))}

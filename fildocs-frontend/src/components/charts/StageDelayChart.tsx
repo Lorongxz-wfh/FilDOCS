@@ -22,12 +22,13 @@ export type StageDelay = {
 };
 
 // Phase colour palette
+// Phase colour palette
 const PHASE_COLORS: Record<string, string> = {
-  Review:      "#38bdf8", // sky-400
-  Approval:    "#a78bfa", // violet-400
-  Finalization: "#34d399", // emerald-400
+  Review:      "var(--color-brand-400)",
+  Approval:    "var(--color-brand-600)",
+  Finalization: "var(--color-neutral-600)",
 };
-const FALLBACK_COLOR = "#94a3b8";
+const FALLBACK_COLOR = "var(--color-neutral-400)";
 
 const phaseColor = (stage: string) => PHASE_COLORS[stage] ?? FALLBACK_COLOR;
 
@@ -39,11 +40,11 @@ import { ChartSkeleton } from "../ui/loader/ChartSkeleton";
 
 const EmptyChart = ({ height = 200 }: { height?: number }) => (
   <div
-    className="flex flex-col items-center justify-center gap-2 w-full rounded-md border border-dashed border-slate-200/60 dark:border-surface-400/30 bg-slate-50/20 dark:bg-surface-600/10 text-slate-400 dark:text-slate-500"
+    className="flex flex-col items-center justify-center gap-2 w-full rounded-lg border border-dashed border-neutral-200 dark:border-surface-400 bg-neutral-50/20 dark:bg-surface-600/10 text-neutral-400 dark:text-neutral-500"
     style={{ height }}
   >
     <BarChart2 className="h-5 w-5 opacity-40" />
-    <span className="text-[11px] font-semibold uppercase tracking-wider opacity-60">No data available</span>
+    <span className="text-xs font-semibold uppercase tracking-widest opacity-60">No data available</span>
   </div>
 );
 
@@ -53,27 +54,27 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   const d: StageDelay = payload[0].payload;
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-surface-300 bg-white dark:bg-surface-500 px-3 py-2.5 shadow-md text-xs space-y-0.5">
-      <p className="font-semibold text-slate-700 dark:text-slate-200 mb-1">{label}</p>
-      <p className="text-slate-500 dark:text-slate-400">
+    <div className="rounded-lg border border-neutral-200 bg-white dark:border-surface-400 dark:bg-surface-500 px-3 py-2.5 shadow-xl shadow-neutral-900/5 text-xs space-y-1">
+      <p className="font-bold text-neutral-900 dark:text-neutral-50 mb-1.5 uppercase tracking-tight">{label}</p>
+      <p className="text-neutral-500 dark:text-neutral-400 font-medium">
         Median:{" "}
-        <span className="font-semibold text-slate-800 dark:text-slate-100">
+        <span className="font-bold text-neutral-900 dark:text-neutral-50 tabular-nums">
           {d.median_hours != null ? `${d.median_hours}h` : "—"}
         </span>
       </p>
-      <p className="text-slate-500 dark:text-slate-400">
+      <p className="text-neutral-500 dark:text-neutral-400 font-medium">
         Avg:{" "}
-        <span className="font-semibold text-slate-800 dark:text-slate-100">
+        <span className="font-bold text-neutral-900 dark:text-neutral-50 tabular-nums">
           {d.avg_hours}h
         </span>
       </p>
-      <p className="text-slate-500 dark:text-slate-400">
+      <p className="text-neutral-500 dark:text-neutral-400 font-medium">
         Tasks:{" "}
-        <span className="font-semibold text-slate-800 dark:text-slate-100">
+        <span className="font-bold text-neutral-900 dark:text-neutral-50 tabular-nums">
           {d.task_count}
         </span>{" "}
         across{" "}
-        <span className="font-semibold text-slate-800 dark:text-slate-100">
+        <span className="font-bold text-neutral-900 dark:text-neutral-50 tabular-nums">
           {d.count}
         </span>{" "}
         docs
@@ -89,7 +90,7 @@ const StageDelayChart: React.FC<{
   height?: number;
   loading?: boolean;
 }> = ({ data, height = 200, loading = false }) => {
-  if (loading) return <ChartSkeleton height={height} type="bar" />;
+  if (loading) return <ChartSkeleton height={height} type="bar-horizontal" />;
   const hasValues = data?.some(d => (d.median_hours ?? d.avg_hours) > 0);
   if (!data?.length || !hasValues) return <EmptyChart height={height} />;
 
@@ -114,12 +115,12 @@ const StageDelayChart: React.FC<{
         {chartData.map((d) => (
           <div key={d.stage} className="flex items-center gap-1.5">
             <span
-              className="h-2 w-2 rounded-full shrink-0"
+              className="h-2 w-2 rounded-full shrink-0 border border-black/5 dark:border-white/10"
               style={{ backgroundColor: phaseColor(d.stage) }}
             />
-            <span className="text-[11px] text-slate-500 dark:text-slate-400">{d.stage}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">{d.stage}</span>
             {d.stage === bottleneckStage && d.display_hours > 0 && (
-              <span className="rounded-full bg-rose-100 dark:bg-rose-900/30 px-1.5 py-px text-[11px] font-semibold text-rose-600 dark:text-rose-400 leading-none">
+              <span className="rounded-full bg-rose-50 dark:bg-rose-950/30 px-1.5 py-px text-[9px] font-bold text-rose-600 dark:text-rose-400 leading-none uppercase tracking-widest border border-rose-200/50 dark:border-rose-800/50">
                 slowest
               </span>
             )}
@@ -136,18 +137,11 @@ const StageDelayChart: React.FC<{
             margin={{ top: 0, right: 52, left: 4, bottom: 0 }}
             barCategoryGap="28%"
           >
-            <Legend
-              verticalAlign="top"
-              align="right"
-              iconType="circle"
-              iconSize={8}
-              wrapperStyle={{ fontSize: 11, fontWeight: 500, paddingTop: 15 }}
-            />
-            <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.15} horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-neutral-400)" strokeOpacity={0.1} horizontal={false} />
             <XAxis
               type="number"
               domain={[0, maxVal * 1.15]}
-              tick={{ fontSize: 11, fontWeight: 500, fill: "#94a3b8" }}
+              tick={{ fontSize: 10, fontWeight: 600, fill: "var(--color-neutral-400)" }}
               unit="h"
               axisLine={false}
               tickLine={false}
@@ -155,13 +149,13 @@ const StageDelayChart: React.FC<{
             <YAxis
               type="category"
               dataKey="stage"
-              tick={{ fontSize: 11, fontWeight: 500, fill: "#94a3b8" }}
+              tick={{ fontSize: 10, fontWeight: 600, fill: "var(--color-neutral-500)", textTransform: 'uppercase', letterSpacing: '0.05em' }}
               width={88}
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.06)" }} />
-            <Bar dataKey="display_hours" radius={[0, 4, 4, 0]} maxBarSize={28}>
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(var(--color-neutral-900), 0.04)" }} />
+            <Bar dataKey="display_hours" radius={[0, 2, 2, 0]} maxBarSize={28}>
               <LabelList
                 dataKey="display_hours"
                 position="right"
@@ -169,13 +163,13 @@ const StageDelayChart: React.FC<{
                   const n = v as number;
                   return n > 0 ? `${n}h` : "—";
                 }}
-                style={{ fontSize: 11, fill: "#94a3b8" }}
+                style={{ fontSize: 10, fontWeight: 700, fill: "var(--color-neutral-600)", fontVariantNumeric: 'tabular-nums' }}
               />
               {chartData.map((entry) => (
                 <Cell
                   key={entry.stage}
                   fill={phaseColor(entry.stage)}
-                  opacity={entry.stage === bottleneckStage ? 1 : 0.65}
+                  opacity={entry.stage === bottleneckStage ? 1 : 0.7}
                 />
               ))}
             </Bar>
@@ -184,7 +178,7 @@ const StageDelayChart: React.FC<{
       </div>
 
       {/* Footnote */}
-      <p className="text-[11px] text-slate-400 dark:text-slate-500 px-1 italic">
+      <p className="text-[10px] text-neutral-400 dark:text-neutral-500 px-1 italic font-medium leading-tight">
         Median task hold time · completed documents only · all routing modes
       </p>
     </div>
