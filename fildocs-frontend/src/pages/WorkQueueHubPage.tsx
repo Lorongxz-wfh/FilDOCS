@@ -270,7 +270,7 @@ const WorkQueueHubPage: React.FC = () => {
                         hidden: { opacity: 0, y: 8 },
                         visible: { opacity: 1, y: 0 }
                       }}
-                      transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                      transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] as const }}
                     >
                       <QueueCard
                         item={item}
@@ -350,7 +350,7 @@ const WorkQueueHubPage: React.FC = () => {
                         hidden: { opacity: 0, y: 8 },
                         visible: { opacity: 1, y: 0 }
                       }}
-                      transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                      transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] as const }}
                     >
                       <RequestQueueCard
                         item={item}
@@ -417,7 +417,7 @@ const WorkQueueHubPage: React.FC = () => {
                         transition={{ 
                           duration: 0.3, 
                           delay: idx * 0.04,
-                          ease: [0.23, 1, 0.32, 1] 
+                          ease: [0.23, 1, 0.32, 1] as const 
                         }}
                         whileHover={{ x: 4 }}
                         type="button"

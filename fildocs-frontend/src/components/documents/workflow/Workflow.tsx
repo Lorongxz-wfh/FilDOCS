@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { getAssetUrl } from "../../../services/api";
 import WorkflowProgressCard from "./WorkflowProgressCard";
 import WorkflowRightPanel from "../panels/WorkflowRightPanel";
@@ -268,7 +268,7 @@ const Workflow: React.FC<WorkflowProps> = ({
         }}
         className="flex flex-col gap-4"
       >
-        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}>
           <WorkflowHeaderPanel
             documentCode={document?.code ?? "N/A"}
             versionNumber={Number(state.localVersion?.version_number ?? 0)}
@@ -323,7 +323,7 @@ const Workflow: React.FC<WorkflowProps> = ({
           />
         </motion.div>
 
-        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}>
           <WorkflowProgressCard
             phases={phases}
             routeStepsCount={state.routeSteps.length}
@@ -340,7 +340,7 @@ const Workflow: React.FC<WorkflowProps> = ({
 
         <motion.div 
           variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} 
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
           className="relative rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shadow-sm"
           style={{ height: "calc(100vh - 145px)" }}
         >

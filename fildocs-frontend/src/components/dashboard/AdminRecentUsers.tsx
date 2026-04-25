@@ -3,7 +3,7 @@ import Skeleton from "../ui/loader/Skeleton";
 import RoleBadge from "../ui/RoleBadge";
 import { useNavigate } from "react-router-dom";
 import { UserPlus, Users } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 type User = {
   id: number;
@@ -58,7 +58,7 @@ const AdminRecentUsers: React.FC<{ users: User[]; loading: boolean }> = ({
                       hidden: { opacity: 0, y: 8 },
                       visible: { opacity: 1, y: 0 }
                     }}
-                    transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                    transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] as const }}
                     type="button"
                     onClick={() => navigate("/user-manager")}
                     className="w-full flex items-center gap-3 rounded-md px-2 py-2 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors group text-left"

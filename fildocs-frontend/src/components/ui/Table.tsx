@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import EmptyState from "./EmptyState";
 import Skeleton from "./loader/Skeleton";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 type Align = "left" | "center" | "right";
 
@@ -447,7 +447,7 @@ export default function Table<T>({
                         hidden: { opacity: 0, y: 8 },
                         visible: { opacity: 1, y: 0 }
                       } : undefined}
-                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
                     >
                       <div 
                         role={clickable ? "button" : undefined}
@@ -481,7 +481,7 @@ export default function Table<T>({
                       hidden: { opacity: 0, y: 8 },
                       visible: { opacity: 1, y: 0 }
                     } : undefined}
-                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
                   >
                     {rowContent}
                     {renderRowDetails && expandedIds.has(key) && (

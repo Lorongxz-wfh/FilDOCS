@@ -93,7 +93,7 @@ const VolumeTrendChart: React.FC<{ data: VolumeSeries[]; height?: number; loadin
               textTransform: 'uppercase', 
               letterSpacing: '0.05em',
               color: 'var(--color-neutral-400)' 
-            }}
+            } as React.CSSProperties}
           />
           <Bar dataKey="created" name="Created" fill="var(--color-brand-400)" radius={[2, 2, 0, 0]} maxBarSize={28} />
           <Bar dataKey="approved_final" name="Approved" fill="var(--color-brand-600)" radius={[2, 2, 0, 0]} maxBarSize={28} />

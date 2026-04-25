@@ -66,18 +66,19 @@ export const CardFooter: React.FC<{
 
 /**
  * Standardized Card Container
- * Enforces the system's 1px border, , and rounded-md geometry.
+ * Enforces the system's 1px border, and rounded-md geometry.
  */
-export const Card: React.FC<CardProps> = ({ 
+export const Card = React.forwardRef<HTMLDivElement, CardProps>(({ 
   children, 
   className = "", 
   onClick, 
   hoverable, 
   noBorder 
-}) => {
+}, ref) => {
   const isClickable = !!onClick || hoverable;
   return (
     <div
+      ref={ref}
       onClick={onClick}
       className={`
         flex flex-col rounded-md bg-white dark:bg-surface-500 overflow-hidden 
@@ -90,4 +91,4 @@ export const Card: React.FC<CardProps> = ({
       {children}
     </div>
   );
-};
+});

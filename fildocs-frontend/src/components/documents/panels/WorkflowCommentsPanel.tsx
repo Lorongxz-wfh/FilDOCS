@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import SkeletonList from "../../ui/loader/SkeletonList";
 import type { DocumentMessage } from "../../../services/documents";
@@ -167,7 +167,7 @@ const WorkflowCommentsPanel: React.FC<Props> = ({
               }}
               className="p-3 space-y-4"
             >
-              {messages.map((m, idx) => {
+              {messages.map((m) => {
                 const isMe = Number(m.sender_user_id) === Number(myUserId);
                 return (
                   <motion.div 
@@ -176,7 +176,7 @@ const WorkflowCommentsPanel: React.FC<Props> = ({
                       hidden: { opacity: 0, y: 10 },
                       visible: { opacity: 1, y: 0 }
                     }}
-                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
                   >
                     <WorkflowCommentBubble
                       senderName={isMe ? (me?.full_name ?? "Me") : (m.sender?.full_name ?? "Unknown")}

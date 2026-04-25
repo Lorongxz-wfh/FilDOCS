@@ -421,7 +421,7 @@ export default function DocumentViewPage() {
       <motion.div
         initial={{ x: 40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+        transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] as const }}
         className="flex flex-1 flex-col min-h-0 min-w-0"
       >
         <DocumentViewSkeleton onBack={() => navigate("/documents")} />
@@ -434,7 +434,7 @@ export default function DocumentViewPage() {
       <motion.div
         initial={{ x: 40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+        transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] as const }}
         className="flex flex-1 flex-col min-h-0 min-w-0"
       >
         <PageFrame title="Document" onBack={() => navigate("/documents")}>
@@ -452,7 +452,7 @@ export default function DocumentViewPage() {
     <motion.div
       initial={{ x: 40, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+      transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] as const }}
       className="flex flex-1 flex-col min-h-0 min-w-0"
     >
       <PageFrame

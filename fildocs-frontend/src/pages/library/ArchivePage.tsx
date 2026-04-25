@@ -262,7 +262,7 @@ export default function ArchivePage() {
       >
         <motion.div 
           variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
           className="flex items-center h-10 px-4"
         >
           <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
@@ -273,7 +273,7 @@ export default function ArchivePage() {
 
         <motion.div 
           variants={{ hidden: { opacity: 0, x: 10 }, visible: { opacity: 1, x: 0 } }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
           className="flex items-center gap-2 shrink-0 h-10"
         >
           <div className="hidden lg:flex items-center relative w-72 h-8 ml-4">
@@ -333,7 +333,7 @@ export default function ArchivePage() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
             className="overflow-hidden bg-slate-50/50 dark:bg-surface-600/50 border-b border-slate-200 dark:border-surface-400 mb-2"
           >
             <div className="px-4 py-2.5 flex flex-wrap items-center gap-2">

@@ -15,7 +15,7 @@ const boxStyles: Record<Variant, string> = {
 
 export type AlertProps = {
   variant?: Variant;
-  title?: string;
+  title?: React.ReactNode;
   icon?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;

@@ -6,7 +6,7 @@
  */
 
 // Custom curve: cubic-bezier(0.16, 1, 0.3, 1)
-export const TRANSITION_EASE_OUT = [0.16, 1, 0.3, 1];
+export const TRANSITION_EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
 export const TRANSITION_DURATIONS = {
   FAST: 0.15,    // Hover, micro-interactions

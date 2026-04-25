@@ -328,7 +328,7 @@ export function OfficeManagerPage() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] as const }}
             className="overflow-hidden bg-slate-50 dark:bg-surface-600 border-b border-slate-200 dark:border-surface-400"
           >
             <div className="px-4 py-3 flex flex-wrap items-center gap-3">

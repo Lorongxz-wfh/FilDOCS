@@ -9,7 +9,6 @@ import {
   Tooltip,
   Cell,
   LabelList,
-  Legend,
   CartesianGrid,
 } from "recharts";
 
@@ -149,7 +148,7 @@ const StageDelayChart: React.FC<{
             <YAxis
               type="category"
               dataKey="stage"
-              tick={{ fontSize: 10, fontWeight: 600, fill: "var(--color-neutral-500)", textTransform: 'uppercase', letterSpacing: '0.05em' }}
+              tick={{ fontSize: 10, fontWeight: 600, fill: "var(--color-neutral-500)", style: { textTransform: 'uppercase', letterSpacing: '0.05em' } }}
               width={88}
               axisLine={false}
               tickLine={false}

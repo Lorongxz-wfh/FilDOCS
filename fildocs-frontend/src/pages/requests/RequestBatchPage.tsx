@@ -432,7 +432,7 @@ export default function RequestBatchPage() {
       <motion.div
         initial={{ x: 40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+        transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] as const }}
         className="flex flex-1 flex-col min-h-0 min-w-0"
       >
         <RequestBatchSkeleton onBack={() => navigate("/document-requests")} />
@@ -445,7 +445,7 @@ export default function RequestBatchPage() {
       <motion.div
         initial={{ x: 40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+        transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] as const }}
         className="flex flex-1 flex-col min-h-0 min-w-0"
       >
         <PageFrame title="Document Request" onBack={() => navigate("/document-requests")}>
@@ -470,7 +470,7 @@ export default function RequestBatchPage() {
     <motion.div
       initial={{ x: 40, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+      transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] as const }}
       className="flex flex-1 flex-col min-h-0 min-w-0"
     >
       <PageFrame

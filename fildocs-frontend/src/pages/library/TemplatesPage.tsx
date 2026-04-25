@@ -304,7 +304,7 @@ const TemplatesPage: React.FC = () => {
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
               className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-1 mb-px"
             >
               <TabBar
@@ -335,7 +335,7 @@ const TemplatesPage: React.FC = () => {
             >
               <motion.div 
                 variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
                 className="flex items-center gap-3 px-4 py-3"
               >
                 <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
@@ -346,7 +346,7 @@ const TemplatesPage: React.FC = () => {
 
               <motion.div 
                 variants={{ hidden: { opacity: 0, x: 10 }, visible: { opacity: 1, x: 0 } }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
                 className="flex items-center gap-2 shrink-0 h-10"
               >
                 {activeTab === "active" && (
@@ -538,7 +538,7 @@ const TemplatesPage: React.FC = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] as const }}
                   className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shadow-sm"
                 >
                   <TemplateList

@@ -227,7 +227,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progressPct}%` }}
-                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] as const }}
                     className="h-full rounded-full bg-brand-500 shadow-[0_0_8px_rgba(var(--brand-500-rgb),0.3)]"
                   />
                 )}
@@ -377,7 +377,7 @@ const WorkflowProgressCard: React.FC<Props> = ({
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
                             className="border-t border-slate-100 dark:border-surface-400/50 bg-slate-50/30 dark:bg-surface-600/20 px-3 py-4 overflow-hidden"
                           >
                             {renderStepBubbles(phaseSteps)}

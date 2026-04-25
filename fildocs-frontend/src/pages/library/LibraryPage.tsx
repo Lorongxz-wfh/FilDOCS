@@ -530,7 +530,7 @@ export default function LibraryPage() {
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
             className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-1 mb-px"
           >
             <SubTabBar
@@ -565,7 +565,7 @@ export default function LibraryPage() {
           >
             <motion.div 
               variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
               className="flex-1 flex items-center min-w-0"
             >
               <Tabs
@@ -582,7 +582,7 @@ export default function LibraryPage() {
 
             <motion.div 
               variants={{ hidden: { opacity: 0, x: 10 }, visible: { opacity: 1, x: 0 } }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
               className="flex items-center gap-2 shrink-0"
             >
               <div className="hidden lg:flex items-center relative w-72 h-8 ml-4">
@@ -644,7 +644,7 @@ export default function LibraryPage() {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
                 className="overflow-hidden border-b border-slate-200 dark:border-surface-400 bg-slate-50/20 dark:bg-surface-500/10 mb-4"
               >
                 <div className="p-4 flex flex-wrap items-center gap-4">
@@ -720,7 +720,7 @@ export default function LibraryPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] as const }}
                 className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shadow-sm"
               >
                 <Table<any>

@@ -50,7 +50,7 @@ export default function EmptyState({
     <motion.div
       initial={{ opacity: 0, scale: 0.98, y: 4 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
       className={`flex flex-col items-center justify-center py-16 px-6 text-center ${className}`}
     >
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 dark:bg-surface-600 mb-4 border border-slate-100 dark:border-surface-400 shadow-sm shadow-slate-200/50 dark:shadow-none">

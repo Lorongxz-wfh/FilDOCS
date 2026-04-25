@@ -71,7 +71,7 @@ const AdminDocumentPhaseChart: React.FC<Props> = ({ byPhase, height = 180, loadi
             type="category"
             dataKey="label"
             width={82}
-            tick={{ fontSize: 10, fill: "var(--color-neutral-500)", fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}
+            tick={{ fontSize: 10, fill: "var(--color-neutral-500)", fontWeight: 600, style: { textTransform: 'uppercase', letterSpacing: '0.05em' } }}
             axisLine={false}
             tickLine={false}
           />

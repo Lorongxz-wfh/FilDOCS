@@ -116,7 +116,7 @@ const WorkflowActivityPanel: React.FC<Props> = ({ logs, loading }) => {
               hidden: { opacity: 0, x: -5 },
               visible: { opacity: 1, x: 0 }
             }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
             className="group flex items-start gap-4 rounded-xl px-4 py-4 hover:bg-slate-50/50 dark:hover:bg-surface-400/10 transition-all border border-transparent hover:border-slate-200 dark:hover:border-surface-400/50"
           >
             <div className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${dotCls} group-hover:ring-4 group-hover:ring-slate-100 dark:group-hover:ring-surface-400/20 transition-all`} />

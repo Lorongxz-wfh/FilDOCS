@@ -89,7 +89,7 @@ const ActivityDistributionChart: React.FC<Props> = ({ data, height = 220, loadin
             align="center"
             iconType="circle"
             iconSize={6}
-            wrapperStyle={{ fontSize: 10, paddingTop: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}
+            wrapperStyle={{ fontSize: 10, paddingTop: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' } as React.CSSProperties}
           />
         </PieChart>
       </ResponsiveContainer>
