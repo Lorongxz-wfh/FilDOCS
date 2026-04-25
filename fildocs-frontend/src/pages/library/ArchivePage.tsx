@@ -252,28 +252,43 @@ export default function ArchivePage() {
       onBack={() => navigate("/documents")}
       contentClassName="flex flex-col min-h-0 h-full"
     >
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-transparent shrink-0 pr-4 gap-4 mb-2">
-        <div className="flex items-center h-10 px-4">
+      <motion.div 
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: { transition: { staggerChildren: 0.05 } }
+        }}
+        className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-transparent shrink-0 pr-4 gap-4 mb-2"
+      >
+        <motion.div 
+          variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="flex items-center h-10 px-4"
+        >
           <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
             <Archive size={16} className="text-slate-400" />
-            <span className="text-sm font-semibold">Document Archive</span>
+            <span className="text-sm font-bold uppercase tracking-widest">Document Archive</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="flex items-center gap-2 shrink-0 h-10">
+        <motion.div 
+          variants={{ hidden: { opacity: 0, x: 10 }, visible: { opacity: 1, x: 0 } }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="flex items-center gap-2 shrink-0 h-10"
+        >
           <div className="hidden lg:flex items-center relative w-72 h-8 ml-4">
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
             <input
               value={q}
               onChange={(e) => { setQ(e.target.value); setPage(1); }}
               placeholder="Search archive..."
-              className="w-full pl-9 pr-8 h-8 text-[13px] bg-slate-50/50 border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-500 dark:bg-surface-500/50 dark:border-surface-400/50 dark:text-slate-200"
+              className="w-full pl-9 pr-8 h-8 text-[11px] font-bold bg-slate-50/50 border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-500 dark:bg-surface-500/50 dark:border-surface-400/50 dark:text-slate-200 transition-all focus:bg-white dark:focus:bg-surface-500"
             />
             {q && (
               <button
                 type="button"
                 onClick={() => { setQ(""); setPage(1); }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
               >
                 <X size={14} />
               </button>
@@ -288,9 +303,9 @@ export default function ArchivePage() {
             className="h-8"
           >
             <SlidersHorizontal size={14} />
-            <span>Filters</span>
+            <span className="font-bold">Filters</span>
             {activeFiltersCount > 0 && !showFilters && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-semibold text-white  ring-2 ring-white dark:ring-surface-600">
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-bold text-white  ring-2 ring-white dark:ring-surface-600">
                 {activeFiltersCount}
               </span>
             )}
@@ -307,10 +322,10 @@ export default function ArchivePage() {
             className="h-8"
           >
             <CheckSquare size={14} />
-            <span>{isSelectMode ? "Cancel" : "Select"}</span>
+            <span className="font-bold">{isSelectMode ? "Cancel" : "Select"}</span>
           </Button>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       <AnimatePresence>
         {showFilters && (
@@ -318,50 +333,62 @@ export default function ArchivePage() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden bg-slate-50/50 dark:bg-surface-600/50 border-b border-slate-200 dark:border-surface-400"
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden bg-slate-50/50 dark:bg-surface-600/50 border-b border-slate-200 dark:border-surface-400 mb-2"
           >
             <div className="px-4 py-2.5 flex flex-wrap items-center gap-2">
-              <SelectDropdown
-                value={officeFilter}
-                onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
-                placeholder="All Offices"
-                className="w-40"
-                options={[{ value: "", label: "All Offices" }, ...availableOffices]}
-              />
-              <SelectDropdown
-                value={reasonFilter}
-                onChange={(val) => { setReasonFilter(val as string); setPage(1); }}
-                placeholder="All Reasons"
-                className="w-40"
-                options={[
-                  { value: "", label: "All Reasons" },
-                  { value: "Archived", label: "Archived" },
-                  { value: "Superseded", label: "Superseded" },
-                  { value: "Cancelled", label: "Cancelled" }
-                ]}
-              />
-              <SelectDropdown
-                value={typeFilter}
-                onChange={(val) => { setTypeFilter((val as string) || "ALL"); setPage(1); }}
-                placeholder="All Types"
-                className="w-32"
-                options={[
-                  { value: "ALL", label: "All Types" },
-                  { value: "INTERNAL", label: "Internal" },
-                  { value: "EXTERNAL", label: "External" },
-                  { value: "FORMS", label: "Forms" }
-                ]}
-              />
-              <DateRangePicker
-                from={dateFrom}
-                to={dateTo}
-                onSelect={(r: any) => {
-                  setDateFrom(r.from);
-                  setDateTo(r.to);
-                  setPage(1);
-                }}
-              />
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Office</label>
+                <SelectDropdown
+                  value={officeFilter}
+                  onChange={(val) => { setOfficeFilter(val as string); setPage(1); }}
+                  placeholder="All Offices"
+                  className="w-40"
+                  options={[{ value: "", label: "All Offices" }, ...availableOffices]}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Reason</label>
+                <SelectDropdown
+                  value={reasonFilter}
+                  onChange={(val) => { setReasonFilter(val as string); setPage(1); }}
+                  placeholder="All Reasons"
+                  className="w-40"
+                  options={[
+                    { value: "", label: "All Reasons" },
+                    { value: "Archived", label: "Archived" },
+                    { value: "Superseded", label: "Superseded" },
+                    { value: "Cancelled", label: "Cancelled" }
+                  ]}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Type</label>
+                <SelectDropdown
+                  value={typeFilter}
+                  onChange={(val) => { setTypeFilter((val as string) || "ALL"); setPage(1); }}
+                  placeholder="All Types"
+                  className="w-32"
+                  options={[
+                    { value: "ALL", label: "All Types" },
+                    { value: "INTERNAL", label: "Internal" },
+                    { value: "EXTERNAL", label: "External" },
+                    { value: "FORMS", label: "Forms" }
+                  ]}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Date Range</label>
+                <DateRangePicker
+                  from={dateFrom}
+                  to={dateTo}
+                  onSelect={(r: any) => {
+                    setDateFrom(r.from);
+                    setDateTo(r.to);
+                    setPage(1);
+                  }}
+                />
+              </div>
               
               <Button
                 variant="ghost"
@@ -376,9 +403,9 @@ export default function ArchivePage() {
                   setReasonFilter("");
                   setPage(1);
                 }}
-                className="text-[11px] h-8"
+                className="text-[10px] h-8 mt-auto mb-1 font-bold uppercase tracking-widest text-rose-600 hover:text-rose-700"
               >
-                <Trash2 size={14} />
+                <X size={14} />
                 <span>Clear all</span>
               </Button>
             </div>
@@ -388,9 +415,10 @@ export default function ArchivePage() {
 
       {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
 
-      <div className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
+      <div className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shadow-sm">
         <Table<any>
           bare
+          staggered
           className="h-full"
           columns={columns}
           rows={rows}

@@ -44,7 +44,7 @@ export function TabBar<T extends string>({
   badge?: Partial<Record<T, number>>;
 }) {
   return (
-    <div className="flex items-center gap-0 border-b border-slate-200 dark:border-surface-400">
+    <div className="flex items-center gap-0">
       {tabs.map((t) => (
         <button
           key={t.value}

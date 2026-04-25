@@ -59,23 +59,24 @@ const WorkflowPreviewWrapper: React.FC<Props> = ({
 }) => {
   return (
     <div
-      className="flex flex-col gap-0 rounded-md overflow-hidden border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500"
+      className="flex flex-col gap-0 rounded-xl overflow-hidden border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 shadow-sm"
       style={{ height: "100%" }}
     >
       {/* Info Strip */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 dark:bg-surface-600 border-b border-slate-200 dark:border-surface-400">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center px-1.5 py-0.5 rounded-sm bg-slate-600 dark:bg-slate-400 text-[10px] font-semibold text-white dark:text-slate-900 uppercase">
+      <div className="flex items-center justify-between px-4 py-2 bg-slate-50/50 dark:bg-surface-600/50 border-b border-slate-200 dark:border-surface-400">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center px-1.5 py-0.5 rounded-sm bg-slate-800 dark:bg-slate-400 text-[9px] font-bold text-white dark:text-slate-900 uppercase tracking-widest">
             V{localVersion.version_number}
           </div>
-          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
             {localVersion.status}
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-            SYNCED: {new Date(localVersion.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 tabular-nums">
+             <span className="opacity-60">Synced:</span>
+             <span>{new Date(localVersion.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+          </div>
         </div>
       </div>
       {/* Preview — fills available space */}

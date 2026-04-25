@@ -299,18 +299,25 @@ const TemplatesPage: React.FC = () => {
           </PageActions>
         }
       >
-        {isSysAdmin && adminDebugMode && (
-          <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-1 mb-px">
-            <TabBar
-              tabs={[
-                { value: "active", label: "Active Templates", icon: <Layers size={12} /> },
-                { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
-              ]}
-              active={activeTab}
-              onChange={(val: any) => setActiveTab(val)}
-            />
-          </div>
-        )}
+        <AnimatePresence>
+          {isSysAdmin && adminDebugMode && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-1 mb-px"
+            >
+              <TabBar
+                tabs={[
+                  { value: "active", label: "Active Templates", icon: <Layers size={12} /> },
+                  { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
+                ]}
+                active={activeTab}
+                onChange={(val: any) => setActiveTab(val)}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {activeTab === "deleted" ? (
           <div className="flex-1 min-h-0">
@@ -318,217 +325,242 @@ const TemplatesPage: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 shrink-0 pr-4">
-              <div className="flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 italic opacity-70">
-                <Layers className="h-3.5 w-3.5" />
-                <span>All Templates</span>
-              </div>
-              {activeTab === "active" && (
-                <Button
-                  variant={isSelectMode ? "primary" : "ghost"}
-                  size="sm"
-                  reveal
-                  onClick={() => {
-                    setIsSelectMode(!isSelectMode);
-                    if (isSelectMode) clearSelection();
-                  }}
-                  className="flex items-center gap-2 h-8"
-                >
-                  <CheckSquare size={14} />
-                  <span>{isSelectMode ? "Cancel" : "Select"}</span>
-                </Button>
-              )}
-            </div>
-
-        <SearchFilterBar
-          search={q}
-          setSearch={(val) => setQ(val)}
-          placeholder="Search name, file, tags…"
-          activeFiltersCount={activeFiltersCount}
-          onClear={() => {
-            setQ("");
-            setScope("all");
-            setActiveTag(null);
-          }}
-          mobileFilters={
-            <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Scope</label>
-                  <SelectDropdown
-                    value={scope}
-                    onChange={(val) => setScope((val as typeof scope) || "all")}
-                    className="w-full"
-                    options={[
-                      { value: "all", label: "All Scope" },
-                      { value: "global", label: "Global" },
-                      { value: "mine", label: "Mine" },
-                    ]}
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Tag</label>
-                  <SelectDropdown
-                    value={activeTag || ""}
-                    onChange={(val) => setActiveTag((val as string) || null)}
-                    className="w-full"
-                    options={[
-                      { value: "", label: "All Tags" },
-                      ...allTags.map(tag => ({
-                        value: tag,
-                        label: tag,
-                      })),
-                    ]}
-                  />
-                </div>
-              </div>
-            </div>
-          }
-        >
-          {canChooseScope && (
-            <SelectDropdown
-              value={scope}
-              onChange={(val) => setScope((val as typeof scope) || "all")}
-              className="w-28"
-              options={[
-                { value: "all", label: "All Scope" },
-                { value: "global", label: "Global" },
-                { value: "mine", label: "Mine" },
-              ]}
-            />
-          )}
-
-          <div ref={tagDropdownRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setTagDropdownOpen((v) => !v)}
-              className={[
-                "flex items-center gap-1.5 rounded-md border px-2.5 h-8 text-[11px] font-medium transition",
-                activeTag
-                  ? "border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-500/10 dark:text-brand-400"
-                  : "border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 ",
-              ].join(" ")}
+            <motion.div 
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: { transition: { staggerChildren: 0.05 } }
+              }}
+              className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 shrink-0 pr-4 gap-4 mb-4"
             >
-              <Tag className="h-3 w-3" />
-              {activeTag ?? "Tags"}
-              <ChevronDown className="h-3 w-3 ml-0.5 opacity-50" />
-            </button>
-            {tagDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1.5 z-20 w-52 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="px-3 py-2 border-b border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-700/50">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Filter by tag
-                  </p>
+              <motion.div 
+                variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="flex items-center gap-3 px-4 py-3"
+              >
+                <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                  <Layers className="h-4 w-4 text-slate-400" />
+                  <span className="text-sm font-bold uppercase tracking-widest">Document Templates</span>
                 </div>
-                <div className="max-h-52 overflow-y-auto p-1.5 space-y-0.5">
-                  <button
-                    type="button"
+              </motion.div>
+
+              <motion.div 
+                variants={{ hidden: { opacity: 0, x: 10 }, visible: { opacity: 1, x: 0 } }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="flex items-center gap-2 shrink-0 h-10"
+              >
+                {activeTab === "active" && (
+                  <Button
+                    variant={isSelectMode ? "primary" : "outline"}
+                    size="sm"
+                    reveal
                     onClick={() => {
-                      setActiveTag(null);
-                      setTagDropdownOpen(false);
+                      setIsSelectMode(!isSelectMode);
+                      if (isSelectMode) clearSelection();
                     }}
-                    className={[
-                      "w-full rounded-md px-3 py-1.5 text-left text-xs font-medium transition",
-                      !activeTag
-                        ? "bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-400"
-                        : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400",
-                    ].join(" ")}
+                    className="h-8"
                   >
-                    All Tags
-                  </button>
-                  {allTags.map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => {
-                        setActiveTag(tag);
-                        setTagDropdownOpen(false);
-                      }}
-                      className={[
-                        "w-full rounded-md px-3 py-1.5 text-left text-xs font-medium transition",
-                        activeTag === tag
-                          ? "bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-400"
-                          : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400",
-                      ].join(" ")}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </SearchFilterBar>
-
-        {uploadingName && (
-          <div className="shrink-0 flex items-center gap-2.5 border-b border-slate-200 dark:border-surface-400 bg-sky-50 dark:bg-sky-950/20 px-4 py-2.5 mb-4">
-            <svg
-              className="h-3.5 w-3.5 animate-spin text-sky-500 shrink-0"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-              />
-            </svg>
-            <p className="text-xs text-sky-700 dark:text-sky-400">
-              Uploading <span className="font-semibold">{uploadingName}</span>…
-            </p>
-          </div>
-        )}
-
-        {error && !initialLoading && (
-          <Alert variant="danger" className="mt-4">
-            {error}{" "}
-            <button
-              type="button"
-              className="underline font-semibold"
-              onClick={() => loadTemplates()}
-            >
-              Retry
-            </button>
-          </Alert>
-        )}
-
-        <div className="flex-1 min-h-0 min-w-0 flex flex-col">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={debouncedQ + scope + activeTag}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
-              className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden"
-            >
-              <TemplateList
-                templates={filtered}
-                loading={initialLoading}
-                deletingId={deletingId}
-                onDeleteClick={handleDeleteClick}
-                onSelect={setSelectedTemplate}
-                sortBy={sortBy}
-                sortDir={sortDir}
-                onSortChange={handleSortChange}
-                adminDebugMode={adminDebugMode}
-                selectable={isSelectMode}
-                selectedIds={selectedIds}
-                onToggleRow={toggleRow}
-                onToggleAll={toggleAll}
-              />
+                    <CheckSquare size={14} />
+                    <span className="font-bold">{isSelectMode ? "Cancel" : "Select"}</span>
+                  </Button>
+                )}
+              </motion.div>
             </motion.div>
-          </AnimatePresence>
-        </div>
-        </>
+
+            <SearchFilterBar
+              search={q}
+              setSearch={(val) => setQ(val)}
+              placeholder="Search name, file, tags…"
+              activeFiltersCount={activeFiltersCount}
+              onClear={() => {
+                setQ("");
+                setScope("all");
+                setActiveTag(null);
+              }}
+              mobileFilters={
+                <div className="flex flex-col gap-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Scope</label>
+                      <SelectDropdown
+                        value={scope}
+                        onChange={(val) => setScope((val as typeof scope) || "all")}
+                        className="w-full"
+                        options={[
+                          { value: "all", label: "All Scope" },
+                          { value: "global", label: "Global" },
+                          { value: "mine", label: "Mine" },
+                        ]}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tag</label>
+                      <SelectDropdown
+                        value={activeTag || ""}
+                        onChange={(val) => setActiveTag((val as string) || null)}
+                        className="w-full"
+                        options={[
+                          { value: "", label: "All Tags" },
+                          ...allTags.map(tag => ({
+                            value: tag,
+                            label: tag,
+                          })),
+                        ]}
+                      />
+                    </div>
+                  </div>
+                </div>
+              }
+            >
+              {canChooseScope && (
+                <SelectDropdown
+                  value={scope}
+                  onChange={(val) => setScope((val as typeof scope) || "all")}
+                  className="w-28"
+                  options={[
+                    { value: "all", label: "All Scope" },
+                    { value: "global", label: "Global" },
+                    { value: "mine", label: "Mine" },
+                  ]}
+                />
+              )}
+
+              <div ref={tagDropdownRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setTagDropdownOpen((v) => !v)}
+                  className={[
+                    "flex items-center gap-1.5 rounded-md border px-2.5 h-8 text-[11px] font-bold uppercase tracking-wider transition",
+                    activeTag
+                      ? "border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-500/10 dark:text-brand-400"
+                      : "border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 ",
+                  ].join(" ")}
+                >
+                  <Tag className="h-3 w-3" />
+                  {activeTag ?? "Tags"}
+                  <ChevronDown className="h-3 w-3 ml-0.5 opacity-50" />
+                </button>
+                {tagDropdownOpen && (
+                  <div className="absolute left-0 top-full mt-1.5 z-20 w-52 rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-600 shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="px-3 py-2 border-b border-slate-100 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-700/50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">
+                        Filter by tag
+                      </p>
+                    </div>
+                    <div className="max-h-52 overflow-y-auto p-1.5 space-y-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTag(null);
+                          setTagDropdownOpen(false);
+                        }}
+                        className={[
+                          "w-full rounded-md px-3 py-1.5 text-left text-xs font-bold transition",
+                          !activeTag
+                            ? "bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-400"
+                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400",
+                        ].join(" ")}
+                      >
+                        All Tags
+                      </button>
+                      {allTags.map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            setActiveTag(tag);
+                            setTagDropdownOpen(false);
+                          }}
+                          className={[
+                            "w-full rounded-md px-3 py-1.5 text-left text-xs font-bold transition",
+                            activeTag === tag
+                              ? "bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-400"
+                              : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400",
+                          ].join(" ")}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </SearchFilterBar>
+
+            {uploadingName && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="shrink-0 flex items-center gap-2.5 border-b border-slate-200 dark:border-surface-400 bg-sky-50 dark:bg-sky-950/20 px-4 py-2.5 mb-4"
+              >
+                <svg
+                  className="h-3.5 w-3.5 animate-spin text-sky-500 shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
+                </svg>
+                <p className="text-xs text-sky-700 dark:text-sky-400 font-bold uppercase tracking-widest">
+                  Uploading <span className="text-sky-600">{uploadingName}</span>…
+                </p>
+              </motion.div>
+            )}
+
+            {error && !initialLoading && (
+              <Alert variant="danger" className="mt-4 mx-4">
+                {error}{" "}
+                <button
+                  type="button"
+                  className="underline font-bold"
+                  onClick={() => loadTemplates()}
+                >
+                  Retry
+                </button>
+              </Alert>
+            )}
+
+            <div className="flex-1 min-h-0 min-w-0 flex flex-col">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={debouncedQ + scope + activeTag}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shadow-sm"
+                >
+                  <TemplateList
+                    staggered
+                    templates={filtered}
+                    loading={initialLoading}
+                    deletingId={deletingId}
+                    onDeleteClick={handleDeleteClick}
+                    onSelect={setSelectedTemplate}
+                    sortBy={sortBy}
+                    sortDir={sortDir}
+                    onSortChange={handleSortChange}
+                    adminDebugMode={adminDebugMode}
+                    selectable={isSelectMode}
+                    selectedIds={selectedIds}
+                    onToggleRow={toggleRow}
+                    onToggleAll={toggleAll}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </>
         )}
 
         <BulkActionBar 

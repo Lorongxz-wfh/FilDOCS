@@ -525,18 +525,25 @@ export default function LibraryPage() {
       }
       contentClassName="flex flex-col min-h-0 gap-0 h-full overflow-hidden"
     >
-      {isAdmin && adminDebugMode && (
-        <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-1 mb-px">
-          <SubTabBar
-            tabs={[
-              { value: "active", label: "Active Library", icon: <Library size={12} /> },
-              { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
-            ]}
-            active={activeTab}
-            onChange={(val: any) => setActiveTab(val)}
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {isAdmin && adminDebugMode && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 px-1 mb-px"
+          >
+            <SubTabBar
+              tabs={[
+                { value: "active", label: "Active Library", icon: <Library size={12} /> },
+                { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
+              ]}
+              active={activeTab}
+              onChange={(val: any) => setActiveTab(val)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {activeTab === "deleted" ? (
         <div className="flex-1 min-h-0">
@@ -548,8 +555,19 @@ export default function LibraryPage() {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 shrink-0 pr-4 gap-4 mb-4">
-            <div className="flex-1 flex items-center min-w-0">
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={{
+              visible: { transition: { staggerChildren: 0.05 } }
+            }}
+            className="flex items-center justify-between border-b border-slate-200 dark:border-surface-400 shrink-0 pr-4 gap-4 mb-4"
+          >
+            <motion.div 
+              variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="flex-1 flex items-center min-w-0"
+            >
               <Tabs
                 tabs={TABS}
                 activeTab={tab}
@@ -560,23 +578,26 @@ export default function LibraryPage() {
                 id="library"
                 className="border-none"
               />
-            </div>
+            </motion.div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              {/* Search moved to Right Side Utility Group */}
+            <motion.div 
+              variants={{ hidden: { opacity: 0, x: 10 }, visible: { opacity: 1, x: 0 } }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center gap-2 shrink-0"
+            >
               <div className="hidden lg:flex items-center relative w-72 h-8 ml-4">
                 <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                 <input
                   value={q}
                   onChange={(e) => { setQ(e.target.value); setPage(1); }}
                   placeholder="Search library..."
-                  className={`${inputCls} pl-9 pr-8 h-8 text-[11px] bg-slate-50/50 border-slate-200/60 dark:bg-surface-500/50 dark:border-surface-400/50`}
+                  className={`${inputCls} pl-9 pr-8 h-8 text-[11px] font-bold bg-slate-50/50 border-slate-200/60 dark:bg-surface-500/50 dark:border-surface-400/50 focus:bg-white dark:focus:bg-surface-500 transition-all`}
                 />
                 {q && (
                   <button
                     type="button"
                     onClick={() => { setQ(""); setPage(1); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                   >
                     <X size={14} />
                   </button>
@@ -591,9 +612,9 @@ export default function LibraryPage() {
                 className="h-8"
               >
                 <SlidersHorizontal size={14} />
-                <span>Filters</span>
+                <span className="font-bold">Filters</span>
                 {activeFiltersCount > 0 && !showFilters && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-semibold text-white  ring-2 ring-white dark:ring-surface-600">
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-bold text-white  ring-2 ring-white dark:ring-surface-600">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -611,11 +632,11 @@ export default function LibraryPage() {
                   className="h-8"
                 >
                   <CheckSquare size={14} />
-                  <span>{isSelectMode ? "Cancel" : "Select"}</span>
+                  <span className="font-bold">{isSelectMode ? "Cancel" : "Select"}</span>
                 </Button>
               )}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           <AnimatePresence>
             {showFilters && (
@@ -623,13 +644,13 @@ export default function LibraryPage() {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
-                className="overflow-hidden border-b border-slate-200 dark:border-surface-400 bg-transparent"
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="overflow-hidden border-b border-slate-200 dark:border-surface-400 bg-slate-50/20 dark:bg-surface-500/10 mb-4"
               >
                 <div className="p-4 flex flex-wrap items-center gap-4">
                   {tab !== "requested" && (
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Type</label>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Type</label>
                       <SelectDropdown
                         value={typeFilter}
                         onChange={(val) => setTypeFilter((val as string) || "all")}
@@ -639,8 +660,8 @@ export default function LibraryPage() {
                     </div>
                   )}
                   {(tab === "all" || tab === "created" || tab === "shared" || (tab === "requested" && (isAdmin || isQA(role)))) && (
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Office</label>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Office</label>
                       <SelectDropdown
                         searchable
                         value={officeFilter}
@@ -652,8 +673,8 @@ export default function LibraryPage() {
                     </div>
                   )}
                   {tab === "requested" && (
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Batch</label>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Batch</label>
                       <SelectDropdown
                         searchable
                         value={batchFilter}
@@ -664,8 +685,8 @@ export default function LibraryPage() {
                       />
                     </div>
                   )}
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Date Range</label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Date Range</label>
                     <DateRangePicker from={dateFrom} to={dateTo} onSelect={(r: any) => { setDateFrom(r.from); setDateTo(r.to); }} />
                   </div>
 
@@ -679,7 +700,7 @@ export default function LibraryPage() {
                         setBatchFilter("");
                         setPage(1);
                       }}
-                      className="mt-auto mb-1 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 transition-colors"
+                      className="mt-auto mb-1 px-3 py-1.5 text-[11px] font-bold text-rose-600 hover:text-rose-700 transition-colors uppercase tracking-widest"
                     >
                       Reset Filters
                     </button>
@@ -699,11 +720,12 @@ export default function LibraryPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.1 }}
-                className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden"
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="flex-1 min-h-0 rounded-sm border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shadow-sm"
               >
                 <Table<any>
                   bare
+                  staggered
                   className="h-full"
                   columns={columns}
                   rows={rows}

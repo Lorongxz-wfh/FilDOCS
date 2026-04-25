@@ -27,6 +27,7 @@ type Props = {
   selectedIds?: Set<string | number>;
   onToggleRow?: (id: string | number) => void;
   onToggleAll?: () => void;
+  staggered?: boolean;
 };
 
 // ── Action cell — isolated so download state is per-row ───────────────────
@@ -112,6 +113,7 @@ const TemplateList: React.FC<Props> = ({
   selectedIds,
   onToggleRow,
   onToggleAll,
+  staggered,
 }) => {
   const columns: TableColumn<DocumentTemplate>[] = React.useMemo(
     () => [
@@ -234,6 +236,7 @@ const TemplateList: React.FC<Props> = ({
   return (
     <Table<DocumentTemplate>
       bare
+      staggered={staggered}
       columns={columns}
       rows={templates}
       rowKey={(t) => t.id}

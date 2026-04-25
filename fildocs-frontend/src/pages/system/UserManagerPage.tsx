@@ -338,13 +338,13 @@ const UserManagerPage: React.FC = () => {
         </PageActions>
       }
     >
-      <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-transparent px-1 mb-2 pr-4 gap-4">
+      <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-transparent px-1 mb-4 pr-4 gap-4">
         <div className="flex items-center">
             <TabBar
               tabs={[
-                { value: "active", label: "Active Users", icon: <Users size={12} /> },
-                { value: "sessions", label: "Sessions", icon: <Activity size={12} /> },
-                { value: "deleted", label: "Deleted", icon: <Trash2 size={12} /> },
+                { value: "active", label: "Active Users", icon: <Users size={14} /> },
+                { value: "sessions", label: "Sessions", icon: <Activity size={14} /> },
+                { value: "deleted", label: "Trash", icon: <Trash2 size={14} /> },
               ]}
               active={activeTab}
               onChange={(val: any) => {
@@ -357,50 +357,50 @@ const UserManagerPage: React.FC = () => {
         <div className="flex items-center gap-2 shrink-0">
           {activeTab === "active" && (
             <>
-              <div className="hidden lg:flex items-center relative w-72 h-8 ml-4">
+              <div className="hidden lg:flex items-center relative w-64 h-8">
                 <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                 <input
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                  placeholder="Search users..."
-                  className="w-full pl-9 pr-8 h-8 text-[13px] bg-slate-50/50 border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-500 dark:bg-surface-500/50 dark:border-surface-400/50 dark:text-slate-200"
+                  placeholder="Filter users..."
+                  className="w-full pl-9 pr-8 h-8 text-[12px] font-medium bg-slate-50/50 border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-500/20 focus:border-brand-500 dark:bg-surface-600/50 dark:border-surface-400 dark:text-slate-200 transition-all"
                 />
                 {search && (
                   <button
                     type="button"
                     onClick={() => { setSearch(""); setPage(1); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                   >
-                    <X size={14} />
+                    <X size={12} />
                   </button>
                 )}
               </div>
 
               <Button
-                variant={showFilters || activeFiltersCount > 0 ? "primary" : "outline"}
+                variant={showFilters || activeFiltersCount > 0 ? "secondary" : "outline"}
                 size="sm"
-                reveal
                 onClick={() => setShowFilters(!showFilters)}
-                className="h-8"
+                className="h-8 text-[11px] font-bold uppercase tracking-widest"
               >
                 <SlidersHorizontal size={14} />
                 <span>Filters</span>
                 {activeFiltersCount > 0 && !showFilters && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-semibold text-white  ring-2 ring-white dark:ring-surface-600">
+                  <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-bold text-white ring-2 ring-white dark:ring-surface-500">
                     {activeFiltersCount}
                   </span>
                 )}
               </Button>
 
+              <div className="w-px h-4 bg-slate-200 dark:bg-surface-400 mx-1" />
+
               <Button
                 variant={isSelectMode ? "primary" : "outline"}
                 size="sm"
-                reveal
                 onClick={() => {
                   setIsSelectMode(!isSelectMode);
                   if (isSelectMode) clearSelection();
                 }}
-                className="h-8"
+                className="h-8 text-[11px] font-bold uppercase tracking-widest"
               >
                 <CheckSquare size={14} />
                 <span>{isSelectMode ? "Cancel" : "Select"}</span>
@@ -416,40 +416,48 @@ const UserManagerPage: React.FC = () => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden bg-slate-50/50 dark:bg-surface-600/50 border-b border-slate-200 dark:border-surface-400"
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            className="overflow-hidden bg-slate-50 dark:bg-surface-600 border-b border-slate-200 dark:border-surface-400"
           >
-            <div className="px-4 py-2.5 flex flex-wrap items-center gap-2">
-              <SelectDropdown
-                value={statusFilter}
-                onChange={(val) => { setStatusFilter((val as any) || ""); setPage(1); }}
-                className="w-40"
-                options={[
-                  { value: "", label: "All Statuses" },
-                  { value: "active", label: "Active" },
-                  { value: "disabled", label: "Disabled" }
-                ]}
-              />
-              <SelectDropdown
-                value={roleFilter}
-                onChange={(val) => { setRoleFilter(val === null || val === "" ? "" : Number(val)); setPage(1); }}
-                className="w-48"
-                options={[
-                  { value: "", label: "All Roles" },
-                  ...roles.map((r) => ({ value: r.id, label: r.label || r.name }))
-                ]}
-              />
+            <div className="px-4 py-3 flex flex-wrap items-center gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Account Status</span>
+                <SelectDropdown
+                  value={statusFilter}
+                  onChange={(val) => { setStatusFilter((val as any) || ""); setPage(1); }}
+                  className="w-40"
+                  options={[
+                    { value: "", label: "All Statuses" },
+                    { value: "active", label: "Active Only" },
+                    { value: "disabled", label: "Disabled Only" }
+                  ]}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Assigned Role</span>
+                <SelectDropdown
+                  value={roleFilter}
+                  onChange={(val) => { setRoleFilter(val === null || val === "" ? "" : Number(val)); setPage(1); }}
+                  className="w-48"
+                  options={[
+                    { value: "", label: "All Roles" },
+                    ...roles.map((r) => ({ value: r.id, label: r.label || r.name }))
+                  ]}
+                />
+              </div>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                reveal
-                onClick={clearFilters}
-                className="text-[11px] h-8"
-              >
-                <Trash2 size={14} />
-                <span>Clear all</span>
-              </Button>
+              <div className="mt-5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-colors h-8"
+                >
+                  <Trash2 size={14} />
+                  <span>Clear all</span>
+                </Button>
+              </div>
             </div>
           </motion.div>
         )}

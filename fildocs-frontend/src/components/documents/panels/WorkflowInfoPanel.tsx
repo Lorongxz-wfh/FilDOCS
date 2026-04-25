@@ -157,12 +157,12 @@ const WorkflowInfoPanel: React.FC<Props> = ({
   const revisionReason = (version as any).revision_reason ?? null;
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto pr-0.5 space-y-4">
+    <div className="flex flex-col h-full overflow-y-auto pr-0.5 space-y-5">
         {activeTab === "details" && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {/* Header Actions for Editing */}
             <div className="flex items-center justify-between px-1">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                 <FileText className="h-3 w-3" />
                 Workflow Metadata
               </h3>
@@ -170,7 +170,7 @@ const WorkflowInfoPanel: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={handleEditOpen}
-                  className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-tight text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-300 hover:bg-brand-50/50 dark:hover:bg-brand-500/10 border border-transparent transition-all"
+                  className="flex items-center gap-1 rounded-lg px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-300 hover:bg-brand-50/50 dark:hover:bg-brand-500/10 border border-transparent transition-all"
                 >
                   <Pencil className="h-2.5 w-2.5" />
                   Edit
@@ -182,7 +182,7 @@ const WorkflowInfoPanel: React.FC<Props> = ({
                     type="button"
                     onClick={handleCancel}
                     disabled={isSaving}
-                    className="rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-tight text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition"
+                    className="rounded-lg px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition"
                   >
                     Cancel
                   </button>
@@ -190,7 +190,7 @@ const WorkflowInfoPanel: React.FC<Props> = ({
                     type="button"
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-tight text-white bg-brand-500 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-500 disabled:opacity-50 transition  flex items-center gap-1.5"
+                    className="rounded-lg px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-white bg-brand-500 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-500 disabled:opacity-50 transition  flex items-center gap-1.5"
                   >
                     {isSaving ? <Loader2 className="animate-spin h-2.5 w-2.5" /> : <CheckCircle2 className="h-2.5 w-2.5" />}
                     Save
@@ -199,10 +199,10 @@ const WorkflowInfoPanel: React.FC<Props> = ({
               )}
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {isEditing ? (
-                <div className="rounded-xl bg-white dark:bg-surface-500 border border-brand-200/50 dark:border-brand-500/20 px-3 py-2.5 ">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1.5">
+                <div className="rounded-xl bg-white dark:bg-surface-500 border border-brand-200/50 dark:border-brand-500/20 px-4 py-3 shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
                     Workflow Title
                     {!isDraftStatus && (
                       <span className="ml-1 text-slate-400 font-normal lowercase tracking-normal">
@@ -215,15 +215,15 @@ const WorkflowInfoPanel: React.FC<Props> = ({
                     onChange={(e) => isDraftStatus && setTitleDraft(e.target.value)}
                     disabled={isSaving || !isDraftStatus}
                     rows={2}
-                    className="w-full rounded-lg border-0 bg-slate-50/50 dark:bg-surface-600/30 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
+                    className="w-full rounded-lg border-0 bg-slate-50/50 dark:bg-surface-600/30 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
                   />
                 </div>
               ) : (
-                <div className="rounded-xl border border-slate-100/80 dark:border-surface-300/10 px-3 py-3 bg-slate-50/30 dark:bg-surface-600/20">
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 block mb-1">
+                <div className="rounded-xl border border-slate-200/60 dark:border-surface-300/10 px-4 py-4 bg-slate-50/30 dark:bg-surface-600/20">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 block mb-1.5">
                     Title
                   </span>
-                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 leading-relaxed block pr-2">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100 leading-relaxed block pr-2">
                     {document.title ?? "—"}
                   </span>
                 </div>
@@ -234,10 +234,10 @@ const WorkflowInfoPanel: React.FC<Props> = ({
                 highlight={justRegistered}
                 value={
                   document.code ? (
-                    <span className="font-mono text-slate-800 dark:text-slate-100">{document.code}</span>
+                    <span className="font-mono text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tighter">{document.code}</span>
                   ) : (document as any).reserved_code ? (
                     <span className="flex items-center justify-end gap-1.5">
-                      <span className="font-mono text-slate-400 dark:text-slate-500">
+                      <span className="font-mono text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tighter">
                         {(document as any).reserved_code}
                       </span>
                       <StatusBadge status="pending" className="!text-[8px] !px-1 font-black uppercase tracking-tighter" />
@@ -259,7 +259,7 @@ const WorkflowInfoPanel: React.FC<Props> = ({
 
               {null}
             {/* Metadata Rows */}
-            <div className="grid grid-cols-1 gap-y-1.5 pt-1">
+            <div className="grid grid-cols-1 gap-y-2 pt-2">
               <InfoRow
                 icon={<Calendar className="h-3 w-3" />}
                 label="Created At"
@@ -280,7 +280,8 @@ const WorkflowInfoPanel: React.FC<Props> = ({
               <InfoRow
                 icon={<CheckCircle2 className="h-3 w-3" />}
                 label="Version"
-                value={`v${version.version_number}`}
+                value={`V${version.version_number}`}
+                valueClassName="font-bold tabular-nums"
               />
               {version.effective_date && (
                 <InfoRow
@@ -294,7 +295,7 @@ const WorkflowInfoPanel: React.FC<Props> = ({
                   icon={<Calendar className="h-3 w-3 text-amber-500" />}
                   label="Retention"
                   value={fmt(version.retention_date)}
-                  valueClassName="text-amber-600 dark:text-amber-400 font-semibold"
+                  valueClassName="text-amber-600 dark:text-amber-400 font-bold"
                 />
               )}
             </div>
@@ -309,10 +310,10 @@ const WorkflowInfoPanel: React.FC<Props> = ({
 
             {/* Description Card */}
             {version.description && (
-              <div className="rounded-xl bg-slate-50/50 dark:bg-surface-600/30 border border-slate-100/80 dark:border-surface-300/10 px-4 py-3">
-                <div className="flex items-center gap-1.5 mb-2">
+              <div className="rounded-xl bg-slate-50/50 dark:bg-surface-600/30 border border-slate-200/60 dark:border-surface-300/10 px-4 py-4">
+                <div className="flex items-center gap-2 mb-2.5">
                   <FileText className="h-3 w-3 text-slate-400" />
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                     Description
                   </span>
                 </div>
@@ -324,14 +325,14 @@ const WorkflowInfoPanel: React.FC<Props> = ({
 
             {/* Revision Reason Card */}
             {revisionReason && (
-              <div className="rounded-xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 px-4 py-3">
-                <div className="flex items-center gap-1.5 mb-2 text-amber-600 dark:text-amber-400">
+              <div className="rounded-xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 px-4 py-4">
+                <div className="flex items-center gap-2 mb-2.5 text-amber-600 dark:text-amber-400">
                   <Calendar className="h-3 w-3" />
                   <span className="text-[10px] font-black uppercase tracking-widest">
                     Revision reason
                   </span>
                 </div>
-                <p className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 leading-relaxed whitespace-pre-wrap">
+                <p className="text-[11px] font-bold text-amber-800 dark:text-amber-300 leading-relaxed whitespace-pre-wrap">
                   {revisionReason}
                 </p>
               </div>
@@ -339,9 +340,9 @@ const WorkflowInfoPanel: React.FC<Props> = ({
 
             {/* Retention Date Edit Field */}
             {isEditing && (
-              <div className="rounded-xl border border-amber-200/50 dark:border-amber-500/20 px-3 py-2.5 bg-amber-50/20 dark:bg-amber-950/10">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-500 mb-1.5 flex items-center gap-1.5">
-                  <Calendar className="h-2.5 w-2.5" />
+              <div className="rounded-xl border border-amber-200/50 dark:border-amber-500/20 px-4 py-3.5 bg-amber-50/20 dark:bg-amber-950/10 shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-500 mb-2 flex items-center gap-2">
+                  <Calendar className="h-3 w-3" />
                   Retention Date
                 </p>
                 <input
@@ -349,43 +350,43 @@ const WorkflowInfoPanel: React.FC<Props> = ({
                   value={retentionDateDraft}
                   onChange={(e) => setRetentionDateDraft(e.target.value)}
                   min={new Date().toISOString().split("T")[0]}
-                  className="w-full rounded-lg border-0 bg-white/50 dark:bg-surface-600 px-3 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
+                  className="w-full rounded-lg border-0 bg-white dark:bg-surface-600 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
                 />
-                <p className="text-[9px] text-amber-600/60 dark:text-amber-500/50 mt-1.5 font-medium">
-                  Document will automatically archive on this date if distributed.
+                <p className="text-[9px] text-amber-600/60 dark:text-amber-500/50 mt-2 font-bold uppercase tracking-wide">
+                  Auto-archive on distribution
                 </p>
               </div>
             )}
 
             {/* Tags Section */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5 px-1">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
                 <Tag className="h-3 w-3 text-slate-400" />
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   Tags
                 </span>
               </div>
               
               {isEditing ? (
-                <div className="rounded-xl bg-white dark:bg-surface-500 border border-slate-200/60 dark:border-surface-300/20 p-2.5 ">
-                  <div className="flex flex-wrap gap-1.5 mb-2">
+                <div className="rounded-xl bg-white dark:bg-surface-500 border border-slate-200/60 dark:border-surface-300/20 p-3 shadow-sm">
+                  <div className="flex flex-wrap gap-2 mb-3">
                     {tagsDraft.map((tag) => (
                       <span
                         key={tag}
-                        className="flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold bg-slate-100 dark:bg-surface-400 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/5"
+                        className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-surface-400 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/5"
                       >
                         {tag}
                         <button
                           type="button"
                           onClick={() => removeTag(tag)}
-                          className="hover:text-rose-500 transition leading-none ml-1"
+                          className="hover:text-rose-500 transition leading-none"
                         >
                           ×
                         </button>
                       </span>
                     ))}
                     {tagsDraft.length === 0 && (
-                      <span className="text-[10px] text-slate-400 p-1">No tags added</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300 p-1">Empty</span>
                     )}
                   </div>
                   <input
@@ -394,15 +395,15 @@ const WorkflowInfoPanel: React.FC<Props> = ({
                     onKeyDown={handleTagInputKeyDown}
                     disabled={isSaving}
                     placeholder="Add tag (Enter or comma)..."
-                    className="w-full rounded-lg bg-slate-50 dark:bg-surface-600/50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 border-0 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
+                    className="w-full rounded-lg bg-slate-50 dark:bg-surface-600/50 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 border-0 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all placeholder:text-slate-400 placeholder:font-normal"
                   />
                 </div>
               ) : tags.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5 px-1">
+                <div className="flex flex-wrap gap-2 px-1">
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-lg bg-slate-100 dark:bg-surface-400 px-2.5 py-1 text-[10px] font-semibold text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-white/5"
+                      className="rounded-lg bg-slate-100/50 dark:bg-surface-400 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-white/5"
                     >
                       {tag}
                     </span>
@@ -410,8 +411,8 @@ const WorkflowInfoPanel: React.FC<Props> = ({
                 </div>
               ) : (
                 <div className="px-1 py-1">
-                  <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 italic">
-                    No tags associated with this document.
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300 dark:text-slate-600">
+                    No Tags
                   </p>
                 </div>
               )}

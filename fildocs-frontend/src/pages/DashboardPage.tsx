@@ -706,13 +706,13 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="min-h-0 flex flex-1 flex-col overflow-hidden">
       {/* ── Page header ── */}
-      <div className="shrink-0 border-b border-neutral-200/60 bg-neutral-50 dark:border-surface-400 dark:bg-surface-600 px-4 sm:px-5 py-3 sm:py-3.5">
+      <div className="shrink-0 border-b border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-neutral-400 dark:text-neutral-500 leading-none">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 leading-none">
               {today}
             </p>
-            <h1 className="mt-1.5 text-sm sm:text-base font-display font-semibold text-neutral-900 dark:text-neutral-50 leading-tight truncate">
+            <h1 className="mt-2 text-base sm:text-xl font-bold text-slate-900 dark:text-slate-50 leading-tight truncate">
               {greeting}<span className="hidden sm:inline">, {firstName}</span>
             </h1>
           </div>
