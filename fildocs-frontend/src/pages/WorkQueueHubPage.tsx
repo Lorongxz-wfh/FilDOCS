@@ -228,7 +228,7 @@ const WorkQueueHubPage: React.FC = () => {
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 sm:py-3.5">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-slate-400" />
-                <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
+                <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 leading-tight truncate">
                   Active Documents
                 </h2>
               </div>
@@ -245,7 +245,7 @@ const WorkQueueHubPage: React.FC = () => {
               )}
             </div>
 
-            <div className="flex-1 px-4 pt-4 pb-3 space-y-1.5 overflow-hidden bg-slate-50/20 dark:bg-surface-500/10">
+            <div className="flex-1 px-4 pt-4 pb-3 space-y-1.5 overflow-y-auto bg-slate-50/20 dark:bg-surface-500/10 custom-scrollbar">
               {loading ? (
                 <SkeletonList variant="card" rows={3} />
               ) : sortedItems.length === 0 ? (
@@ -255,28 +255,38 @@ const WorkQueueHubPage: React.FC = () => {
                   className="py-10"
                 />
               ) : (
-                <div className="flex flex-col gap-1.5 focus-within:z-20">
+                <motion.div 
+                  className="flex flex-col gap-1.5"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    visible: { transition: { staggerChildren: 0.04 } }
+                  }}
+                >
                   {sortedItems.map((item: WorkQueueItem) => (
-                    <QueueCard
+                    <motion.div
                       key={`${item.document.id}-${item.version.id}`}
-                      item={item}
-                      onClick={openByDocId}
-                    />
+                      variants={{
+                        hidden: { opacity: 0, y: 8 },
+                        visible: { opacity: 1, y: 0 }
+                      }}
+                      transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                    >
+                      <QueueCard
+                        item={item}
+                        onClick={openByDocId}
+                      />
+                    </motion.div>
                   ))}
-                </div>
+                </motion.div>
               )}
             </div>
 
-            {/* Fading Edge Mask */}
-            {!loading && sortedItems.length > 2 && (
-              <div className="absolute bottom-[61px] left-0 right-0 h-10 bg-gradient-to-t from-white dark:from-surface-500 via-white/40 dark:via-surface-500/40 to-transparent pointer-events-none z-10" />
-            )}
-
             {/* Bottom View All Button */}
-            <div className="shrink-0 flex justify-center py-4 border-t border-slate-50/50 dark:border-surface-400/30">
+            <div className="shrink-0 flex justify-center py-3 border-t border-slate-100 dark:border-surface-400/50 bg-white dark:bg-surface-500">
               <button
                 onClick={() => navigate("/documents/all")}
-                className="flex items-center gap-2 px-4 py-2 rounded-md border border-slate-200 dark:border-surface-400 text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors uppercase tracking-wider"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-md border border-slate-200 dark:border-surface-400 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 hover:border-slate-300 dark:hover:border-surface-300 transition-all uppercase tracking-widest active:scale-95"
               >
                 <FileText className="h-3.5 w-3.5" />
                 View all documents
@@ -299,7 +309,7 @@ const WorkQueueHubPage: React.FC = () => {
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 sm:py-3.5">
               <div className="flex items-center gap-2">
                 <ClipboardList className="h-4 w-4 text-slate-400" />
-                <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
+                <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 leading-tight truncate">
                   Active Requests
                 </h2>
               </div>
@@ -315,7 +325,7 @@ const WorkQueueHubPage: React.FC = () => {
               )}
             </div>
 
-            <div className="flex-1 px-4 pt-4 pb-1 space-y-1.5 overflow-hidden bg-slate-50/20 dark:bg-surface-500/10">
+            <div className="flex-1 px-4 pt-4 pb-3 space-y-1.5 overflow-y-auto bg-slate-50/20 dark:bg-surface-500/10 custom-scrollbar">
               {loading ? (
                 <SkeletonList variant="card" rows={3} />
               ) : requestItems.length === 0 ? (
@@ -325,28 +335,38 @@ const WorkQueueHubPage: React.FC = () => {
                   className="py-10"
                 />
               ) : (
-                <div className="flex flex-col gap-1.5 focus-within:z-20">
+                <motion.div 
+                  className="flex flex-col gap-1.5"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    visible: { transition: { staggerChildren: 0.04 } }
+                  }}
+                >
                   {requestItems.map((item: any) => (
-                    <RequestQueueCard
+                    <motion.div
                       key={`req-${item.id || item.request_id}`}
-                      item={item}
-                      onClick={(id) => navigate(`/document-requests/${id}`)}
-                    />
+                      variants={{
+                        hidden: { opacity: 0, y: 8 },
+                        visible: { opacity: 1, y: 0 }
+                      }}
+                      transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                    >
+                      <RequestQueueCard
+                        item={item}
+                        onClick={(id) => navigate(`/document-requests/${id}`)}
+                      />
+                    </motion.div>
                   ))}
-                </div>
+                </motion.div>
               )}
             </div>
 
-            {/* Fading Edge Mask */}
-            {!loading && requestItems.length > 2 && (
-              <div className="absolute bottom-[61px] left-0 right-0 h-10 bg-gradient-to-t from-white dark:from-surface-500 via-white/40 dark:via-surface-500/40 to-transparent pointer-events-none z-10" />
-            )}
-
             {/* Bottom View All Button */}
-            <div className="shrink-0 flex justify-center py-4 border-t border-slate-50/50 dark:border-surface-400/30">
+            <div className="shrink-0 flex justify-center py-3 border-t border-slate-100 dark:border-surface-400/50 bg-white dark:bg-surface-500">
               <button
                 onClick={() => navigate("/document-requests")}
-                className="flex items-center gap-2 px-4 py-2 rounded-md border border-slate-200 dark:border-surface-400 text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors uppercase tracking-wider"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-md border border-slate-200 dark:border-surface-400 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 hover:border-slate-300 dark:hover:border-surface-300 transition-all uppercase tracking-widest active:scale-95"
               >
                 <ClipboardList className="h-3.5 w-3.5" />
                 View all requests
@@ -368,13 +388,13 @@ const WorkQueueHubPage: React.FC = () => {
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 dark:border-surface-400 px-4 py-3 sm:py-3.5">
               <div className="flex items-center gap-2">
                 <LayoutTemplate className="h-4 w-4 text-slate-400" />
-                <h2 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight truncate">
+                <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 leading-tight truncate">
                   Recent Activity
                 </h2>
               </div>
             </div>
 
-            <div className="flex-1 px-3 pt-3 pb-1 overflow-hidden">
+            <div className="flex-1 px-3 pt-3 pb-3 overflow-y-auto custom-scrollbar">
               {loadingActivity ? (
                 <SkeletonList variant="activity" rows={6} />
               ) : recentActivity.length === 0 ? (
@@ -383,7 +403,7 @@ const WorkQueueHubPage: React.FC = () => {
                   className="py-10"
                 />
               ) : (
-                <div className="space-y-0.5 focus-within:z-20">
+                <div className="space-y-0.5">
                   {recentActivity.map((l: any, idx) => {
                     const docName = l.document 
                       ? (l.document.code ? `${l.document.code} — ${l.document.title}` : l.document.title)
@@ -392,11 +412,11 @@ const WorkQueueHubPage: React.FC = () => {
                     return (
                       <motion.button
                         key={l.id}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ 
                           duration: 0.3, 
-                          delay: idx * 0.05,
+                          delay: idx * 0.04,
                           ease: [0.23, 1, 0.32, 1] 
                         }}
                         whileHover={{ x: 4 }}
@@ -405,17 +425,17 @@ const WorkQueueHubPage: React.FC = () => {
                         className="w-full text-left rounded-md px-3 py-2.5 transition-colors hover:bg-slate-50 dark:hover:bg-surface-400 group"
                       >
                         {/* Action - Header */}
-                        <p className="text-[12px] font-semibold text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                        <p className="text-[12px] font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                           {friendlyEvent(l.event)}
                         </p>
 
                         {/* Doc Context | Time - Subheader */}
-                        <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium overflow-hidden">
-                          <span className="truncate max-w-[75%]">
+                        <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-semibold overflow-hidden">
+                          <span className="truncate max-w-[70%]">
                             {docName}
                           </span>
                           <span className="shrink-0 opacity-40">|</span>
-                          <span className="tabular-nums whitespace-nowrap opacity-80">
+                          <span className="tabular-nums whitespace-nowrap opacity-80 uppercase tracking-tighter">
                             {formatWhen(l.created_at)}
                           </span>
                         </div>
@@ -426,16 +446,11 @@ const WorkQueueHubPage: React.FC = () => {
               )}
             </div>
 
-            {/* Fading Edge Mask */}
-            {!loadingActivity && recentActivity.length > 3 && (
-              <div className="absolute bottom-[61px] left-0 right-0 h-10 bg-gradient-to-t from-white dark:from-surface-500 via-white/40 dark:via-surface-500/40 to-transparent pointer-events-none z-10" />
-            )}
-
             {/* Bottom View All Button */}
-            <div className="shrink-0 flex justify-center py-4 border-t border-slate-50/50 dark:border-surface-400/30">
+            <div className="shrink-0 flex justify-center py-3 border-t border-slate-100 dark:border-surface-400/50 bg-white dark:bg-surface-500">
               <button
                 onClick={() => navigate("/my-activity")}
-                className="flex items-center gap-2 px-4 py-2 rounded-md border border-slate-200 dark:border-surface-400 text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 transition-colors uppercase tracking-wider"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-md border border-slate-200 dark:border-surface-400 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-400 hover:border-slate-300 dark:hover:border-surface-300 transition-all uppercase tracking-widest active:scale-95"
               >
                 <LayoutTemplate className="h-3.5 w-3.5" />
                 View all activity
