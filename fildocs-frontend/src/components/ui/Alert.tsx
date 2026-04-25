@@ -1,4 +1,6 @@
 import React from "react";
+import { motion } from "framer-motion";
+import { TRANSITION_EASE_OUT } from "../../utils/animations";
 
 type Variant = "info" | "success" | "warning" | "error" | "danger" | "primary";
 
@@ -31,9 +33,12 @@ export default function Alert({
   dense = false,
 }: AlertProps) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, transform: "scale(0.98) translateY(4px)" }}
+      animate={{ opacity: 1, transform: "scale(1) translateY(0)" }}
+      transition={{ duration: 0.3, ease: TRANSITION_EASE_OUT }}
       className={[
-        "rounded-md border text-sm transition-all duration-200",
+        "rounded-md border text-sm transition-[background-color,border-color] duration-200",
         dense ? "px-3 py-2" : "px-4 py-3",
         boxStyles[variant],
         className,
@@ -61,6 +66,6 @@ export default function Alert({
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
