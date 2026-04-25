@@ -19,8 +19,10 @@ import { useToast } from "../../components/ui/toast/ToastContext";
 import FlowSelectModal, {
   type FlowSelection,
 } from "../../components/documents/modals/WorkflowCreateModal";
-import { Pencil } from "lucide-react";
+import { Pencil, ArrowRight, FileText, Info } from "lucide-react";
 import SelectDropdown from "../../components/ui/SelectDropdown";
+import { motion, AnimatePresence } from "framer-motion";
+import { TRANSITION_EASE_OUT } from "../../utils/animations";
 
 const Field: React.FC<{
   label: string;
@@ -320,10 +322,10 @@ export default function CreateWorkflowPage() {
       >
         {/* ── Flow summary bar ─────────────────────────────────────────────── */}
         {flow && (
-          <div className="flex items-center gap-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
+          <div className="flex items-center gap-0 rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shadow-sm shadow-slate-900/5">
             {/* Label */}
-            <div className="shrink-0 hidden sm:flex items-center px-4 py-2.5 border-r border-slate-200 dark:border-surface-400">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            <div className="shrink-0 hidden sm:flex items-center px-4 py-2.5 border-r border-slate-200 dark:border-surface-400 bg-slate-50/30 dark:bg-surface-600/10">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 whitespace-nowrap">
                 {flow.routingMode === "default"
                   ? isQA
                     ? "Default QA Flow"
@@ -333,27 +335,25 @@ export default function CreateWorkflowPage() {
             </div>
             {/* Chain — centered, scrollable */}
             <div className="flex-1 min-w-0 overflow-x-auto px-4 py-2.5">
-              <div className="flex items-center justify-center gap-1 flex-nowrap">
+              <div className="flex items-center justify-center gap-1.5 flex-nowrap">
                 {chainNodes.map((node, i) => (
                   <React.Fragment key={i}>
                     <span
                       className={[
-                        "whitespace-nowrap rounded px-2.5 py-1 text-xs font-medium shrink-0",
+                        "whitespace-nowrap rounded px-2.5 py-1 text-[11px] font-semibold shrink-0 transition-colors",
                         node.type === "check"
-                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400"
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-800/30"
                           : node.type === "action"
-                            ? "bg-slate-100 text-slate-600 dark:bg-surface-400 dark:text-slate-400"
+                            ? "bg-slate-50 text-slate-500 dark:bg-surface-400 dark:text-slate-400 border border-slate-200 dark:border-surface-400/80"
                             : node.type === "creator"
-                              ? "bg-brand-400/10 text-brand-600 dark:bg-brand-400/15 dark:text-brand-300 ring-1 ring-brand-400/30 dark:ring-brand-400/20"
-                              : "bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 text-slate-600 dark:text-slate-300",
+                              ? "bg-brand-50 text-brand-600 dark:bg-brand-400/15 dark:text-brand-300 ring-1 ring-brand-200 dark:ring-brand-400/20"
+                              : "bg-white dark:bg-surface-600 border border-slate-200 dark:border-surface-400 text-slate-600 dark:text-slate-300 shadow-sm shadow-slate-900/5",
                       ].join(" ")}
                     >
                       {node.label}
                     </span>
                     {i < chainNodes.length - 1 && (
-                      <span className="text-slate-400 dark:text-slate-600 text-xs shrink-0">
-                        →
-                      </span>
+                      <ArrowRight className="h-3 w-3 text-slate-300 dark:text-slate-600 shrink-0 mx-0.5" />
                     )}
                   </React.Fragment>
                 ))}
@@ -364,10 +364,10 @@ export default function CreateWorkflowPage() {
               <button
                 type="button"
                 onClick={() => setFlowModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition h-full"
+                className="flex items-center gap-1.5 px-4 py-2.5 text-[10px] font-bold uppercase tracking-tight text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-400 transition h-full"
               >
-                <Pencil size={10} />
-                Edit flow
+                <Pencil size={11} className="text-slate-400" />
+                <span>Edit flow</span>
               </button>
             </div>
           </div>
@@ -633,41 +633,100 @@ export default function CreateWorkflowPage() {
                   </div>
                 </div>
                 <div className="flex-1 min-h-0">
-                  {!file ? (
-                    <div className="flex h-full items-center justify-center border-2 border-dashed border-slate-200 dark:border-surface-400">
-                      <p className="text-sm text-slate-400 dark:text-slate-500">
-                        Attach a file to preview it here
-                      </p>
-                    </div>
-                  ) : previewLoading ? (
-                    <div className="h-full w-full bg-slate-100 dark:bg-surface-400 animate-pulse flex flex-col gap-3 p-5">
-                      <div className="h-3.5 w-3/4 rounded bg-slate-200 dark:bg-surface-300" />
-                      <div className="h-3.5 w-full rounded bg-slate-200 dark:bg-surface-300" />
-                      <div className="h-3.5 w-5/6 rounded bg-slate-200 dark:bg-surface-300" />
-                      <div className="h-3.5 w-2/3 rounded bg-slate-200 dark:bg-surface-300" />
-                      <div className="mt-2 h-3.5 w-full rounded bg-slate-200 dark:bg-surface-300" />
-                      <div className="h-3.5 w-4/5 rounded bg-slate-200 dark:bg-surface-300" />
-                    </div>
-                  ) : previewError ? (
-                    <div className="border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/15 p-4 text-xs text-rose-700 dark:text-rose-300">
-                      {previewError}
-                      <p className="mt-1 opacity-70">
-                        You can still save without a preview.
-                      </p>
-                    </div>
-                  ) : tempPreview?.url ? (
-                    <iframe
-                      title="Document preview"
-                      src={tempPreview.url}
-                      className="h-full w-full border-0"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center">
-                      <p className="text-sm text-slate-400 dark:text-slate-500">
-                        Preview not available.
-                      </p>
-                    </div>
-                  )}
+                  <AnimatePresence mode="wait">
+                    {!file ? (
+                      <motion.div 
+                        key="empty"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease: TRANSITION_EASE_OUT }}
+                        className="flex h-full flex-col items-center justify-center border-2 border-dashed border-slate-100 dark:border-surface-400 p-8 text-center"
+                      >
+                        <div className="h-12 w-12 rounded-full bg-slate-50 dark:bg-surface-400 flex items-center justify-center mb-3">
+                          <FileText className="h-6 w-6 text-slate-300 dark:text-slate-500" />
+                        </div>
+                        <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">
+                          No file attached
+                        </p>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 max-w-[180px]">
+                          Upload a PDF, Word, or Excel file to see a preview here.
+                        </p>
+                      </motion.div>
+                    ) : previewLoading ? (
+                      <motion.div 
+                        key="loading"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-full w-full bg-white dark:bg-surface-500 flex flex-col p-8 space-y-6"
+                      >
+                        <div className="space-y-3">
+                          <div className="h-4 w-2/3 bg-slate-100 dark:bg-surface-400 rounded animate-pulse" />
+                          <div className="h-3 w-1/2 bg-slate-50 dark:bg-surface-400/50 rounded animate-pulse" />
+                        </div>
+                        
+                        <div className="space-y-3 pt-4">
+                          {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div 
+                              key={i} 
+                              className="h-2.5 bg-slate-50 dark:bg-surface-400/30 rounded animate-pulse" 
+                              style={{ 
+                                width: `${Math.floor(Math.random() * 40) + 60}%`,
+                                animationDelay: `${i * 100}ms`
+                              }} 
+                            />
+                          ))}
+                        </div>
+
+                        <div className="flex-1" />
+                        
+                        <div className="flex items-center gap-2 pt-6 border-t border-slate-50 dark:border-surface-400/50">
+                          <div className="h-8 w-8 rounded-full bg-slate-50 dark:bg-surface-400 animate-pulse" />
+                          <div className="space-y-1.5 flex-1">
+                            <div className="h-2 w-24 bg-slate-100 dark:bg-surface-400 rounded animate-pulse" />
+                            <div className="h-2 w-16 bg-slate-50 dark:bg-surface-400/50 rounded animate-pulse" />
+                          </div>
+                        </div>
+                      </motion.div>
+                    ) : previewError ? (
+                      <motion.div 
+                        key="error"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3, ease: TRANSITION_EASE_OUT }}
+                        className="p-6 h-full flex flex-col items-center justify-center text-center"
+                      >
+                         <div className="h-10 w-10 rounded-full bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center mb-3 text-rose-500">
+                          <Info className="h-5 w-5" />
+                        </div>
+                        <p className="text-sm font-bold text-rose-600 dark:text-rose-400">{previewError}</p>
+                        <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 max-w-[200px]">
+                          We couldn't generate a visual preview for this file. You can still save the document and it will be accessible in the library.
+                        </p>
+                      </motion.div>
+                    ) : tempPreview?.url ? (
+                      <motion.div 
+                        key="iframe"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="h-full w-full"
+                      >
+                        <iframe
+                          title="Document preview"
+                          src={tempPreview.url}
+                          className="h-full w-full border-0"
+                        />
+                      </motion.div>
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <p className="text-sm text-slate-400 dark:text-slate-500">
+                          Preview not available.
+                        </p>
+                      </div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
