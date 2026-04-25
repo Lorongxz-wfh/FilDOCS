@@ -1,11 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { StatusBadge } from "../ui/Badge";
 import SkeletonList from "../ui/loader/SkeletonList";
 import InlineSpinner from "../ui/loader/InlineSpinner";
 import type { PendingAction } from "../../services/types";
 import { FileText, CheckCircle, Megaphone, Inbox } from "lucide-react";
 import { Card, CardHeader, CardBody } from "../ui/Card";
+import { TRANSITION_EASE_OUT } from "../../utils/animations";
 
 type Props = {
   items: PendingAction[];
@@ -31,7 +33,6 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
 
       <CardBody noPadding className="relative min-h-[240px]">
         <div
-          key={items.length} 
           className={`divide-y divide-neutral-200/60 dark:divide-surface-400 transition-opacity duration-200 ${loading && hasData ? "opacity-60" : "opacity-100"}`}
         >
           {loading && !hasData ? (
@@ -53,46 +54,56 @@ const DashboardPendingList: React.FC<Props> = ({ items, loading, hasData }) => {
               </p>
             </div>
           ) : (
-            items.slice(0, 5).map((x, i) => {
-              const isRequest = x.type === "request";
-              const Icon = isRequest ? Megaphone : FileText;
+            <AnimatePresence initial={false} mode="popLayout">
+              {items.slice(0, 5).map((x, i) => {
+                const isRequest = x.type === "request";
+                const Icon = isRequest ? Megaphone : FileText;
 
-              const handleClick = () => {
-                if (x.type === "document") {
-                  navigate(`/documents/${x.item.document.id}?version_id=${x.item.version.id}`);
-                } else {
-                  navigate(`/document-requests/${x.id}`);
-                }
-              };
+                const handleClick = () => {
+                  if (x.type === "document") {
+                    navigate(`/documents/${x.item.document.id}?version_id=${x.item.version.id}`);
+                  } else {
+                    navigate(`/document-requests/${x.id}`);
+                  }
+                };
 
-              return (
-                <button
-                  key={`${x.type}-${x.id}`}
-                  type="button"
-                  onClick={handleClick}
-                  style={{ animationDelay: `${i * 40}ms` }}
-                  className="flex w-full items-center gap-2.5 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 t-left transition-colors hover:bg-neutral-50 dark:hover:bg-surface-400 min-w-0 animate-live-entry fill-mode-backwards"
-                >
-                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded border border-neutral-200/60 dark:border-surface-300 ${isRequest ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-500' : 'bg-neutral-50 dark:bg-surface-400 text-neutral-500 dark:text-neutral-400'}`}>
-                    <Icon className="h-3.5 w-3.5" />
-                  </div>
+                return (
+                  <motion.button
+                    layout
+                    key={`${x.type}-${x.id}`}
+                    initial={{ opacity: 0, transform: "translateX(-8px)" }}
+                    animate={{ opacity: 1, transform: "translateX(0)" }}
+                    exit={{ opacity: 0, transform: "translateX(8px)" }}
+                    transition={{ 
+                      duration: 0.3, 
+                      ease: TRANSITION_EASE_OUT,
+                      delay: i * 0.04 
+                    }}
+                    type="button"
+                    onClick={handleClick}
+                    className="flex w-full items-center gap-2.5 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 t-left transition-colors hover:bg-neutral-50 dark:hover:bg-surface-400 min-w-0"
+                  >
+                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded border border-neutral-200/60 dark:border-surface-300 ${isRequest ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-500' : 'bg-neutral-50 dark:bg-surface-400 text-neutral-500 dark:text-neutral-400'}`}>
+                      <Icon className="h-3.5 w-3.5" />
+                    </div>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-neutral-900 dark:text-neutral-50 leading-tight">
-                      {x.title}
-                    </p>
-                    <p className="mt-0.5 truncate text-[10px] sm:text-[11px] text-neutral-400 dark:text-neutral-500 font-mono">
-                      {x.type === "document" ? (x.code || (x.item as any)?.document?.reserved_code || "—") : (x.code || "—")}
-                      {x.type === "document" && x.item?.version?.version_number !== undefined && (
-                        <> · v{x.item.version.version_number}</>
-                      )}
-                    </p>
-                  </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-semibold text-neutral-900 dark:text-neutral-50 leading-tight">
+                        {x.title}
+                      </p>
+                      <p className="mt-0.5 truncate text-[10px] sm:text-[11px] text-neutral-400 dark:text-neutral-500 font-mono">
+                        {x.type === "document" ? (x.code || (x.item as any)?.document?.reserved_code || "—") : (x.code || "—")}
+                        {x.type === "document" && x.item?.version?.version_number !== undefined && (
+                          <> · v{x.item.version.version_number}</>
+                        )}
+                      </p>
+                    </div>
 
-                  <StatusBadge status={x.status} className="shrink-0" />
-                </button>
-              );
-            })
+                    <StatusBadge status={x.status} className="shrink-0" />
+                  </motion.button>
+                );
+              })}
+            </AnimatePresence>
           )}
         </div>
 
