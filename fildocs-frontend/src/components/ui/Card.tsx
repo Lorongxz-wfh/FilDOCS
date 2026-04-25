@@ -80,9 +80,10 @@ export const Card: React.FC<CardProps> = ({
     <div
       onClick={onClick}
       className={`
-        flex flex-col rounded-md bg-white dark:bg-surface-500 overflow-hidden transition-all duration-150
+        flex flex-col rounded-md bg-white dark:bg-surface-500 overflow-hidden 
+        transition-[transform,border-color,background-color] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]
         ${noBorder ? "" : "border border-slate-200 dark:border-surface-400"}
-        ${isClickable ? "cursor-pointer hover:border-brand-300 dark:hover:border-surface-300" : ""}
+        ${isClickable ? "cursor-pointer hover:border-brand-300 dark:hover:border-surface-300 active:scale-[0.99]" : ""}
         ${className}
       `}
     >
