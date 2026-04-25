@@ -1,6 +1,7 @@
 import React from "react";
 import Skeleton from "../ui/loader/Skeleton";
 import { Card, CardBody } from "../ui/Card";
+import LiveValuePulse from "../ui/LiveValuePulse";
 
 interface StatCardProps {
   label: string;
@@ -15,7 +16,13 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, loading }) => (
         {label}
       </p>
       <div className="mt-1.5 sm:mt-2 text-xl sm:text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100 leading-none h-6 sm:h-7 flex items-center">
-        {loading ? <Skeleton className="h-5 w-10 sm:h-6 sm:w-14" /> : (value ?? 0)}
+        {loading ? (
+          <Skeleton className="h-5 w-10 sm:h-6 sm:w-14" />
+        ) : (
+          <LiveValuePulse value={value ?? 0}>
+            {value ?? 0}
+          </LiveValuePulse>
+        )}
       </div>
     </CardBody>
   </Card>

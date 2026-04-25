@@ -2,6 +2,7 @@ import React from "react";
 import type { WorkQueueItem } from "../../services/documents";
 import { StatusBadge } from "../ui/Badge";
 import { Card, CardBody } from "../ui/Card";
+import { motion } from "framer-motion";
 
 interface QueueCardProps {
   item: WorkQueueItem;
@@ -20,7 +21,11 @@ const QueueCard: React.FC<QueueCardProps> = ({ item, onClick }) => {
       <CardBody className="flex-row items-center gap-4 py-3 px-4">
         {/* Action Indicator Strip */}
         {item.can_act && (
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500 dark:bg-rose-400" />
+          <motion.div 
+            initial={{ opacity: 0, x: -4 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500 dark:bg-rose-400" 
+          />
         )}
 
         {/* Title + meta */}
@@ -29,7 +34,11 @@ const QueueCard: React.FC<QueueCardProps> = ({ item, onClick }) => {
             {doc.title}
           </p>
           <div className="flex items-center gap-2 mt-1.5">
-            <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-mono font-bold">
+            <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-mono font-bold uppercase tracking-wider">
+              {doc.code || "No Code"}
+            </span>
+            <div className="h-1 w-1 rounded-full bg-slate-200 dark:bg-surface-400" />
+            <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
               v{ver.version_number}
             </span>
             <div className="h-1 w-1 rounded-full bg-slate-200 dark:bg-surface-400" />
@@ -39,9 +48,11 @@ const QueueCard: React.FC<QueueCardProps> = ({ item, onClick }) => {
 
         <div className="shrink-0 text-right">
           {item.can_act ? (
-            <span className="text-[10px] sm:text-[11px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-widest block">
-              Action needed
-            </span>
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] sm:text-[11px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-widest block">
+                Action needed
+              </span>
+            </div>
           ) : (
             <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
               Monitoring

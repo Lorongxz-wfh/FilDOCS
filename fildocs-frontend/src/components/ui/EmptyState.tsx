@@ -1,5 +1,6 @@
 import React from "react";
 import { type LucideIcon, Search, Inbox } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface EmptyStateProps {
   /** Custom icon element or LucideIcon component */
@@ -46,10 +47,13 @@ export default function EmptyState({
   };
 
   return (
-    <div
-      className={`flex flex-col items-center justify-center py-16 px-6 text-center animate-in fade-in duration-500 ${className}`}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98, y: 4 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className={`flex flex-col items-center justify-center py-16 px-6 text-center ${className}`}
     >
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 dark:bg-surface-600 mb-4 border border-slate-100 dark:border-surface-400 ">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 dark:bg-surface-600 mb-4 border border-slate-100 dark:border-surface-400 shadow-sm shadow-slate-200/50 dark:shadow-none">
         <div className="text-slate-400 dark:text-slate-500">
           {renderIcon()}
         </div>
@@ -63,6 +67,6 @@ export default function EmptyState({
         </p>
       )}
       {action && <div className="mt-6">{action}</div>}
-    </div>
+    </motion.div>
   );
 }

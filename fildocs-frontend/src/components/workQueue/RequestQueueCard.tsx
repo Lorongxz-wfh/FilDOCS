@@ -2,6 +2,7 @@ import React from "react";
 import { StatusBadge } from "../ui/Badge";
 import { Users, FileStack } from "lucide-react";
 import { Card, CardBody } from "../ui/Card";
+import { motion } from "framer-motion";
 
 interface RequestQueueCardProps {
   item: any;
@@ -22,7 +23,11 @@ const RequestQueueCard: React.FC<RequestQueueCardProps> = ({ item, onClick }) =>
       <CardBody className="flex-row items-center gap-4 py-3 px-4">
         {/* Action Indicator Strip */}
         {isActionNeeded && (
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500 dark:bg-rose-400" />
+          <motion.div 
+            initial={{ opacity: 0, x: -4 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500 dark:bg-rose-400" 
+          />
         )}
 
         <div className="flex-1 min-w-0">
