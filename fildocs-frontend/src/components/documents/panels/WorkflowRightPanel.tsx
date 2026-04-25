@@ -86,7 +86,7 @@ const WorkflowRightPanel: React.FC<Props> = (props) => {
         }} 
         id="workflow-right" 
         fullWidth={true}
-        className="px-0.5 border-b border-slate-200 dark:border-surface-400 bg-slate-50/30 dark:bg-surface-600/20"
+        className="px-0.5 border-b border-slate-200 dark:border-surface-400 bg-slate-50/20 dark:bg-surface-600/10"
       />
 
       {/* Tab Content */}

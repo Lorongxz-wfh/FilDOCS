@@ -1,4 +1,5 @@
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getAssetUrl } from "../../../services/api";
 import WorkflowProgressCard from "./WorkflowProgressCard";
 import WorkflowRightPanel from "../panels/WorkflowRightPanel";
@@ -259,83 +260,102 @@ const Workflow: React.FC<WorkflowProps> = ({
 
   return (
     <>
-      <section className="flex flex-col gap-4 animate-in fade-in duration-300">
-        <WorkflowHeaderPanel
-          documentCode={document?.code ?? "N/A"}
-          versionNumber={Number(state.localVersion?.version_number ?? 0)}
-          status={state.localVersion?.status ?? "Loading..."}
-          isDraft={state.isDraft}
-          hasFile={state.hasFile}
-          canAct={state.canAct}
-          headerActions={state.headerActions}
-          approverNeedsSignedUpload={state.approverNeedsSignedUpload}
-          approverHasDownloaded={state.approverHasDownloaded}
-          isPreApprovalCreatorCheck={state.isPreApprovalCreatorCheck}
-          hasSignedFile={!!(state.localVersion as any)?.signed_file_path}
-          hasPreSignBackup={!!(state.localVersion as any)?.pre_sign_file_path}
-          currentUserSignatureUrl={currentUserSignatureUrl}
-          needsFileReplacement={state.needsFileReplacement}
-          isActiveApprover={state.isActiveApprover}
-          approverHasUploaded={state.approverHasUploaded}
-          onDownload={async () => {
-             try {
-               await downloadDocument(state.localVersion!);
-               actions.setApproverHasDownloaded(true);
-             } catch (e: any) {
-               push({ type: "error", title: "Download failed", message: e?.message ?? "Could not download." });
-             }
-          }}
-          onTriggerSign={(editMode) => {
-            actions.setSigningEditMode(editMode ?? false);
-            actions.setSigningOpen(true);
-          }}
-          onTriggerUpload={() => {
-            if (!state.canAct) return;
-            actions.fileUpload.triggerFilePicker();
-          }}
-          onRemoveSignature={async () => {
-            actions.setRemovingSignature(true);
-            try {
-              await removeInAppSignature(state.localVersion!.id);
-              actions.workflow.updateLastActionTime();
-              actions.setApproverHasUploaded(false);
-              actions.setApproverHasDownloaded(false);
-              if (onChanged) await onChanged();
-            } catch (e: any) {
-              push({ type: "error", title: "Failed to remove signature", message: e?.message ?? "Could not remove signature." });
-            } finally {
-              actions.setRemovingSignature(false);
-            }
-          }}
-          isChangingStatus={actions.workflow.isChangingStatus}
-          isUploading={actions.fileUpload.isUploading}
-          signingInBackground={state.signingInBackground}
-          removingSignature={state.removingSignature}
-        />
+      <motion.section 
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: { transition: { staggerChildren: 0.1 } }
+        }}
+        className="flex flex-col gap-4"
+      >
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
+          <WorkflowHeaderPanel
+            documentCode={document?.code ?? "N/A"}
+            versionNumber={Number(state.localVersion?.version_number ?? 0)}
+            status={state.localVersion?.status ?? "Loading..."}
+            isDraft={state.isDraft}
+            hasFile={state.hasFile}
+            canAct={state.canAct}
+            headerActions={state.headerActions}
+            approverNeedsSignedUpload={state.approverNeedsSignedUpload}
+            approverHasDownloaded={state.approverHasDownloaded}
+            isPreApprovalCreatorCheck={state.isPreApprovalCreatorCheck}
+            hasSignedFile={!!(state.localVersion as any)?.signed_file_path}
+            hasPreSignBackup={!!(state.localVersion as any)?.pre_sign_file_path}
+            currentUserSignatureUrl={currentUserSignatureUrl}
+            needsFileReplacement={state.needsFileReplacement}
+            isActiveApprover={state.isActiveApprover}
+            approverHasUploaded={state.approverHasUploaded}
+            onDownload={async () => {
+               try {
+                 await downloadDocument(state.localVersion!);
+                 actions.setApproverHasDownloaded(true);
+               } catch (e: any) {
+                 push({ type: "error", title: "Download failed", message: e?.message ?? "Could not download." });
+               }
+            }}
+            onTriggerSign={(editMode) => {
+              actions.setSigningEditMode(editMode ?? false);
+              actions.setSigningOpen(true);
+            }}
+            onTriggerUpload={() => {
+              if (!state.canAct) return;
+              actions.fileUpload.triggerFilePicker();
+            }}
+            onRemoveSignature={async () => {
+              actions.setRemovingSignature(true);
+              try {
+                await removeInAppSignature(state.localVersion!.id);
+                actions.workflow.updateLastActionTime();
+                actions.setApproverHasUploaded(false);
+                actions.setApproverHasDownloaded(false);
+                if (onChanged) await onChanged();
+              } catch (e: any) {
+                push({ type: "error", title: "Failed to remove signature", message: e?.message ?? "Could not remove signature." });
+              } finally {
+                actions.setRemovingSignature(false);
+              }
+            }}
+            isChangingStatus={actions.workflow.isChangingStatus}
+            isUploading={actions.fileUpload.isUploading}
+            signingInBackground={state.signingInBackground}
+            removingSignature={state.removingSignature}
+          />
+        </motion.div>
 
-        <WorkflowProgressCard
-          phases={phases}
-          routeStepsCount={state.routeSteps.length}
-          isTasksReady={actions.workflow.isTasksReady}
-          currentStep={state.currentStep}
-          nextStep={state.nextStep}
-          currentPhaseIndex={state.currentPhaseIndex}
-          currentGlobalIndex={state.activeFlowSteps.findIndex(s => s.id === state.currentStep.id)}
-          currentPhaseId={state.currentPhase.id}
-          activeFlowSteps={state.activeFlowSteps}
-          tasks={actions.workflow.tasks}
-        />
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
+          <WorkflowProgressCard
+            phases={phases}
+            routeStepsCount={state.routeSteps.length}
+            isTasksReady={actions.workflow.isTasksReady}
+            currentStep={state.currentStep}
+            nextStep={state.nextStep}
+            currentPhaseIndex={state.currentPhaseIndex}
+            currentGlobalIndex={state.activeFlowSteps.findIndex(s => s.id === state.currentStep.id)}
+            currentPhaseId={state.currentPhase.id}
+            activeFlowSteps={state.activeFlowSteps}
+            tasks={actions.workflow.tasks}
+          />
+        </motion.div>
 
-        {/* Specialized Finalization Modals are handled via hook state */}
-
-        <div style={{ height: "calc(100vh - 145px)" }}>
+        <motion.div 
+          variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} 
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="relative rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden shadow-sm"
+          style={{ height: "calc(100vh - 145px)" }}
+        >
           {!state.localVersion ? (
-            <div className="flex flex-col h-full rounded-xl border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 overflow-hidden">
-              <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-slate-50 dark:bg-surface-600 px-4 py-2 gap-3">
-                <div className="h-2.5 w-32 rounded-full bg-slate-200 dark:bg-surface-300 animate-pulse" />
-                <div className="h-6 w-14 rounded-md bg-slate-200 dark:bg-surface-300 animate-pulse" />
+            <div className="flex flex-col h-full">
+              <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-surface-400 bg-slate-50/50 dark:bg-surface-600/50 px-4 py-3 gap-3">
+                <div className="h-4 w-48 rounded-md bg-slate-100 dark:bg-surface-400 animate-pulse" />
+                <div className="h-8 w-24 rounded-md bg-slate-100 dark:bg-surface-400 animate-pulse" />
               </div>
-              <div className="flex-1 bg-slate-100 dark:bg-surface-600 animate-pulse" />
+              <div className="flex-1 bg-slate-50/30 dark:bg-surface-600/30 flex items-center justify-center">
+                 <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 rounded-full border-2 border-slate-100 border-t-slate-300 animate-spin" />
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 animate-pulse">Loading workspace...</p>
+                 </div>
+              </div>
             </div>
           ) : (
             <WorkflowPreviewWrapper
@@ -365,7 +385,6 @@ const Workflow: React.FC<WorkflowProps> = ({
               setIsPreviewLoading={actions.setIsPreviewLoading}
               fileInputRef={actions.fileUpload.fileInputRef}
               onOpenPreview={async () => {
-                
                 const res = await getDocumentPreviewLink(state.localVersion!.id);
                 window.open(res.url, "_blank");
               }}
@@ -393,8 +412,8 @@ const Workflow: React.FC<WorkflowProps> = ({
               }}
             />
           )}
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
       {state.pendingDelete != null && (
         <WorkflowDeleteDraftModal

@@ -1,4 +1,5 @@
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import SkeletonList from "../../ui/loader/SkeletonList";
 import type { DocumentMessage } from "../../../services/documents";
@@ -148,33 +149,58 @@ const WorkflowCommentsPanel: React.FC<Props> = ({
               <SkeletonList variant="comments" rows={skeletonCount} />
             </div>
           ) : messages.length === 0 && !optimisticText ? (
-            <div className="flex flex-col items-center justify-center h-full py-12 gap-1.5 text-center">
-              <p className="text-xs font-medium text-slate-400 dark:text-slate-500">No comments yet.</p>
-              <p className="text-[11px] text-slate-300 dark:text-slate-600">Be the first to leave a note.</p>
+            <div className="flex flex-col items-center justify-center h-full py-16 gap-3 text-center">
+              <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-surface-400 flex items-center justify-center border border-slate-200 dark:border-surface-300/30">
+                <ChevronDown className="h-5 w-5 text-slate-300 dark:text-slate-500 rotate-180" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Workspace Quiet</p>
+                <p className="text-[11px] font-medium text-slate-300 dark:text-slate-600">Be the first to leave a workflow note.</p>
+              </div>
             </div>
           ) : (
-            <div className="p-2 space-y-3">
-              {messages.map((m) => {
+            <motion.div 
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: { transition: { staggerChildren: 0.05 } }
+              }}
+              className="p-3 space-y-4"
+            >
+              {messages.map((m, idx) => {
                 const isMe = Number(m.sender_user_id) === Number(myUserId);
                 return (
-                  <WorkflowCommentBubble
+                  <motion.div 
                     key={m.id}
-                    senderName={isMe ? (me?.full_name ?? "Me") : (m.sender?.full_name ?? "Unknown")}
-                    roleName={m.sender?.role?.name}
-                    message={m.message}
-                    when={formatWhen(m.created_at)}
-                    isMine={isMe}
-                    isNew={newMessageIds.has(m.id)}
-                    type={m.type}
-                    avatarUrl={getAvatarUrl(isMe ? (me?.profile_photo_url || me?.profile_photo_path) : (m.sender?.profile_photo_url || m.sender?.profile_photo_path))}
-                    avatarLetter={isMe ? me?.full_name?.charAt(0).toUpperCase() : m.sender?.full_name?.charAt(0).toUpperCase()}
-                  />
+                    variants={{
+                      hidden: { opacity: 0, y: 10 },
+                      visible: { opacity: 1, y: 0 }
+                    }}
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <WorkflowCommentBubble
+                      senderName={isMe ? (me?.full_name ?? "Me") : (m.sender?.full_name ?? "Unknown")}
+                      roleName={m.sender?.role?.name}
+                      message={m.message}
+                      when={formatWhen(m.created_at)}
+                      isMine={isMe}
+                      isNew={newMessageIds.has(m.id)}
+                      type={m.type}
+                      avatarUrl={getAvatarUrl(isMe ? (me?.profile_photo_url || me?.profile_photo_path) : (m.sender?.profile_photo_url || m.sender?.profile_photo_path))}
+                      avatarLetter={isMe ? me?.full_name?.charAt(0).toUpperCase() : m.sender?.full_name?.charAt(0).toUpperCase()}
+                    />
+                  </motion.div>
                 );
               })}
 
               {/* Optimistic Message */}
               {optimisticText && (
-                <div key="optimistic-comment-bubble" className="opacity-60 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <motion.div 
+                  key="optimistic-comment-bubble" 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 0.6, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
                   <WorkflowCommentBubble
                     senderName={me?.full_name ?? "Me"}
                     message={optimisticText}
@@ -185,9 +211,9 @@ const WorkflowCommentsPanel: React.FC<Props> = ({
                     avatarUrl={getAvatarUrl(me?.profile_photo_url || me?.profile_photo_path)}
                     avatarLetter={me?.full_name?.charAt(0).toUpperCase()}
                   />
-                </div>
+                </motion.div>
               )}
-            </div>
+            </motion.div>
           )}
         </div>
 

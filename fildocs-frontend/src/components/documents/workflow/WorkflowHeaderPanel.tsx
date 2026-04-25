@@ -71,26 +71,27 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
     <div className="space-y-3">
       <AnimatePresence mode="popLayout">
         {/* ───── Action-Required Banners ─────────────────────────────────────────── */}
-
         {/* 0. Drafting - No Document Attached Banner */}
         {isDraft && !hasFile && (
           <motion.div
             key="draft-no-file"
-            initial={{ opacity: 0, height: 0, y: -20 }}
+            initial={{ opacity: 0, height: 0, y: -10 }}
             animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -20 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            exit={{ opacity: 0, height: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
             <Alert
               dense
               variant="primary"
+              className="border-brand-200 dark:border-brand-900/50"
               icon={<FileSearch className="h-4 w-4" />}
-              title="Drafting: No document attached"
+              title={<span className="font-bold uppercase tracking-widest text-[10px]">Action Required: Upload Document</span>}
               action={
                 <Button
                   type="button"
                   variant="primary"
                   size="sm"
+                  reveal
                   onClick={onTriggerUpload}
                   disabled={isUploading || isChangingStatus || signingInBackground || removingSignature || !canAct}
                 >
@@ -98,7 +99,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                 </Button>
               }
             >
-              Attach a document to begin the workflow.
+              <p className="text-xs font-medium text-brand-700/80 dark:text-brand-400/80">Attach a document to begin the workflow.</p>
             </Alert>
           </motion.div>
         )}
@@ -106,16 +107,17 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
         {canAct && approverNeedsSignedUpload && !approverHasUploaded && (
           <motion.div
             key="approver-sign"
-            initial={{ opacity: 0, height: 0, y: -20 }}
+            initial={{ opacity: 0, height: 0, y: -10 }}
             animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -20 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            exit={{ opacity: 0, height: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
             <Alert
               dense
               variant="primary"
+              className="border-brand-200 dark:border-brand-900/50"
               icon={<Upload className="h-4 w-4" />}
-              title={approverHasDownloaded ? "Step 2: Upload signed copy" : "Step 1: Download for signing"}
+              title={<span className="font-bold uppercase tracking-widest text-[10px]">{approverHasDownloaded ? "Step 2: Upload signed copy" : "Step 1: Download for signing"}</span>}
               action={
                 <div className="flex items-center gap-2">
                   {!approverHasDownloaded ? (
@@ -123,6 +125,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                       type="button"
                       variant="primary"
                       size="sm"
+                      reveal
                       onClick={onDownload}
                       disabled={isUploading || isChangingStatus || signingInBackground || removingSignature || !canAct}
                     >
@@ -133,6 +136,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                       type="button"
                       variant="primary"
                       size="sm"
+                      reveal
                       onClick={onTriggerUpload}
                       disabled={isUploading || isChangingStatus || signingInBackground || removingSignature || !canAct}
                     >
@@ -143,6 +147,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                     type="button"
                     variant="outline"
                     size="sm"
+                    reveal
                     onClick={() => onTriggerSign(false)}
                     disabled={isUploading || isChangingStatus || signingInBackground || removingSignature || !canAct}
                   >
@@ -152,9 +157,11 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                 </div>
               }
             >
-              {!approverHasDownloaded
-                ? "Choose a signing option to enable forwarding."
-                : "Upload signed copy or sign directly in the app."}
+              <p className="text-xs font-medium text-brand-700/80 dark:text-brand-400/80">
+                {!approverHasDownloaded
+                  ? "Choose a signing option to enable forwarding."
+                  : "Upload signed copy or sign directly in the app."}
+              </p>
             </Alert>
           </motion.div>
         )}
@@ -163,22 +170,24 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
         {canAct && isPreApprovalCreatorCheck && !hasSignedFile && (
           <motion.div
             key="creator-sign"
-            initial={{ opacity: 0, height: 0, y: -20 }}
+            initial={{ opacity: 0, height: 0, y: -10 }}
             animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -20 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            exit={{ opacity: 0, height: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
             <Alert
               dense
               variant="primary"
+              className="border-brand-200 dark:border-brand-900/50"
               icon={<Upload className="h-4 w-4" />}
-              title="Sign document before approval"
+              title={<span className="font-bold uppercase tracking-widest text-[10px]">Action Required: Sign document before approval</span>}
               action={
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
                     variant="primary"
                     size="sm"
+                    reveal
                     onClick={onTriggerUpload}
                     disabled={isUploading || isChangingStatus || signingInBackground || removingSignature || !canAct}
                   >
@@ -188,6 +197,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                     type="button"
                     variant="outline"
                     size="sm"
+                    reveal
                     onClick={() => onTriggerSign(false)}
                     disabled={isUploading || isChangingStatus || signingInBackground || removingSignature || !canAct}
                   >
@@ -197,7 +207,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                 </div>
               }
             >
-              A signature is required from the document owner before approval.
+              <p className="text-xs font-medium text-brand-700/80 dark:text-brand-400/80">A signature is required from the document owner before approval.</p>
             </Alert>
           </motion.div>
         )}
@@ -206,16 +216,17 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
         {canAct && ((isPreApprovalCreatorCheck && hasSignedFile) || (isActiveApprover && approverHasUploaded)) && (
           <motion.div
             key="signed-success"
-            initial={{ opacity: 0, height: 0, y: -20 }}
+            initial={{ opacity: 0, height: 0, y: -10 }}
             animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -20 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            exit={{ opacity: 0, height: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
             <Alert
               dense
               variant="success"
+              className="border-emerald-200 dark:border-emerald-900/50"
               icon={<CheckCircle2 className="h-4 w-4" />}
-              title={isActiveApprover && !isPreApprovalCreatorCheck ? "Document signed" : "Draft signed & ready"}
+              title={<span className="font-bold uppercase tracking-widest text-[10px]">{isActiveApprover && !isPreApprovalCreatorCheck ? "Document signed" : "Draft signed & ready"}</span>}
               action={
                 <div className="flex items-center gap-2">
                   {currentUserSignatureUrl && hasPreSignBackup && (
@@ -223,6 +234,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                       type="button"
                       variant="outline"
                       size="xs"
+                      reveal
                       onClick={() => onTriggerSign(true)}
                       disabled={isChangingStatus || removingSignature || !canAct}
                     >
@@ -233,6 +245,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                     type="button"
                     variant="danger"
                     size="xs"
+                    reveal
                     disabled={isChangingStatus || removingSignature || !canAct}
                     onClick={onRemoveSignature}
                   >
@@ -241,7 +254,7 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
                 </div>
               }
             >
-              Signature attached. You can now proceed.
+              <p className="text-xs font-medium text-emerald-700/80 dark:text-emerald-400/80">Signature attached. You can now proceed.</p>
             </Alert>
           </motion.div>
         )}
@@ -250,17 +263,18 @@ const WorkflowHeaderPanel: React.FC<Props> = ({
         {needsFileReplacement && (
           <motion.div
             key="needs-replacement"
-            initial={{ opacity: 0, height: 0, y: -20 }}
+            initial={{ opacity: 0, height: 0, y: -10 }}
             animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -20 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            exit={{ opacity: 0, height: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
             <Alert
               variant="warning"
+              className="border-amber-200 dark:border-amber-900/50"
               icon={<AlertTriangle className="h-4 w-4" />}
-              title="Revised document required"
+              title={<span className="font-bold uppercase tracking-widest text-[10px]">Revised document required</span>}
             >
-              This document was returned for revision. Please use the "Replace file" button above to upload the corrected version before forwarding it for review again.
+              <p className="text-xs font-medium text-amber-700/80 dark:text-amber-400/80">This document was returned for revision. Please use the "Replace file" button above to upload the corrected version before forwarding it for review again.</p>
             </Alert>
           </motion.div>
         )}

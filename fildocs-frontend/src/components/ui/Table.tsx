@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import EmptyState from "./EmptyState";
 import Skeleton from "./loader/Skeleton";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Align = "left" | "center" | "right";
 
@@ -61,6 +62,8 @@ export type TableProps<T> = {
   renderRowDetails?: (row: T) => React.ReactNode;
   /** Total items in the backend (for "Showing X of Y") */
   total?: number;
+  /** Enable staggered entrance animation for rows */
+  staggered?: boolean;
 };
 
 const alignClass = (align: Align | undefined) => {
@@ -163,6 +166,7 @@ export default function Table<T>({
   onToggleAll,
   renderRowDetails,
   total,
+  staggered,
 }: TableProps<T>) {
   const [expandedIds, setExpandedIds] = React.useState<Set<string | number>>(new Set());
 
@@ -215,7 +219,7 @@ export default function Table<T>({
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         {/* Sticky header — hidden if mobileRender is active on small screen */}
         <div
-          className={`sticky top-0 z-20 shrink-0 grid gap-3 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-300 border-b border-neutral-300/60 dark:border-surface-300/50 bg-neutral-50 dark:bg-surface-600 ${mobileRender ? "hidden sm:grid" : "grid"}`}
+          className={`sticky top-0 z-20 shrink-0 grid gap-3 px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-neutral-500 dark:text-neutral-400 border-b border-neutral-300/60 dark:border-surface-300/50 bg-neutral-50 dark:bg-surface-600 ${mobileRender ? "hidden sm:grid" : "grid"}`}
           style={{ gridTemplateColumns: finalTemplate }}
         >
           {selectable && (
@@ -367,77 +371,20 @@ export default function Table<T>({
             />
           )
         ) : (
-          <div className="divide-y divide-neutral-200/60 dark:divide-surface-400/50">
-            {rows.map((row, idx) => {
-              const clickable = !!onRowClick;
-              const key = rowKey(row, idx);
-              
-              // Mobile Card view
-              if (mobileRender) {
-                return (
-                  <div key={key}>
-                    <div 
-                      role={clickable ? "button" : undefined}
-                      tabIndex={clickable ? 0 : undefined}
-                      onClick={clickable ? () => onRowClick?.(row) : undefined}
-                      onKeyDown={clickable ? (e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onRowClick?.(row);
-                        }
-                      } : undefined}
-                      className={[
-                        "block sm:hidden transition-colors border-b border-neutral-100 dark:border-surface-400/50 bg-white dark:bg-surface-500",
-                        clickable ? "cursor-pointer active:bg-neutral-50 dark:active:bg-surface-400/60" : ""
-                      ].join(" ")}
-                    >
-                      {mobileRender(row)}
-                    </div>
-                    <div
-                      role={clickable ? "button" : undefined}
-                      tabIndex={clickable ? 0 : undefined}
-                      onClick={clickable ? () => onRowClick?.(row) : undefined}
-                      onKeyDown={clickable ? (e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onRowClick?.(row);
-                        }
-                      } : undefined}
-                      className={[
-                        "hidden sm:grid gap-3 items-center px-4 py-2.5 rounded-none text-sm transition-colors group",
-                        clickable
-                          ? "cursor-pointer hover:bg-neutral-50/80 dark:hover:bg-surface-400/40"
-                          : "",
-                        selectedIds?.has(key) ? "bg-brand-50/40 dark:bg-brand-900/10" : ""
-                      ].join(" ")}
-                      style={{ gridTemplateColumns: finalTemplate }}
-                    >
-                      {selectable && (
-                        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-                          <Checkbox 
-                            checked={selectedIds?.has(key) ?? false}
-                            onChange={() => onToggleRow?.(key)}
-                          />
-                        </div>
-                      )}
-                      {columns.map((c) => (
-                        <div
-                          key={c.key}
-                          className={[alignClass(c.align), c.className ?? ""].join(" ")}
-                        >
-                          {c.render(row)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-
-              const isSelected = selectedIds?.has(key) ?? false;
-
-              // Standard Table view
-              return (
-                <React.Fragment key={key}>
+          <>
+            <motion.div 
+              className="divide-y divide-neutral-200/60 dark:divide-surface-400/50"
+              initial={staggered ? "hidden" : undefined}
+              animate={staggered ? "visible" : undefined}
+              variants={{
+                visible: { transition: { staggerChildren: 0.03 } }
+              }}
+            >
+              {rows.map((row, idx) => {
+                const clickable = !!onRowClick;
+                const key = rowKey(row, idx);
+                
+                const rowContent = (
                   <div
                     role={clickable ? "button" : undefined}
                     tabIndex={clickable ? 0 : undefined}
@@ -451,7 +398,7 @@ export default function Table<T>({
                     className={[
                       "grid gap-3 items-center px-4 py-2.5 rounded-none text-sm transition-colors group",
                       clickable ? "cursor-pointer hover:bg-neutral-50/80 dark:hover:bg-surface-400/40" : "",
-                      isSelected ? "bg-brand-50/40 dark:bg-brand-900/10" : "",
+                      selectedIds?.has(key) ? "bg-brand-50/40 dark:bg-brand-900/10" : "",
                       renderRowDetails && expandedIds.has(key) ? "border-l-2 border-brand-500" : ""
                     ].join(" ")}
                     style={{ gridTemplateColumns: finalTemplate }}
@@ -459,7 +406,7 @@ export default function Table<T>({
                     {selectable && (
                       <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                         <Checkbox 
-                          checked={isSelected}
+                          checked={selectedIds?.has(key) ?? false}
                           onChange={() => onToggleRow?.(key)}
                         />
                       </div>
@@ -476,7 +423,7 @@ export default function Table<T>({
                         {c.key === 'expand' ? (
                            <button 
                              onClick={(e) => { e.stopPropagation(); toggleExpand(key); }}
-                             className="p-2 rounded hover:bg-slate-100 dark:hover:bg-surface-400 transition-colors" // Increased from p-1
+                             className="p-2 rounded hover:bg-slate-100 dark:hover:bg-surface-400 transition-colors"
                            >
                              <svg 
                                className={`h-4 w-4 transition-transform ${expandedIds.has(key) ? "rotate-180" : ""}`} 
@@ -489,14 +436,63 @@ export default function Table<T>({
                       </div>
                     ))}
                   </div>
-                  {renderRowDetails && expandedIds.has(key) && (
-                    <div className="bg-slate-50/50 dark:bg-surface-600/30 border-b border-neutral-100 dark:border-surface-400/50">
-                      {renderRowDetails(row)}
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
+                );
+
+                // Mobile Card view
+                if (mobileRender) {
+                  return (
+                    <motion.div 
+                      key={key}
+                      variants={staggered ? {
+                        hidden: { opacity: 0, y: 8 },
+                        visible: { opacity: 1, y: 0 }
+                      } : undefined}
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      <div 
+                        role={clickable ? "button" : undefined}
+                        tabIndex={clickable ? 0 : undefined}
+                        onClick={clickable ? () => onRowClick?.(row) : undefined}
+                        onKeyDown={clickable ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onRowClick?.(row);
+                          }
+                        } : undefined}
+                        className={[
+                          "block sm:hidden transition-colors border-b border-neutral-100 dark:border-surface-400/50 bg-white dark:bg-surface-500",
+                          clickable ? "cursor-pointer active:bg-neutral-50 dark:active:bg-surface-400/60" : ""
+                        ].join(" ")}
+                      >
+                        {mobileRender(row)}
+                      </div>
+                      <div className="hidden sm:block">
+                        {rowContent}
+                      </div>
+                    </motion.div>
+                  );
+                }
+
+                // Standard Table view
+                return (
+                  <motion.div 
+                    key={key}
+                    variants={staggered ? {
+                      hidden: { opacity: 0, y: 8 },
+                      visible: { opacity: 1, y: 0 }
+                    } : undefined}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    {rowContent}
+                    {renderRowDetails && expandedIds.has(key) && (
+                      <div className="bg-slate-50/50 dark:bg-surface-600/30 border-b border-neutral-100 dark:border-surface-400/50">
+                        {renderRowDetails(row)}
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </motion.div>
 
             {/* Sentinel + bottom loader */}
             {onLoadMore && (
@@ -511,7 +507,7 @@ export default function Table<T>({
                 )}
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
 
