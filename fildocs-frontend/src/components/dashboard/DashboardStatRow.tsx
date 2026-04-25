@@ -1,7 +1,9 @@
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Skeleton from "../ui/loader/Skeleton";
 import { Bell, FileText, Clock, Inbox } from "lucide-react";
 import { Card, CardBody } from "../ui/Card";
+import { TRANSITION_EASE_OUT } from "../../utils/animations";
 
 type StatItem = {
   label: string;
@@ -32,8 +34,8 @@ const DashboardStatRow: React.FC<Props> = ({
   loading,
   onStatClick,
 }) => {
-  const [pulseIndices, setPulseIndices] = React.useState<Set<number>>(new Set());
   const prevValues = React.useRef<(number | null)[]>([]);
+  const [highlightIndices, setHighlightIndices] = React.useState<Set<number>>(new Set());
 
   const items = React.useMemo(() => {
     const kpis: StatItem[] = [
@@ -56,7 +58,7 @@ const DashboardStatRow: React.FC<Props> = ({
         iconColor: "text-slate-400 dark:text-slate-500",
         valueColor: "text-slate-900 dark:text-slate-100",
         sub: "active cycles",
-        onClick: () => onStatClick?.("In progress"),
+        onClick: () => onStatClick?.("Pending workflows"),
       },
       {
         label: "Open requests",
@@ -65,7 +67,7 @@ const DashboardStatRow: React.FC<Props> = ({
         iconColor: "text-sky-400 dark:text-sky-400",
         valueColor: "text-slate-900 dark:text-slate-100",
         sub: "pending evidence",
-        onClick: () => onStatClick?.("Pending requests"),
+        onClick: () => onStatClick?.("Open requests"),
       },
       {
         label: "Total workflows",
@@ -74,7 +76,7 @@ const DashboardStatRow: React.FC<Props> = ({
         iconColor: "text-slate-400 dark:text-slate-500",
         valueColor: "text-slate-900 dark:text-slate-100",
         sub: "all-time documents",
-        onClick: () => onStatClick?.("Total documents"),
+        onClick: () => onStatClick?.("Total workflows"),
       },
       {
         label: "Total requests",
@@ -90,21 +92,21 @@ const DashboardStatRow: React.FC<Props> = ({
     return kpis;
   }, [pendingCount, pendingWorkflowsCount, openRequestsCount, allTimeWorkflowsCount, allTimeRequestsCount, onStatClick]);
 
-  // Pulse effect on value change
+  // Handle subtle highlight on value change
   React.useEffect(() => {
     const currentValues = items.map(i => i.value);
-    const indicesToPulse = new Set<number>();
+    const indicesToHighlight = new Set<number>();
 
     currentValues.forEach((val, idx) => {
       const prev = prevValues.current[idx];
       if (prev !== undefined && prev !== null && prev !== val) {
-        indicesToPulse.add(idx);
+        indicesToHighlight.add(idx);
       }
     });
 
-    if (indicesToPulse.size > 0) {
-      setPulseIndices(indicesToPulse);
-      const timer = setTimeout(() => setPulseIndices(new Set()), 1500);
+    if (indicesToHighlight.size > 0) {
+      setHighlightIndices(indicesToHighlight);
+      const timer = setTimeout(() => setHighlightIndices(new Set()), 2000);
       return () => clearTimeout(timer);
     }
 
@@ -117,19 +119,32 @@ const DashboardStatRow: React.FC<Props> = ({
         const isActionNeeded = item.label === "Action needed";
         const isLastAndNeedsSpan = (idx === items.length - 1) && (items.length % 2 === 0);
         const mobileColSpan = (isActionNeeded || isLastAndNeedsSpan) ? "col-span-2" : "col-span-1";
-        const isPulsing = pulseIndices.has(idx);
+        const isHighlighted = highlightIndices.has(idx);
 
         return (
           <Card
             key={item.label}
             onClick={item.onClick}
             className={`
-              transition-all duration-200 min-h-0 ${mobileColSpan} sm:col-span-1
-              ${isActionNeeded && item.value > 0 ? "ring-1 ring-rose-500/20 bg-rose-50/15 dark:ring-rose-500/40 dark:bg-rose-500/5 border-rose-200 dark:border-rose-900/50" : "border-neutral-200/60 dark:border-surface-400"}
-              ${isPulsing ? "animate-pulse-highlight ring-emerald-500/30" : ""}
+              relative transition-all duration-500 min-h-0 ${mobileColSpan} sm:col-span-1
+              ${isActionNeeded && item.value > 0 ? "border-rose-200/60 bg-rose-50/5 dark:border-rose-900/40 dark:bg-rose-500/5" : "border-neutral-200/60 dark:border-surface-400"}
+              overflow-hidden
             `}
           >
-            <CardBody className="h-full justify-between gap-1 py-2 sm:py-2.5 px-3 sm:px-4">
+            {/* Subtle background flash */}
+            <AnimatePresence>
+              {isHighlighted && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className={`absolute inset-0 pointer-events-none ${isActionNeeded ? "bg-rose-500/5" : "bg-sky-500/5"}`}
+                />
+              )}
+            </AnimatePresence>
+
+            <CardBody className="h-full justify-between gap-1 py-2 sm:py-2.5 px-3 sm:px-4 relative z-10">
               <div className="flex flex-col gap-1.5 sm:gap-2">
                 <div className="flex items-center gap-2">
                   <span className={`shrink-0 ${item.iconColor} sm:scale-110`}>{item.icon}</span>
@@ -138,17 +153,25 @@ const DashboardStatRow: React.FC<Props> = ({
                   </p>
                 </div>
 
-                <div className="flex items-center">
+                <div className="flex items-center h-6 sm:h-8">
                   {loading ? (
                     <Skeleton className="h-6 w-10 sm:h-8 sm:w-16" />
                   ) : (
-                    <p className={`text-xl sm:text-3xl font-display font-semibold tabular-nums leading-none transition-transform duration-300 ${item.valueColor} ${isPulsing ? "scale-110" : "scale-100"}`}>
-                      {item.value}
-                    </p>
+                    <AnimatePresence mode="wait">
+                      <motion.p
+                        key={item.value}
+                        initial={{ opacity: 0, transform: "translateY(4px)" }}
+                        animate={{ opacity: 1, transform: "translateY(0)" }}
+                        exit={{ opacity: 0, transform: "translateY(-4px)" }}
+                        transition={{ duration: 0.3, ease: TRANSITION_EASE_OUT }}
+                        className={`text-xl sm:text-3xl font-display font-semibold tabular-nums leading-none ${item.valueColor}`}
+                      >
+                        {item.value}
+                      </motion.p>
+                    </AnimatePresence>
                   )}
                 </div>
               </div>
-
             </CardBody>
           </Card>
         );
