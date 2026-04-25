@@ -80,7 +80,7 @@ const VolumeTrendChart: React.FC<{ data: VolumeSeries[]; height?: number; loadin
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(var(--color-neutral-900), 0.04)" }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148, 163, 184, 0.1)" }} />
           <Legend 
             verticalAlign="bottom" 
             align="center"

@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { FileText, CheckCircle2, Activity, TrendingUp, History, Percent, Clock, RotateCcw } from "lucide-react";
 import KpiCard from "../../ui/KpiCard";
 import ReportChartCard from "../ReportChartCard";
@@ -8,6 +9,7 @@ import StageDelayChart from "../../charts/StageDelayChart";
 import ActivityDistributionChart from "../../charts/ActivityDistributionChart";
 import DailyActivityStackedBarChart from "../../charts/DailyActivityStackedBarChart";
 import { type Bucket } from "../ReportFilters";
+import { TRANSITION_EASE_OUT } from "../../../utils/animations";
 
 interface OverviewTabProps {
   loading: boolean;
@@ -35,7 +37,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
   return (
     <div className="flex flex-col gap-6">
       {/* KPI cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <motion.div 
+        className="grid grid-cols-1 sm:grid-cols-3 gap-6"
+        initial={{ opacity: 0, transform: "translateY(10px)" }}
+        animate={{ opacity: 1, transform: "translateY(0)" }}
+        transition={{ duration: 0.4, ease: TRANSITION_EASE_OUT, delay: 0.05 }}
+      >
         <KpiCard
           loading={loading}
           label="All documents"
@@ -57,10 +64,15 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           icon={<Activity size={16} className="text-amber-600 dark:text-amber-400" />}
           iconBg="bg-amber-50 dark:bg-amber-900/30"
         />
-      </div>
+      </motion.div>
 
       {/* Volume trend + Phase donut side by side */}
-      <div className="relative group/snap">
+      <motion.div 
+        className="relative group/snap"
+        initial={{ opacity: 0, transform: "translateY(10px)" }}
+        animate={{ opacity: 1, transform: "translateY(0)" }}
+        transition={{ duration: 0.4, ease: TRANSITION_EASE_OUT, delay: 0.15 }}
+      >
         <div className="sm:hidden absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none animate-pulse-slow">
           <div className="bg-white/80 dark:bg-surface-600/80 backdrop-blur-sm p-1.5 rounded-full shadow-md border border-slate-200 dark:border-surface-400">
             <TrendingUp size={12} className="text-sky-500 rotate-90" />
@@ -88,10 +100,15 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             </ReportChartCard>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Secondary KPI row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <motion.div 
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+        initial={{ opacity: 0, transform: "translateY(10px)" }}
+        animate={{ opacity: 1, transform: "translateY(0)" }}
+        transition={{ duration: 0.4, ease: TRANSITION_EASE_OUT, delay: 0.25 }}
+      >
         <KpiCard
           loading={loading}
           label="First pass yield"
@@ -113,18 +130,24 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           icon={<RotateCcw size={16} className="text-rose-500 dark:text-rose-400" />}
           iconBg="bg-rose-50 dark:bg-rose-900/30"
         />
-      </div>
+      </motion.div>
 
       {/* Stage delays by phase */}
-      <ReportChartCard
-        title="Stage delay by phase"
-        subtitle="Median task hold time per workflow phase"
-        loading={loading}
-        skeletonType="bar"
-        skeletonHeight={160}
+      <motion.div
+        initial={{ opacity: 0, transform: "translateY(10px)" }}
+        animate={{ opacity: 1, transform: "translateY(0)" }}
+        transition={{ duration: 0.4, ease: TRANSITION_EASE_OUT, delay: 0.35 }}
       >
-        <StageDelayChart data={stageDelaysByPhase} height={160} loading={loading} />
-      </ReportChartCard>
+        <ReportChartCard
+          title="Stage delay by phase"
+          subtitle="Median task hold time per workflow phase"
+          loading={loading}
+          skeletonType="bar"
+          skeletonHeight={160}
+        >
+          <StageDelayChart data={stageDelaysByPhase} height={160} loading={loading} />
+        </ReportChartCard>
+      </motion.div>
 
       {/* Activity Summary */}
       {(qaMode ||
@@ -132,7 +155,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         role === "SYSADMIN" ||
         role === "OFFICE_HEAD" ||
         role === "OFFICE_STAFF") && (
-        <div className="relative group/snap">
+        <motion.div 
+          className="relative group/snap"
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, ease: TRANSITION_EASE_OUT, delay: 0.45 }}
+        >
           <div className="sm:hidden absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none animate-pulse-slow">
             <div className="bg-white/80 dark:bg-surface-600/80 backdrop-blur-sm p-1.5 rounded-full shadow-md border border-slate-200 dark:border-surface-400">
               <History size={12} className="text-amber-500 rotate-90" />
@@ -170,7 +198,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               </ReportChartCard>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

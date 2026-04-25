@@ -154,7 +154,7 @@ const StageDelayChart: React.FC<{
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(var(--color-neutral-900), 0.04)" }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148, 163, 184, 0.1)" }} />
             <Bar dataKey="display_hours" radius={[0, 2, 2, 0]} maxBarSize={28}>
               <LabelList
                 dataKey="display_hours"

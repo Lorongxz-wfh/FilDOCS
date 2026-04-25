@@ -1,5 +1,6 @@
 import React from "react";
 import Skeleton from "./loader/Skeleton";
+import { Card, CardBody } from "./Card";
 
 interface KpiCardProps {
   label: string;
@@ -7,6 +8,7 @@ interface KpiCardProps {
   icon: React.ReactNode;
   iconBg: string;
   loading?: boolean;
+  onClick?: () => void;
 }
 
 const KpiCard: React.FC<KpiCardProps> = ({
@@ -15,31 +17,37 @@ const KpiCard: React.FC<KpiCardProps> = ({
   icon,
   iconBg,
   loading,
+  onClick,
 }) => (
-  <div className="rounded-md border border-slate-200 dark:border-surface-400 bg-white dark:bg-surface-500 px-3 py-2 sm:px-4 sm:py-2.5 flex items-center gap-3 sm:gap-4">
-    <div
-      className={`flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-md ${iconBg} scale-90 sm:scale-100`}
-    >
-      {icon}
-    </div>
-    <div className="min-w-0 flex-1">
-      {loading ? (
-        <div className="space-y-1">
-          <Skeleton className="h-4 w-12 sm:h-5 sm:w-16" />
-          <Skeleton className="h-2 w-20 sm:h-3 sm:w-24" />
-        </div>
-      ) : (
-        <div className="flex flex-col sm:block">
-          <p className="text-base sm:text-xl font-semibold tabular-nums leading-none text-slate-900 dark:text-slate-100">
-            {value}
-          </p>
-          <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate font-medium">
-            {label}
-          </p>
-        </div>
-      )}
-    </div>
-  </div>
+  <Card 
+    onClick={onClick}
+    className={`min-h-0 ${onClick ? "cursor-pointer active:scale-[0.98] transition-transform duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]" : ""}`}
+  >
+    <CardBody className="flex-row items-center gap-3 sm:gap-4 py-3 sm:py-4 px-4 sm:px-5">
+      <div
+        className={`flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg ${iconBg} transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]`}
+      >
+        <span className="scale-110 sm:scale-125">{icon}</span>
+      </div>
+      <div className="min-w-0 flex-1 flex flex-col justify-center">
+        {loading ? (
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-12 sm:h-6 sm:w-16" />
+            <Skeleton className="h-2 w-20 sm:h-3 sm:w-24" />
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            <p className="text-lg sm:text-2xl font-bold tabular-nums leading-tight text-slate-900 dark:text-slate-100">
+              {value}
+            </p>
+            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+              {label}
+            </p>
+          </div>
+        )}
+      </div>
+    </CardBody>
+  </Card>
 );
 
 export default KpiCard;

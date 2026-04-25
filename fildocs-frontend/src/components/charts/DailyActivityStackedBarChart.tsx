@@ -103,7 +103,7 @@ const DailyActivityStackedBarChart: React.FC<Props> = ({ data, height = 220, loa
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.05)" }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148, 163, 184, 0.1)" }} />
           <Legend 
             verticalAlign="bottom" 
             align="center"

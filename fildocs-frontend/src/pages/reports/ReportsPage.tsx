@@ -1,5 +1,7 @@
 import React from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { TRANSITION_EASE_OUT } from "../../utils/animations";
 import { useAuthUser } from "../../hooks/useAuthUser";
 import { getUserRole, isQA } from "../../lib/roleFilters";
 import PageFrame from "../../components/layout/PageFrame";
@@ -191,7 +193,12 @@ const ReportsPage: React.FC = () => {
       }
     >
       {/* Tab nav */}
-      <div className="shrink-0 flex items-center border-b border-slate-200 dark:border-surface-400 overflow-x-auto hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+      <motion.div 
+        className="shrink-0 flex items-center border-b border-slate-200 dark:border-surface-400 overflow-x-auto hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0"
+        initial={{ opacity: 0, transform: "translateY(-4px)" }}
+        animate={{ opacity: 1, transform: "translateY(0)" }}
+        transition={{ duration: 0.3, ease: TRANSITION_EASE_OUT }}
+      >
         <Tabs 
           tabs={TABS} 
           activeTab={activeTab} 
@@ -216,7 +223,7 @@ const ReportsPage: React.FC = () => {
             )}
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Content + filter panel */}
       <div className="flex flex-1 min-h-0 overflow-hidden">

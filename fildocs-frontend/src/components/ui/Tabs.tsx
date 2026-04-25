@@ -1,5 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TRANSITION_EASE_OUT } from "../../utils/animations";
 
 interface Tab {
   key: string;
@@ -50,15 +51,16 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onChange, className
             {t.badge}
             
             {isActive && (
-              motion ? (
-                <motion.div
-                  layoutId={`tab-indicator-${id}`}
-                  className="absolute bottom-0 left-1 right-1 h-0.5 bg-brand-500 z-10 rounded-sm"
-                  transition={{ type: "spring", bounce: 0, duration: 0.25 }}
-                />
-              ) : (
-                <div className="absolute bottom-0 left-1 right-1 h-0.5 bg-brand-500 z-10 rounded-sm" />
-              )
+              <motion.div
+                layoutId={`tab-indicator-${id}`}
+                className="absolute bottom-0 left-1 right-1 h-0.5 bg-brand-500 z-10 rounded-sm"
+                transition={{ 
+                  type: "spring", 
+                  bounce: 0, 
+                  duration: 0.35,
+                  ease: TRANSITION_EASE_OUT 
+                }}
+              />
             )}
             
             {/* Hover Indicator (Subtle) */}
