@@ -1,5 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { TRANSITION_EASE_OUT } from "../utils/animations";
 import Skeleton from "../components/ui/loader/Skeleton";
 import DatePresetSwitcher, { type PresetOption } from "../components/ui/DatePresetSwitcher";
 import Button from "../components/ui/Button";
@@ -57,8 +59,6 @@ const DASHBOARD_PRESETS: PresetOption[] = [
 // ─── Shared announcements prop ─────────────────────────────────────────────
 type AnnouncementsHook = ReturnType<typeof useAnnouncements>;
 
-// ─── Dashboard Helper Components Removed (Migrated to src/components/ui/Card.tsx) ────────────────
-
 // ─── QA Dashboard ─────────────────────────────────────────────────────────
 const QADashboard: React.FC<
   ReturnType<typeof useDashboardData> & {
@@ -85,27 +85,44 @@ const QADashboard: React.FC<
 
     return (
       <div className="space-y-4">
-        <AnnouncementsBanner
-          announcements={announcements.announcements}
-          loading={announcements.loading}
-          onDeleted={() => announcements.reload()}
-        />
+        <motion.div
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, ease: TRANSITION_EASE_OUT }}
+        >
+          <AnnouncementsBanner
+            announcements={announcements.announcements}
+            loading={announcements.loading}
+            onDeleted={() => announcements.reload()}
+          />
+        </motion.div>
 
-        <DashboardStatRow
-          pendingCount={pending.length}
-          pendingWorkflowsCount={stats?.pending_workflows ?? 0}
-          openRequestsCount={pendingRequestsCount}
-          allTimeWorkflowsCount={stats?.all_time_total ?? 0}
-          allTimeRequestsCount={allTimeRequestsCount}
-          loading={loading}
-          onStatClick={(label) => {
-            if (label === "Action needed" || label === "Pending workflows") navigate("/work-queue");
-            if (label === "Total workflows" || label === "Distributed") navigate("/documents");
-            if (label === "Open requests" || label === "Total requests") navigate("/document-requests");
-          }}
-        />
+        <motion.div
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, delay: 0.05, ease: TRANSITION_EASE_OUT }}
+        >
+          <DashboardStatRow
+            pendingCount={pending.length}
+            pendingWorkflowsCount={stats?.pending_workflows ?? 0}
+            openRequestsCount={pendingRequestsCount}
+            allTimeWorkflowsCount={stats?.all_time_total ?? 0}
+            allTimeRequestsCount={allTimeRequestsCount}
+            loading={loading}
+            onStatClick={(label) => {
+              if (label === "Action needed" || label === "Pending workflows") navigate("/work-queue");
+              if (label === "Total workflows" || label === "Distributed") navigate("/documents");
+              if (label === "Open requests" || label === "Total requests") navigate("/document-requests");
+            }}
+          />
+        </motion.div>
 
-        <div className="relative group">
+        <motion.div 
+          className="relative group"
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, delay: 0.1, ease: TRANSITION_EASE_OUT }}
+        >
           <div
             onScroll={onCarouselScroll}
             className="flex sm:grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0"
@@ -197,10 +214,15 @@ const QADashboard: React.FC<
               />
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Desktop-only Stage Delay if not in carousel-span above */}
-        <div className="hidden lg:grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <motion.div 
+          className="hidden lg:grid grid-cols-1 gap-4 lg:grid-cols-2"
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, delay: 0.15, ease: TRANSITION_EASE_OUT }}
+        >
           <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
           <Card>
             <CardHeader 
@@ -226,14 +248,25 @@ const QADashboard: React.FC<
               />
             </CardBody>
           </Card>
-        </div>
+        </motion.div>
 
         {/* Mobile-only Pending list */}
-        <div className="lg:hidden mt-1">
+        <motion.div 
+          className="lg:hidden mt-1"
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, delay: 0.15, ease: TRANSITION_EASE_OUT }}
+        >
           <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
-        </div>
+        </motion.div>
 
-        <DashboardRecentActivity logs={recentActivity} loading={loading} />
+        <motion.div
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, delay: 0.2, ease: TRANSITION_EASE_OUT }}
+        >
+          <DashboardRecentActivity logs={recentActivity} loading={loading} />
+        </motion.div>
       </div>
     );
   };
@@ -277,28 +310,45 @@ const OfficeDashboard: React.FC<
 
     return (
       <div className="space-y-4">
-        <AnnouncementsBanner
-          announcements={announcements.announcements}
-          loading={announcements.loading}
-          onDeleted={() => announcements.reload()}
-        />
+        <motion.div
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, ease: TRANSITION_EASE_OUT }}
+        >
+          <AnnouncementsBanner
+            announcements={announcements.announcements}
+            loading={announcements.loading}
+            onDeleted={() => announcements.reload()}
+          />
+        </motion.div>
 
-        <DashboardStatRow
-          pendingCount={pending.length}
-          pendingWorkflowsCount={stats?.pending_workflows ?? 0}
-          openRequestsCount={pendingRequestsCount}
-          allTimeWorkflowsCount={stats?.all_time_total ?? 0}
-          allTimeRequestsCount={allTimeRequestsCount}
-          loading={loading}
-          onStatClick={(label) => {
-            if (label === "Action needed" || label === "Pending workflows") navigate("/work-queue");
-            if (label === "Total workflows" || label === "Distributed") navigate("/documents");
-            if (label === "Open requests" || label === "Total requests") navigate("/document-requests");
-          }}
-        />
+        <motion.div
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, delay: 0.05, ease: TRANSITION_EASE_OUT }}
+        >
+          <DashboardStatRow
+            pendingCount={pending.length}
+            pendingWorkflowsCount={stats?.pending_workflows ?? 0}
+            openRequestsCount={pendingRequestsCount}
+            allTimeWorkflowsCount={stats?.all_time_total ?? 0}
+            allTimeRequestsCount={allTimeRequestsCount}
+            loading={loading}
+            onStatClick={(label) => {
+              if (label === "Action needed" || label === "Pending workflows") navigate("/work-queue");
+              if (label === "Total workflows" || label === "Distributed") navigate("/documents");
+              if (label === "Open requests" || label === "Total requests") navigate("/document-requests");
+            }}
+          />
+        </motion.div>
 
         {/* Document summary + pending work queue */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-stretch">
+        <motion.div 
+          className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-stretch"
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, delay: 0.1, ease: TRANSITION_EASE_OUT }}
+        >
           <div className="relative group lg:h-full">
             <div
               onScroll={onCarouselScroll}
@@ -346,10 +396,16 @@ const OfficeDashboard: React.FC<
           <div className="h-full">
             <DashboardPendingList items={pendingActions} loading={loading} hasData={!!pendingActions?.length} />
           </div>
-        </div>
+        </motion.div>
 
         {/* Recent activity */}
-        <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
+        <motion.div
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, delay: 0.15, ease: TRANSITION_EASE_OUT }}
+        >
+          <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
+        </motion.div>
       </div>
     );
   };
@@ -362,24 +418,41 @@ const AdminDashboard: React.FC<
   }
 > = ({ adminStats, recentActivity, loading, navigate, announcements }) => (
   <div className="space-y-4">
-    <AnnouncementsBanner
-      announcements={announcements.announcements}
-      loading={announcements.loading}
-      onDeleted={() => announcements.reload()}
-    />
-
-    <Card>
-      <CardHeader 
-        title="Admin overview" 
-        subtitle="System-wide document statistics" 
+    <motion.div
+      initial={{ opacity: 0, transform: "translateY(10px)" }}
+      animate={{ opacity: 1, transform: "translateY(0)" }}
+      transition={{ duration: 0.4, ease: TRANSITION_EASE_OUT }}
+    >
+      <AnnouncementsBanner
+        announcements={announcements.announcements}
+        loading={announcements.loading}
+        onDeleted={() => announcements.reload()}
       />
-      <CardBody>
-        <AdminStatGrid data={adminStats} loading={loading && !adminStats} />
-      </CardBody>
-    </Card>
+    </motion.div>
+
+    <motion.div
+      initial={{ opacity: 0, transform: "translateY(10px)" }}
+      animate={{ opacity: 1, transform: "translateY(0)" }}
+      transition={{ duration: 0.4, delay: 0.05, ease: TRANSITION_EASE_OUT }}
+    >
+      <Card>
+        <CardHeader 
+          title="Admin overview" 
+          subtitle="System-wide document statistics" 
+        />
+        <CardBody>
+          <AdminStatGrid data={adminStats} loading={loading && !adminStats} />
+        </CardBody>
+      </Card>
+    </motion.div>
 
     {/* Charts Carousel/Grid */}
-    <div className="flex sm:grid grid-cols-1 gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0">
+    <motion.div 
+      className="flex sm:grid grid-cols-1 gap-4 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory hide-scrollbar pb-1 sm:pb-0"
+      initial={{ opacity: 0, transform: "translateY(10px)" }}
+      animate={{ opacity: 1, transform: "translateY(0)" }}
+      transition={{ duration: 0.4, delay: 0.1, ease: TRANSITION_EASE_OUT }}
+    >
       <Card className="min-w-[85vw] sm:min-w-0 snap-center lg:col-span-2">
         <CardHeader 
           title="Documents by phase" 
@@ -429,34 +502,46 @@ const AdminDashboard: React.FC<
           />
         </CardBody>
       </Card>
-    </div>
+    </motion.div>
 
-    <Card>
-      <CardHeader 
-        title="System Activity Trend" 
-        subtitle="Categorized system actions last 14 days." 
-        right={
-          <Button
-            type="button"
-            variant="ghost"
-            size="xs"
-            onClick={() => navigate("/reports")}
-            className="font-semibold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
-          >
-            View full report →
-          </Button>
-        }
-      />
-      <CardBody>
-        <DailyActivityStackedBarChart
-          data={adminStats?.activity.daily_trend ?? []}
-          height={200}
-          loading={loading && !adminStats?.activity.daily_trend?.length}
+    <motion.div
+      initial={{ opacity: 0, transform: "translateY(10px)" }}
+      animate={{ opacity: 1, transform: "translateY(0)" }}
+      transition={{ duration: 0.4, delay: 0.15, ease: TRANSITION_EASE_OUT }}
+    >
+      <Card>
+        <CardHeader 
+          title="System Activity Trend" 
+          subtitle="Categorized system actions last 14 days." 
+          right={
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              onClick={() => navigate("/reports")}
+              className="font-semibold text-sky-600 dark:text-sky-400 p-0 hover:bg-transparent"
+            >
+              View full report →
+            </Button>
+          }
         />
-      </CardBody>
-    </Card>
+        <CardBody>
+          <DailyActivityStackedBarChart
+            data={adminStats?.activity.daily_trend ?? []}
+            height={200}
+            loading={loading && !adminStats?.activity.daily_trend?.length}
+          />
+        </CardBody>
+      </Card>
+    </motion.div>
 
-    <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
+    <motion.div
+      initial={{ opacity: 0, transform: "translateY(10px)" }}
+      animate={{ opacity: 1, transform: "translateY(0)" }}
+      transition={{ duration: 0.4, delay: 0.2, ease: TRANSITION_EASE_OUT }}
+    >
+      <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
+    </motion.div>
   </div>
 );
 
@@ -469,14 +554,25 @@ const AuditorDashboard: React.FC<
 > = ({ stats, recentActivity, loading, navigate, announcements }) => {
   return (
     <div className="space-y-4">
-      <AnnouncementsBanner
-        announcements={announcements.announcements}
-        loading={announcements.loading}
-        onDeleted={() => announcements.reload()}
-      />
+      <motion.div
+        initial={{ opacity: 0, transform: "translateY(10px)" }}
+        animate={{ opacity: 1, transform: "translateY(0)" }}
+        transition={{ duration: 0.4, ease: TRANSITION_EASE_OUT }}
+      >
+        <AnnouncementsBanner
+          announcements={announcements.announcements}
+          loading={announcements.loading}
+          onDeleted={() => announcements.reload()}
+        />
+      </motion.div>
 
       {/* Stat card */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <motion.div 
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+        initial={{ opacity: 0, transform: "translateY(10px)" }}
+        animate={{ opacity: 1, transform: "translateY(0)" }}
+        transition={{ duration: 0.4, delay: 0.05, ease: TRANSITION_EASE_OUT }}
+      >
         <Card 
           onClick={() => navigate("/documents")}
           hoverable
@@ -505,34 +601,48 @@ const AuditorDashboard: React.FC<
             </p>
           </CardBody>
         </Card>
-      </div>
+      </motion.div>
 
       {/* Info + global activity feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="text-center">
-          <CardBody className="py-10">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-500 dark:bg-sky-950/30 dark:text-sky-400">
-              <FolderOpen className="h-7 w-7" />
-            </div>
-            <h2 className="mt-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
-              Read-only Auditor access
-            </h2>
-            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-              Browse and download all fully distributed documents across all offices.
-            </p>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={() => navigate("/documents")}
-              className="mt-5 mx-auto"
-            >
-              Go to Library
-            </Button>
-          </CardBody>
-        </Card>
+        <motion.div 
+          className="text-center"
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, delay: 0.1, ease: TRANSITION_EASE_OUT }}
+        >
+          <Card className="h-full">
+            <CardBody className="py-10">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-500 dark:bg-sky-950/30 dark:text-sky-400">
+                <FolderOpen className="h-7 w-7" />
+              </div>
+              <h2 className="mt-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Read-only Auditor access
+              </h2>
+              <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                Browse and download all fully distributed documents across all offices.
+              </p>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => navigate("/documents")}
+                className="mt-5 mx-auto"
+              >
+                Go to Library
+              </Button>
+            </CardBody>
+          </Card>
+        </motion.div>
 
-        <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
+        <motion.div 
+          className="lg:col-span-2"
+          initial={{ opacity: 0, transform: "translateY(10px)" }}
+          animate={{ opacity: 1, transform: "translateY(0)" }}
+          transition={{ duration: 0.4, delay: 0.15, ease: TRANSITION_EASE_OUT }}
+        >
+          <DashboardRecentActivity logs={recentActivity} loading={loading} hasData={!!recentActivity?.length} />
+        </motion.div>
       </div>
     </div>
   );
