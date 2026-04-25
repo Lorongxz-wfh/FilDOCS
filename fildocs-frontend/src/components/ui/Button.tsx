@@ -1,5 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TRANSITION_EASE_OUT } from "../../utils/animations";
 import Tooltip from "./Tooltip";
 import { Loader2 } from "lucide-react";
 
@@ -20,7 +21,7 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const base =
-  "cursor-pointer inline-flex items-center justify-center font-semibold rounded-md transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2";
+  "cursor-pointer inline-flex items-center justify-center font-semibold rounded-md transition-[transform,background-color,border-color] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2";
 
 const variants: Record<Variant, string> = {
   primary:
@@ -85,11 +86,11 @@ export default function Button({
         <SafeAnimatePresence initial={false}>
           {isHovered && (
             <SafeMotion.span
-              initial={{ width: 0, opacity: 0, marginLeft: 0 }}
-              animate={{ width: "auto", opacity: 1, marginLeft: 8 }}
-              exit={{ width: 0, opacity: 0, marginLeft: 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="overflow-hidden whitespace-nowrap font-semibold"
+              initial={{ transform: "translateX(-4px)", opacity: 0, width: 0 }}
+              animate={{ transform: "translateX(0)", opacity: 1, width: "auto" }}
+              exit={{ transform: "translateX(-4px)", opacity: 0, width: 0 }}
+              transition={{ duration: 0.2, ease: TRANSITION_EASE_OUT }}
+              className="overflow-hidden whitespace-nowrap font-semibold ml-2"
             >
               {textNode}
             </SafeMotion.span>
